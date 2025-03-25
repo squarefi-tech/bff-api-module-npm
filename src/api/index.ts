@@ -6,6 +6,7 @@ import { issuing } from './issuing';
 import { kyc } from './kyc';
 import { list } from './list';
 import { orders } from './orders';
+import { tenants } from './tenants';
 import { user } from './user';
 import { wallets } from './wallets';
 
@@ -18,6 +19,7 @@ type Api = {
   kyc: typeof kyc;
   list: typeof list;
   orders: typeof orders;
+  tenants: typeof tenants;
   user: typeof user;
   wallets: typeof wallets;
 };
@@ -31,6 +33,7 @@ export const squarefiBffApiClient: Api = {
   kyc,
   list,
   orders,
+  tenants,
   user,
   wallets,
 };
