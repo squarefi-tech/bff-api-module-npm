@@ -377,11 +377,7 @@ export namespace API {
         initial_topup?: number;
         currency_id?: string;
       }
-      export interface StandAloneRequest extends CommonRequest {
-        authorization_controls: AuthorizationControls;
-        transaction_limits: TransactionLimit[];
-        purpose?: string;
-      }
+      export type StandAloneRequest = CommonRequest;
 
       export interface FiatAccountRequest extends CommonRequest {
         sub_account_id: string;
