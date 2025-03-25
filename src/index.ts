@@ -1,4 +1,4 @@
-export * from './api';
+export { squarefi_bff_api_client } from './api';
 export * from './utils/apiClientFactory';
 export * from './utils/tokensFactory';
 export * from './constants';
