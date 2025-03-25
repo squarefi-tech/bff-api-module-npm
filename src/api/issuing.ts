@@ -65,14 +65,3 @@ export const issuing = {
     },
   },
 };
-
-issuing.cards.byWalletUuid.getBySubaccountType({
-  wallet_uuid: '123',
-  limit: 10,
-  offset: 0,
-  filter: {
-    fiat_account: {
-      type: SubAccountType.BALANCE,
-    },
-  },
-});
