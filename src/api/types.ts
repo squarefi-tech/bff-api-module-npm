@@ -349,6 +349,7 @@ export namespace API {
       cvv: string;
       expiry_month: number;
       expiry_year: number;
+      security_code?: string;
     }
 
     export interface OTP {
