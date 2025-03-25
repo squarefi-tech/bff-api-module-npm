@@ -294,7 +294,7 @@ export namespace API {
         }
 
         export interface BySubaccountAndWalletUuid extends ByWalletUuid {
-          filter: Array<Partial<Record<'fiat_account', Record<'type', SubAccountType>>>>;
+          filter: Record<'fiat_account', Record<'type', SubAccountType>>;
         }
 
         export type ByFiatAccountAndWalletId = ByWalletUuid & {
@@ -407,7 +407,7 @@ export namespace API {
 
     export namespace Filtering {
       export interface Request<T> {
-        filter: Partial<Record<keyof T, any>>[];
+        filter: Partial<Record<keyof T, any>>;
       }
     }
   }

@@ -1,7 +1,7 @@
 export const getFromLocalStorage = (key: string) => {
   if (typeof window === 'undefined') {
     // eslint-disable-next-line no-console
-    console.error('call getFromLocalStorage in server side');
+    // console.error('call getFromLocalStorage in server side');
     return null;
   }
 
