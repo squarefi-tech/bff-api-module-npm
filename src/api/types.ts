@@ -217,7 +217,7 @@ export namespace API {
         type: SubAccountType | string;
         status: string;
         balance: number;
-        currency: API.Currencies.Currency;
+        currency: API.Currencies.FiatCurrency;
         nick_name: string;
         wallet_id: string;
         created_at: string;
