@@ -241,7 +241,7 @@ export namespace API {
         type: string;
         status: string;
         balance: number;
-        currency: API.Currencies.Currency;
+        currency: API.Currencies.FiatCurrency;
         nick_name: string | null;
         wallet_id: string;
         created_at: string;
