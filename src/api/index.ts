@@ -22,7 +22,7 @@ type Api = {
   wallets: typeof wallets;
 };
 
-const squarefiBffApiClient: Api = {
+export const squarefiBffApiClient: Api = {
   auth,
   developer,
   exchange,
@@ -34,5 +34,3 @@ const squarefiBffApiClient: Api = {
   user,
   wallets,
 };
-
-export default squarefiBffApiClient;
