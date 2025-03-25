@@ -79,7 +79,7 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
 
         if (isLogoutNeccesary) {
           if (typeof window !== 'undefined') {
-            // navigate('/auth/logout');
+            window.location.href = '/logout';
             deleteTokens();
           }
           requestQueue = [];
@@ -95,7 +95,7 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
             })
             .catch((tokenRefreshError) => {
               if (typeof window !== 'undefined') {
-                // navigate('/auth/logout');
+                window.location.href = '/logout';
                 deleteTokens();
               }
               requestQueue = [];
