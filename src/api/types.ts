@@ -137,6 +137,9 @@ export namespace API {
         sub_account_type: SubAccountType | string;
         description: string | null;
         icon: string | null;
+        card_issuing_fee: number | null;
+        card_monthly_fee: number | null;
+        initial_topup: number | null;
       }
     }
     export interface User {
