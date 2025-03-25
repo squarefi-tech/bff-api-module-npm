@@ -369,23 +369,22 @@ export namespace API {
     };
 
     export namespace Create {
-      export interface StandAloneRequest {
-        authorization_controls: AuthorizationControls;
-
-        // name_on_card: string; hide cardholder name
-        nick_name: string;
-        purpose?: string;
-        request_id: string;
+      export interface CommonRequest {
         program_id: string;
+        request_id: string;
+        nick_name: string;
         wallet_id: string;
+        initial_topup?: number;
+        currency_id?: string;
+      }
+      export interface StandAloneRequest extends CommonRequest {
+        authorization_controls: AuthorizationControls;
+        transaction_limits: TransactionLimit[];
+        purpose?: string;
       }
 
-      export interface FiatAccountRequest {
+      export interface FiatAccountRequest extends CommonRequest {
         sub_account_id: string;
-        program_id: string;
-        request_id: string;
-        nick_name: string;
-        wallet_id: string;
       }
 
       export type StandAloneResponse = IssuingCardDetailItem;
