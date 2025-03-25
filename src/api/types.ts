@@ -212,18 +212,7 @@ export namespace API {
       wallet_id: string;
       program_id: string;
 
-      fiat_account: {
-        id: string;
-        type: SubAccountType | string;
-        status: string;
-        balance: number;
-        currency: API.Currencies.FiatCurrency;
-        nick_name: string;
-        wallet_id: string;
-        created_at: string;
-        program_id: string;
-        account_currency: string;
-      };
+      fiat_account: API.FiatAccounts.FiatAccount;
       last4: string;
       request_id: string;
       name_on_card: string | null;
