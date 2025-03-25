@@ -834,7 +834,36 @@ export namespace API {
         meta?: WalletTransactionMeta;
       }
 
+      export interface DetailedTransaction {
+        id: number;
+        amount: number;
+        created_at: string;
+        from: string;
+        info: string;
+        status: string;
+        to: string;
+        txid: string;
+        type: WalletTransactionType | string;
+        wallet_id: string;
+        method: WalletTransactionMethod | string;
+        meta: WalletTransactionMeta;
+        record_type: WalletTransactionRecordType | string;
+        currency: API.Currencies.Currency;
+      }
+
+      export namespace GetByUuid {
+        export type Request = {
+          wallet_uuid: string;
+          uuid: string;
+        };
+      }
+
       export namespace TransactionList {
+        export type Request = {
+          wallet_uuid: string;
+          limit?: number;
+          offset?: number;
+        };
         export type Response = {
           total: number;
           data: Transaction[];

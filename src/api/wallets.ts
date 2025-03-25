@@ -21,16 +21,22 @@ export const wallets = {
     },
   },
   transactions: {
-    getByWalletUuid: async (
-      wallet_uuid: string,
-      limit = defaultPaginationParams.limit,
-      offset = defaultPaginationParams.offset
-    ) =>
-      apiClientV2.getRequest<API.Wallets.WalletTransactions.TransactionList.Response>(
-        `/wallets/${wallet_uuid}/transactions`,
-        {
-          params: { limit, offset },
-        }
-      ),
+    byWalletUuid: {
+      getAll: async ({
+        wallet_uuid,
+        limit = defaultPaginationParams.limit,
+        offset = defaultPaginationParams.offset,
+      }: API.Wallets.WalletTransactions.TransactionList.Request) =>
+        apiClientV2.getRequest<API.Wallets.WalletTransactions.TransactionList.Response>(
+          `/wallets/${wallet_uuid}/transactions`,
+          {
+            params: { limit, offset },
+          }
+        ),
+      getByUuid: ({ wallet_uuid, uuid }: API.Wallets.WalletTransactions.GetByUuid.Request) =>
+        apiClientV2.getRequest<API.Wallets.WalletTransactions.DetailedTransaction>(
+          `/wallets/${wallet_uuid}/transactions/${uuid}`
+        ),
+    },
   },
 };
