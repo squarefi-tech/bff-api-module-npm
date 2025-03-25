@@ -8,6 +8,7 @@ import {
   KYCStatuses,
   OrderStatuses,
   OrderType,
+  SortingDirection,
   SubAccountType,
   WalletTransactionMethod,
   WalletTransactionRecordType,
@@ -125,9 +126,6 @@ export namespace API {
         id: string;
         account_currency: string;
         brand: string;
-        card_issuing_fee: number | null;
-        card_monthly_fee: number | null;
-        initial_topup: number | null;
         form_factor: CardFormFactor | string;
         name: string;
         card_limit: number;
@@ -171,53 +169,37 @@ export namespace API {
       };
     }
 
-    export interface Limit {
-      interval?: string;
-      amount: number;
+    export namespace Limits {
+      export interface Limits {
+        all_time_enabled: boolean;
+        all_time_cap: number;
+        all_time_spent: number;
+        daily_enabled: boolean;
+        daily_cap: number;
+        daily_spent: number;
+        weekly_enabled: boolean;
+        weekly_cap: number;
+        weekly_spent: number;
+        monthly_enabled: boolean;
+        monthly_cap: number;
+        monthly_spent: number;
+        yearly_enabled: boolean;
+        yearly_cap: number;
+        yearly_spent: number;
+        per_transaction_enabled: boolean;
+        per_transaction_cap: number;
+        per_transaction_spent: number;
+      }
+      export interface UpdateRequest {
+        all_time_cap?: number;
+        daily_cap?: number;
+        weekly_cap?: number;
+        monthly_cap?: number;
+        yearly_cap?: number;
+        per_transaction_cap?: number;
+      }
     }
 
-    export interface Limits {
-      single: Limit;
-      daily: Limit;
-      weekly: Limit;
-      monthly: Limit;
-      lifetime: Limit;
-    }
-
-    export interface CardDetailItem {
-      brand: string;
-      card_id: string;
-      // card_number: string;
-      last4: string;
-      card_status: CardStatus | string;
-      form_factor: string;
-      name_on_card: string;
-      nick_name: string;
-      program_id: string;
-      wallet_id: string;
-      type: CardType | string;
-      transaction_limits: {
-        amount: number;
-        interval: string;
-      }[];
-      authorization_controls: {
-        id: string;
-        card_id: string;
-        allowed_transaction_count: string;
-        allowed_merchant_categories: string | null;
-      };
-      fiat_account: {
-        id: string;
-        currency: API.Currencies.FiatCurrency;
-        type: SubAccountType | string;
-        balance: number;
-        nick_name: string;
-        wallet_id: string;
-        created_at: string;
-        payment_types: Array<{ order_type: OrderType }>;
-        account_details?: API.FiatAccounts.FiatAccountDetails;
-      };
-    }
     export interface IssuingCardListItem {
       brand: string;
       card_id: string;
@@ -226,13 +208,53 @@ export namespace API {
       nick_name: string | null;
       wallet_id: string;
       program_id: string;
-      fiat_account: API.FiatAccounts.FiatAccount;
+
+      fiat_account: {
+        id: string;
+        type: SubAccountType | string;
+        status: string;
+        balance: number;
+        currency: API.Currencies.Currency;
+        nick_name: string;
+        wallet_id: string;
+        created_at: string;
+        program_id: string;
+        account_currency: string;
+      };
       last4: string;
       request_id: string;
       name_on_card: string | null;
       type: CardType | string;
       form_factor: CardFormFactor | string;
       tokenizable: boolean;
+    }
+
+    export interface IssuingCardDetailItem {
+      id: string;
+      brand: string;
+      card_id: string;
+      fiat_account: {
+        id: string;
+        type: string;
+        status: string;
+        balance: number;
+        currency: API.Currencies.Currency;
+        nick_name: string | null;
+        wallet_id: string;
+        created_at: string;
+        program_id: string;
+        account_currency: string;
+      };
+      last4: string;
+      card_status: string;
+      form_factor: string;
+      name_on_card: string | null;
+      nick_name: string;
+      wallet_id: string;
+      type: string;
+      tokenizable: boolean;
+      issuing_programs: API.Cards.Config.Program;
+      limits: API.Cards.Limits.Limits;
     }
 
     export interface FiatAccountCardListItem {
@@ -246,7 +268,7 @@ export namespace API {
       created_at: string;
       program_id: string;
       request_id: string;
-      // card_number: string;
+      card_number: string;
       card_status: string;
       expiry_year: number;
       form_factor: string;
@@ -258,11 +280,22 @@ export namespace API {
 
     export namespace CardsList {
       export namespace Request {
-        export type ByWalletUuid = {
+        export type CardsListSortingFields = Partial<
+          Pick<IssuingCardListItem, 'created_at' | 'card_status' | 'last4' | 'nick_name' | 'name_on_card' | 'card_id'>
+        >;
+        export type CardsListFilteringFields = Partial<IssuingCardListItem>;
+
+        export type CardsListRequestCommonParams = API.Common.Pagination.Request &
+          API.Common.Sorting.Request<CardsListSortingFields> &
+          API.Common.Filtering.Request<CardsListFilteringFields>;
+
+        export interface ByWalletUuid extends CardsListRequestCommonParams {
           wallet_uuid: string;
-          limit: number;
-          offset: number;
-        };
+        }
+
+        export interface BySubaccountAndWalletUuid extends ByWalletUuid {
+          filter: Array<Partial<Record<'fiat_account', Record<'type', SubAccountType>>>>;
+        }
 
         export type ByFiatAccountAndWalletId = ByWalletUuid & {
           fiat_account_id: string;
@@ -313,7 +346,6 @@ export namespace API {
       cvv: string;
       expiry_month: number;
       expiry_year: number;
-      security_code?: string | null;
     }
 
     export interface OTP {
@@ -334,37 +366,48 @@ export namespace API {
     };
 
     export namespace Create {
-      export interface CommonRequest {
+      export interface StandAloneRequest {
+        authorization_controls: AuthorizationControls;
+
+        // name_on_card: string; hide cardholder name
+        nick_name: string;
+        purpose?: string;
+        request_id: string;
+        program_id: string;
+        wallet_id: string;
+      }
+
+      export interface FiatAccountRequest {
+        sub_account_id: string;
         program_id: string;
         request_id: string;
         nick_name: string;
         wallet_id: string;
-        initial_topup?: number;
-        currency_id?: string;
-      }
-      export interface StandAloneRequest extends CommonRequest {
-        authorization_controls: AuthorizationControls;
-        transaction_limits: TransactionLimit[];
-        purpose?: string;
       }
 
-      export interface FiatAccountRequest extends CommonRequest {
-        sub_account_id: string;
-      }
+      export type StandAloneResponse = IssuingCardDetailItem;
+      export type FiatAccountResponse = IssuingCardDetailItem;
+    }
+  }
 
-      export type StandAloneResponse = CardDetailItem;
-      export type FiatAccountResponse = CardDetailItem;
+  export namespace Common {
+    export namespace Pagination {
+      export interface Request {
+        limit: number;
+        offset: number;
+      }
     }
 
-    export namespace Update {
-      export interface DeprecatedRequest {
-        status: string;
-        cardName: string;
-        limits: Limits;
-        autoTopUp: {
-          thresholdAmount: number;
-          topUpAmount: number;
-        };
+    export namespace Sorting {
+      export interface Request<T> {
+        sort_by?: keyof Partial<T>;
+        sort_order?: SortingDirection;
+      }
+    }
+
+    export namespace Filtering {
+      export interface Request<T> {
+        filter: Partial<Record<keyof T, any>>[];
       }
     }
   }

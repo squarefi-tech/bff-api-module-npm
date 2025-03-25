@@ -178,3 +178,8 @@ export enum APIKeyRole {
   DEVELOPER = 'DEVELOPER',
   PRODUCTION = 'PRODUCTION',
 }
+
+export enum SortingDirection {
+  ASC = 'ASC',
+  DESC = 'DESC',
+}
