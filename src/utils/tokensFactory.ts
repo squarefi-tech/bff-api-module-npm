@@ -35,11 +35,11 @@ export async function refreshTokens() {
         })
       : auth.refresh.refresh_token(refreshToken as string);
 
-  const { data } = await refreshHandler();
+  const tokens = await refreshHandler();
 
-  setTokens(data);
+  setTokens(tokens);
 
-  return data;
+  return tokens;
 }
 
 export function getTokens() {
