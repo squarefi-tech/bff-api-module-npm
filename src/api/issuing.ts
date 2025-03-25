@@ -1,5 +1,3 @@
-import { AxiosResponse } from 'axios';
-
 import { fiat_accounts } from './fiat_accounts';
 import { API } from './types';
 
@@ -19,17 +17,15 @@ export const issuing = {
       apiClientV1.getRequest<API.Cards.CardsList.Response>('/issuing/cards', { params }),
     getByFiatAccountAndWalletId: (params: API.Cards.CardsList.Request.ByFiatAccountAndWalletId) =>
       apiClientV1.getRequest<API.Cards.CardsList.Response>('/issuing/cards', { params }),
-    getById: async (card_id: string): Promise<AxiosResponse<API.Cards.CardDetailItem, any>> => {
-      const { data: card, ...rest } = await apiClientV1.getRequest<API.Cards.CardDetailItem>(
-        `/issuing/cards/${card_id}`
-      );
-      const { data: fiatAccountData } = await fiat_accounts.getByUuid(card.fiat_account.id);
+    getById: async (card_id: string): Promise<API.Cards.CardDetailItem> => {
+      const card = await apiClientV1.getRequest<API.Cards.CardDetailItem>(`/issuing/cards/${card_id}`);
+      const fiatAccountData = await fiat_accounts.getByUuid(card.fiat_account.id);
 
       // const { data: fiatAccountData } = await fiat_accounts.getByUuid({ V2 API FIAT ACCOUNTS
       //   wallet_uuid: card.fiat_account.wallet_id,
       //   fiat_account_id: card.fiat_account.id,
       // });
-      return { ...rest, data: { ...card, fiat_account: { ...fiatAccountData, type: card.fiat_account.type } } };
+      return { ...card, fiat_account: { ...fiatAccountData, type: card.fiat_account.type } };
     },
     sensitiveData: {
       get: (card_id: string) => apiClientV1.getRequest<API.Cards.SensitiveData>(`/issuing/cards/${card_id}/sensitive`),
@@ -59,8 +55,7 @@ export const issuing = {
   },
   config: {
     programs: {
-      getAll: () =>
-        apiClientV1.getRequest<API.Issuing.Programs.Response>('/issuing/config/programs').then(({ data }) => data),
+      getAll: () => apiClientV1.getRequest<API.Issuing.Programs.Response>('/issuing/config/programs'),
     },
   },
 };

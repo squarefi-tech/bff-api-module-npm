@@ -6,17 +6,11 @@ import { OrderType } from '../constants';
 
 const createOrderTypeMethods = (orderType: OrderType) => ({
   getByFromCurrency: (from_uuid: string) =>
-    apiClientV1
-      .getRequest<API.Exchange.Exchange[]>('/exchange/', { params: { from_uuid, order_type: orderType } })
-      .then(({ data }) => data),
+    apiClientV1.getRequest<API.Exchange.Exchange[]>('/exchange/', { params: { from_uuid, order_type: orderType } }),
   getByToCurrency: (to_uuid: string) =>
-    apiClientV1
-      .getRequest<API.Exchange.Exchange[]>('/exchange/', { params: { to_uuid, order_type: orderType } })
-      .then(({ data }) => data),
+    apiClientV1.getRequest<API.Exchange.Exchange[]>('/exchange/', { params: { to_uuid, order_type: orderType } }),
   getByOrderType: () =>
-    apiClientV1
-      .getRequest<API.Exchange.Exchange[]>('/exchange/', { params: { order_type: orderType } })
-      .then(({ data }) => data),
+    apiClientV1.getRequest<API.Exchange.Exchange[]>('/exchange/', { params: { order_type: orderType } }),
 });
 
 export const exchange = {

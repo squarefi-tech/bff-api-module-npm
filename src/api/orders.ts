@@ -6,7 +6,7 @@ import { OrderType } from '../constants';
 
 export const orders = {
   calc: ({ signal, ...params }: API.Orders.Calc.Request) =>
-    apiClientV1.getRequest<API.Orders.Calc.Response>('/orders/calc', { params, signal }).then((res) => res.data),
+    apiClientV1.getRequest<API.Orders.Calc.Response>('/orders/calc', { params, signal }),
   create: {
     byOrderType: {
       [OrderType.TRANSFER_CARD_SUBACCOUNT]: (data: API.Orders.Create.ByOrderType.TRANSFER_CARD_SUBACCOUNT.Request) =>

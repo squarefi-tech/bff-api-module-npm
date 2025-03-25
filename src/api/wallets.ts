@@ -5,22 +5,18 @@ import { apiClientV2 } from '../utils/apiClientFactory';
 import { defaultPaginationParams, WalletTypeValues } from '../constants';
 
 export const wallets = {
-  create: (type: WalletTypeValues) => apiClientV2.postRequest('/wallets', { data: { type } }).then(({ data }) => data),
-  getAll: () => apiClientV2.getRequest<API.Wallets.WalletsList.Response>('/wallets').then(({ data }) => data),
-  getByUuid: (uuid: string) => apiClientV2.getRequest<API.Wallets.Wallet>(`/wallets/${uuid}`).then(({ data }) => data),
+  create: (type: WalletTypeValues) => apiClientV2.postRequest('/wallets', { data: { type } }),
+  getAll: () => apiClientV2.getRequest<API.Wallets.WalletsList.Response>('/wallets'),
+  getByUuid: (uuid: string) => apiClientV2.getRequest<API.Wallets.Wallet>(`/wallets/${uuid}`),
   addresses: {
     create: ({ wallet_uuid, chain, label }: API.Wallets.WalletChain.Create.Request) =>
-      apiClientV2
-        .postRequest<API.Wallets.WalletChain.Create.Response>(`/wallets/${wallet_uuid}/addresses/${chain}`, {
-          data: { label },
-        })
-        .then(({ data }) => data),
+      apiClientV2.postRequest<API.Wallets.WalletChain.Create.Response>(`/wallets/${wallet_uuid}/addresses/${chain}`, {
+        data: { label },
+      }),
     get: {
       byWalletUuid: {
         byChainId: (wallet_uuid: string, chain_id: number) =>
-          apiClientV2
-            .getRequest<API.Wallets.WalletChain.WalletChain>(`/wallets/${wallet_uuid}/addresses/${chain_id}`)
-            .then(({ data }) => data),
+          apiClientV2.getRequest<API.Wallets.WalletChain.WalletChain>(`/wallets/${wallet_uuid}/addresses/${chain_id}`),
       },
     },
   },
@@ -30,10 +26,11 @@ export const wallets = {
       limit = defaultPaginationParams.limit,
       offset = defaultPaginationParams.offset
     ) =>
-      apiClientV2
-        .getRequest<API.Wallets.WalletTransactions.TransactionList.Response>(`/wallets/${wallet_uuid}/transactions`, {
+      apiClientV2.getRequest<API.Wallets.WalletTransactions.TransactionList.Response>(
+        `/wallets/${wallet_uuid}/transactions`,
+        {
           params: { limit, offset },
-        })
-        .then(({ data }) => data),
+        }
+      ),
   },
 };

@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import { isTMA } from '@telegram-apps/sdk-react';
-import axios, { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
 
 import { telegramSignUpPath, telegramSignInPath, refreshTokenPath } from '../api/auth';
 
@@ -122,20 +122,20 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
     }
   );
 
-  const patchRequest = async <T>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+  const patchRequest = async <T>(url: string, config?: AxiosRequestConfig): Promise<T> => {
     const { data = {}, ...restConfig } = config ?? {};
 
     const res = await instance.patch(url, data, restConfig);
 
-    return res;
+    return res.data;
   };
 
-  const postRequest = async <T>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+  const postRequest = async <T>(url: string, config?: AxiosRequestConfig): Promise<T> => {
     const { data = {}, ...restConfig } = config ?? {};
 
     const res = await instance.post(url, data, restConfig);
 
-    return res;
+    return res.data;
   };
 
   const deleteRequest = async (url: string, config?: AxiosRequestConfig) => {
@@ -143,15 +143,15 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
 
     const res = await instance.delete(url, { data, ...restConfig });
 
-    return res;
+    return res.data;
   };
 
-  const getRequest = async <T>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> => {
+  const getRequest = async <T>(url: string, config?: AxiosRequestConfig): Promise<T> => {
     const { params = {}, ...restConfig } = config ?? {};
 
     const res = await instance.get(url, { params, ...restConfig });
 
-    return res;
+    return res.data;
   };
 
   return { patchRequest, postRequest, deleteRequest, getRequest };
