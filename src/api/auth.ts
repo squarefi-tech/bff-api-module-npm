@@ -32,13 +32,13 @@ export const auth = {
       email: string,
       password: string // check on backend V2
     ) =>
-      apiClientV2.postRequest<API.Auth.SupabaseGetSessionResponse>('/auth/sign-in/password/email', {
+      apiClientV2.postRequest<API.Auth.Tokens>('/auth/sign-in/password/email', {
         data: { email, password },
       }),
   },
   signup: {
     password: (email: string, password: string) =>
-      apiClientV2.postRequest<API.Auth.SupabaseGetSessionResponse>('/auth/sign-up/password/email', {
+      apiClientV2.postRequest<API.Auth.Tokens>('/auth/sign-up/password/email', {
         data: { email, password },
       }),
     telegram: (data: API.Auth.Telegram.Signup) => apiClientV2.postRequest(telegramSignUpPath, { data }),

@@ -109,11 +109,11 @@ export namespace API {
         }
       }
     }
-    export interface SupabaseGetSessionResponse {
-      session?: Tokens;
-      // user?: User;
-      error?: string;
-    }
+    // export interface SupabaseGetSessionResponse {
+    //   session?: Tokens;
+    //   // user?: User;
+    //   error?: string;
+    // }
 
     export namespace VerifyOtp {
       export type Response = { access_token: string; refresh_token: string; error?: string };
