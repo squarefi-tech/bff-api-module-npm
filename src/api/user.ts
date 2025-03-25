@@ -1,6 +1,6 @@
 import { API } from './types';
 
-import { apiClientV2 } from '.';
+import { apiClientV2 } from '../utils/apiClientFactory';
 
 export const user = {
   get: () => apiClientV2.getRequest<API.User.User>('/user'),

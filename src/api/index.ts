@@ -1,16 +1,38 @@
-import { createApiClient } from '../utils/apiClientFactory';
+import { auth } from './auth';
+import { developer } from './developer';
+import { exchange } from './exchange';
+import { fiat_accounts } from './fiat_accounts';
+import { issuing } from './issuing';
+import { kyc } from './kyc';
+import { list } from './list';
+import { orders } from './orders';
+import { user } from './user';
+import { wallets } from './wallets';
 
-const apiV1BaseURL = process.env.API_URL ?? 'ENV variable API_URL is not defined';
-const apiV2BaseURL = process.env.API_V2_URL ?? 'ENV variable API_V2_URL is not defined';
-const envTenantId = process.env.TENANT_ID ?? 'ENV variable TENANT_ID is not defined';
+type Api = {
+  auth: typeof auth;
+  developer: typeof developer;
+  exchange: typeof exchange;
+  fiat_accounts: typeof fiat_accounts;
+  issuing: typeof issuing;
+  kyc: typeof kyc;
+  list: typeof list;
+  orders: typeof orders;
+  user: typeof user;
+  wallets: typeof wallets;
+};
 
-export const apiClientV1 = createApiClient({
-  baseURL: apiV1BaseURL,
-  tenantId: envTenantId,
-});
+const squarefiBffApiClient: Api = {
+  auth,
+  developer,
+  exchange,
+  fiat_accounts,
+  issuing,
+  kyc,
+  list,
+  orders,
+  user,
+  wallets,
+};
 
-export const apiClientV2 = createApiClient({
-  baseURL: apiV2BaseURL,
-  isBearerToken: true,
-  tenantId: envTenantId,
-});
+export default squarefiBffApiClient;

@@ -4,7 +4,7 @@ import { AxiosRequestConfig } from 'axios';
 
 import { API } from './types';
 
-import { apiClientV2 } from '.';
+import { apiClientV2 } from '../utils/apiClientFactory';
 
 export const list = {
   currencies: {

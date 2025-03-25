@@ -3,7 +3,7 @@ import { AxiosResponse } from 'axios';
 import { fiat_accounts } from './fiat_accounts';
 import { API } from './types';
 
-import { apiClientV1 } from '.';
+import { apiClientV1 } from '../utils/apiClientFactory';
 
 import { defaultPaginationParams } from '../constants';
 

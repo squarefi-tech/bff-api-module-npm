@@ -1,6 +1,6 @@
 import { API } from './types';
 
-import { apiClientV2 } from '.';
+import { apiClientV2 } from '../utils/apiClientFactory';
 
 import { defaultPaginationParams, WalletTypeValues } from '../constants';
 

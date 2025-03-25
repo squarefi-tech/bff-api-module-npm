@@ -1,6 +1,6 @@
 import { API } from './types';
 
-import { apiClientV1 } from '.';
+import { apiClientV1 } from '../utils/apiClientFactory';
 
 export const kyc = {
   sumsub: {

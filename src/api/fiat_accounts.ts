@@ -1,6 +1,6 @@
 import { API } from './types';
 
-import { apiClientV2, apiClientV1 } from '.';
+import { apiClientV2, apiClientV1 } from '../utils/apiClientFactory';
 
 export const fiat_accounts_v2 = {
   list: {
@@ -20,7 +20,7 @@ export const fiat_accounts_v2 = {
 
   getByUuid: ({ wallet_uuid, fiat_account_id }: API.FiatAccountsV2.ExtendedFiatAccount.Request) =>
     apiClientV2.getRequest<API.FiatAccountsV2.ExtendedFiatAccount.Response>(
-      `/fiat-accounts/${wallet_uuid}/${fiat_account_id}`,
+      `/fiat-accounts/${wallet_uuid}/${fiat_account_id}`
     ),
   create: ({ wallet_id, program_id }: API.FiatAccountsV2.CreateFiatAccount.Request) =>
     apiClientV2.postRequest<API.FiatAccountsV2.CreateFiatAccount.Response>(`/fiat-accounts/${wallet_id}`, {
@@ -32,7 +32,7 @@ export const fiat_accounts_v2 = {
         `/fiat-accounts/${wallet_uuid}/${fiat_account_id}/transactions`,
         {
           params: { limit, offset },
-        },
+        }
       ),
   },
 };

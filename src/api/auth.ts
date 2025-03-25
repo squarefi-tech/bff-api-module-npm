@@ -1,6 +1,6 @@
 import { API } from './types';
 
-import { apiClientV2 } from '.';
+import { apiClientV2 } from '../utils/apiClientFactory';
 
 export const telegramSignInPath = '/auth/sign-in/telegram';
 export const telegramSignUpPath = '/auth/sign-up/telegram';
@@ -30,7 +30,7 @@ export const auth = {
       apiClientV2.postRequest<API.Auth.Tokens>(telegramSignInPath, { data }),
     password: (
       email: string,
-      password: string, // check on backend V2
+      password: string // check on backend V2
     ) =>
       apiClientV2.postRequest<API.Auth.SupabaseGetSessionResponse>('/auth/sign-in/password', {
         data: { email, password },
