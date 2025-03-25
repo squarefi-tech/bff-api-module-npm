@@ -506,6 +506,7 @@ export namespace API {
       created_at: string;
       currency: API.Currencies.FiatCurrency;
       fiat_balance: number;
+      type: SubAccountType | string;
       id: string;
       issuing_program: API.Cards.Config.Program;
       nick_name: string;
