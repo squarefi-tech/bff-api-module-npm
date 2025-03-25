@@ -225,18 +225,7 @@ export namespace API {
       id: string;
       brand: string;
       card_id: string;
-      fiat_account: {
-        id: string;
-        type: string;
-        status: string;
-        balance: number;
-        currency: API.Currencies.FiatCurrency;
-        nick_name: string | null;
-        wallet_id: string;
-        created_at: string;
-        program_id: string;
-        account_currency: string;
-      };
+      fiat_account: API.FiatAccounts.FiatAccount;
       last4: string;
       card_status: string;
       form_factor: string;
