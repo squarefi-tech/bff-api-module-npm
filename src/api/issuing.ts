@@ -3,6 +3,7 @@ import { API } from './types';
 import { apiClientV1 } from '../utils/apiClientFactory';
 
 import { defaultPaginationParams, SubAccountType } from '../constants';
+import { fiat_accounts } from './fiat_accounts';
 
 export const issuing = {
   cards: {
@@ -22,7 +23,12 @@ export const issuing = {
       getByFiatAccount: (params: API.Cards.CardsList.Request.ByFiatAccountAndWalletId) =>
         apiClientV1.getRequest<API.Cards.CardsList.Response>('/issuing/cards', { params }),
     },
-    getById: (card_id: string) => apiClientV1.getRequest<API.Cards.IssuingCardDetailItem>(`/issuing/cards/${card_id}`),
+    // getById: (card_id: string) => apiClientV1.getRequest<API.Cards.IssuingCardDetailItem>(`/issuing/cards/${card_id}`),
+    getById: async (card_id: string): Promise<API.Cards.IssuingCardDetailItem> => {
+      const card = await apiClientV1.getRequest<API.Cards.IssuingCardDetailItem>(`/issuing/cards/${card_id}`);
+      const fiatAccountData = await fiat_accounts.getByUuid(card.fiat_account.id);
+      return { ...card, fiat_account: { ...fiatAccountData, type: card.fiat_account.type } };
+    },
     sensitiveData: {
       get: (card_id: string) => apiClientV1.getRequest<API.Cards.SensitiveData>(`/issuing/cards/${card_id}/sensitive`),
       otp: {
