@@ -112,6 +112,7 @@ Access different API functionalities through the client:
 | API_URL    | Base URL for the Squarefi BFF API | Yes      | `https://api-v1.url` |
 | API_V2_URL | Base URL for the Squarefi BFF API | Yes      | `https://api-v2.url` |
 | TENANT_ID  | Your tenant identifier            | Yes      | `tenant_12345`       |
+| LOGOUT_URL | Your logout route                 | Yes      | '/auth/logout'       |
 
 ## 🚀 Features
 

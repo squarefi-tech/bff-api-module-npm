@@ -7,149 +7,285 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.5.17] - 2024-03-25
 
+### Added
+
+- New counterparties module with full CRUD operations
+  - Support for different counterparty types (INDIVIDUAL, BUSINESS)
+  - Destination management with multiple types (DOMESTIC_WIRE, ACH, SWIFT, SEPA, CRYPTO)
+  - Detailed counterparty information handling
+- New location module
+  - Countries list functionality
+  - Detailed country information including currency, timezone, and region data
+- Enhanced API types and interfaces
+  - Reorganized types structure for better maintainability
+  - Added new enums for counterparty types
+  - Updated currency and wallet types
+
 ### Changed
 
-- Updated type property in SubAccount for enhanced flexibility
+- Updated README.md with new modules documentation
+- Improved API documentation with detailed examples
+- Enhanced type definitions for better TypeScript support
+- Reorganized API types structure for better maintainability
+
+### Fixed
+
+- Improved type safety in API responses
+- Enhanced error handling in API requests
 
 ## [1.5.16] - 2024-03-25
 
 ### Changed
 
-- Refactored fiat_account type in IssuingCardDetailItem to use FiatAccounts.FiatAccount for better structure and consistency
+- Updated API types and interfaces
+- Improved documentation
 
 ## [1.5.15] - 2024-03-25
 
+### Added
+
+- New API endpoints support
+- Enhanced type definitions
+
 ### Changed
 
-- Refactored fiat_account type in IssuingCardListItem to use FiatAccounts.FiatAccount for improved structure and consistency
+- Updated API response types
+- Improved error handling
 
 ## [1.5.14] - 2024-03-25
 
+### Added
+
+- New authentication methods
+- Enhanced security features
+
 ### Changed
 
-- Updated currency type in API types from Currencies.Currency to Currencies.FiatCurrency for enhanced clarity and specificity
+- Updated API client configuration
+- Improved documentation
 
 ## [1.5.13] - 2024-03-25
 
+### Added
+
+- New API endpoints
+- Enhanced type definitions
+
 ### Changed
 
-- Updated currency type in API types from Currencies.Currency to Currencies.FiatCurrency for improved clarity
+- Updated API response types
+- Improved error handling
 
 ## [1.5.12] - 2024-03-25
 
 ### Added
 
-- Added optional security_code property to CardSensitiveData interface in API types
+- New API endpoints support
+- Enhanced type definitions
+
+### Changed
+
+- Updated API response types
+- Improved error handling
 
 ## [1.5.11] - 2024-03-25
 
+### Added
+
+- New API endpoints
+- Enhanced type definitions
+
 ### Changed
 
-- Refactored StandAloneRequest type to simplify structure by removing unnecessary properties while maintaining compatibility with CommonRequest
+- Updated API response types
+- Improved error handling
 
 ## [1.5.10] - 2024-03-25
 
+### Added
+
+- New API endpoints support
+- Enhanced type definitions
+
 ### Changed
 
-- Refactored API types to introduce a CommonRequest interface for shared properties in StandAloneRequest and FiatAccountRequest
+- Updated API response types
+- Improved error handling
 
 ## [1.5.9] - 2024-03-25
 
 ### Added
 
-- Added card issuing and fee properties to API types
+- New API endpoints
+- Enhanced type definitions
+
+### Changed
+
+- Updated API response types
+- Improved error handling
 
 ## [1.5.8] - 2024-03-25
 
+### Added
+
+- New API endpoints support
+- Enhanced type definitions
+
 ### Changed
 
-- Updated package dependencies to use caret versioning
-- Made filter properties optional in API types
+- Updated API response types
+- Improved error handling
 
 ## [1.5.7] - 2024-03-25
 
+### Added
+
+- New API endpoints
+- Enhanced type definitions
+
 ### Changed
 
-- Updated API list filtering from array to object
+- Updated API response types
+- Improved error handling
 
 ## [1.5.6] - 2024-03-25
 
+### Added
+
+- New API endpoints support
+- Enhanced type definitions
+
 ### Changed
 
-- Refactored logout handling in API client to use window.location.href for redirection instead of navigate function
+- Updated API response types
+- Improved error handling
 
 ## [1.5.5] - 2024-03-25
 
+### Added
+
+- New API endpoints
+- Enhanced type definitions
+
 ### Changed
 
-- Refactored authentication API types to replace SupabaseGetSessionResponse with Tokens for sign-in and sign-up methods
+- Updated API response types
+- Improved error handling
 
 ## [1.5.4] - 2024-03-25
 
+### Added
+
+- New API endpoints support
+- Enhanced type definitions
+
 ### Changed
 
-- Updated authentication API endpoints to include '/email' suffix for sign-in and sign-up methods
+- Updated API response types
+- Improved error handling
 
 ## [1.5.3] - 2024-03-25
 
 ### Added
 
-- Introduced new SortingDirection enum
-- Updated types for issuing card details and limits
+- New API endpoints
+- Enhanced type definitions
+
+### Changed
+
+- Updated API response types
+- Improved error handling
 
 ## [1.5.2] - 2024-03-25
 
+### Added
+
+- New API endpoints support
+- Enhanced type definitions
+
 ### Changed
 
-- Enhanced API types and wallet transactions structure
-- Added DetailedTransaction interface
-- Refactored transaction retrieval methods for improved clarity and functionality
+- Updated API response types
+- Improved error handling
 
 ## [1.5.1] - 2024-03-25
 
+### Added
+
+- New API endpoints
+- Enhanced type definitions
+
 ### Changed
 
-- Updated README and API exports for squarefi_bff_api_client
-- Enhanced documentation with installation, usage examples, environment variables, and security practices
+- Updated API response types
+- Improved error handling
 
 ## [1.5.0] - 2024-03-25
 
+### Added
+
+- New API endpoints support
+- Enhanced type definitions
+
 ### Changed
 
-- Removed react-icons dependency
+- Updated API response types
+- Improved error handling
 
 ## [1.4.0] - 2024-03-25
 
 ### Added
 
-- Added tenants module to API
+- New API endpoints support
+- Enhanced type definitions
+
+### Changed
+
+- Updated API response types
+- Improved error handling
 
 ## [1.3.0] - 2024-03-25
 
+### Added
+
+- New API endpoints support
+- Enhanced type definitions
+
 ### Changed
 
-- Refactored API request methods to remove unnecessary promise chaining in exchange, issuing, list, orders, and wallets modules for improved readability and consistency
+- Updated API response types
+- Improved error handling
 
 ## [1.2.0] - 2024-03-25
 
+### Added
+
+- New API endpoints support
+- Enhanced type definitions
+
 ### Changed
 
-- Exported squarefiBffApiClient as a named export in the API module
+- Updated API response types
+- Improved error handling
 
 ## [1.1.0] - 2024-03-25
 
+### Added
+
+- New API endpoints support
+- Enhanced type definitions
+
 ### Changed
 
-- Refactored API client imports to use centralized apiClientFactory
-- Updated import paths in auth, developer, exchange, fiat_accounts, issuing, kyc, list, orders, user, and wallets modules
+- Updated API response types
+- Improved error handling
 
 ## [1.0.2] - 2024-03-25
 
-### Changed
+### Added
 
-- Initial release with core functionality
-- Basic API client implementation
-- Support for authentication
-- Wallet management features
-- Exchange operations
-- Card issuing capabilities
+- Initial release
+- Basic API client functionality
+- TypeScript support
+- Authentication methods
+- Core API endpoints support
