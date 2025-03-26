@@ -183,3 +183,17 @@ export enum SortingDirection {
   ASC = 'ASC',
   DESC = 'DESC',
 }
+
+export enum CounterpartyType {
+  INDIVIDUAL = 'INDIVIDUAL',
+  BUSINESS = 'BUSINESS',
+}
+
+export enum CounterpartyDestinationType {
+  DOMESTIC_WIRE = 'DOMESTIC_WIRE',
+  ACH = 'ACH',
+  SWIFT = 'SWIFT',
+  SEPA = 'SEPA',
+  CRYPTO_EXTERNAL = 'CRYPTO_EXTERNAL',
+  CRYPTO_INTERNAL = 'CRYPTO_INTERNAL',
+}

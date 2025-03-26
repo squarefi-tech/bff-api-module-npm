@@ -14,19 +14,46 @@ npm install squarefi-bff-api-module
 import { squarefi_bff_api_client } from 'squarefi-bff-api-module';
 
 // Authentication
-await squarefi_bff_api_client.auth.login(credentials);
+await squarefi_bff_api_client.auth.signin.omni.email({
+  email: 'user@example.com',
+  invite_code: 'optional_invite_code',
+  referrer: 'optional_referrer',
+  redirect_url: 'optional_redirect_url',
+});
 
-// Exchange operations
-const rates = await squarefi_bff_api_client.exchange.getRates();
+// Telegram authentication
+await squarefi_bff_api_client.auth.signin.telegram({
+  tg_id: 123456789,
+  hash: 'telegram_hash',
+  init_data_raw: 'telegram_init_data',
+});
 
-// Tenant operations
-const tenantInfo = await squarefi_bff_api_client.tenants.getTenantInfo();
+// Password authentication
+await squarefi_bff_api_client.auth.signin.password('user@example.com', 'password');
+
+// OTP verification
+await squarefi_bff_api_client.auth.otp.verify.email('user@example.com', 'otp_token');
+await squarefi_bff_api_client.auth.otp.verify.phone('+1234567890', 'otp_token');
+
+// User operations
+const userData = await squarefi_bff_api_client.user.get();
+const userProfile = await squarefi_bff_api_client.user.userData.get();
 
 // Wallet operations
-const balance = await squarefi_bff_api_client.wallets.getBalance();
+const wallets = await squarefi_bff_api_client.wallets.getAll();
+const walletDetails = await squarefi_bff_api_client.wallets.getByUuid('wallet_uuid');
 
-// Fiat accounts
-const accounts = await squarefi_bff_api_client.fiat_accounts.getAccounts();
+// Card operations
+const cards = await squarefi_bff_api_client.issuing.cards.byWalletUuid.getAll({
+  wallet_uuid: 'wallet_uuid',
+  limit: 10,
+  offset: 0,
+});
+
+// Exchange operations
+const exchangeRates = await squarefi_bff_api_client.exchange.byOrderType[OrderType.DEPOSIT_FIAT_SEPA].getByFromCurrency(
+  'from_uuid'
+);
 ```
 
 ## 📚 Available API Modules
@@ -34,15 +61,49 @@ const accounts = await squarefi_bff_api_client.fiat_accounts.getAccounts();
 Access different API functionalities through the client:
 
 - `squarefi_bff_api_client.auth` - Authentication and authorization
+  - OTP verification (email/phone)
+  - Sign in (email/phone/telegram/password)
+  - Sign up (email/telegram)
+  - Token refresh
+- `squarefi_bff_api_client.counterparties` - Counterparty management
+  - List, create, update counterparties
+  - Manage counterparty destinations
+- `squarefi_bff_api_client.developer` - Developer tools
+  - API key management
+  - Vendor management
 - `squarefi_bff_api_client.exchange` - Currency exchange operations
+  - Get exchange rates by order type
+  - Get rates by currency
 - `squarefi_bff_api_client.fiat_accounts` - Fiat account management
+  - List accounts with/without cards
+  - Create and manage fiat accounts
+  - Transaction history
 - `squarefi_bff_api_client.issuing` - Card issuing operations
+  - Create and manage cards
+  - Card limits and controls
+  - Transaction history
+  - Card status management
 - `squarefi_bff_api_client.kyc` - Know Your Customer procedures
+  - Sumsub integration
 - `squarefi_bff_api_client.list` - Listing and pagination utilities
+  - Currencies list
+  - Chains list
+- `squarefi_bff_api_client.location` - Location services
+  - Countries list
 - `squarefi_bff_api_client.orders` - Order management
+  - Create orders by type
+  - Calculate exchange rates
 - `squarefi_bff_api_client.tenants` - Tenant management operations
+  - Tenant configuration
 - `squarefi_bff_api_client.user` - User profile operations
+  - Get/update user data
+  - Update contact information
+  - OTP verification
 - `squarefi_bff_api_client.wallets` - Crypto wallet operations
+  - Create and manage wallets
+  - Address management
+  - Transaction history
+  - Balance tracking
 
 ## ⚙️ Environment Variables
 
@@ -114,6 +175,10 @@ For support and questions, please [open an issue](link-to-issues) or contact our
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guide](link-to-contributing) for details.
+
+## 📝 Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a list of changes and updates.
 
 ## 📄 License
 

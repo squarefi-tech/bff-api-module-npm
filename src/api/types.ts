@@ -4,6 +4,8 @@ import {
   CardStatus,
   CardTransactionType,
   CardType,
+  CounterpartyDestinationType,
+  CounterpartyType,
   CurrencyType,
   KYCStatuses,
   OrderStatuses,
@@ -367,6 +369,20 @@ export namespace API {
     }
   }
 
+  export namespace Chains {
+    export interface Chain {
+      id: number;
+      name: string;
+      symbol: string;
+      is_beta: boolean | null;
+    }
+
+    export type ChainList = {
+      count: number;
+      data: Chain[];
+    };
+  }
+
   export namespace Common {
     export namespace Pagination {
       export interface Request {
@@ -387,6 +403,257 @@ export namespace API {
         filter?: Partial<Record<keyof T, any>>;
       }
     }
+  }
+
+  export namespace Counterparties {
+    export interface Counterparty {
+      id: string;
+      email: string;
+      phone: string;
+      name: string;
+      nickname: string;
+      type: CounterpartyType | string;
+      created_at: string;
+    }
+    export namespace Destination {
+      export namespace List {
+        export interface DestinationListItemCommonFields {
+          id: string;
+          nickname: string;
+          type: CounterpartyDestinationType | string;
+          created_at: string;
+        }
+
+        export interface DestinationListItemExternalBankingData {
+          account_number: string;
+          routing_number: string;
+          bank_name: string;
+          note: string;
+          swift_bic: string;
+          address?: {
+            city?: string;
+            country_id?: number;
+            postcode?: string;
+            street1?: string;
+            street2?: string;
+            memo?: string;
+          };
+        }
+
+        export interface DestinationListItemExternalCryptoData {
+          address: string;
+          currency_id: string;
+        }
+
+        export interface DestinationListItemWithExternalBankingData extends DestinationListItemCommonFields {
+          type:
+            | CounterpartyDestinationType.DOMESTIC_WIRE
+            | CounterpartyDestinationType.ACH
+            | CounterpartyDestinationType.SWIFT
+            | CounterpartyDestinationType.SEPA;
+          external_banking_data: DestinationListItemExternalBankingData;
+          external_crypto_data?: never;
+        }
+
+        export interface DestinationListItemWithExternalCryptoData extends DestinationListItemCommonFields {
+          type: CounterpartyDestinationType.CRYPTO_EXTERNAL | CounterpartyDestinationType.CRYPTO_INTERNAL;
+          external_banking_data?: never;
+          external_crypto_data: DestinationListItemExternalCryptoData;
+        }
+
+        export type CounterpartyDestinationListItem =
+          | DestinationListItemWithExternalBankingData
+          | DestinationListItemWithExternalCryptoData;
+
+        export interface Request {
+          wallet_id: string;
+          counterparty_account_id: string;
+          limit?: number;
+          offset?: number;
+          search?: string;
+          type?: CounterpartyDestinationType | string;
+          sort_by?: 'created_at' | 'nickname' | 'type';
+          sort_order?: SortingDirection;
+          filter?: {
+            type?: CounterpartyDestinationType;
+            nickname?: string;
+            created_at?: string;
+          };
+        }
+
+        export type Response = {
+          total: number;
+          data: CounterpartyDestinationListItem[];
+        };
+      }
+
+      export namespace Detail {
+        export type DestinationDetailItemCommonFields =
+          API.Counterparties.Destination.List.DestinationListItemCommonFields;
+
+        export interface DestinationDetailItemExternalBankingData
+          extends API.Counterparties.Destination.List.DestinationListItemExternalBankingData {
+          address: API.Counterparties.Destination.List.DestinationListItemExternalBankingData['address'] & {
+            country?: API.Location.Countries.Country;
+          };
+        }
+
+        export interface DestinationDetailItemExternalCryptoData
+          extends API.Counterparties.Destination.List.DestinationListItemExternalCryptoData {
+          currency: API.Currencies.Currency;
+        }
+
+        export interface DestinationDetailItemWithExternalBankingData extends DestinationDetailItemCommonFields {
+          type:
+            | CounterpartyDestinationType.DOMESTIC_WIRE
+            | CounterpartyDestinationType.ACH
+            | CounterpartyDestinationType.SWIFT
+            | CounterpartyDestinationType.SEPA;
+          external_banking_data: DestinationDetailItemExternalBankingData;
+          external_crypto_data?: never;
+        }
+
+        export interface DestinationDetailItemWithExternalCryptoData extends DestinationDetailItemCommonFields {
+          type: CounterpartyDestinationType.CRYPTO_EXTERNAL | CounterpartyDestinationType.CRYPTO_INTERNAL;
+          external_banking_data?: never;
+          external_crypto_data: DestinationDetailItemExternalCryptoData;
+        }
+
+        export type DestinationDetailItem =
+          | DestinationDetailItemWithExternalBankingData
+          | DestinationDetailItemWithExternalCryptoData;
+        export interface Request {
+          wallet_id: string;
+          counterparty_account_id: string;
+          counterparty_destination_id: string;
+        }
+
+        export type Response = DestinationDetailItem;
+      }
+
+      export namespace Create {
+        export interface Request {
+          wallet_id: string;
+          counterparty_account_id: string;
+          type: CounterpartyDestinationType;
+          nickname: string;
+          external_banking_data?: API.Counterparties.Destination.Detail.DestinationDetailItemExternalBankingData;
+          external_crypto_data?: API.Counterparties.Destination.Detail.DestinationDetailItemExternalCryptoData;
+        }
+
+        export interface Response extends API.Counterparties.Destination.Detail.DestinationDetailItemCommonFields {
+          id: string;
+          nickname: string;
+          created_at: string;
+          type: CounterpartyDestinationType;
+          external_banking_data?: API.Counterparties.Destination.Detail.DestinationDetailItemExternalBankingData;
+          external_crypto_data?: API.Counterparties.Destination.Detail.DestinationDetailItemExternalCryptoData;
+        }
+      }
+
+      export namespace Update {
+        export interface Request {
+          wallet_id: string;
+          counterparty_account_id: string;
+          counterparty_destination_id: string;
+          nickname: string;
+        }
+
+        export type Response = API.Counterparties.Destination.Detail.DestinationDetailItemCommonFields;
+      }
+    }
+
+    export namespace GetById {
+      export interface Request {
+        wallet_id: string;
+        counterparty_account_id: string;
+      }
+
+      export type Response = Counterparty;
+    }
+
+    export namespace List {
+      export interface Request {
+        wallet_id: string;
+        offset?: number;
+        limit?: number;
+        sort_by?: 'created_at' | 'nickname' | 'type' | 'email' | 'phone';
+        sort_order?: SortingDirection;
+        filter?: {
+          type?: CounterpartyDestinationType;
+          nickname?: string;
+          created_at?: string;
+        };
+      }
+
+      export type Response = {
+        total: number;
+        data: Counterparty[];
+      };
+    }
+
+    export namespace Create {
+      export interface Request {
+        email: string;
+        phone: string;
+        wallet_id: string;
+        nickname: string;
+        type: CounterpartyType;
+      }
+
+      export type Response = Counterparty;
+    }
+
+    export namespace Update {
+      export interface Request {
+        wallet_id: string;
+        counterparty_account_id: string;
+        nickname: string;
+      }
+
+      export type Response = Counterparty;
+    }
+  }
+
+  export namespace Currencies {
+    interface CommonCurrencyFields {
+      uuid: string;
+      decimal: number | null;
+      is_memo: boolean | null;
+      is_stablecoin: boolean;
+      is_enabled: boolean; // added
+      render_decimal: number;
+      meta: {
+        icon: string;
+        name: string;
+        symbol: string;
+        description: string;
+      };
+      type: CurrencyType; // moved
+    }
+    export interface CryptoCurrency extends CommonCurrencyFields {
+      is_crypto: true;
+      meta: CommonCurrencyFields['meta'] & {
+        chain_id: number;
+        contract: string;
+        chain_name: string;
+      };
+    }
+    export interface FiatCurrency extends CommonCurrencyFields {
+      is_crypto: false;
+      meta: CommonCurrencyFields['meta'] & {
+        code: string;
+        iso_code: number;
+        sign: string;
+      };
+    }
+
+    export type Currency = CryptoCurrency | FiatCurrency;
+
+    export type CurrencyList = {
+      count: number;
+      data: Currency[];
+    };
   }
 
   export namespace Developer {
@@ -693,206 +960,41 @@ export namespace API {
     }
   }
 
-  export namespace Currencies {
-    interface CommonCurrencyFields {
-      uuid: string;
-      decimal: number | null;
-      is_memo: boolean | null;
-      is_stablecoin: boolean;
-      is_enabled: boolean; // added
-      render_decimal: number;
-      meta: {
-        icon: string;
+  export namespace Location {
+    export namespace Countries {
+      export interface Country {
+        id: number;
+        capital: string;
+        currency: string;
+        currency_name: string;
+        currency_symbol: string;
+        emoji: string;
+        emojiU: string;
+        flag: number;
+        iso2: string;
+        iso3: string;
+        latitude: number;
+        longitude: number;
         name: string;
-        symbol: string;
-        description: string;
-      };
-      type: CurrencyType; // moved
-    }
-    export interface CryptoCurrency extends CommonCurrencyFields {
-      is_crypto: true;
-      meta: CommonCurrencyFields['meta'] & {
-        chain_id: number;
-        contract: string;
-        chain_name: string;
-      };
-    }
-    export interface FiatCurrency extends CommonCurrencyFields {
-      is_crypto: false;
-      meta: CommonCurrencyFields['meta'] & {
-        code: string;
-        iso_code: number;
-        sign: string;
-      };
-    }
-
-    export type Currency = CryptoCurrency | FiatCurrency;
-
-    export type CurrencyList = {
-      count: number;
-      data: Currency[];
-    };
-  }
-
-  export namespace Chains {
-    export interface Chain {
-      id: number;
-      name: string;
-      symbol: string;
-      is_beta: boolean | null;
-    }
-
-    export type ChainList = {
-      count: number;
-      data: Chain[];
-    };
-  }
-
-  export namespace Wallets {
-    export interface WallletBalanceCryptoDetails {
-      uuid: string;
-      amount: number;
-      fiat_amount: number;
-      currency: API.Currencies.Currency;
-    }
-    export interface WalletBalanceItem {
-      symbol: string;
-      icon: string;
-      name: string;
-      is_crypto: boolean;
-      decimal?: number | null;
-      amount: number;
-      fiat_amount: number;
-      details: WallletBalanceCryptoDetails[];
-    }
-
-    export type WalletBalance = WalletBalanceItem[];
-
-    export namespace WalletChain {
-      export interface WalletChain {
-        uuid: string;
-        created_ad: string;
-        address: string;
-        wallet_uuid: string;
-        chain: number;
+        nationality: string;
+        native: string;
+        numeric_code: string;
+        phonecode: string;
+        region: string;
+        region_id: number;
+        subregion: string;
+        subregion_id: number;
+        timezones: object[]; // TODO: add type
+        tld: string;
+        translations: object[]; // TODO: add type
+        wikiDataId: string;
       }
 
-      export namespace Create {
-        export interface Request {
-          wallet_uuid: string;
-          chain: number;
-          label: string;
-        }
-        export type Response = WalletChain;
-      }
-    }
-
-    export interface Wallet {
-      uuid: string;
-      type: WalletType | string;
-      created_at: string;
-      fiat_total: number;
-      crypto_total: number;
-      total_amount: number;
-      balance: WalletBalance;
-    }
-
-    export namespace WalletsList {
-      export interface WalletsListItem {
-        type: WalletType | string;
-        uuid: string;
-        created_at: string;
-      }
-
-      export type Response = {
-        total: number;
-        data: WalletsListItem[];
-      };
-    }
-
-    export namespace WalletTransactions {
-      export interface WalletTransactionMeta {
-        transaction_hash?: string;
-        fee?: number;
-        order_id?: string;
-        from_address?: string; // not added on backend
-        to_address?: string;
-        network_fee?: number;
-        network_fee_currency?: string;
-        fee_currency?: string;
-        billing_amount?: number;
-        utila_transaction?: string;
-        transcation_amount?: number;
-        transaction_amount?: number;
-        billing_amount_currency?: string;
-        transcation_amount_currency?: string;
-        transaction_amount_currency?: string;
-        exchange_rate?: number;
-        fiat_account_id?: string;
-        txid?: string;
-        chain_id?: number;
-        from_user_data?: number;
-        to_user_data?: number;
-        to_card_id?: string;
-        to_card_last4?: string;
-        to_fiat_account_id?: string;
-        to_vendor_id?: string;
-      }
-      export interface Transaction {
-        id: number;
-        created_at: string;
-        type: WalletTransactionType | string;
-        method: WalletTransactionMethod | string;
-        status: string;
-        amount: number;
-        from: string | null; // deprecated?
-        to: string | null; // deprecated?
-        wallet_id: string;
-        txid: string; // deprecated?
-        info: string;
-        currency: API.Currencies.Currency;
-        record_type: WalletTransactionRecordType | string;
-        meta?: WalletTransactionMeta;
-      }
-
-      export interface DetailedTransaction {
-        id: number;
-        amount: number;
-        created_at: string;
-        from: string;
-        info: string;
-        status: string;
-        to: string;
-        txid: string;
-        type: WalletTransactionType | string;
-        wallet_id: string;
-        method: WalletTransactionMethod | string;
-        meta: WalletTransactionMeta;
-        record_type: WalletTransactionRecordType | string;
-        currency: API.Currencies.Currency;
-      }
-
-      export namespace GetByUuid {
-        export type Request = {
-          wallet_uuid: string;
-          uuid: string;
-        };
-      }
-
-      export namespace TransactionList {
-        export type Request = {
-          wallet_uuid: string;
-          limit?: number;
-          offset?: number;
-        };
-        export type Response = {
-          total: number;
-          data: Transaction[];
-        };
+      export namespace List {
+        export type Response = API.Location.Countries.Country[];
       }
     }
   }
-
   export namespace Orders {
     export namespace Create {
       export namespace ByOrderType {
@@ -1185,6 +1287,151 @@ export namespace API {
         };
 
         export type Response = API.User.UserData.UserData;
+      }
+    }
+  }
+
+  export namespace Wallets {
+    export interface WallletBalanceCryptoDetails {
+      uuid: string;
+      amount: number;
+      fiat_amount: number;
+      currency: API.Currencies.Currency;
+    }
+    export interface WalletBalanceItem {
+      symbol: string;
+      icon: string;
+      name: string;
+      is_crypto: boolean;
+      decimal?: number | null;
+      amount: number;
+      fiat_amount: number;
+      details: WallletBalanceCryptoDetails[];
+    }
+
+    export type WalletBalance = WalletBalanceItem[];
+
+    export namespace WalletChain {
+      export interface WalletChain {
+        uuid: string;
+        created_ad: string;
+        address: string;
+        wallet_uuid: string;
+        chain: number;
+      }
+
+      export namespace Create {
+        export interface Request {
+          wallet_uuid: string;
+          chain: number;
+          label: string;
+        }
+        export type Response = WalletChain;
+      }
+    }
+
+    export interface Wallet {
+      uuid: string;
+      type: WalletType | string;
+      created_at: string;
+      fiat_total: number;
+      crypto_total: number;
+      total_amount: number;
+      balance: WalletBalance;
+    }
+
+    export namespace WalletsList {
+      export interface WalletsListItem {
+        type: WalletType | string;
+        uuid: string;
+        created_at: string;
+      }
+
+      export type Response = {
+        total: number;
+        data: WalletsListItem[];
+      };
+    }
+
+    export namespace WalletTransactions {
+      export interface WalletTransactionMeta {
+        transaction_hash?: string;
+        fee?: number;
+        order_id?: string;
+        from_address?: string; // not added on backend
+        to_address?: string;
+        network_fee?: number;
+        network_fee_currency?: string;
+        fee_currency?: string;
+        billing_amount?: number;
+        utila_transaction?: string;
+        transcation_amount?: number;
+        transaction_amount?: number;
+        billing_amount_currency?: string;
+        transcation_amount_currency?: string;
+        transaction_amount_currency?: string;
+        exchange_rate?: number;
+        fiat_account_id?: string;
+        txid?: string;
+        chain_id?: number;
+        from_user_data?: number;
+        to_user_data?: number;
+        to_card_id?: string;
+        to_card_last4?: string;
+        to_fiat_account_id?: string;
+        to_vendor_id?: string;
+      }
+      export interface Transaction {
+        id: number;
+        created_at: string;
+        type: WalletTransactionType | string;
+        method: WalletTransactionMethod | string;
+        status: string;
+        amount: number;
+        from: string | null; // deprecated?
+        to: string | null; // deprecated?
+        wallet_id: string;
+        txid: string; // deprecated?
+        info: string;
+        currency: API.Currencies.Currency;
+        record_type: WalletTransactionRecordType | string;
+        meta?: WalletTransactionMeta;
+      }
+
+      export interface DetailedTransaction {
+        id: number;
+        amount: number;
+        created_at: string;
+        from: string;
+        info: string;
+        status: string;
+        to: string;
+        txid: string;
+        type: WalletTransactionType | string;
+        wallet_id: string;
+        method: WalletTransactionMethod | string;
+        meta: WalletTransactionMeta;
+        record_type: WalletTransactionRecordType | string;
+        currency: API.Currencies.Currency;
+      }
+
+      export namespace GetByUuid {
+        export type Request = {
+          wallet_uuid: string;
+          uuid: string;
+        };
+      }
+
+      export namespace TransactionList {
+        export type Request = {
+          wallet_uuid: string;
+          limit?: number;
+          offset?: number;
+        };
+        export type Response = {
+          total: number;
+          data: Transaction[];
+        };
       }
     }
   }
