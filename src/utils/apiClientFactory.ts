@@ -13,7 +13,7 @@ import { deleteTokens, refreshTokens } from '../utils/tokensFactory';
 const apiV1BaseURL = process.env.API_URL ?? 'ENV variable API_URL is not defined';
 const apiV2BaseURL = process.env.API_V2_URL ?? 'ENV variable API_V2_URL is not defined';
 const envTenantId = process.env.TENANT_ID ?? 'ENV variable TENANT_ID is not defined';
-const envLogoutURL = process.env.LOGOUT_URL ?? 'auth/logout';
+const envLogoutURL = process.env.LOGOUT_URL ?? '/auth/logout';
 
 type CreateApiClientOptions = {
   baseURL: string;
