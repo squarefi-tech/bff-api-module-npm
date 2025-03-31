@@ -1427,6 +1427,15 @@ export namespace API {
           wallet_uuid: string;
           limit?: number;
           offset?: number;
+          filter: {
+            created_at?: string;
+            from?: string;
+            status?: string;
+            to?: string;
+            type?: string;
+            method?: WalletTransactionMeta;
+            record_type?: WalletTransactionRecordType;
+          };
         };
         export type Response = {
           total: number;
