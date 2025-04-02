@@ -1,5 +1,3 @@
-import { initData, isTMA } from '@telegram-apps/sdk-react';
-
 import { deleteFromLocalStorage, getFromLocalStorage, setToLocalStorage } from './storage';
 
 import { auth } from '../api/auth';
@@ -22,20 +20,11 @@ export function deleteTokens() {
 export async function refreshTokens() {
   const refreshToken = getFromLocalStorage('refresh_token');
 
-  if (!refreshToken && !isTMA()) {
+  if (!refreshToken) {
     return null;
   }
 
-  const refreshHandler = () =>
-    isTMA()
-      ? auth.signin.telegram({
-          tg_id: initData.user()?.id as number,
-          hash: initData.hash() as string,
-          init_data_raw: initData.raw() as string,
-        })
-      : auth.refresh.refresh_token(refreshToken as string);
-
-  const tokens = await refreshHandler();
+  const tokens = await auth.refresh.refresh_token(refreshToken);
 
   setTokens(tokens);
 
