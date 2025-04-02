@@ -1427,7 +1427,7 @@ export namespace API {
           wallet_uuid: string;
           limit?: number;
           offset?: number;
-          filter: {
+          filter?: {
             created_at?: string;
             from?: string;
             status?: string;
