@@ -144,6 +144,11 @@ export enum CardStatus {
   CLOSED = 'CLOSED',
 }
 
+export enum IssuingProgramStatus {
+  ACTIVE = 'ACTIVE',
+  ARCHIVED = 'ARCHIVED',
+}
+
 export enum FiatAccountStatus {
   ACTIVE = 'ACTIVE',
   BLOCKED = 'BLOCKED',

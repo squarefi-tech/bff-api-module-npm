@@ -7,6 +7,7 @@ import {
   CounterpartyDestinationType,
   CounterpartyType,
   CurrencyType,
+  IssuingProgramStatus,
   KYCStatuses,
   OrderStatuses,
   OrderType,
@@ -142,6 +143,7 @@ export namespace API {
         card_issuing_fee: number | null;
         card_monthly_fee: number | null;
         initial_topup: number | null;
+        status?: IssuingProgramStatus | string;
       }
     }
     export interface User {
