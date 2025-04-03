@@ -1431,19 +1431,19 @@ export namespace API {
           limit?: number;
           offset?: number;
           filter?: {
-            created_at: string;
-            from: string;
-            status: WalletTransactionStatus;
-            to: string;
-            type: WalletTransactionType | string;
-            method: WalletTransactionMethod | string;
-            record_type: WalletTransactionRecordType | string;
-            'currency.uuid': string;
-            'meta.billing_amount_currency': string;
-            'meta.transaction_amount_currency': string;
-            address: string;
-            from_created_at: string;
-            to_created_at: string;
+            created_at?: string;
+            from?: string;
+            status?: WalletTransactionStatus;
+            to?: string;
+            type?: WalletTransactionType;
+            method?: WalletTransactionMethod;
+            record_type?: WalletTransactionRecordType;
+            'currency.uuid'?: string;
+            'meta.billing_amount_currency'?: string;
+            'meta.transaction_amount_currency'?: string;
+            address?: string;
+            from_created_at?: string;
+            to_created_at?: string;
           };
         };
         export type Response = {
