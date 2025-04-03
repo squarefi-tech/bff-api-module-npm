@@ -26,11 +26,12 @@ export const wallets = {
         wallet_uuid,
         limit = defaultPaginationParams.limit,
         offset = defaultPaginationParams.offset,
+        ...params
       }: API.Wallets.WalletTransactions.TransactionList.Request) =>
         apiClientV2.getRequest<API.Wallets.WalletTransactions.TransactionList.Response>(
           `/wallets/${wallet_uuid}/transactions`,
           {
-            params: { limit, offset },
+            params: { limit, offset, ...params },
           }
         ),
       getByUuid: ({ wallet_uuid, uuid }: API.Wallets.WalletTransactions.GetByUuid.Request) =>
