@@ -15,6 +15,7 @@ import {
   SubAccountType,
   WalletTransactionMethod,
   WalletTransactionRecordType,
+  WalletTransactionStatus,
   WalletTransactionType,
 } from '../constants';
 import { WalletType } from '../';
@@ -1388,7 +1389,7 @@ export namespace API {
         created_at: string;
         type: WalletTransactionType | string;
         method: WalletTransactionMethod | string;
-        status: string;
+        status: WalletTransactionStatus | string;
         amount: number;
         from: string | null; // deprecated?
         to: string | null; // deprecated?
@@ -1406,7 +1407,7 @@ export namespace API {
         created_at: string;
         from: string;
         info: string;
-        status: string;
+        status: WalletTransactionStatus | string;
         to: string;
         txid: string;
         type: WalletTransactionType | string;
@@ -1430,13 +1431,19 @@ export namespace API {
           limit?: number;
           offset?: number;
           filter?: {
-            created_at?: string;
-            from?: string;
-            status?: string;
-            to?: string;
-            type?: string;
-            method?: WalletTransactionMeta;
-            record_type?: WalletTransactionRecordType;
+            created_at: string;
+            from: string;
+            status: WalletTransactionStatus;
+            to: string;
+            type: WalletTransactionType | string;
+            method: WalletTransactionMethod | string;
+            record_type: WalletTransactionRecordType | string;
+            'currency.uuid': string;
+            'meta.billing_amount_currency': string;
+            'meta.transaction_amount_currency': string;
+            address: string;
+            from_created_at: string;
+            to_created_at: string;
           };
         };
         export type Response = {

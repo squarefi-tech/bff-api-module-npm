@@ -48,6 +48,15 @@ export enum WalletTransactionMethod {
   SBP = 'sbp',
 }
 
+export enum WalletTransactionStatus {
+  COMPLETE = 'complete',
+  PENDING = 'pending',
+  CANCELED = 'canceled',
+  FAILED = 'failed',
+  PROCESSING = 'processing',
+  NEW = 'new',
+}
+
 export enum WalletTransactionRecordType {
   CARD_PROVIDER_DEPOSIT = 'CARD_PROVIDER_DEPOSIT',
   CARD_PROVIDER_REFUND = 'CARD_PROVIDER_REFUND',
