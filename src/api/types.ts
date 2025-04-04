@@ -606,6 +606,7 @@ export namespace API {
     export namespace Update {
       export type Request = Partial<Omit<Counterparty, 'id' | 'created_at'>> & {
         wallet_id: string;
+        counterparty_account_id: string;
       };
 
       export type Response = Counterparty;
