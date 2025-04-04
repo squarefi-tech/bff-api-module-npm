@@ -411,10 +411,10 @@ export namespace API {
   export namespace Counterparties {
     export interface Counterparty {
       id: string;
-      email: string;
-      phone: string;
+      email?: string;
+      phone?: string;
       name: string;
-      nickname: string;
+      nickname?: string;
       type: CounterpartyType | string;
       created_at: string;
     }
@@ -596,23 +596,13 @@ export namespace API {
     }
 
     export namespace Create {
-      export interface Request {
-        email: string;
-        phone: string;
-        wallet_id: string;
-        nickname: string;
-        type: CounterpartyType;
-      }
+      export type Request = Omit<Counterparty, 'id' | 'created_at'>;
 
       export type Response = Counterparty;
     }
 
     export namespace Update {
-      export interface Request {
-        wallet_id: string;
-        counterparty_account_id: string;
-        nickname: string;
-      }
+      export type Request = Partial<Omit<Counterparty, 'id' | 'created_at'>>;
 
       export type Response = Counterparty;
     }
