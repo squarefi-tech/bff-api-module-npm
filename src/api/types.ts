@@ -596,13 +596,17 @@ export namespace API {
     }
 
     export namespace Create {
-      export type Request = Omit<Counterparty, 'id' | 'created_at'>;
+      export type Request = Omit<Counterparty, 'id' | 'created_at'> & {
+        wallet_id: string;
+      };
 
       export type Response = Counterparty;
     }
 
     export namespace Update {
-      export type Request = Partial<Omit<Counterparty, 'id' | 'created_at'>>;
+      export type Request = Partial<Omit<Counterparty, 'id' | 'created_at'>> & {
+        wallet_id: string;
+      };
 
       export type Response = Counterparty;
     }
