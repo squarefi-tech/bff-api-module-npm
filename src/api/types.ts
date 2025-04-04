@@ -582,6 +582,7 @@ export namespace API {
         limit?: number;
         sort_by?: 'created_at' | 'nickname' | 'type' | 'email' | 'phone';
         sort_order?: SortingDirection;
+        search?: string;
         filter?: {
           type?: CounterpartyDestinationType;
           nickname?: string;
