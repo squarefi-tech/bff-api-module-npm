@@ -411,10 +411,10 @@ export namespace API {
   export namespace Counterparties {
     export interface Counterparty {
       id: string;
-      email?: string;
-      phone?: string;
+      email?: string | null;
+      phone?: string | null;
       name: string;
-      nickname?: string;
+      nickname?: string | null;
       type: CounterpartyType | string;
       created_at: string;
     }
