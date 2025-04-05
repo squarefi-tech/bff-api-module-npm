@@ -1,6 +1,7 @@
 import { API } from './types';
 
 import { apiClientV2 } from '../utils/apiClientFactory';
+import { convertPhoneToSupabaseFormat } from '../utils/converters';
 
 export const telegramSignInPath = '/auth/sign-in/telegram';
 export const telegramSignUpPath = '/auth/sign-up/telegram';
@@ -15,7 +16,7 @@ export const auth = {
         }),
       phone: (phone: string, token: string) =>
         apiClientV2.postRequest<API.Auth.VerifyOtp.Response>('/auth/verify/phone/otp', {
-          data: { phone, token, type: 'sms' },
+          data: { phone: convertPhoneToSupabaseFormat(phone), token, type: 'sms' },
         }),
     },
   },
@@ -23,8 +24,10 @@ export const auth = {
     omni: {
       email: (data: API.Auth.SignIn.Email.OTP.Request) =>
         apiClientV2.postRequest('/auth/sign-in/omni/email/otp', { data }),
-      phone: (data: API.Auth.SignIn.Phone.OTP.Request) =>
-        apiClientV2.postRequest('/auth/sign-in/omni/phone/otp', { data }),
+      phone: ({ phone, ...data }: API.Auth.SignIn.Phone.OTP.Request) =>
+        apiClientV2.postRequest('/auth/sign-in/omni/phone/otp', {
+          data: { phone: convertPhoneToSupabaseFormat(phone), ...data },
+        }),
     },
     telegram: (data: API.Auth.Telegram.Signin) =>
       apiClientV2.postRequest<API.Auth.Tokens>(telegramSignInPath, { data }),
