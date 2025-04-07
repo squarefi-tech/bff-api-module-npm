@@ -541,7 +541,11 @@ export namespace API {
           type: CounterpartyDestinationType;
           nickname: string;
           external_banking_data?: API.Counterparties.Destination.Detail.DestinationDetailItemExternalBankingData;
-          external_crypto_data?: API.Counterparties.Destination.Detail.DestinationDetailItemExternalCryptoData;
+
+          external_crypto_data?: Pick<
+            API.Counterparties.Destination.Detail.DestinationDetailItemExternalCryptoData,
+            'currency_id' | 'address'
+          >;
         }
 
         export type Response = API.Counterparties.Destination.Detail.DestinationDetailItem;
