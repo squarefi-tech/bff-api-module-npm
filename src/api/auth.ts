@@ -1,10 +1,10 @@
 import { API } from './types';
 
-import { apiClientV1, apiClientV2 } from '../utils/apiClientFactory';
+import { apiClientV2 } from '../utils/apiClientFactory';
 import { convertPhoneToSupabaseFormat } from '../utils/converters';
 
-// export const telegramSignInPath = '/auth/sign-in/telegram'; V2 path
-export const telegramSignInPath = '/auth/signin/telegram'; // V1 path
+export const telegramSignInPath = '/auth/sign-in/telegram'; // V2 path
+// export const telegramSignInPath = '/auth/signin/telegram'; // V1 path
 
 export const telegramSignUpPath = '/auth/sign-up/telegram';
 export const refreshTokenPath = '/auth/refresh/refresh-token';
@@ -32,7 +32,7 @@ export const auth = {
         }),
     },
     telegram: (data: API.Auth.Telegram.Signin) =>
-      apiClientV1.postRequest<API.Auth.Tokens>(telegramSignInPath, { data }),
+      apiClientV2.postRequest<API.Auth.Tokens>(telegramSignInPath, { data }),
     password: (
       email: string,
       password: string // check on backend V2
