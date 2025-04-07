@@ -544,14 +544,7 @@ export namespace API {
           external_crypto_data?: API.Counterparties.Destination.Detail.DestinationDetailItemExternalCryptoData;
         }
 
-        export interface Response extends API.Counterparties.Destination.Detail.DestinationDetailItemCommonFields {
-          id: string;
-          nickname: string;
-          created_at: string;
-          type: CounterpartyDestinationType;
-          external_banking_data?: API.Counterparties.Destination.Detail.DestinationDetailItemExternalBankingData;
-          external_crypto_data?: API.Counterparties.Destination.Detail.DestinationDetailItemExternalCryptoData;
-        }
+        export type Response = API.Counterparties.Destination.Detail.DestinationDetailItem;
       }
 
       export namespace Update {
