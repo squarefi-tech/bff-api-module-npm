@@ -3,7 +3,9 @@ import { API } from './types';
 import { apiClientV1, apiClientV2 } from '../utils/apiClientFactory';
 import { convertPhoneToSupabaseFormat } from '../utils/converters';
 
-export const telegramSignInPath = '/auth/sign-in/telegram';
+// export const telegramSignInPath = '/auth/sign-in/telegram'; V2 path
+export const telegramSignInPath = '/auth/signin/telegram'; // V1 path
+
 export const telegramSignUpPath = '/auth/sign-up/telegram';
 export const refreshTokenPath = '/auth/refresh/refresh-token';
 
