@@ -1,6 +1,6 @@
 import { API } from './types';
 
-import { apiClientV2 } from '../utils/apiClientFactory';
+import { apiClientV1, apiClientV2 } from '../utils/apiClientFactory';
 import { convertPhoneToSupabaseFormat } from '../utils/converters';
 
 export const telegramSignInPath = '/auth/sign-in/telegram';
@@ -30,7 +30,7 @@ export const auth = {
         }),
     },
     telegram: (data: API.Auth.Telegram.Signin) =>
-      apiClientV2.postRequest<API.Auth.Tokens>(telegramSignInPath, { data }),
+      apiClientV1.postRequest<API.Auth.Tokens>(telegramSignInPath, { data }),
     password: (
       email: string,
       password: string // check on backend V2
