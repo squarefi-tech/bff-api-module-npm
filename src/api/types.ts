@@ -335,6 +335,13 @@ export namespace API {
       security_code?: string;
     }
 
+    export interface SensitiveDataEncrypted {
+      data?: string;
+      success?: boolean;
+      encrypted?: boolean;
+      iv?: string;
+    }
+
     export interface OTP {
       created_at: number;
       internal_card_id: string;

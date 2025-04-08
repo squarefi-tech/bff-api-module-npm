@@ -4,6 +4,12 @@ import { apiClientV1 } from '../utils/apiClientFactory';
 
 import { defaultPaginationParams, SubAccountType } from '../constants';
 import { fiat_accounts } from './fiat_accounts';
+import {
+  arrayBufferToBase64,
+  decodePEMFromBase64,
+  decryptSensitiveData,
+  generate256bitSecretKey,
+} from '../utils/common';
 
 export const issuing = {
   cards: {
@@ -31,6 +37,43 @@ export const issuing = {
     },
     sensitiveData: {
       get: (card_id: string) => apiClientV1.getRequest<API.Cards.SensitiveData>(`/issuing/cards/${card_id}/sensitive`),
+      encrypted: {
+        secretKey: {
+          get: async (card_id: string) => {
+            const serverPublicKey = process.env.SERVER_PUBLIC_KEY_BASE64;
+            if (!serverPublicKey) {
+              throw new Error('SERVER_PUBLIC_KEY_BASE64 is not set');
+            }
+            const secretKey = generate256bitSecretKey();
+            const secretKeyBase64 = arrayBufferToBase64(secretKey);
+            const JSEncrypt = (await import('jsencrypt')).default;
+            const encrypt = new JSEncrypt();
+            const serverPublicKeyPEM = decodePEMFromBase64(serverPublicKey);
+            encrypt.setPublicKey(serverPublicKeyPEM);
+
+            const payload = {
+              key: secretKeyBase64,
+              timestamp: Date.now(),
+            };
+
+            const encrypted_key = encrypt.encrypt(JSON.stringify(payload));
+
+            const response = await apiClientV1.postRequest<API.Cards.SensitiveDataEncrypted>(
+              `/issuing/cards/${card_id}/sensitive/secretkey`,
+              {
+                data: {
+                  encrypted_key,
+                },
+              }
+            );
+            if (response.success && response.encrypted && response.data && response.iv) {
+              const decryptedData = await decryptSensitiveData(response.data, response.iv, secretKey);
+
+              return decryptedData;
+            }
+          },
+        },
+      },
       otp: {
         // have to update
         get: (card_id: string) => apiClientV1.getRequest<API.Cards.OTP>(`/vcards/cards/${card_id}/sensitive/otp`),
