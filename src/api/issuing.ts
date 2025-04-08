@@ -64,9 +64,9 @@ export const issuing = {
             );
 
             if (success && encrypted && data && iv) {
-              const decryptedData = decryptAESData(data, iv, clientSecretKey);
+              const decryptedData = await decryptAESData(data, iv, clientSecretKey);
 
-              return decryptedData;
+              return decryptedData.data;
             }
           },
         },
