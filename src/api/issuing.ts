@@ -32,10 +32,10 @@ export const issuing = {
       return { ...card, fiat_account: { ...fiatAccountData, type: card.fiat_account.type } };
     },
     sensitiveData: {
-      get: (card_id: string) => apiClientV1.getRequest<API.Cards.SensitiveData>(`/issuing/cards/${card_id}/sensitive`),
+      // get: (card_id: string) => apiClientV1.getRequest<API.Cards.SensitiveData>(`/issuing/cards/${card_id}/sensitive`), deprecated
       encrypted: {
         secretKey: {
-          get: async (card_id: string) => {
+          get: async (card_id: string): Promise<API.Cards.SensitiveData> => {
             const serverPublicKeyEnv = process.env.SERVER_PUBLIC_KEY_BASE64;
             const clientRsa = new NodeRSA();
 
@@ -67,6 +67,8 @@ export const issuing = {
               const decryptedData = await decryptAESData(data, iv, clientSecretKey);
 
               return decryptedData.data;
+            } else {
+              throw new Error('Failed to get encrypted secret key');
             }
           },
         },
