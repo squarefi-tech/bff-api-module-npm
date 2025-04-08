@@ -5,7 +5,7 @@ export const generate256bitSecretKey = () => {
 };
 
 export const arrayBufferToBase64 = (buffer: Uint8Array<ArrayBuffer>) => {
-  return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+  return btoa(String.fromCharCode.apply(null, new Uint8Array(buffer) as any));
 };
 
 export const decodePEMFromBase64 = (base64EncodedPEM: string) => {

@@ -40,14 +40,16 @@ export const issuing = {
       encrypted: {
         secretKey: {
           get: async (card_id: string) => {
+            const JSEncrypt = (await import('jsencrypt')).default;
             const serverPublicKey = process.env.SERVER_PUBLIC_KEY_BASE64;
+            const encrypt = new JSEncrypt();
+
             if (!serverPublicKey) {
               throw new Error('SERVER_PUBLIC_KEY_BASE64 is not set');
             }
+
             const secretKey = generate256bitSecretKey();
             const secretKeyBase64 = arrayBufferToBase64(secretKey);
-            const JSEncrypt = (await import('jsencrypt')).default;
-            const encrypt = new JSEncrypt();
             const serverPublicKeyPEM = decodePEMFromBase64(serverPublicKey);
             encrypt.setPublicKey(serverPublicKeyPEM);
 
