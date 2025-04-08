@@ -1,12 +1,8 @@
 import { API } from './types';
-import NodeRSA from 'node-rsa';
-
 import { apiClientV1 } from '../utils/apiClientFactory';
-
 import { defaultPaginationParams } from '../constants';
 import { fiat_accounts } from './fiat_accounts';
-import { decryptAESData, generateSecretKey } from '../utils/encrypt';
-
+import { makeSecureRequest } from '../utils/encrypt';
 export const issuing = {
   cards: {
     create: {
@@ -32,44 +28,26 @@ export const issuing = {
       return { ...card, fiat_account: { ...fiatAccountData, type: card.fiat_account.type } };
     },
     sensitiveData: {
-      // get: (card_id: string) => apiClientV1.getRequest<API.Cards.SensitiveData>(`/issuing/cards/${card_id}/sensitive`), deprecated
+      // get: (card_id: string) => apiClientV1.getRequest<API.Cards.SensitiveData>(`/issuing/cards/${card_id}/sensitive`), deprecated from v1.13.1
       encrypted: {
         secretKey: {
           get: async (card_id: string): Promise<API.Cards.SensitiveData> => {
             const serverPublicKeyEnv = process.env.SERVER_PUBLIC_KEY_BASE64;
-            const clientRsa = new NodeRSA();
+            const callback = (props: API.Common.Encrypted.Request) =>
+              apiClientV1.postRequest<API.Common.Encrypted.Response>(`/issuing/cards/${card_id}/sensitive/secretkey`, {
+                data: props,
+              });
 
             if (!serverPublicKeyEnv) {
               throw new Error('SERVER_PUBLIC_KEY_BASE64 is not set');
             }
 
-            const serverPublicKey = Buffer.from(serverPublicKeyEnv, 'base64').toString('utf8');
-            clientRsa.importKey(serverPublicKey, 'pkcs8-public-pem');
+            const encryptedData = await makeSecureRequest<API.Cards.SensitiveData>({
+              callback,
+              publicKey: serverPublicKeyEnv,
+            });
 
-            const clientSecretKey = generateSecretKey();
-            const clientPayload = {
-              key: clientSecretKey.toString('base64'),
-              timestamp: Date.now(),
-            };
-
-            const encrypted_key = clientRsa.encrypt(JSON.stringify(clientPayload), 'base64');
-
-            const { success, encrypted, data, iv } = await apiClientV1.postRequest<API.Cards.SensitiveDataEncrypted>(
-              `/issuing/cards/${card_id}/sensitive/secretkey`,
-              {
-                data: {
-                  encrypted_key,
-                },
-              }
-            );
-
-            if (success && encrypted && data && iv) {
-              const decryptedData = await decryptAESData(data, iv, clientSecretKey);
-
-              return decryptedData.data;
-            } else {
-              throw new Error('Failed to get encrypted secret key');
-            }
+            return encryptedData;
           },
         },
       },

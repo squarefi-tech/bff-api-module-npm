@@ -335,13 +335,6 @@ export namespace API {
       security_code?: string;
     }
 
-    export interface SensitiveDataEncrypted {
-      data?: string;
-      success?: boolean;
-      encrypted?: boolean;
-      iv?: string;
-    }
-
     export interface OTP {
       created_at: number;
       internal_card_id: string;
@@ -411,6 +404,18 @@ export namespace API {
     export namespace Filtering {
       export interface Request<T> {
         filter?: Partial<Record<keyof T, any>>;
+      }
+    }
+
+    export namespace Encrypted {
+      export interface Request {
+        encrypted_key: string;
+      }
+      export interface Response {
+        data: string;
+        success: boolean;
+        encrypted: boolean;
+        iv: string;
       }
     }
   }

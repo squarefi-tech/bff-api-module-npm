@@ -5,6 +5,161 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.2] - 2025-04-08
+
+### Changed
+
+- Refactored encryption logic for improved security and maintainability
+
+## [1.13.1] - 2025-04-08
+
+### Fixed
+
+- Deprecated card sensitive data retrieval method
+- Improved error handling in API responses
+- Fixed decryption handling in issuing API
+
+## [1.13.0] - 2025-04-08
+
+### Changed
+
+- Replaced JSEncrypt with NodeRSA for encryption implementation
+
+## [1.12.1] - 2025-04-08
+
+### Fixed
+
+- Improved encryption implementation for card data
+
+## [1.12.0] - 2025-04-08
+
+### Added
+
+- Implemented encryption for sensitive card data
+
+## [1.11.3] - 2025-04-07
+
+### Changed
+
+- Updated Telegram sign-in method to use apiClientV2
+
+## [1.11.2] - 2025-04-07
+
+### Changed
+
+- Updated Telegram sign-in path for versioning clarity
+
+## [1.11.1] - 2025-04-07
+
+### Changed
+
+- Switched to apiClientV1 for Telegram sign-in
+
+## [1.11.0] - 2025-04-07
+
+### Changed
+
+- Updated external_crypto_data type in Counterparty destination
+- Simplified Response type for Counterparty destination
+
+## [1.10.13] - 2025-04-07
+
+### Changed
+
+- Updated external_crypto_data type in Counterparty destination
+
+## [1.10.12] - 2025-04-07
+
+### Changed
+
+- Simplified Response type for Counterparty destination
+
+## [1.10.11] - 2025-04-05
+
+### Fixed
+
+- Formatted phone numbers for Supabase compatibility
+
+## [1.10.10] - 2025-04-04
+
+### Fixed
+
+- Added search parameter to Counterparty request type
+
+## [1.10.9] - 2025-04-04
+
+### Fixed
+
+- Updated Counterparty fields to allow null values
+
+## [1.10.8] - 2025-04-04
+
+### Fixed
+
+- Added counterparty_account_id to Update request type for Counterparty
+
+## [1.10.7] - 2025-04-04
+
+### Fixed
+
+- Added wallet_id to Create and Update request types for Counterparty
+
+## [1.10.6] - 2025-04-04
+
+### Fixed
+
+- Made Counterparty fields optional in API types
+
+## [1.10.5] - 2025-04-03
+
+### Fixed
+
+- Included additional parameters in wallet transaction request
+
+## [1.10.4] - 2025-04-03
+
+### Fixed
+
+- Made wallet transaction filter fields optional
+
+## [1.10.3] - 2025-04-03
+
+### Added
+
+- Added WalletTransactionStatus enum
+- Updated API types with new status enum
+
+## [1.10.2] - 2025-04-02
+
+### Added
+
+- Added IssuingProgramStatus enum
+- Updated API types with new status enum
+
+## [1.10.1] - 2025-04-02
+
+### Fixed
+
+- Made filter object optional in wallet transaction request
+
+## [1.10.0] - 2025-04-02
+
+### Fixed
+
+- Simplified token refresh logic by removing TMA check
+
+## [1.9.0] - 2025-03-31
+
+### Added
+
+- Added filter options to wallet transaction request
+
+## [1.8.2] - 2025-03-26
+
+### Changed
+
+- Clarified LOGOUT_URL description in documentation
+
 ## [1.8.1] - 2025-03-26
 
 ### Added
