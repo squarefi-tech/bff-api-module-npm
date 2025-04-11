@@ -46,5 +46,13 @@ export const counterparties = {
         `/counterparties/${wallet_id}/${counterparty_account_id}/destinations/${counterparty_destination_id}`,
         { data }
       ),
+    delete: ({
+      wallet_id,
+      counterparty_account_id,
+      counterparty_destination_id,
+    }: API.Counterparties.Destination.Delete.Request) =>
+      apiClientV2.deleteRequest(
+        `/counterparties/${wallet_id}/${counterparty_account_id}/destinations/${counterparty_destination_id}`
+      ),
   },
 };

@@ -564,6 +564,14 @@ export namespace API {
         export type Response = API.Counterparties.Destination.Detail.DestinationDetailItem;
       }
 
+      export namespace Delete {
+        export interface Request {
+          wallet_id: string;
+          counterparty_account_id: string;
+          counterparty_destination_id: string;
+        }
+      }
+
       export namespace Update {
         export interface Request {
           wallet_id: string;
