@@ -458,6 +458,7 @@ export namespace API {
         export interface DestinationListItemExternalCryptoData {
           address: string;
           currency_id: string;
+          memo?: string;
         }
 
         export interface DestinationListItemWithExternalBankingData extends DestinationListItemCommonFields {
@@ -556,7 +557,7 @@ export namespace API {
 
           external_crypto_data?: Pick<
             API.Counterparties.Destination.Detail.DestinationDetailItemExternalCryptoData,
-            'currency_id' | 'address'
+            'currency_id' | 'address' | 'memo'
           >;
         }
 
