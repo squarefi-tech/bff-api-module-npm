@@ -1,6 +1,6 @@
 import { API } from './types';
 
-import { apiClientV2 } from '../utils/apiClientFactory';
+import { apiClientV1, apiClientV2 } from '../utils/apiClientFactory';
 
 import { defaultPaginationParams, WalletTypeValues } from '../constants';
 
@@ -38,6 +38,10 @@ export const wallets = {
         apiClientV2.getRequest<API.Wallets.WalletTransactions.DetailedTransaction>(
           `/wallets/${wallet_uuid}/transactions/${uuid}`
         ),
+    },
+    csv: {
+      getByWalletUuid: (wallet_uuid: string) =>
+        apiClientV1.getRequest<string>(`/wallets/transactions/${wallet_uuid}/csv`),
     },
   },
 };

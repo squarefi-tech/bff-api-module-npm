@@ -83,6 +83,12 @@ export const issuing = {
       apiClientV1.getRequest<API.Cards.TransactionsList>(`/issuing/transactions/`, {
         params: { limit, offset, fiat_account_id, new_scheme: true },
       }),
+    csv: {
+      getByCardId: (card_id: string) =>
+        apiClientV1.getRequest<string>(`/issuing/transactions/csv`, {
+          params: { card_id },
+        }),
+    },
   },
   config: {
     programs: {
