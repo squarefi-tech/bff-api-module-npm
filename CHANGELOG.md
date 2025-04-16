@@ -5,6 +5,48 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.16.0] - 2025-04-16
+
+### Added
+
+- Added support for fetching transactions by fiat account ID
+
+## [1.15.1] - 2025-04-16
+
+### Changed
+
+- Simplified logout logic in API client
+
+## [1.15.0] - 2025-04-14
+
+### Added
+
+- Added CSV export functionality for transactions
+
+## [1.14.0] - 2025-04-11
+
+### Added
+
+- Added delete functionality for counterparties destinations
+
+## [1.13.5] - 2025-04-11
+
+### Fixed
+
+- Added optional memo field to external crypto data type
+
+## [1.13.4] - 2025-04-11
+
+### Fixed
+
+- Added optional memo field to external crypto data type
+
+## [1.13.3] - 2025-04-10
+
+### Fixed
+
+- Moved search parameter to filter object in API types
+
 ## [1.13.2] - 2025-04-08
 
 ### Changed
