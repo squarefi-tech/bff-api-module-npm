@@ -88,6 +88,10 @@ export const issuing = {
         apiClientV1.getRequest<string>(`/issuing/transactions/csv`, {
           params: { card_id },
         }),
+      getByFiatAccountId: (fiat_account_id: string) =>
+        apiClientV1.getRequest<string>(`/issuing/transactions/csv`, {
+          params: { fiat_account_id },
+        }),
     },
   },
   config: {
