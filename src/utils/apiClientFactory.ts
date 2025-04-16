@@ -66,15 +66,8 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
         const isRetryRequest = failedRequest.headers['X-Retry-Request'];
 
         const isRefreshTokenRequest = response?.config?.url.includes(refreshTokenPath);
-        const isTelegramSignInRequest = response?.config?.url.includes(telegramSignInPath);
-        const isTelegramSignUpRequest = response?.config?.url.includes(telegramSignUpPath);
-        const isRefreshNotRequired = !refreshToken && !isTMA();
-        const isLogoutNeccesary =
-          isRefreshNotRequired ||
-          isTelegramSignInRequest ||
-          isTelegramSignUpRequest ||
-          isRefreshTokenRequest ||
-          isRetryRequest;
+        const isRefreshNotRequired = !refreshToken;
+        const isLogoutNeccesary = isRefreshNotRequired || isRefreshTokenRequest || isRetryRequest;
 
         const isRefreshAvailable = (!isTokenRefreshing && typeof refreshToken === 'string') || isTMA();
 
