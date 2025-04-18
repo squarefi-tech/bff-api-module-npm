@@ -87,10 +87,8 @@ export const issuing = {
         apiClientV1.getRequest<string>(`/issuing/transactions/csv`, {
           params: { card_id },
         }),
-      getBySubAccountId: (fiat_account_id: string) =>
-        apiClientV1.getRequest<string>(`/issuing/transactions/csv`, {
-          params: { fiat_account_id },
-        }),
+      getBySubAccountId: (sub_account_id: string) =>
+        apiClientV1.getRequest<string>(`/issuing/sub_account/${sub_account_id}/transactions/csv`),
     },
   },
   sub_accounts: {
@@ -128,7 +126,7 @@ export const issuing = {
     transactions: {
       get: (sub_account_id: string, limit?: number, offset?: number) =>
         apiClientV1.getRequest<API.Issuing.SubAccounts.TransactionList>(
-          `/issuing/sub_account/${sub_account_id}/transactions/csv`,
+          `/issuing/sub_account/${sub_account_id}/transactions`,
           {
             params: { limit, offset },
           }
