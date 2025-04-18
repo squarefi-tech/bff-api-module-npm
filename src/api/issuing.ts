@@ -126,9 +126,9 @@ export const issuing = {
         data: { wallet_id, program_id },
       }),
     transactions: {
-      get: (fiat_account_id: string, limit?: number, offset?: number) =>
+      get: (sub_account_id: string, limit?: number, offset?: number) =>
         apiClientV1.getRequest<API.Issuing.SubAccounts.TransactionList>(
-          `/issuing/sub_account/${fiat_account_id}/transactions`,
+          `/issuing/sub_account/${sub_account_id}/transactions/csv`,
           {
             params: { limit, offset },
           }
