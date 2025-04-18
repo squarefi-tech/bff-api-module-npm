@@ -2,7 +2,6 @@ import { auth } from './auth';
 import { counterparties } from './counterparties';
 import { developer } from './developer';
 import { exchange } from './exchange';
-import { fiat_accounts } from './fiat_accounts';
 import { issuing } from './issuing';
 import { kyc } from './kyc';
 import { list } from './list';
@@ -17,7 +16,6 @@ type Api = {
   counterparties: typeof counterparties;
   developer: typeof developer;
   exchange: typeof exchange;
-  fiat_accounts: typeof fiat_accounts;
   issuing: typeof issuing;
   kyc: typeof kyc;
   list: typeof list;
@@ -33,7 +31,6 @@ export const squarefi_bff_api_client: Api = {
   counterparties,
   developer,
   exchange,
-  fiat_accounts,
   issuing,
   kyc,
   list,

@@ -1,7 +1,6 @@
 import { API } from './types';
 import { apiClientV1 } from '../utils/apiClientFactory';
 import { defaultPaginationParams } from '../constants';
-import { fiat_accounts } from './fiat_accounts';
 import { makeSecureRequest } from '../utils/encrypt';
 export const issuing = {
   cards: {
@@ -24,7 +23,7 @@ export const issuing = {
     // getById: (card_id: string) => apiClientV1.getRequest<API.Cards.IssuingCardDetailItem>(`/issuing/cards/${card_id}`),
     getById: async (card_id: string): Promise<API.Cards.IssuingCardDetailItem> => {
       const card = await apiClientV1.getRequest<API.Cards.IssuingCardDetailItem>(`/issuing/cards/${card_id}`);
-      const fiatAccountData = await fiat_accounts.getByUuid(card.fiat_account.id);
+      const fiatAccountData = await issuing.sub_accounts.getByUuid(card.fiat_account.id);
       return { ...card, fiat_account: { ...fiatAccountData, type: card.fiat_account.type } };
     },
     sensitiveData: {
@@ -92,6 +91,48 @@ export const issuing = {
         apiClientV1.getRequest<string>(`/issuing/transactions/csv`, {
           params: { fiat_account_id },
         }),
+    },
+  },
+  sub_accounts: {
+    list: {
+      withCards: {
+        getSinglecards: (wallet_uuid: string, limit: number, offset: number) =>
+          apiClientV1.getRequest<API.Issuing.SubAccounts.SubAccountWithCards[]>(
+            `/issuing/sub_account/list/${wallet_uuid}`,
+            {
+              params: { limit, offset, lt_cards_limit: 2, gt_cards_limit: 0, show_cards: true },
+            }
+          ),
+        getAll: (wallet_uuid: string, limit: number, offset: number) =>
+          apiClientV1.getRequest<API.Issuing.SubAccounts.SubAccountWithCards[]>(
+            `/issuing/sub_account/list/${wallet_uuid}`,
+            {
+              params: { limit, offset, show_cards: true },
+            }
+          ),
+      },
+      withoutCards: {
+        getAll: (wallet_uuid: string, limit: number, offset: number) =>
+          apiClientV1.getRequest<API.Issuing.SubAccounts.SubAccount[]>(`/issuing/sub_account/list/${wallet_uuid}`, {
+            params: { limit, offset },
+          }),
+      },
+    },
+
+    getByUuid: (uuid: string) =>
+      apiClientV1.getRequest<API.Issuing.SubAccounts.SubAccount>(`/issuing/sub_account/${uuid}`),
+    create: (wallet_id: string, program_id: string) =>
+      apiClientV1.postRequest<API.Issuing.SubAccounts.SubAccount>(`/issuing/sub_account`, {
+        data: { wallet_id, program_id },
+      }),
+    transactions: {
+      get: (fiat_account_id: string, limit?: number, offset?: number) =>
+        apiClientV1.getRequest<API.Issuing.SubAccounts.TransactionList>(
+          `/issuing/sub_account/${fiat_account_id}/transactions`,
+          {
+            params: { limit, offset },
+          }
+        ),
     },
   },
   config: {

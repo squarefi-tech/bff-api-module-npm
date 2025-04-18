@@ -217,7 +217,7 @@ export namespace API {
       wallet_id: string;
       program_id: string;
 
-      fiat_account: API.FiatAccounts.FiatAccount;
+      fiat_account: API.Issuing.SubAccounts.SubAccount;
       last4: string;
       request_id: string;
       name_on_card: string | null;
@@ -230,7 +230,7 @@ export namespace API {
       id: string;
       brand: string;
       card_id: string;
-      fiat_account: API.FiatAccounts.FiatAccount;
+      fiat_account: API.Issuing.SubAccounts.SubAccount;
       last4: string;
       card_status: string;
       form_factor: string;
@@ -766,56 +766,6 @@ export namespace API {
     }
   }
 
-  export namespace FiatAccounts {
-    export type Transaction = API.Cards.TransactionItem;
-    export type FiatAccountDetails = {
-      iban: string;
-      bank_name: string;
-      swift_code: string;
-      bank_address: string;
-      receiver_name: string;
-      payment_details: string;
-      reference_number: string;
-      registration_number: string;
-    };
-
-    export type TransactionList = {
-      count: number;
-      data: Transaction[];
-      has_more: boolean;
-    };
-    export interface FiatAccount {
-      balance: number;
-      cards_count: number;
-      created_at: string;
-      currency: API.Currencies.FiatCurrency;
-      fiat_balance: number;
-      type: SubAccountType | string;
-      id: string;
-      issuing_program: API.Cards.Config.Program;
-      nick_name: string;
-      program_id: string;
-      payment_types: Array<{ order_type: OrderType }>;
-      realtime_auth: [
-        {
-          crypto_token: string;
-          fiat_account: string;
-          id: string;
-          priority: number;
-        }
-      ];
-      realtimeauth_balance: number;
-      status: string;
-      total_balance: number;
-      wallet_id: string;
-      account_details?: FiatAccountDetails;
-    }
-
-    export interface FiatAccountWithCards extends FiatAccount {
-      cards: API.Cards.IssuingCardListItem[];
-    }
-  }
-
   export namespace FiatAccountsV2 {
     export type FiatAccountDetails = {
       iban: string;
@@ -961,6 +911,56 @@ export namespace API {
         count: number;
         data: API.Cards.Config.Program[];
       };
+    }
+
+    export namespace SubAccounts {
+      export type Transaction = API.Cards.TransactionItem;
+      export type SubAccountDetails = {
+        iban: string;
+        bank_name: string;
+        swift_code: string;
+        bank_address: string;
+        receiver_name: string;
+        payment_details: string;
+        reference_number: string;
+        registration_number: string;
+      };
+
+      export type TransactionList = {
+        count: number;
+        data: Transaction[];
+        has_more: boolean;
+      };
+      export interface SubAccount {
+        balance: number;
+        cards_count: number;
+        created_at: string;
+        currency: API.Currencies.FiatCurrency;
+        fiat_balance: number;
+        type: SubAccountType | string;
+        id: string;
+        issuing_program: API.Cards.Config.Program;
+        nick_name: string;
+        program_id: string;
+        payment_types: Array<{ order_type: OrderType }>;
+        realtime_auth: [
+          {
+            crypto_token: string;
+            fiat_account: string;
+            id: string;
+            priority: number;
+          }
+        ];
+        realtimeauth_balance: number;
+        status: string;
+        total_balance: number;
+        wallet_id: string;
+        account_details?: SubAccountDetails;
+      }
+
+      export interface SubAccountWithCards extends SubAccount {
+        cards: API.Cards.IssuingCardListItem[];
+      }
     }
   }
 
