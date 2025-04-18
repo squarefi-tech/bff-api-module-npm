@@ -243,7 +243,7 @@ export namespace API {
       limits: API.Cards.Limits.Limits;
     }
 
-    export interface FiatAccountCardListItem {
+    export interface SubAccountCardListItem {
       type: string;
       brand: string;
       last4: string;
@@ -283,7 +283,7 @@ export namespace API {
           filter?: Record<'fiat_account', Record<'type', SubAccountType>>;
         }
 
-        export type ByFiatAccountAndWalletId = ByWalletUuid & {
+        export type BySubAccountAndWalletId = ByWalletUuid & {
           fiat_account_id: string;
         };
       }
@@ -363,12 +363,12 @@ export namespace API {
       }
       export type StandAloneRequest = CommonRequest;
 
-      export interface FiatAccountRequest extends CommonRequest {
+      export interface SubAccountRequest extends CommonRequest {
         sub_account_id: string;
       }
 
       export type StandAloneResponse = IssuingCardDetailItem;
-      export type FiatAccountResponse = IssuingCardDetailItem;
+      export type SubAccountResponse = IssuingCardDetailItem;
     }
   }
 
@@ -766,8 +766,8 @@ export namespace API {
     }
   }
 
-  export namespace FiatAccountsV2 {
-    export type FiatAccountDetails = {
+  export namespace SubAccountsV2 {
+    export type SubAccountDetails = {
       iban: string;
       bank_name: string;
       swift_code: string;
@@ -778,7 +778,7 @@ export namespace API {
       registration_number: string;
     };
 
-    export interface FiatAccount {
+    export interface SubAccount {
       balance: number;
       cards_count: number;
       created_at: string;
@@ -794,9 +794,9 @@ export namespace API {
       wallet_id: string;
     }
 
-    export namespace ExtendedFiatAccount {
-      export interface ExtendedFiatAccount extends FiatAccount {
-        account_details?: FiatAccountDetails;
+    export namespace ExtendedSubAccount {
+      export interface ExtendedSubAccount extends SubAccount {
+        account_details?: SubAccountDetails;
         payment_types: Array<{ order_type: OrderType }>;
         realtime_auth: [
           {
@@ -812,22 +812,22 @@ export namespace API {
         fiat_account_id: string;
       }
 
-      export type Response = ExtendedFiatAccount;
+      export type Response = ExtendedSubAccount;
     }
 
-    export interface FiatAccountWithCards extends FiatAccount {
+    export interface SubAccountWithCards extends SubAccount {
       cards: API.Cards.IssuingCardListItem[];
     }
 
-    export interface FiatAccountsList<T extends FiatAccount | FiatAccountWithCards> {
+    export interface SubAccountsList<T extends SubAccount | SubAccountWithCards> {
       count: number;
       data: T[];
     }
 
-    export type FiatAccountsListWithCards = FiatAccountsList<FiatAccountWithCards>;
-    export type FiatAccountsListWithoutCards = FiatAccountsList<FiatAccount>;
+    export type SubAccountsListWithCards = SubAccountsList<SubAccountWithCards>;
+    export type SubAccountsListWithoutCards = SubAccountsList<SubAccount>;
 
-    export namespace CreateFiatAccount {
+    export namespace CreateSubAccount {
       export interface Request {
         wallet_id: string;
         program_id: string;
@@ -1191,7 +1191,7 @@ export namespace API {
     //         }
     //       }
 
-    //       export namespace FiatAccount {
+    //       export namespace SubAccount {
     //         export type Request = {
     //           amount: number;
     //           fiat_uuid: string;

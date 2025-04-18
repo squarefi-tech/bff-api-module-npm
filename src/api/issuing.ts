@@ -7,8 +7,8 @@ export const issuing = {
     create: {
       standAloneCard: (data: API.Cards.Create.StandAloneRequest) =>
         apiClientV1.postRequest<API.Cards.Create.StandAloneResponse>('/issuing/cards/create', { data }),
-      fiatAccountCard: (data: API.Cards.Create.FiatAccountRequest) =>
-        apiClientV1.postRequest<API.Cards.Create.FiatAccountResponse>('/issuing/cards/balance', { data }),
+      subAccountCard: (data: API.Cards.Create.SubAccountRequest) =>
+        apiClientV1.postRequest<API.Cards.Create.SubAccountResponse>('/issuing/cards/balance', { data }),
     },
     byWalletUuid: {
       getAll: (params: API.Cards.CardsList.Request.ByWalletUuid) =>
@@ -17,14 +17,14 @@ export const issuing = {
         apiClientV1.getRequest<API.Cards.CardsList.Response>('/issuing/cards', {
           params,
         }),
-      getByFiatAccount: (params: API.Cards.CardsList.Request.ByFiatAccountAndWalletId) =>
+      getBySubAccount: (params: API.Cards.CardsList.Request.BySubAccountAndWalletId) =>
         apiClientV1.getRequest<API.Cards.CardsList.Response>('/issuing/cards', { params }),
     },
     // getById: (card_id: string) => apiClientV1.getRequest<API.Cards.IssuingCardDetailItem>(`/issuing/cards/${card_id}`),
     getById: async (card_id: string): Promise<API.Cards.IssuingCardDetailItem> => {
       const card = await apiClientV1.getRequest<API.Cards.IssuingCardDetailItem>(`/issuing/cards/${card_id}`);
-      const fiatAccountData = await issuing.sub_accounts.getByUuid(card.fiat_account.id);
-      return { ...card, fiat_account: { ...fiatAccountData, type: card.fiat_account.type } };
+      const subAccountData = await issuing.sub_accounts.getByUuid(card.fiat_account.id);
+      return { ...card, fiat_account: { ...subAccountData, type: card.fiat_account.type } };
     },
     sensitiveData: {
       // get: (card_id: string) => apiClientV1.getRequest<API.Cards.SensitiveData>(`/issuing/cards/${card_id}/sensitive`), deprecated from v1.13.1
@@ -74,7 +74,7 @@ export const issuing = {
       apiClientV1.getRequest<API.Cards.TransactionsList>(`/issuing/transactions/`, {
         params: { limit, offset, card_id, new_scheme: true },
       }),
-    getByFiatAccountId: (
+    getBySubAccountId: (
       fiat_account_id: string,
       limit = defaultPaginationParams.limit,
       offset = defaultPaginationParams.offset
@@ -87,7 +87,7 @@ export const issuing = {
         apiClientV1.getRequest<string>(`/issuing/transactions/csv`, {
           params: { card_id },
         }),
-      getByFiatAccountId: (fiat_account_id: string) =>
+      getBySubAccountId: (fiat_account_id: string) =>
         apiClientV1.getRequest<string>(`/issuing/transactions/csv`, {
           params: { fiat_account_id },
         }),

@@ -158,7 +158,7 @@ export enum IssuingProgramStatus {
   ARCHIVED = 'ARCHIVED',
 }
 
-export enum FiatAccountStatus {
+export enum SubAccountStatus {
   ACTIVE = 'ACTIVE',
   BLOCKED = 'BLOCKED',
   INACTIVE = 'INACTIVE',
