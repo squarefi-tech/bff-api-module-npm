@@ -124,6 +124,12 @@ export const defaultPaginationParams = {
   isLastPage: true,
 };
 
+export enum CalcType {
+  ONRAMP = 'onramp',
+  OFFRAMP = 'offramp',
+  WITHDRAWAL = 'withdrawal',
+}
+
 export enum KYCStatuses {
   APPROVED = 'APPROVED',
   DECLINED = 'DECLINED',
@@ -210,4 +216,15 @@ export enum CounterpartyDestinationType {
   SEPA = 'SEPA',
   CRYPTO_EXTERNAL = 'CRYPTO_EXTERNAL',
   CRYPTO_INTERNAL = 'CRYPTO_INTERNAL',
+}
+
+export enum CardTransactionStatus {
+  APPROVED = 'APPROVED',
+  CLEARED = 'CLEARED',
+  EXPIRED = 'EXPIRED',
+  FAILED = 'FAILED',
+  CANCELLED = 'CANCELLED',
+  CANCELED = 'CANCELED',
+  PENDING = 'PENDING',
+  REVERSED = 'REVERSED',
 }
