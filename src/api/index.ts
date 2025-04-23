@@ -5,7 +5,7 @@ import { exchange } from './exchange';
 import { issuing } from './issuing';
 import { kyc } from './kyc';
 import { list } from './list';
-import { location } from './location';
+
 import { orders } from './orders';
 import { tenants } from './tenants';
 import { user } from './user';

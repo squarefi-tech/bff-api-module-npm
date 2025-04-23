@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.17.8] - 2025-04-23
+
+### Changed
+
+- Removed the `location` module as its functionality has been integrated into the `list` module
+- Updated the `list` module to include new endpoints for fetching countries
+- Modified existing endpoints for currencies and chains to use the `/system` prefix
+
+## [1.17.7] - 2025-04-23
+
+### Added
+
+- Expanded WithdrawCryptoRequest to include INTERNAL_TRANSFER order type
+
 ## [1.17.6] - 2025-04-21
 
 ### Added
