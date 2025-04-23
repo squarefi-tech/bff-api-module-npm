@@ -445,11 +445,11 @@ export namespace API {
           bank_name: string;
           note: string;
           swift_bic: string;
-          address?: {
-            city?: string;
-            country_id?: number;
-            postcode?: string;
-            street1?: string;
+          address: {
+            city: string;
+            country_id: number;
+            postcode: string;
+            street1: string;
             street2?: string;
           };
         }
