@@ -19,7 +19,6 @@ type Api = {
   issuing: typeof issuing;
   kyc: typeof kyc;
   list: typeof list;
-  location: typeof location;
   orders: typeof orders;
   tenants: typeof tenants;
   user: typeof user;
@@ -34,7 +33,6 @@ export const squarefi_bff_api_client: Api = {
   issuing,
   kyc,
   list,
-  location,
   orders,
   tenants,
   user,

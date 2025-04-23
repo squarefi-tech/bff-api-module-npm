@@ -54,6 +54,11 @@ const cards = await squarefi_bff_api_client.issuing.cards.byWalletUuid.getAll({
 const exchangeRates = await squarefi_bff_api_client.exchange.byOrderType[OrderType.DEPOSIT_FIAT_SEPA].getByFromCurrency(
   'from_uuid'
 );
+
+// System operations (currencies, chains, countries)
+const currencies = await squarefi_bff_api_client.list.currencies.getAll();
+const chains = await squarefi_bff_api_client.list.chains.getAll();
+const countries = await squarefi_bff_api_client.list.countries.getAll();
 ```
 
 ## 📚 Available API Modules
@@ -81,14 +86,14 @@ Access different API functionalities through the client:
   - Card status management
 - `squarefi_bff_api_client.kyc` - Know Your Customer procedures
   - Sumsub integration
-- `squarefi_bff_api_client.list` - Listing and pagination utilities
-  - Currencies list
-  - Chains list
-- `squarefi_bff_api_client.location` - Location services
-  - Countries list
+- `squarefi_bff_api_client.list` - System data operations
+  - Currencies list (`/system/currencies`)
+  - Chains list (`/system/chains`)
+  - Countries list (`/system/countries`)
 - `squarefi_bff_api_client.orders` - Order management
   - Create orders by type
   - Calculate exchange rates
+  - Support for INTERNAL_TRANSFER order type
 - `squarefi_bff_api_client.tenants` - Tenant management operations
   - Tenant configuration
 - `squarefi_bff_api_client.user` - User profile operations
