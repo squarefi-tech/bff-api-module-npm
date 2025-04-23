@@ -1398,7 +1398,7 @@ export namespace API {
       }
 
       export interface WithdrawCryptoRequest extends CommonRequestParams {
-        order_type: OrderType.WITHDRAWAL_CRYPTO;
+        order_type: OrderType.WITHDRAWAL_CRYPTO | OrderType.INTERNAL_TRANSFER;
         to_address?: string;
       }
 
