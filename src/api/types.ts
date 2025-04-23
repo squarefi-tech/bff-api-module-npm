@@ -1008,7 +1008,10 @@ export namespace API {
       }
 
       export namespace List {
-        export type Response = API.Location.Countries.Country[];
+        export type Response = {
+          total: number;
+          data: Country[];
+        };
       }
     }
   }
