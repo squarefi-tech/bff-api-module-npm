@@ -451,7 +451,6 @@ export namespace API {
             postcode?: string;
             street1?: string;
             street2?: string;
-            memo?: string;
           };
         }
 
