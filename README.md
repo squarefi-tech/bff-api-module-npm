@@ -165,24 +165,16 @@ The module implements industry-standard security practices:
 
 ### Peer Dependencies
 
-- react: ^18.x.x
-
-## 📚 API Documentation
-
-Each module provides a set of type-safe methods for interacting with specific API endpoints. For detailed API documentation, please refer to our [API Documentation](link-to-your-docs).
-
-## 🆘 Support
-
-For support and questions, please [open an issue](link-to-issues) or contact our support team.
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](link-to-contributing) for details.
+- react: >=18.x.x
 
 ## 📝 Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for a list of changes and updates.
+See [CHANGELOG.md](https://github.com/squarefi-tech/bff-api-module-npm/blob/main/CHANGELOG.md) for a list of changes and updates.
 
 ## 📄 License
 
 MIT
+
+## 🔗 Repository
+
+This package is available on [GitHub](https://github.com/squarefi-tech/bff-api-module-npm) and [npm](https://www.npmjs.com/package/squarefi-bff-api-module).
