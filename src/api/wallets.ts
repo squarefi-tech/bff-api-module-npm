@@ -10,7 +10,8 @@ export const wallets = {
   getByUuid: (uuid: string) => apiClientV2.getRequest<API.Wallets.Wallet>(`/wallets/${uuid}`),
   addresses: {
     create: ({ wallet_uuid, chain, label }: API.Wallets.WalletChain.Create.Request) =>
-      apiClientV1.postRequest<API.Wallets.WalletChain.Create.Response>(`/wallets/${wallet_uuid}/addresses/${chain}`, {
+      // apiClientV1.postRequest<API.Wallets.WalletChain.Create.Response>(`/wallets/${wallet_uuid}/addresses/${chain}`, {
+      apiClientV2.postRequest<API.Wallets.WalletChain.Create.Response>(`/wallets/${wallet_uuid}/addresses/${chain}`, {
         data: { label },
       }),
     get: {
