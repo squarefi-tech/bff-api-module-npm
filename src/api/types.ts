@@ -924,6 +924,12 @@ export namespace API {
         reference_number: string;
         registration_number: string;
       };
+      export type SubAccountCryptoDetails = {
+        currency_id: string;
+        deposit_address: string;
+        chain_id: number;
+        memo?: string;
+      };
 
       export type TransactionList = {
         count: number;
@@ -955,6 +961,7 @@ export namespace API {
         total_balance: number;
         wallet_id: string;
         account_details?: SubAccountDetails;
+        crypto_details?: SubAccountCryptoDetails[];
       }
 
       export interface SubAccountWithCards extends SubAccount {
