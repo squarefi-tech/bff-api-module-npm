@@ -55,7 +55,6 @@ export enum WalletTransactionStatus {
   FAILED = 'failed',
   PROCESSING = 'processing',
   NEW = 'new',
-  CANCELLED = 'cancelled',
 }
 
 export enum WalletTransactionRecordType {
