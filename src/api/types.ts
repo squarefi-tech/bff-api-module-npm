@@ -128,7 +128,7 @@ export namespace API {
     export namespace Config {
       export type IssuingProgramOrderType = {
         id: string;
-        order_types_id: string;
+        order_types_id: OrderType | string;
         issuing_programs_id: string;
       };
       export interface Program {
