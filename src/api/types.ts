@@ -126,6 +126,11 @@ export namespace API {
 
   export namespace Cards {
     export namespace Config {
+      export type IssuingProgramOrderType = {
+        id: string;
+        order_types_id: string;
+        issuing_programs_id: string;
+      };
       export interface Program {
         id: string;
         account_currency: string;
@@ -138,7 +143,7 @@ export namespace API {
         vendor_id: string;
         purposes: string[] | null;
         type: CardType | string; // MOCK
-        order_types: OrderType[];
+        order_types: IssuingProgramOrderType[];
         sub_account_type: SubAccountType | string;
         description: string | null;
         icon: string | null;
