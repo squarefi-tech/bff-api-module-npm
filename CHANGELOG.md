@@ -5,17 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.17.18] - 2025-05-07
+
+### Changed
+
+- Deprecated old deposit fiat_types
+- Introduced new issuing types for enhanced clarity and better type safety
+
 ## [1.17.17] - 2025-05-06
 
 ### Fixed
 
 - Reverted wallet address creation method to use apiClientV1 (UTILA)
+  - This change was necessary to maintain compatibility with the UTILA service
+  - Ensures proper address generation and validation
 
 ## [1.17.16] - 2025-05-06
 
 ### Added
 
-- Added SubAccountCryptoDetail type and integrated into SubAccount type for enhanced crypto details management
+- Added SubAccountCryptoDetail type and integrated into SubAccount type
+  - Enhanced crypto details management
+  - Improved type safety for crypto-related operations
+  - Better support for crypto account features
 
 ## [1.17.15] - 2025-04-29
 
