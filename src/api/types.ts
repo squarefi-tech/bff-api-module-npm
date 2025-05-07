@@ -138,6 +138,7 @@ export namespace API {
         vendor_id: string;
         purposes: string[] | null;
         type: CardType | string; // MOCK
+        order_types: OrderType[] | [];
         sub_account_type: SubAccountType | string;
         description: string | null;
         icon: string | null;
@@ -944,10 +945,10 @@ export namespace API {
         fiat_balance: number;
         type: SubAccountType | string;
         id: string;
+        // payment_types: Array<{ order_type: OrderType }>; deprecated, use order_types inside issuing_program
         issuing_program: API.Cards.Config.Program;
         nick_name: string;
         program_id: string;
-        payment_types: Array<{ order_type: OrderType }>;
         realtime_auth: [
           {
             crypto_token: string;
