@@ -138,7 +138,7 @@ export namespace API {
         vendor_id: string;
         purposes: string[] | null;
         type: CardType | string; // MOCK
-        order_types: OrderType[] | [];
+        order_types: OrderType[];
         sub_account_type: SubAccountType | string;
         description: string | null;
         icon: string | null;
