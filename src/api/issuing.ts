@@ -95,25 +95,28 @@ export const issuing = {
     list: {
       withCards: {
         getSinglecards: (wallet_uuid: string, limit: number, offset: number) =>
-          apiClientV1.getRequest<API.Issuing.SubAccounts.SubAccountWithCards[]>(
+          apiClientV1.getRequest<API.Issuing.SubAccounts.WithCards.Response>(
             `/issuing/sub_account/list/${wallet_uuid}`,
             {
-              params: { limit, offset, lt_cards_limit: 2, gt_cards_limit: 0, show_cards: true },
+              params: { limit, offset, lt_cards_limit: 2, gt_cards_limit: 0, show_cards: true, pagination: true },
             }
           ),
         getAll: (wallet_uuid: string, limit: number, offset: number) =>
-          apiClientV1.getRequest<API.Issuing.SubAccounts.SubAccountWithCards[]>(
+          apiClientV1.getRequest<API.Issuing.SubAccounts.WithCards.Response>(
             `/issuing/sub_account/list/${wallet_uuid}`,
             {
-              params: { limit, offset, show_cards: true },
+              params: { limit, offset, show_cards: true, pagination: true },
             }
           ),
       },
       withoutCards: {
         getAll: (wallet_uuid: string, limit: number, offset: number) =>
-          apiClientV1.getRequest<API.Issuing.SubAccounts.SubAccount[]>(`/issuing/sub_account/list/${wallet_uuid}`, {
-            params: { limit, offset },
-          }),
+          apiClientV1.getRequest<API.Issuing.SubAccounts.WithoutCards.Response>(
+            `/issuing/sub_account/list/${wallet_uuid}`,
+            {
+              params: { limit, offset, pagination: true },
+            }
+          ),
       },
     },
 

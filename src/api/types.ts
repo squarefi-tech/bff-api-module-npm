@@ -970,8 +970,22 @@ export namespace API {
         crypto_details?: SubAccountCryptoDetails[];
       }
 
-      export interface SubAccountWithCards extends SubAccount {
-        cards: API.Cards.IssuingCardListItem[];
+      export namespace WithCards {
+        export interface SubAccountWithCards extends SubAccount {
+          cards: API.Cards.IssuingCardListItem[];
+        }
+        export interface Response {
+          count: number;
+          data: SubAccountWithCards[];
+          has_more: boolean;
+        }
+      }
+      export namespace WithoutCards {
+        export interface Response {
+          count: number;
+          data: SubAccount[];
+          has_more: boolean;
+        }
       }
     }
   }

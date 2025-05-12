@@ -5,6 +5,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.17.23] - 2025-05-12
+
+### Changed
+
+- Updated response types for issuing sub-accounts to include pagination support
+  - Enhanced data retrieval capabilities
+  - Improved handling of large datasets
+
+## [1.17.22] - 2025-05-07
+
+### Fixed
+
+- Updated order_types_id type in IssuingProgramOrderType to support both OrderType and string values
+  - Improved type flexibility
+  - Better backward compatibility
+
+## [1.17.21] - 2025-05-07
+
+### Added
+
+- Introduced IssuingProgramOrderType for enhanced order types definition in Cards
+  - Better type safety for card operations
+  - Improved order type management
+
+## [1.17.20] - 2025-05-07
+
+### Fixed
+
+- Corrected order_types type definition in IssuingPrograms
+  - Fixed type inconsistencies
+  - Improved type safety
+
 ## [1.17.19] - 2025-05-07
 
 ### Added
