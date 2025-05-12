@@ -799,27 +799,6 @@ export namespace API {
       wallet_id: string;
     }
 
-    export namespace ExtendedSubAccount {
-      export interface ExtendedSubAccount extends SubAccount {
-        account_details?: SubAccountDetails;
-        payment_types: Array<{ order_type: OrderType }>;
-        realtime_auth: [
-          {
-            crypto_token: string;
-            fiat_account: string;
-            id: string;
-            priority: number;
-          }
-        ];
-      }
-      export interface Request {
-        wallet_uuid: string;
-        fiat_account_id: string;
-      }
-
-      export type Response = ExtendedSubAccount;
-    }
-
     export interface SubAccountWithCards extends SubAccount {
       cards: API.Cards.IssuingCardListItem[];
     }
