@@ -86,6 +86,7 @@ Access different API functionalities through the client:
   - Card status management
 - `squarefi_bff_api_client.kyc` - Know Your Customer procedures
   - Sumsub integration
+  - Persona inquiries initialization
 - `squarefi_bff_api_client.list` - System data operations
   - Currencies list (`/system/currencies`)
   - Chains list (`/system/chains`)
@@ -94,6 +95,10 @@ Access different API functionalities through the client:
   - Create orders by type
   - Calculate exchange rates
   - Support for INTERNAL_TRANSFER order type
+- `squarefi_bff_api_client.rails` - KYC onboarding rails
+  - Manage onboarding rails and flows
+- `squarefi_bff_api_client.forms` - KYC forms
+  - Manage and submit KYC forms
 - `squarefi_bff_api_client.tenants` - Tenant management operations
   - Tenant configuration
 - `squarefi_bff_api_client.user` - User profile operations
@@ -125,6 +130,8 @@ Access different API functionalities through the client:
 - 📦 Comprehensive constants and types
 - 🛡️ Secure request handling
 - 🔑 Multi-tenant support
+- 🧩 Persona KYC integration
+- 📝 Rails and Forms modules for flexible onboarding/compliance
 
 ## 🛠️ Development
 

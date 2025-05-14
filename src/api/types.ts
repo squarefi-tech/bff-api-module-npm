@@ -1671,6 +1671,22 @@ export namespace API {
     // }
   }
 
+  export namespace Persona {
+    export namespace Inquiries {
+      export type InquiryType = 'individual' | 'business';
+      export namespace Init {
+        export interface Request {
+          wallet_id: string;
+          type: InquiryType;
+        }
+        export type Response = {
+          referenceId: string;
+          templateId: string;
+        };
+      }
+    }
+  }
+
   export namespace VirtualAccount {
     export namespace Programs {
       export interface OrderType {

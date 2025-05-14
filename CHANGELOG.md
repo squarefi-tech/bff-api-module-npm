@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.17.26] - 2025-05-14
+
+### Added
+
+- Added Persona inquiries initialization for advanced KYC workflows
+
+## [1.17.25] - 2025-05-14
+
+### Added
+
+- Added Rails and Forms namespaces with new types and methods for KYC integration
+  - Enhanced support for onboarding and compliance flows
+
+## [1.17.24] - 2025-05-14
+
+### Added
+
+- Persona inquiries initialization for advanced KYC workflows
+- Rails and Forms namespaces with new types and methods for KYC integration (onboarding/compliance flows)
+
+### Changed
+
+- Removed ExtendedSubAccount type definitions to streamline API types (simplified and unified sub-account type management)
+
 ## [1.17.23] - 2025-05-12
 
 ### Changed
