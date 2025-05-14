@@ -1,5 +1,5 @@
 import { apiClientV2 } from '../utils/apiClientFactory';
-import { API } from './types';
+import { API } from './types/types';
 
 export const counterparties = {
   getAll: ({ wallet_id, ...params }: API.Counterparties.List.Request) =>

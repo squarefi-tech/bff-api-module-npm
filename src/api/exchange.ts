@@ -1,4 +1,4 @@
-import { API } from './types';
+import { API } from './types/types';
 
 import { apiClientV1 } from '../utils/apiClientFactory';
 

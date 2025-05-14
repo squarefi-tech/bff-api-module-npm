@@ -17,8 +17,9 @@ import {
   WalletTransactionRecordType,
   WalletTransactionStatus,
   WalletTransactionType,
-} from '../constants';
-import { WalletType } from '../';
+} from '../../constants';
+import { WalletType } from '../..';
+import { operations } from './autogen/apiV2.types';
 
 export namespace API {
   export namespace Auth {
@@ -1673,16 +1674,11 @@ export namespace API {
 
   export namespace Persona {
     export namespace Inquiries {
-      export type InquiryType = 'individual' | 'business';
+      export type InquiryType = operations['PersonaController_initInquiry']['parameters']['path']['type'];
       export namespace Init {
-        export interface Request {
-          wallet_id: string;
-          type: InquiryType;
-        }
-        export type Response = {
-          referenceId: string;
-          templateId: string;
-        };
+        export type Request = operations['PersonaController_initInquiry']['parameters']['path'];
+        export type Response =
+          operations['PersonaController_initInquiry']['responses']['200']['content']['application/json'];
       }
     }
   }

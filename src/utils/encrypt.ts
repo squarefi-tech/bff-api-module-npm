@@ -1,7 +1,7 @@
 import crypto, { CipherKey } from 'crypto';
 import NodeRSA from 'node-rsa';
 
-import { API } from '../api/types';
+import { API } from '../api/types/types';
 
 type MakeSecureRequestParams = {
   callback: (props: API.Common.Encrypted.Request) => Promise<API.Common.Encrypted.Response>;

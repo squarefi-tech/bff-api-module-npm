@@ -1,5 +1,5 @@
 import { apiClientV2 } from '../utils/apiClientFactory';
-import { API } from './types';
+import { API } from './types/types';
 
 export const persona = {
   inquiries: {

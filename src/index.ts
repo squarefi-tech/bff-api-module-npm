@@ -4,4 +4,4 @@ export * from './utils/tokensFactory';
 export * from './constants';
 
 // Also export types if you have any
-export * from './api/types';
+export * from './api/types/types';
