@@ -799,6 +799,27 @@ export namespace API {
       wallet_id: string;
     }
 
+    export namespace ExtendedSubAccount {
+      export interface ExtendedSubAccount extends SubAccount {
+        account_details?: SubAccountDetails;
+        payment_types: Array<{ order_type: OrderType }>;
+        realtime_auth: [
+          {
+            crypto_token: string;
+            fiat_account: string;
+            id: string;
+            priority: number;
+          }
+        ];
+      }
+      export interface Request {
+        wallet_uuid: string;
+        fiat_account_id: string;
+      }
+
+      export type Response = ExtendedSubAccount;
+    }
+
     export interface SubAccountWithCards extends SubAccount {
       cards: API.Cards.IssuingCardListItem[];
     }
@@ -977,6 +998,121 @@ export namespace API {
         }
         export interface Response extends Request {
           token: string;
+        }
+      }
+    }
+    export namespace Forms {
+      export namespace FormField {
+        export type FormFieldType =
+          | 'text'
+          | 'email'
+          | 'password'
+          | 'radio'
+          | 'select'
+          | 'checkbox'
+          | 'textarea'
+          | 'number'
+          | 'date'
+          | 'switch'
+          | 'file';
+
+        export interface FormFieldValidation {
+          pattern?: string;
+          min?: number;
+          max?: number;
+          min_length?: number;
+          max_length?: number;
+          message?: string;
+        }
+
+        export interface FormFieldOption {
+          label: string;
+          value: string;
+        }
+        export interface FormField {
+          name: string;
+          type: FormFieldType;
+          label: string;
+          placeholder?: string;
+          required?: boolean;
+          order?: number;
+          options?: FormFieldOption[];
+          rows?: number;
+          value?: string;
+          accept?: string;
+          validation?: FormFieldValidation;
+        }
+      }
+
+      export namespace FormGroup {
+        export type FormGroupFieldType = 'group' | 'field';
+        export interface FormGroupFieldGroup {
+          type: 'group';
+          fields: API.KYC.Forms.FormGroup.FormGroup[];
+        }
+        export interface FormGroupFieldField {
+          type: 'field';
+          field: API.KYC.Forms.FormField.FormField;
+        }
+        export interface FormGroup {
+          name?: string;
+          isArray?: boolean;
+          label: string;
+          fields: Array<FormGroupFieldGroup | FormGroupFieldField>;
+        }
+      }
+    }
+
+    export namespace Rails {
+      export type RailStatus =
+        | 'APPROVED'
+        | 'DECLINED'
+        | 'PENDING'
+        | 'HOLD'
+        | 'DOUBLE'
+        | 'SOFT_REJECT'
+        | 'REJECT'
+        | 'UNVERIFIED';
+
+      export interface WalletRail {
+        id: string;
+        status: API.KYC.Rails.RailStatus;
+      }
+
+      export namespace RailInfo {
+        export interface RailInfo {
+          id: string;
+          code: string;
+          name: string;
+          wallet_rail: WalletRail;
+        }
+
+        export namespace SingleRail {
+          export interface Request {
+            wallet_id: string;
+            rail_id: string;
+          }
+          export type Response = RailInfo;
+        }
+
+        export namespace List {
+          export interface Request {
+            wallet_id: string;
+          }
+          export type Response = {
+            total: number;
+            data: RailInfo[];
+          };
+        }
+      }
+
+      export namespace Submit {
+        export namespace Single {
+          export interface Request {
+            wallet_id: string;
+            rail_id: string;
+          }
+          export type Response = API.KYC.Rails.RailInfo.RailInfo;
         }
       }
     }
@@ -1533,6 +1669,67 @@ export namespace API {
     //     }
     //   }
     // }
+  }
+
+  export namespace VirtualAccount {
+    export namespace Programs {
+      export interface OrderType {
+        id: string;
+        description: string | null;
+      }
+      export interface OrderTypeListItem {
+        order_type: OrderType;
+        order_type_id: string;
+      }
+
+      export interface CurrencyItem {
+        icon: string | null;
+        name: string;
+        type: string;
+        uuid: string;
+        symbol: string;
+      }
+
+      export interface IntegrationVendor {
+        id: string;
+        code: string;
+        name: string;
+      }
+
+      export interface Program {
+        id: string;
+        name: string;
+        vendor_id: string | null;
+        tenant_id: string;
+        status: string;
+        account_currency_id: string;
+        description: string;
+        icon: string | null;
+        code: string;
+        kyc_rails_id: string;
+        consent_text: string | null;
+        integration_vendors_id: string;
+        is_hidden: boolean;
+        destination_currency_id: string;
+        integration_vendor: API.VirtualAccount.Programs.IntegrationVendor;
+        account_currency_details: API.VirtualAccount.Programs.CurrencyItem;
+        destination_currency_details: API.VirtualAccount.Programs.CurrencyItem;
+        virtual_accounts_programs_order_types: API.VirtualAccount.Programs.OrderTypeListItem[];
+      }
+
+      export namespace List {
+        export interface Request {
+          offset?: number;
+          limit?: number;
+          pagination?: boolean;
+        }
+        export interface Response {
+          data: Program[];
+          count: number;
+          has_more: boolean;
+        }
+      }
+    }
   }
 
   export namespace User {
