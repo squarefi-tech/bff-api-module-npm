@@ -1734,10 +1734,17 @@ export interface components {
             address?: components["schemas"]["KycAddressDto"] | null;
             beneficial_owners?: components["schemas"]["KycBeneficialOwnerDto"][] | null;
         };
+        WalletKycRailExtraActionDto: {
+            /** @enum {string} */
+            action: "verification";
+            type: string;
+            url: string;
+        };
         WalletKycRailDto: {
             message: string | null;
             /** @enum {string} */
             readonly status: "APPROVED" | "DECLINED" | "PENDING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED";
+            extra_actions?: components["schemas"]["WalletKycRailExtraActionDto"][];
         };
         WalletKycRailTypeDto: {
             id: string;
