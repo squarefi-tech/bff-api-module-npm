@@ -3,22 +3,25 @@ import { API } from './types/types';
 import { apiClientV2 } from '../utils/apiClientFactory';
 
 export const user = {
-  get: () => apiClientV2.getRequest<API.User.User>('/user'),
+  get: (): Promise<API.User.User> => apiClientV2.getRequest<API.User.User>('/user'),
   userData: {
-    get: () => apiClientV2.getRequest<API.User.UserData.UserData>('/user/user-data'),
-    update: (data: API.User.UserData.UpdateUserData.Request) =>
+    get: (): Promise<API.User.UserData.UserData> =>
+      apiClientV2.getRequest<API.User.UserData.UserData>('/user/user-data'),
+    update: (data: API.User.UserData.UpdateUserData.Request): Promise<API.User.UserData.UpdateUserData.Response> =>
       apiClientV2.patchRequest<API.User.UserData.UpdateUserData.Response>('/user/user-data', { data }),
   },
   update: {
     phone: {
-      request: (data: API.User.UpdateUser.Phone.RequestOTP.Request) =>
+      request: (data: API.User.UpdateUser.Phone.RequestOTP.Request): Promise<void> =>
         apiClientV2.patchRequest('/user/phone', { data }),
-      confirm: (data: API.User.UpdateUser.Phone.Confirm.Request) => apiClientV2.postRequest('/user/phone', { data }),
+      confirm: (data: API.User.UpdateUser.Phone.Confirm.Request): Promise<void> =>
+        apiClientV2.postRequest('/user/phone', { data }),
     },
     email: {
-      request: (data: API.User.UpdateUser.Email.RequestOTP.Request) =>
+      request: (data: API.User.UpdateUser.Email.RequestOTP.Request): Promise<void> =>
         apiClientV2.patchRequest('/user/email', { data }),
-      confirm: (data: API.User.UpdateUser.Email.Confirm.Request) => apiClientV2.postRequest('/user/email', { data }),
+      confirm: (data: API.User.UpdateUser.Email.Confirm.Request): Promise<void> =>
+        apiClientV2.postRequest('/user/email', { data }),
     },
   },
 };

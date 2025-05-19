@@ -16,12 +16,12 @@ type IExchangeModule = {
   };
 };
 
-const createOrderTypeMethods = (orderType: OrderType) => ({
-  getByFromCurrency: (from_uuid: string) =>
+const createOrderTypeMethods = (orderType: OrderType): IExchangeByOrderType => ({
+  getByFromCurrency: (from_uuid: string): Promise<API.Exchange.Exchange[]> =>
     apiClientV1.getRequest<API.Exchange.Exchange[]>('/exchange/', { params: { from_uuid, order_type: orderType } }),
-  getByToCurrency: (to_uuid: string) =>
+  getByToCurrency: (to_uuid: string): Promise<API.Exchange.Exchange[]> =>
     apiClientV1.getRequest<API.Exchange.Exchange[]>('/exchange/', { params: { to_uuid, order_type: orderType } }),
-  getByOrderType: () =>
+  getByOrderType: (): Promise<API.Exchange.Exchange[]> =>
     apiClientV1.getRequest<API.Exchange.Exchange[]>('/exchange/', { params: { order_type: orderType } }),
 });
 
