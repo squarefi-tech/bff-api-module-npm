@@ -19,7 +19,7 @@ import {
   WalletTransactionType,
 } from '../../constants';
 import { WalletType } from '../..';
-import { operations } from './autogen/apiV2.types';
+import { components, operations } from './autogen/apiV2.types';
 
 export namespace API {
   export namespace Auth {
@@ -1000,6 +1000,15 @@ export namespace API {
         export interface Response extends Request {
           token: string;
         }
+      }
+    }
+
+    export namespace Entity {
+      export type Entity = components['schemas']['KycEntityDto'];
+      export namespace Get {
+        export type Request = operations['KycEntitiesController_findOne']['parameters']['path'];
+        export type Response =
+          operations['KycEntitiesController_findOne']['responses']['200']['content']['application/json'];
       }
     }
     export namespace Forms {

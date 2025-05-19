@@ -7,6 +7,10 @@ export const kyc = {
     generate_token: (data: API.KYC.Sumsub.GenerateToken.Request): Promise<API.KYC.Sumsub.GenerateToken.Response> =>
       apiClientV1.postRequest<API.KYC.Sumsub.GenerateToken.Response>('/kyc/sumsub/generate_token', { data }),
   },
+  entity: {
+    get: ({ wallet_id }: API.KYC.Entity.Get.Request): Promise<API.KYC.Entity.Get.Response> =>
+      apiClientV2.getRequest<API.KYC.Entity.Get.Response>(`/kyc/${wallet_id}/entity`),
+  },
   rails: {
     info: {
       getAll: ({ wallet_id }: API.KYC.Rails.RailInfo.List.Request): Promise<API.KYC.Rails.RailInfo.List.Response> =>

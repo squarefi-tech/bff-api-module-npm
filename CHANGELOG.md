@@ -632,3 +632,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - TypeScript support
 - Authentication methods
 - Core API endpoints support
+
+## [1.18.2] - 2025-05-21
+
+### Added
+
+- Added entity retrieval functionality to KYC module with new endpoint and types
