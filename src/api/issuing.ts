@@ -5,8 +5,20 @@ import { makeSecureRequest } from '../utils/encrypt';
 export const issuing = {
   cards: {
     create: {
-      standAloneCard: (data: API.Cards.Create.StandAloneRequest) =>
-        apiClientV1.postRequest<API.Cards.Create.StandAloneResponse>('/issuing/cards/create', { data }),
+      standAloneCard: {
+        prepaid: (data: API.Cards.Create.StandAloneRequest) =>
+          apiClientV1.postRequest<API.Cards.Create.StandAloneResponse>('/issuing/cards/create', { data }),
+        balance: async (data: API.Cards.Create.StandAloneRequest) => {
+          const { id: sub_account_id } = await issuing.sub_accounts.create(data.wallet_id, data.program_id);
+
+          apiClientV1.postRequest<API.Cards.Create.SubAccountResponse>('/issuing/cards/balance', {
+            data: {
+              ...data,
+              sub_account_id,
+            },
+          });
+        },
+      },
       subAccountCard: (data: API.Cards.Create.SubAccountRequest) =>
         apiClientV1.postRequest<API.Cards.Create.SubAccountResponse>('/issuing/cards/balance', { data }),
     },
