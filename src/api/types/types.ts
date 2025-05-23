@@ -1078,6 +1078,7 @@ export namespace API {
       export type RailStatus = components['schemas']['WalletKycRailDto']['status'];
 
       export type WalletRail = components['schemas']['WalletKycRailDto'];
+      export type WalletRailTermsAndConditions = components['schemas']['WalletKycRailTermsAndConditionsDto'];
 
       export namespace RailInfo {
         export type RailInfo = components['schemas']['WalletKycRailTypeDto'];
