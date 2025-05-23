@@ -141,8 +141,9 @@ export namespace API {
         card_limit: number;
         realtime_auth: boolean;
         tokenizable: boolean;
+        kyc_rails_id: string;
+        integration_vendor_id: string;
         vendor_id: string;
-        purposes: string[] | null;
         type: CardType | string; // MOCK
         order_types: IssuingProgramOrderType[];
         sub_account_type: SubAccountType | string;

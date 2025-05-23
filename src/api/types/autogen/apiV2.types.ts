@@ -1294,12 +1294,21 @@ export interface components {
             total: number;
             data: components["schemas"]["ChainDto"][];
         };
+        KycRailTermsAndConditionsEntity: {
+            id: string;
+            description: string | null;
+            kyc_rail_id: string;
+            link: string;
+            title: string;
+        };
         KycRailEntity: {
             id: string;
             code: string | null;
             name: string;
             /** @enum {string|null} */
             type: "individual" | "business" | null;
+            /** @description Current terms and conditions data */
+            terms_and_conditions?: components["schemas"]["KycRailTermsAndConditionsEntity"][];
         };
         IssuingProgramDto: {
             id: string;
@@ -1830,17 +1839,25 @@ export interface components {
             type: string;
             url: string;
         };
+        WalletKycRailTermsAndConditionsDto: {
+            description: string | null;
+            link: string;
+            title: string;
+        };
         WalletKycRailDto: {
             message: string | null;
             /** @enum {string} */
             readonly status: "APPROVED" | "DECLINED" | "PENDING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED";
             extra_actions?: components["schemas"]["WalletKycRailExtraActionDto"][];
+            /** @description Accepted terms and conditions data */
+            terms_and_conditions: components["schemas"]["WalletKycRailTermsAndConditionsDto"][];
         };
         WalletKycRailTypeDto: {
             id: string;
             code: string | null;
             name: string;
             wallet_rail: components["schemas"]["WalletKycRailDto"] | null;
+            terms_and_conditions: components["schemas"]["WalletKycRailTermsAndConditionsDto"][];
         };
         GetWalletKycRailsResponseDto: {
             /** @example 20 */
