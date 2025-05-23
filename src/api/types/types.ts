@@ -1075,55 +1075,30 @@ export namespace API {
     }
 
     export namespace Rails {
-      export type RailStatus =
-        | 'APPROVED'
-        | 'DECLINED'
-        | 'PENDING'
-        | 'HOLD'
-        | 'DOUBLE'
-        | 'SOFT_REJECT'
-        | 'REJECT'
-        | 'UNVERIFIED';
+      export type RailStatus = components['schemas']['WalletKycRailDto']['status'];
 
-      export interface WalletRail {
-        id: string;
-        status: API.KYC.Rails.RailStatus;
-      }
+      export type WalletRail = components['schemas']['WalletKycRailDto'];
 
       export namespace RailInfo {
-        export interface RailInfo {
-          id: string;
-          code: string;
-          name: string;
-          wallet_rail: WalletRail;
-        }
+        export type RailInfo = components['schemas']['WalletKycRailTypeDto'];
 
         export namespace SingleRail {
-          export interface Request {
-            wallet_id: string;
-            rail_id: string;
-          }
+          export type Request = operations['WalletKycRailsController_findOne']['parameters']['path'];
           export type Response = RailInfo;
         }
 
         export namespace List {
-          export interface Request {
+          export type Request = {
             wallet_id: string;
-          }
-          export type Response = {
-            total: number;
-            data: RailInfo[];
           };
+          export type Response = components['schemas']['GetWalletKycRailsResponseDto'];
         }
       }
 
       export namespace Submit {
         export namespace Single {
-          export interface Request {
-            wallet_id: string;
-            rail_id: string;
-          }
-          export type Response = API.KYC.Rails.RailInfo.RailInfo;
+          export type Request = operations['WalletKycRailsController_findOne']['parameters']['path'];
+          export type Response = components['schemas']['WalletKycRailTypeDto'];
         }
       }
     }
