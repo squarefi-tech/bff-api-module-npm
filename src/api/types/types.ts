@@ -1669,14 +1669,123 @@ export namespace API {
     }
   }
 
-  export namespace VirtualAccount {
+  export namespace VirtualAccounts {
+    export namespace Create {
+      export interface Request {
+        wallet_id: string;
+        va_programs_id: string;
+      }
+
+      export type Response = null;
+    }
+
+    export namespace GetByUuid {
+      export interface Request {
+        uuid: string;
+      }
+
+      export type Response = API.VirtualAccounts.VirtualAccount.VirtualAccount;
+    }
+
+    export namespace GetAll {
+      export interface Request {
+        wallet_uuid: string;
+        limit: number;
+        offset: number;
+      }
+
+      export type Response = {
+        count: number;
+        has_more: boolean;
+        data: API.VirtualAccounts.VirtualAccount.VirtualAccount[];
+      };
+    }
+
+    export namespace VirtualAccount {
+      export interface Beneficiary {
+        name: string;
+        address: string;
+      }
+
+      export interface AccountDetails {
+        bankName: string;
+        bankAddress: string;
+        beneficiary: API.VirtualAccounts.VirtualAccount.Beneficiary;
+        accountNumber: string;
+        routingNumber: string;
+      }
+
+      export interface PaymentRail {
+        currency: string;
+        paymentRail: string[];
+      }
+
+      export interface Destination {
+        chain: string;
+        currency: string;
+        walletAddress: string;
+      }
+
+      export interface MicroDeposits {
+        data: any[];
+        count: number;
+      }
+
+      export interface DepositInstructions {
+        bankName: string;
+        bankAddress: string;
+        beneficiary: API.VirtualAccounts.VirtualAccount.Beneficiary;
+        accountNumber: string;
+        routingNumber: string;
+      }
+
+      export interface AccountInfo {
+        id: string;
+        source: API.VirtualAccounts.VirtualAccount.PaymentRail;
+        status: string;
+        userId: string;
+        destination: API.VirtualAccounts.VirtualAccount.Destination;
+        microDeposits: API.VirtualAccounts.VirtualAccount.MicroDeposits;
+        depositInstructions: API.VirtualAccounts.VirtualAccount.DepositInstructions;
+      }
+
+      export namespace Meta {
+        export interface HifiResponse {
+          message: string;
+          accountInfo: API.VirtualAccounts.VirtualAccount.AccountInfo;
+        }
+        export interface Meta {
+          hifi_response: API.VirtualAccounts.VirtualAccount.Meta.HifiResponse;
+        }
+      }
+
+      export interface OrderType {
+        order_type_id: string;
+      }
+
+      export interface VirtualAccount {
+        id: string;
+        created_at: string;
+        wallet_id: string;
+        status: string;
+        account_currency: API.Currencies.Currency;
+        va_programs_id: string;
+        destination_currency: API.Currencies.Currency;
+        destination_address: string;
+        integration_vendor_id: string;
+        vendor_account_id: string;
+        meta: API.VirtualAccounts.VirtualAccount.Meta.Meta;
+        account_details: API.VirtualAccounts.VirtualAccount.AccountDetails;
+        virtual_accounts_program: API.VirtualAccounts.Programs.Program;
+      }
+    }
     export namespace Programs {
       export interface OrderType {
         id: string;
         description: string | null;
       }
       export interface OrderTypeListItem {
-        order_type: OrderType;
+        order_type: API.VirtualAccounts.Programs.OrderType;
         order_type_id: string;
       }
 
@@ -1709,16 +1818,16 @@ export namespace API {
         integration_vendors_id: string;
         is_hidden: boolean;
         destination_currency_id: string;
-        integration_vendor: API.VirtualAccount.Programs.IntegrationVendor;
-        account_currency_details: API.VirtualAccount.Programs.CurrencyItem;
-        destination_currency_details: API.VirtualAccount.Programs.CurrencyItem;
-        virtual_accounts_programs_order_types: API.VirtualAccount.Programs.OrderTypeListItem[];
+        integration_vendor: API.VirtualAccounts.Programs.IntegrationVendor;
+        account_currency_details: API.VirtualAccounts.Programs.CurrencyItem;
+        destination_currency_details: API.VirtualAccounts.Programs.CurrencyItem;
+        virtual_accounts_programs_order_types: API.VirtualAccounts.Programs.OrderTypeListItem[];
       }
 
       export namespace List {
         export interface Request {
-          offset?: number;
-          limit?: number;
+          offset: number;
+          limit: number;
           pagination?: boolean;
         }
         export interface Response {

@@ -2060,6 +2060,8 @@ export interface components {
             referenceId: string;
             /** @example itmpl_rmUunz2XZk5xm4KQyJawGQSpappS */
             templateId: string;
+            /** @example inq_E6U4KitBucNKpfrDMb997AaTkQTt */
+            inquiryId: string | null;
         };
         WalletPersonaReferenceEntityDto: Record<string, never>;
         IntegrationPersonaTemplateEntityDto: Record<string, never>;
