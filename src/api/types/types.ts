@@ -1676,7 +1676,7 @@ export namespace API {
         va_programs_id: string;
       }
 
-      export type Response = null;
+      export type Response = API.VirtualAccounts.VirtualAccount.VirtualAccount;
     }
 
     export namespace GetByUuid {
