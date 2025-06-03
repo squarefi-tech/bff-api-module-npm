@@ -1413,11 +1413,10 @@ export namespace API {
         export namespace OMNIBUS_CRYPTO_WITHDRAWAL {
           export interface Request {
             idempotency_key: string;
+            counterparty_account_id: string;
             amount: number;
             wallet_uuid: string;
             currency_id: string;
-            to_address: string;
-            counterparty_id: string;
             memo?: string;
             note?: string;
           }
