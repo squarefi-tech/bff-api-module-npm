@@ -118,6 +118,14 @@ export const orders = {
             data,
           }
         ),
+
+      [OrderType.TBD_SWIFT_WITHDRAWAL]: (
+        data: API.Orders.Create.ByOrderType.TBD_SWIFT_WITHDRAWAL.Request
+      ): Promise<API.Orders.Create.ByOrderType.TBD_SWIFT_WITHDRAWAL.Response> =>
+        apiClientV1.postRequest<API.Orders.Create.ByOrderType.TBD_SWIFT_WITHDRAWAL.Response>(
+          '/orders/TBD_SWIFT_WITHDRAWAL',
+          { data }
+        ),
     },
   },
 };

@@ -1517,6 +1517,15 @@ export namespace API {
           };
           export type Response = null;
         }
+
+        export namespace TBD_SWIFT_WITHDRAWAL {
+          export type Request = {
+            amount: number;
+            wallet_uuid: string;
+            currency_id: string;
+          };
+          export type Response = null;
+        }
       }
     }
     export namespace Calc {
