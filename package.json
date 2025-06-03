@@ -1,6 +1,6 @@
 {
   "name": "squarefi-bff-api-module",
-  "version": "1.18.9",
+  "version": "1.18.10",
   "description": "Squarefi BFF API client module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
