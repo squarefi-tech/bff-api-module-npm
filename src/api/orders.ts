@@ -8,7 +8,10 @@ export const orders = {
   calc: ({ signal, ...params }: API.Orders.Calc.Request): Promise<API.Orders.Calc.Response> =>
     apiClientV1.getRequest<API.Orders.Calc.Response>('/orders/calc', { params, signal }),
 
-  orderTypes: (): Promise<OrderType[]> => apiClientV1.getRequest<OrderType[]>('/orders/order_types'),
+  orderTypes: {
+    list: (): Promise<API.Orders.OrderTypes.List.Response> =>
+      apiClientV1.getRequest<API.Orders.OrderTypes.List.Response>('/orders/order_types'),
+  },
 
   create: {
     byOrderType: {

@@ -981,23 +981,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/wallet-persona-references/{wallet_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Get or Create */
-        post: operations["WalletPersonaReferenceController_findOrCreate"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/kyc/integration-persona-templates": {
         parameters: {
             query?: never;
@@ -1618,6 +1601,7 @@ export interface components {
             country_id: number | null;
             postal_code?: string | null;
             state_province_region?: string | null;
+            id?: string;
         };
         KycBeneficialOwnerDto: {
             auth_letter_url: string | null;
@@ -1656,6 +1640,7 @@ export interface components {
             supplementary_url: string | null;
             tax_identification_number: string | null;
             selfie_url?: string | null;
+            id?: string;
             address?: components["schemas"]["KycAddressDto"] | null;
         };
         KycEntityDto: {
@@ -2063,7 +2048,6 @@ export interface components {
             /** @example inq_E6U4KitBucNKpfrDMb997AaTkQTt */
             inquiryId: string | null;
         };
-        WalletPersonaReferenceEntityDto: Record<string, never>;
         IntegrationPersonaTemplateEntityDto: Record<string, never>;
         FindAllIntegrationPersonaTemplatesResponseDto: {
             /** @example 20 */
@@ -4413,41 +4397,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InitInquiryResponseDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletPersonaReferenceController_findOrCreate: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WalletPersonaReferenceEntityDto"];
                 };
             };
             /** @description Unauthorized */

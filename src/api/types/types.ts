@@ -1557,6 +1557,22 @@ export namespace API {
       }
     }
 
+    export namespace OrderTypes {
+      export interface OrderInfo {
+        id: string;
+        transaction_type: string;
+        description: string | null;
+        direction: 'deposit' | 'withdrawal';
+        is_internal: boolean;
+        kyc_rails_id: string | null;
+        payment_method: OrderType | string;
+      }
+
+      export namespace List {
+        export type Response = OrderInfo[];
+      }
+    }
+
     // export namespace OffRamp {
     //   // deprecated
     //   export interface Item {
