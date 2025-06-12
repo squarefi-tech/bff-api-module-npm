@@ -1,187 +1,140 @@
-# Squarefi BFF API Module
+# Squarefi BFF API SDK
 
-A professional TypeScript/JavaScript SDK for seamless integration with Squarefi BFF API.
+A fully-typed TypeScript / JavaScript SDK for effortless interaction with the Squarefi **Back-For-Front** (BFF) API.
+
+---
+
+## ✨ Why use this SDK?
+
+• Built-in token lifecycle management (refresh, revoke, storage helpers).  
+• Strict TypeScript types generated from the OpenAPI contract.  
+• Axios-powered HTTP client with automatic tenant & environment headers.  
+• First-class support for **Telegram Mini-Apps** as well as Web.  
+• Batteries included: constants, helpers & cryptography utilities.  
+• Zero-config – just provide your API URLs and tenant id.
+
+---
 
 ## 📦 Installation
 
 ```bash
+# npm
+yarn add squarefi-bff-api-module
+# or
 npm install squarefi-bff-api-module
 ```
 
-## 🔧 Usage
+The package ships with `.d.ts` files so no additional typings are required.
 
-```typescript
-import { squarefi_bff_api_client } from 'squarefi-bff-api-module';
+---
 
-// Authentication
-await squarefi_bff_api_client.auth.signin.omni.email({
-  email: 'user@example.com',
-  invite_code: 'optional_invite_code',
-  referrer: 'optional_referrer',
-  redirect_url: 'optional_redirect_url',
+## ⚡️ Quick start
+
+```ts
+import { squarefi_bff_api_client as api, OrderType } from 'squarefi-bff-api-module';
+
+// 1) Authenticate (choose the strategy that suits your flow)
+await api.auth.signin.omni.email({
+  email: 'alice@example.com',
+  invite_code: 'optional',
 });
 
-// Telegram authentication
-await squarefi_bff_api_client.auth.signin.telegram({
-  tg_id: 123456789,
-  hash: 'telegram_hash',
-  init_data_raw: 'telegram_init_data',
+// 2) Make authorised calls – tokens are forwarded automatically.
+const wallets = await api.wallets.getAll();
+const firstWalletUuid = wallets[0].uuid;
+
+const cards = await api.issuing.cards.byWalletUuid.getAll({
+  wallet_uuid: firstWalletUuid,
 });
 
-// Password authentication
-await squarefi_bff_api_client.auth.signin.password('user@example.com', 'password');
-
-// OTP verification
-await squarefi_bff_api_client.auth.otp.verify.email('user@example.com', 'otp_token');
-await squarefi_bff_api_client.auth.otp.verify.phone('+1234567890', 'otp_token');
-
-// User operations
-const userData = await squarefi_bff_api_client.user.get();
-const userProfile = await squarefi_bff_api_client.user.userData.get();
-
-// Wallet operations
-const wallets = await squarefi_bff_api_client.wallets.getAll();
-const walletDetails = await squarefi_bff_api_client.wallets.getByUuid('wallet_uuid');
-
-// Card operations
-const cards = await squarefi_bff_api_client.issuing.cards.byWalletUuid.getAll({
-  wallet_uuid: 'wallet_uuid',
-  limit: 10,
-  offset: 0,
-});
-
-// Exchange operations
-const exchangeRates = await squarefi_bff_api_client.exchange.byOrderType[OrderType.DEPOSIT_FIAT_SEPA].getByFromCurrency(
-  'from_uuid'
-);
-
-// System operations (currencies, chains, countries)
-const currencies = await squarefi_bff_api_client.list.currencies.getAll();
-const chains = await squarefi_bff_api_client.list.chains.getAll();
-const countries = await squarefi_bff_api_client.list.countries.getAll();
+// 3) Exchange rates helper
+await api.exchange.byOrderType[OrderType.DEPOSIT_FIAT_SEPA].getByFromCurrency(firstWalletUuid);
 ```
 
-## 📚 Available API Modules
+See the [Examples](#examples) section below for more real-life snippets.
 
-Access different API functionalities through the client:
+---
 
-- `squarefi_bff_api_client.auth` - Authentication and authorization
-  - OTP verification (email/phone)
-  - Sign in (email/phone/telegram/password)
-  - Sign up (email/telegram)
-  - Token refresh
-- `squarefi_bff_api_client.counterparties` - Counterparty management
-  - List, create, update counterparties
-  - Manage counterparty destinations
-- `squarefi_bff_api_client.developer` - Developer tools
-  - API key management
-  - Vendor management
-- `squarefi_bff_api_client.exchange` - Currency exchange operations
-  - Get exchange rates by order type
-  - Get rates by currency
-- `squarefi_bff_api_client.issuing` - Card issuing operations
-  - Create and manage cards
-  - Card limits and controls
-  - Transaction history
-  - Card status management
-- `squarefi_bff_api_client.kyc` - Know Your Customer procedures
-  - Sumsub integration
-  - Persona inquiries initialization
-- `squarefi_bff_api_client.list` - System data operations
-  - Currencies list (`/system/currencies`)
-  - Chains list (`/system/chains`)
-  - Countries list (`/system/countries`)
-- `squarefi_bff_api_client.orders` - Order management
-  - Create orders by type
-  - Calculate exchange rates
-  - Support for INTERNAL_TRANSFER order type
-- `squarefi_bff_api_client.rails` - KYC onboarding rails
-  - Manage onboarding rails and flows
-- `squarefi_bff_api_client.forms` - KYC forms
-  - Manage and submit KYC forms
-- `squarefi_bff_api_client.tenants` - Tenant management operations
-  - Tenant configuration
-- `squarefi_bff_api_client.user` - User profile operations
-  - Get/update user data
-  - Update contact information
-  - OTP verification
-- `squarefi_bff_api_client.wallets` - Crypto wallet operations
-  - Create and manage wallets
-  - Address management
-  - Transaction history
-  - Balance tracking
+## 🌐 Environment variables
 
-## ⚙️ Environment Variables
+The SDK reads connection details from process-level variables. When bundling for the browser, tools like **Vite**, **Webpack DefinePlugin**, or **Next.js** can safely inline those values at build time.
 
-| Variable                 | Description                                   | Required | Example              |
-| ------------------------ | --------------------------------------------- | -------- | -------------------- |
-| API_URL                  | Base URL for the Squarefi BFF API             | Yes      | `https://api-v1.url` |
-| API_V2_URL               | Base URL for the Squarefi BFF API             | Yes      | `https://api-v2.url` |
-| TENANT_ID                | Your tenant identifier                        | Yes      | `tenant_12345`       |
-| LOGOUT_URL               | Your frontend-app logout route                | No       | '/auth/logout'       |
-| SERVER_PUBLIC_KEY_BASE64 | Server provides base64-encoded PEM format key | Yes      | 'example'            |
+| Name                       | Description                                                          | Required                      | Example                       |
+| -------------------------- | -------------------------------------------------------------------- | ----------------------------- | ----------------------------- |
+| `API_URL`                  | Base URL of the BFF **v1** service                                   | ✅                            | `https://api-v1.squarefi.com` |
+| `API_V2_URL`               | Base URL of the BFF **v2** service                                   | ✅                            | `https://api-v2.squarefi.com` |
+| `API_TOTP_URL`             | Base URL of the **TOTP / OTP** micro-service                         | ⚠️ _If you use TOTP features_ | `https://totp.squarefi.com`   |
+| `TENANT_ID`                | Your tenant / organisation identifier                                | ✅                            | `tenant_12345`                |
+| `LOGOUT_URL`               | Frontend route where the user is redirected when refresh token fails | ❌                            | `/auth/logout`                |
+| `SERVER_PUBLIC_KEY_BASE64` | PEM encoded key (base64) used for request signing                    | ✅                            | `MIIBIjANBgkqh…`              |
 
-## 🚀 Features
+> ℹ️ When running in Node.js you can place these variables in a `.env` file and load them with [dotenv](https://npmjs.com/package/dotenv).
 
-- 🔒 Built-in token management and authentication
-- 📱 Telegram integration support
-- 💪 Full TypeScript support with strict typing
-- 🔄 Axios-based HTTP client
-- 📦 Comprehensive constants and types
-- 🛡️ Secure request handling
-- 🔑 Multi-tenant support
-- 🧩 Persona KYC integration
-- 📝 Rails and Forms modules for flexible onboarding/compliance
+---
 
-## 🛠️ Development
+## 🗺️ API surface
 
-### Prerequisites
+`squarefi_bff_api_client` is a plain object where every property is a namespaced group of operations. The list below reflects the current SDK version (v1.18.13).
 
-- Node.js (Latest LTS version)
-- npm or yarn
+| Namespace           | Highlights                                                          |
+| ------------------- | ------------------------------------------------------------------- |
+| **auth**            | Omni/Telegram/Password sign-in & sign-up, token refresh, OTP verify |
+| **counterparties**  | CRUD for counterparties & their destinations                        |
+| **developer**       | Vendor & API key management                                         |
+| **exchange**        | Exchange rates per order type / currency                            |
+| **issuing**         | Virtual & physical cards, limits, controls, transactions            |
+| **kyc**             | Sumsub flows, rails & form submission                               |
+| **list**            | Static system lists – currencies, chains, countries                 |
+| **orders**          | Create / calculate orders (including internal transfer)             |
+| **persona**         | Persona in-app KYC inquiries                                        |
+| **tenants**         | Tenant configuration                                                |
+| **totp**            | TOTP generation / verification / revoke helpers                     |
+| **user**            | User profile, contacts, OTP verification                            |
+| **virtualAccounts** | Create & manage virtual IBAN accounts                               |
+| **wallets**         | Wallet creation, addresses, balances, history                       |
 
-### Setup
+> 📝 Every method returns a typed `Promise<Response>` so you get IDE autocompletion & compile-time safety.
 
-```bash
-# Install dependencies
-npm install
+---
 
-# Build the package
-npm run build
+## 🛠️ Development & contributing
 
-# Run tests
-npm test
-```
+1. Fork the repo and install dependencies:
+   ```bash
+   git clone https://github.com/squarefi-tech/bff-api-module-npm.git
+   cd bff-api-module-npm
+   npm ci
+   ```
+2. Generate/update OpenAPI types (if the backend spec changed):
+   ```bash
+   npm run generate:openapi-types
+   ```
+3. Run the linter & the test suite:
+   ```bash
+   npm test
+   ```
+4. Build the package:
+   ```bash
+   npm run build
+   ```
 
-## 🔐 Security
+Please open a PR once the checks are green. All contributions are welcome! 🤝
 
-The module implements industry-standard security practices:
+---
 
-- Secure token management
-- Request signing
-- Rate limiting protection
-- HTTPS enforcement
-- Multi-tenant isolation
+## 🔐 Security policy
 
-## Dependencies
+If you discover a vulnerability, **do NOT** open a public issue. Instead please email *security@squarefi.com* with the details and we will respond promptly.
 
-### Main Dependencies
-
-- axios: 1.6.7
-- @telegram-apps/sdk-react: 3.1.2
-
-### Peer Dependencies
-
-- react: >=18.x.x
-
-## 📝 Changelog
-
-See [CHANGELOG.md](https://github.com/squarefi-tech/bff-api-module-npm/blob/main/CHANGELOG.md) for a list of changes and updates.
+---
 
 ## 📄 License
 
-MIT
+[MIT](./LICENSE)
 
-## 🔗 Repository
+---
 
-This package is available on [GitHub](https://github.com/squarefi-tech/bff-api-module-npm) and [npm](https://www.npmjs.com/package/squarefi-bff-api-module).
+## 🔗 Links
+
+• NPM – https://www.npmjs.com/package/squarefi-bff-api-module  
+• GitHub – https://github.com/squarefi-tech/bff-api-module-npm

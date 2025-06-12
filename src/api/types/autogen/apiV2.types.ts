@@ -684,7 +684,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/webhook/kyc/hifi-bridge": {
+    "/webhook/kyc/hifibridge": {
         parameters: {
             query?: never;
             header?: never;
@@ -801,6 +801,23 @@ export interface paths {
         put?: never;
         /** Upload KYC file */
         post: operations["StorageController_uploadKycFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/storage/kyc/{folderId}/{fileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get KYC file by ID */
+        get: operations["StorageController_getKycFile"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1704,7 +1721,8 @@ export interface components {
             proof_of_address_url?: string | null;
             proof_of_ownership_url?: string | null;
             /** @enum {string|null} */
-            purpose?: "PAY_SUPPLIERS" | "PAY_SERVICE_PROVIDERS" | "GOODS_MERCHANDISE_COMMODITIES" | "FREELANCERS_CONTRACTORS_PAYROLL" | "FINANCIAL_SERVICES_LOANS_INVESTMENTS" | "TAX_REGULATORY_FEES" | "LEGAL_SERVICES" | "OPERATIONAL_EXPENSES" | "SUBSCRIPTIONS" | "TRAVEL_RELATED_EXPENSES" | "INSURANCE" | "ADVERTISING_MARKETING_EXPENSES" | "EQUIPMENT_MACHINERY" | "TECHNOLOGY_SERVICES" | "EDUCATION_RELATED_EXPENSES" | "TREASURY_PAYMENTS" | "FX_SERVICES" | "OTHER" | "ONLINE_MARKETPLACE_TRADING" | "OFFLINE_TRADING" | null;
+            purpose?: "charitable_donations" | "ecommerce_retail_payments" | "investment_purposes" | "other" | "payments_to_friends_or_family_abroad" | "payroll" | "personal_or_living_expenses" | "protect_wealth" | "purchase_goods_and_services" | "receive_payments_for_goods_and_services" | "tax_optimization" | "third_party_money_transmission" | "treasury_management" | "operating_a_company" | "receive_payment_for_freelancing" | "receive_salary" | null;
+            purpose_other?: string | null;
             registration_number?: string | null;
             share_structure_url?: string | null;
             sof_eu_questionnaire?: components["schemas"]["KycEntitySofEuQuestionnaireEntity"] | null;
@@ -1794,7 +1812,8 @@ export interface components {
             proof_of_address_url?: string | null;
             proof_of_ownership_url?: string | null;
             /** @enum {string|null} */
-            purpose?: "PAY_SUPPLIERS" | "PAY_SERVICE_PROVIDERS" | "GOODS_MERCHANDISE_COMMODITIES" | "FREELANCERS_CONTRACTORS_PAYROLL" | "FINANCIAL_SERVICES_LOANS_INVESTMENTS" | "TAX_REGULATORY_FEES" | "LEGAL_SERVICES" | "OPERATIONAL_EXPENSES" | "SUBSCRIPTIONS" | "TRAVEL_RELATED_EXPENSES" | "INSURANCE" | "ADVERTISING_MARKETING_EXPENSES" | "EQUIPMENT_MACHINERY" | "TECHNOLOGY_SERVICES" | "EDUCATION_RELATED_EXPENSES" | "TREASURY_PAYMENTS" | "FX_SERVICES" | "OTHER" | "ONLINE_MARKETPLACE_TRADING" | "OFFLINE_TRADING" | null;
+            purpose?: "charitable_donations" | "ecommerce_retail_payments" | "investment_purposes" | "other" | "payments_to_friends_or_family_abroad" | "payroll" | "personal_or_living_expenses" | "protect_wealth" | "purchase_goods_and_services" | "receive_payments_for_goods_and_services" | "tax_optimization" | "third_party_money_transmission" | "treasury_management" | "operating_a_company" | "receive_payment_for_freelancing" | "receive_salary" | null;
+            purpose_other?: string | null;
             registration_number?: string | null;
             share_structure_url?: string | null;
             sof_eu_questionnaire?: components["schemas"]["KycEntitySofEuQuestionnaireEntity"] | null;
@@ -3832,6 +3851,28 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    StorageController_getKycFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                folderId: string;
+                fileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
             };
         };
     };

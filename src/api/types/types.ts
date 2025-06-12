@@ -1695,6 +1695,134 @@ export namespace API {
     }
   }
 
+  export namespace TOTP {
+    export namespace OTPVerification {
+      export type OTPVerificationChannelType = 'EMAIL' | 'SMS' | 'TOTP' | 'APP';
+      export type OTPVerificationStatus = 'PENDING' | 'APPROVED' | 'DENIED';
+      export type OTPVerificationChannelInfo = {
+        channel: OTPVerificationChannelType;
+        validity: number;
+      };
+      export type OTPVerificationInfo = {
+        id: string;
+        status: OTPVerificationStatus;
+        created_at: string;
+        updated_at: string;
+      };
+
+      export namespace Create {
+        export type Request = {
+          id: string;
+          amount: number;
+          order_type: string;
+          wallet_id: string;
+          meta: {
+            description: string;
+          };
+        };
+
+        export type Response = {
+          id: string;
+          status: OTPVerificationStatus;
+          channels: OTPVerificationChannelInfo[];
+        };
+      }
+
+      export namespace Verify {
+        export type Request = {
+          id: string;
+          channel: OTPVerificationChannelType;
+          otp: string;
+        };
+
+        export type Response = {
+          success?: boolean;
+          error?: boolean;
+          message?: string;
+          details?: string;
+        };
+      }
+    }
+    export namespace TOTP {
+      export namespace Generate {
+        export type Request = {
+          user_name: string;
+          service_name: string;
+        };
+
+        export type Response = {
+          success?: boolean;
+          error?: boolean;
+          message?: string;
+          data?: {
+            id: string;
+            qrCode: string;
+            secret: string;
+          };
+        };
+      }
+
+      export namespace Verify {
+        export type Request = {
+          token: string;
+          otp: string;
+        };
+
+        export type Response = {
+          success?: boolean;
+          error?: boolean;
+          message?: string;
+          details?: string;
+        };
+      }
+
+      export namespace Revoke {
+        export type Request = {
+          token: string;
+        };
+
+        export type Response = {
+          success?: boolean;
+          error?: boolean;
+          message?: string;
+          details?: string;
+        };
+      }
+
+      export namespace Activate {
+        export type Request = {
+          token: string;
+        };
+
+        export type Response = {
+          success?: boolean;
+          error?: boolean;
+          message?: string;
+          details?: string;
+          data?: {
+            activated: boolean;
+          };
+        };
+      }
+
+      export namespace GenerateEncrypted {
+        export type Request = {
+          user_name: string;
+          service_name: string;
+          public_key: string;
+        };
+
+        export type Response = {
+          success?: boolean;
+          error?: boolean;
+          message?: string;
+          details?: string;
+          data?: string;
+        };
+      }
+    }
+  }
+
   export namespace VirtualAccounts {
     export namespace Create {
       export interface Request {

@@ -9,6 +9,7 @@ import { list } from './list';
 import { orders } from './orders';
 import { persona } from './persona';
 import { tenants } from './tenants';
+import { totp } from './totp';
 import { user } from './user';
 import { virtualAccounts } from './virtual-accounts';
 import { wallets } from './wallets';
@@ -24,6 +25,7 @@ type Api = {
   orders: typeof orders;
   persona: typeof persona;
   tenants: typeof tenants;
+  totp: typeof totp;
   user: typeof user;
   virtualAccounts: typeof virtualAccounts;
   wallets: typeof wallets;
@@ -40,6 +42,7 @@ export const squarefi_bff_api_client: Api = {
   orders,
   persona,
   tenants,
+  totp,
   user,
   virtualAccounts,
   wallets,

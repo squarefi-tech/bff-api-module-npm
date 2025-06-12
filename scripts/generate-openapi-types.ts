@@ -10,7 +10,7 @@ type ApiDocsData = {
 
 const apiDocsData: ApiDocsData[] = [
   {
-    url: process.env.API_V2_URL,
+    url: process.env.API_DOCS_V2_URL,
     name: 'apiV2',
   },
 ];

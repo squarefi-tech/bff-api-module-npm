@@ -12,6 +12,7 @@ import { deleteTokens, refreshTokens } from '../utils/tokensFactory';
 
 const apiV1BaseURL = process.env.API_URL ?? 'ENV variable API_URL is not defined';
 const apiV2BaseURL = process.env.API_V2_URL ?? 'ENV variable API_V2_URL is not defined';
+const apiTOTPBaseURL = process.env.API_TOTP_URL ?? 'ENV variable API_TOTP_URL is not defined';
 const envTenantId = process.env.TENANT_ID ?? 'ENV variable TENANT_ID is not defined';
 const envLogoutURL = process.env.LOGOUT_URL ?? '/auth/logout';
 
@@ -158,6 +159,12 @@ export const apiClientV1 = createApiClient({
 
 export const apiClientV2 = createApiClient({
   baseURL: apiV2BaseURL,
+  isBearerToken: true,
+  tenantId: envTenantId,
+});
+
+export const apiClientTOTP = createApiClient({
+  baseURL: apiTOTPBaseURL,
   isBearerToken: true,
   tenantId: envTenantId,
 });
