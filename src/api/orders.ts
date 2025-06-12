@@ -15,7 +15,7 @@ export const orders = {
 
   create: {
     byOrderType: {
-      [OrderType.INTERNAL_TRANSFER]: (
+      [OrderType.TRANSFER_INTERNAL]: (
         data: API.Orders.Create.ByOrderType.INTERNAL_TRANSFER.Request
       ): Promise<API.Orders.Create.ByOrderType.INTERNAL_TRANSFER.Response> =>
         apiClientV1.postRequest<API.Orders.Create.ByOrderType.INTERNAL_TRANSFER.Response>('/orders/INTERNAL_TRANSFER', {

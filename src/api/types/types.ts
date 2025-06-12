@@ -1539,7 +1539,7 @@ export namespace API {
       }
 
       export interface WithdrawCryptoRequest extends CommonRequestParams {
-        order_type: OrderType.WITHDRAWAL_CRYPTO | OrderType.INTERNAL_TRANSFER | OrderType.OMNIBUS_CRYPTO_WITHDRAWAL;
+        order_type: OrderType.WITHDRAWAL_CRYPTO | OrderType.TRANSFER_INTERNAL | OrderType.OMNIBUS_CRYPTO_WITHDRAWAL;
         to_address?: string;
       }
 
