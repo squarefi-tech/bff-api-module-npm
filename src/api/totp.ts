@@ -6,6 +6,13 @@ export const totp = {
     create: (data: API.TOTP.OTPVerification.Create.Request): Promise<API.TOTP.OTPVerification.Create.Response> => {
       return apiClientTOTP.postRequest<API.TOTP.OTPVerification.Create.Response>('/api/otp-verification', { data });
     },
+    request: (
+      data: API.TOTP.OTPVerification.RequestOtp.Request
+    ): Promise<API.TOTP.OTPVerification.RequestOtp.Response> => {
+      return apiClientTOTP.postRequest<API.TOTP.OTPVerification.RequestOtp.Response>('/api/otp-verification/request', {
+        data,
+      });
+    },
     verify: (data: API.TOTP.OTPVerification.Verify.Request): Promise<API.TOTP.OTPVerification.Verify.Response> => {
       return apiClientTOTP.postRequest<API.TOTP.OTPVerification.Verify.Response>('/api/otp-verification/verify', {
         data,

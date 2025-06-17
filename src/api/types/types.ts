@@ -1702,9 +1702,10 @@ export namespace API {
       export type OTPVerificationChannelInfo = {
         channel: OTPVerificationChannelType;
         validity: number;
+        max_requests: number;
       };
       export type OTPVerificationInfo = {
-        id: string;
+        request_id: string;
         status: OTPVerificationStatus;
         created_at: string;
         updated_at: string;
@@ -1712,25 +1713,43 @@ export namespace API {
 
       export namespace Create {
         export type Request = {
-          id: string;
+          request_id: string;
           amount: number;
           order_type: string;
           wallet_id: string;
-          meta: {
-            description: string;
+          meta?: {
+            currency?: string;
+            description?: string;
           };
         };
 
         export type Response = {
-          id: string;
+          request_id: string;
           status: OTPVerificationStatus;
           channels: OTPVerificationChannelInfo[];
         };
       }
 
+      export namespace RequestOtp {
+        export type Request = {
+          request_id: string;
+          channel: OTPVerificationChannelType;
+        };
+
+        export type Response = {
+          success?: boolean;
+          error?: boolean;
+          message?: string;
+          details?: string;
+          validity?: number;
+          request_made?: number;
+          max_requests?: number;
+        };
+      }
+
       export namespace Verify {
         export type Request = {
-          id: string;
+          request_id: string;
           channel: OTPVerificationChannelType;
           otp: string;
         };

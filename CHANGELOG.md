@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Integrated Time-based One-Time Password (TOTP) functionality with new types and API client methods
 
+## [1.19.2] - 2025-06-17
+
+### Added
+
+- Added OTP request functionality with updated types to improve verification process
+
 ## [1.18.9] - 2025-05-24
 
 ### Added

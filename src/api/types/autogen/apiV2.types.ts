@@ -1105,7 +1105,7 @@ export interface components {
              * @default UNVERIFIED
              * @enum {string|null}
              */
-            kyc_status: "APPROVED" | "DECLINED" | "PENDING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | null;
+            kyc_status: "APPROVED" | "DECLINED" | "PENDING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | null;
             referral_name: string | null;
             tenant_id: string;
             turnover_limit: number;
@@ -1747,7 +1747,7 @@ export interface components {
              * @default UNVERIFIED
              * @enum {string}
              */
-            status: "APPROVED" | "DECLINED" | "PENDING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED";
+            status: "APPROVED" | "DECLINED" | "PENDING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS";
             address?: components["schemas"]["KycAddressDto"] | null;
             beneficial_owners?: components["schemas"]["KycBeneficialOwnerDto"][] | null;
         };
@@ -1851,7 +1851,7 @@ export interface components {
         WalletKycRailDto: {
             message: string | null;
             /** @enum {string} */
-            readonly status: "APPROVED" | "DECLINED" | "PENDING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED";
+            readonly status: "APPROVED" | "DECLINED" | "PENDING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS";
             extra_actions?: components["schemas"]["WalletKycRailExtraActionDto"][];
             /** @description Accepted terms and conditions data */
             terms_and_conditions: components["schemas"]["WalletKycRailTermsAndConditionsDto"][];
