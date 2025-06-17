@@ -1697,7 +1697,7 @@ export namespace API {
 
   export namespace TOTP {
     export namespace OTPVerification {
-      export type OTPVerificationChannelType = 'EMAIL' | 'SMS' | 'TOTP' | 'APP';
+      export type OTPVerificationChannelType = 'EMAIL' | 'SMS' | 'TOTP' | 'APP' | 'TG_TEST';
       export type OTPVerificationStatus = 'PENDING' | 'APPROVED' | 'DENIED';
       export type OTPVerificationChannelInfo = {
         channel: OTPVerificationChannelType;
