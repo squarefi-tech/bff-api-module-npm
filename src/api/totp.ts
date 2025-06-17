@@ -4,7 +4,9 @@ import { API } from './types/types';
 export const totp = {
   otp_verification: {
     create: (data: API.TOTP.OTPVerification.Create.Request): Promise<API.TOTP.OTPVerification.Create.Response> => {
-      return apiClientTOTP.postRequest<API.TOTP.OTPVerification.Create.Response>('/api/otp-verification', { data });
+      return apiClientTOTP.postRequest<API.TOTP.OTPVerification.Create.Response>('/api/otp-verification/create', {
+        data,
+      });
     },
     request: (
       data: API.TOTP.OTPVerification.RequestOtp.Request
