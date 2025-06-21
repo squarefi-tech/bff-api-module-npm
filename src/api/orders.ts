@@ -108,17 +108,6 @@ export const orders = {
         apiClientV1.postRequest<API.Orders.Create.ByOrderType.HIFI_SEPA_OFFRAMP.Response>('/orders/HIFI_SEPA_OFFRAMP', {
           data,
         }),
-
-      [OrderType.OMNIBUS_CRYPTO_WITHDRAWAL]: (
-        data: API.Orders.Create.ByOrderType.OMNIBUS_CRYPTO_WITHDRAWAL.Request
-      ): Promise<API.Orders.Create.ByOrderType.OMNIBUS_CRYPTO_WITHDRAWAL.Response> =>
-        apiClientV1.postRequest<API.Orders.Create.ByOrderType.OMNIBUS_CRYPTO_WITHDRAWAL.Response>(
-          '/orders/OMNIBUS_CRYPTO_WITHDRAWAL',
-          {
-            data,
-          }
-        ),
-
       [OrderType.TBD_SWIFT_WITHDRAWAL]: (
         data: API.Orders.Create.ByOrderType.TBD_SWIFT_WITHDRAWAL.Request
       ): Promise<API.Orders.Create.ByOrderType.TBD_SWIFT_WITHDRAWAL.Response> =>
@@ -126,6 +115,96 @@ export const orders = {
           '/orders/TBD_SWIFT_WITHDRAWAL',
           { data }
         ),
+    },
+  },
+  v2: {
+    calc: ({ signal, ...params }: API.Orders.V2.Calc.Request): Promise<API.Orders.V2.Calc.Response> =>
+      apiClientV1.getRequest<API.Orders.V2.Calc.Response>('/v2/orders/calc', { params, signal }),
+
+    orderTypes: {
+      list: (): Promise<API.Orders.V2.OrderTypes.List.Response> =>
+        apiClientV1.getRequest<API.Orders.V2.OrderTypes.List.Response>('/v2/orders/order_types'),
+    },
+
+    create: {
+      byOrderType: {
+        [OrderType.TRANSFER_INTERNAL]: (
+          data: API.Orders.V2.Create.ByOrderType.INTERNAL_TRANSFER.Request
+        ): Promise<API.Orders.V2.Create.ByOrderType.INTERNAL_TRANSFER.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.INTERNAL_TRANSFER.Response>('/v2/orders/TRA', {
+            data,
+          }),
+
+        [OrderType.HIFI_WIRE_ONRAMP]: (
+          data: API.Orders.V2.Create.ByOrderType.HIFI_WIRE_ONRAMP.Request
+        ): Promise<API.Orders.V2.Create.ByOrderType.HIFI_WIRE_ONRAMP.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.HIFI_WIRE_ONRAMP.Response>(
+            '/v2/orders/HIFI_WIRE_ONRAMP',
+            {
+              data,
+            }
+          ),
+
+        [OrderType.HIFI_ACH_ONRAMP]: (
+          data: API.Orders.V2.Create.ByOrderType.HIFI_ACH_ONRAMP.Request
+        ): Promise<API.Orders.V2.Create.ByOrderType.HIFI_ACH_ONRAMP.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.HIFI_ACH_ONRAMP.Response>(
+            '/v2/orders/HIFI_ACH_ONRAMP',
+            {
+              data,
+            }
+          ),
+
+        [OrderType.HIFI_SEPA_ONRAMP]: (
+          data: API.Orders.V2.Create.ByOrderType.HIFI_SEPA_ONRAMP.Request
+        ): Promise<API.Orders.V2.Create.ByOrderType.HIFI_SEPA_ONRAMP.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.HIFI_SEPA_ONRAMP.Response>(
+            '/v2/orders/HIFI_SEPA_ONRAMP',
+            {
+              data,
+            }
+          ),
+
+        [OrderType.HIFI_WIRE_OFFRAMP]: (
+          data: API.Orders.V2.Create.ByOrderType.HIFI_WIRE_OFFRAMP.Request
+        ): Promise<API.Orders.V2.Create.ByOrderType.HIFI_WIRE_OFFRAMP.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.HIFI_WIRE_OFFRAMP.Response>(
+            '/v2/orders/HIFI_WIRE_OFFRAMP',
+            {
+              data,
+            }
+          ),
+
+        [OrderType.HIFI_ACH_OFFRAMP]: (
+          data: API.Orders.V2.Create.ByOrderType.HIFI_ACH_OFFRAMP.Request
+        ): Promise<API.Orders.V2.Create.ByOrderType.HIFI_ACH_OFFRAMP.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.HIFI_ACH_OFFRAMP.Response>(
+            '/v2/orders/HIFI_ACH_OFFRAMP',
+            {
+              data,
+            }
+          ),
+
+        [OrderType.HIFI_SEPA_OFFRAMP]: (
+          data: API.Orders.V2.Create.ByOrderType.HIFI_SEPA_OFFRAMP.Request
+        ): Promise<API.Orders.V2.Create.ByOrderType.HIFI_SEPA_OFFRAMP.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.HIFI_SEPA_OFFRAMP.Response>(
+            '/v2/orders/HIFI_SEPA_OFFRAMP',
+            {
+              data,
+            }
+          ),
+
+        [OrderType.OMNIBUS_CRYPTO_TRANSFER]: (
+          data: API.Orders.V2.Create.ByOrderType.OMNIBUS_CRYPTO_TRANSFER.Request
+        ): Promise<API.Orders.V2.Create.ByOrderType.OMNIBUS_CRYPTO_TRANSFER.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.OMNIBUS_CRYPTO_TRANSFER.Response>(
+            '/v2/orders/OMNIBUS_CRYPTO_WITHDRAWAL',
+            {
+              data,
+            }
+          ),
+      },
     },
   },
 };

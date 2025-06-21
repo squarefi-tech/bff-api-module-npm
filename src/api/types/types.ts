@@ -1539,7 +1539,7 @@ export namespace API {
       }
 
       export interface WithdrawCryptoRequest extends CommonRequestParams {
-        order_type: OrderType.WITHDRAWAL_CRYPTO | OrderType.TRANSFER_INTERNAL | OrderType.OMNIBUS_CRYPTO_WITHDRAWAL;
+        order_type: OrderType.WITHDRAWAL_CRYPTO | OrderType.TRANSFER_INTERNAL | OrderType.OMNIBUS_CRYPTO_TRANSFER;
         to_address?: string;
       }
 
@@ -1682,6 +1682,328 @@ export namespace API {
     //     }
     //   }
     // }
+    export namespace V2 {
+      export namespace Calc {
+        interface CommonRequestParams {
+          from_currency: string;
+          to_currency: string;
+          amount: number;
+          is_reverse?: boolean;
+          signal?: AbortSignal;
+        }
+
+        export interface WithdrawCryptoRequest extends CommonRequestParams {
+          order_type: OrderType.WITHDRAWAL_CRYPTO | OrderType.TRANSFER_INTERNAL | OrderType.OMNIBUS_CRYPTO_TRANSFER;
+          to_address?: string;
+        }
+
+        export interface NonWithdrawCryptoRequest extends CommonRequestParams {
+          order_type: Exclude<OrderType, OrderType.WITHDRAWAL_CRYPTO>;
+          to_address?: never;
+        }
+
+        export type Request = NonWithdrawCryptoRequest | WithdrawCryptoRequest;
+        export interface Response {
+          from_currency: string;
+          to_currency: string;
+          from_symbol: string;
+          to_symbol: string;
+          from_amount: number;
+          net_amount: number;
+          result_amount: number;
+          fees: number;
+          comission: number;
+          base_markup: number;
+          network_fee: number;
+          transaction_fee: number;
+          rate: number;
+          direction: 'c2f' | 'f2c' | 'c2c';
+        }
+      }
+
+      export namespace Create {
+        export namespace ByOrderType {
+          export namespace INTERNAL_TRANSFER {
+            export interface Request {
+              wallet_id: string;
+              from_crypto_uuid: string;
+              to_wallet_id: string;
+              to_wallet_uuid: string;
+              amount: number;
+              request_id: string;
+            }
+
+            export type Response = null;
+          }
+
+          export namespace HIFI_WIRE_ONRAMP {
+            export interface Request {
+              request_id: string;
+              counterparty_account_id: string;
+              amount: number;
+              wallet_id: string;
+              currency_id: string;
+            }
+
+            export interface Response {
+              order_uuid: string;
+              wallet_uuid: string;
+              from_uuid: string;
+              to_uuid: string;
+              amount_from: number;
+              amount_to: number;
+              order_type: 'HIFI_WIRE_ONRAMP';
+              status: OrderStatuses;
+              created_at: string;
+              info: string;
+              meta: {
+                request_id: string;
+                counterparty_account_id: string;
+                fee: number;
+                fee_currency: string;
+                billing_amount: number;
+                billing_currency: string;
+                transaction_amount: number;
+                transaction_currency: string;
+                order_uuid: string;
+              };
+
+              id: string;
+            }
+          }
+
+          export namespace HIFI_ACH_ONRAMP {
+            export interface Request {
+              request_id: string;
+              counterparty_account_id: string;
+              amount: number;
+              wallet_id: string;
+              currency_id: string;
+            }
+
+            export interface Response {
+              order_uuid: string;
+              wallet_uuid: string;
+              from_uuid: string;
+              to_uuid: string;
+              amount_from: number;
+              amount_to: number;
+              order_type: 'HIFI_ACH_ONRAMP';
+              status: OrderStatuses;
+              created_at: string;
+              info: string;
+              meta: {
+                request_id: string;
+                counterparty_account_id: string;
+                fee: number;
+                fee_currency: string;
+                billing_amount: number;
+                billing_currency: string;
+                transaction_amount: number;
+                transaction_currency: string;
+                order_uuid: string;
+              };
+
+              id: string;
+            }
+          }
+
+          export namespace HIFI_SEPA_ONRAMP {
+            export interface Request {
+              request_id: string;
+              counterparty_account_id: string;
+              amount: number;
+              wallet_id: string;
+              currency_id: string;
+            }
+
+            export interface Response {
+              order_uuid: string;
+              wallet_uuid: string;
+              from_uuid: string;
+              to_uuid: string;
+              amount_from: number;
+              amount_to: number;
+              order_type: 'HIFI_SEPA_ONRAMP';
+              status: OrderStatuses;
+              created_at: string;
+              info: string;
+              meta: {
+                request_id: string;
+                counterparty_account_id: string;
+                fee: number;
+                fee_currency: string;
+                billing_amount: number;
+                billing_currency: string;
+                transaction_amount: number;
+                transaction_currency: string;
+                order_uuid: string;
+              };
+              id: string;
+            }
+          }
+
+          export namespace HIFI_WIRE_OFFRAMP {
+            export interface Request {
+              request_id: string;
+              counterparty_account_id: string;
+              amount: number;
+              wallet_id: string;
+              currency_id: string;
+            }
+
+            export interface Response {
+              order_uuid: string;
+              wallet_uuid: string;
+              from_uuid: string;
+              to_uuid: string;
+              amount_from: number;
+              amount_to: number;
+              order_type: 'HIFI_WIRE_OFFRAMP';
+              status: OrderStatuses;
+              created_at: string;
+              info: string;
+              meta: {
+                request_id: string;
+                counterparty_account_id: string;
+                fee: number;
+                fee_currency: string;
+                billing_amount: number;
+                billing_currency: string;
+                transaction_amount: number;
+                transaction_currency: string;
+                order_uuid: string;
+              };
+              id: string;
+            }
+          }
+
+          export namespace HIFI_ACH_OFFRAMP {
+            export interface Request {
+              request_id: string;
+              counterparty_account_id: string;
+              amount: number;
+              wallet_id: string;
+              currency_id: string;
+            }
+
+            export interface Response {
+              order_uuid: string;
+              wallet_uuid: string;
+              from_uuid: string;
+              to_uuid: string;
+              amount_from: number;
+              amount_to: number;
+              order_type: 'HIFI_ACH_OFFRAMP';
+              status: OrderStatuses;
+              created_at: string;
+              info: string;
+              meta: {
+                request_id: string;
+                counterparty_account_id: string;
+                fee: number;
+                fee_currency: string;
+                billing_amount: number;
+                billing_currency: string;
+                transaction_amount: number;
+                transaction_currency: string;
+                order_uuid: string;
+              };
+              id: string;
+            }
+          }
+
+          export namespace HIFI_SEPA_OFFRAMP {
+            export interface Request {
+              request_id: string;
+              counterparty_account_id: string;
+              amount: number;
+              wallet_id: string;
+              currency_id: string;
+            }
+
+            export interface Response {
+              order_uuid: string;
+              wallet_uuid: string;
+              from_uuid: string;
+              to_uuid: string;
+              amount_from: number;
+              amount_to: number;
+              order_type: 'HIFI_SEPA_OFFRAMP';
+              status: OrderStatuses;
+              created_at: string;
+              info: string;
+              meta: {
+                request_id: string;
+                counterparty_account_id: string;
+                fee: number;
+                fee_currency: string;
+                billing_amount: number;
+                billing_currency: string;
+                transaction_amount: number;
+                transaction_currency: string;
+                order_uuid: string;
+              };
+              id: string;
+            }
+          }
+
+          export namespace OMNIBUS_CRYPTO_TRANSFER {
+            export interface Request {
+              request_id: string;
+              counterparty_account_id: string;
+              amount: number;
+              wallet_id: string;
+              wallet_account_id: string;
+              currency_id: string;
+            }
+
+            export interface Response {
+              created_at: string;
+              order_uuid: string;
+              wallet_uuid: string;
+              from_uuid: string;
+              to_uuid: string;
+              amount_from: number;
+              order_type: 'OMNIBUS_CRYPTO_WITHDRAWAL';
+              status: OrderStatuses;
+              amount_to: number;
+              info: string;
+              meta: {
+                fee: number;
+                order_uuid: string;
+                to_address: string;
+                fee_currency: string;
+                request_id: string;
+                counterparty_account_id: string;
+                billing_amount: number;
+                billing_currency: string;
+                transaction_amount: number;
+                transaction_currency: string;
+                network_fee: number;
+              };
+              id: string;
+            }
+          }
+        }
+      }
+
+      export namespace OrderTypes {
+        export interface OrderInfo {
+          id: string;
+          transaction_type: string;
+          description: string | null;
+          direction: 'deposit' | 'withdrawal';
+          is_internal: boolean;
+          kyc_rails_id: string | null;
+          payment_method: OrderType | string;
+        }
+
+        export namespace List {
+          export type Response = OrderInfo[];
+        }
+      }
+    }
   }
 
   export namespace Persona {
