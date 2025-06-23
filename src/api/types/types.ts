@@ -1947,6 +1947,40 @@ export namespace API {
               id: string;
             }
           }
+          export namespace TBD_SWIFT_WITHDRAWAL {
+            export interface Request {
+              request_id: string;
+              counterparty_account_id: string;
+              amount: number;
+              wallet_id: string;
+              currency_id: string;
+            }
+
+            export interface Response {
+              order_uuid: string;
+              wallet_uuid: string;
+              from_uuid: string;
+              to_uuid: string;
+              amount_from: number;
+              amount_to: number;
+              order_type: 'HIFI_SEPA_OFFRAMP';
+              status: OrderStatuses;
+              created_at: string;
+              info: string;
+              meta: {
+                request_id: string;
+                counterparty_account_id: string;
+                fee: number;
+                fee_currency: string;
+                billing_amount: number;
+                billing_currency: string;
+                transaction_amount: number;
+                transaction_currency: string;
+                order_uuid: string;
+              };
+              id: string;
+            }
+          }
 
           export namespace OMNIBUS_CRYPTO_TRANSFER {
             export interface Request {

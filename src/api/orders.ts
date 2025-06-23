@@ -109,6 +109,7 @@ export const orders = {
           data,
         }),
       [OrderType.TBD_SWIFT_WITHDRAWAL]: (
+        // TODO: ITS MOCK ORDER TYPE
         data: API.Orders.Create.ByOrderType.TBD_SWIFT_WITHDRAWAL.Request
       ): Promise<API.Orders.Create.ByOrderType.TBD_SWIFT_WITHDRAWAL.Response> =>
         apiClientV1.postRequest<API.Orders.Create.ByOrderType.TBD_SWIFT_WITHDRAWAL.Response>(
@@ -203,6 +204,14 @@ export const orders = {
             {
               data,
             }
+          ),
+        [OrderType.TBD_SWIFT_WITHDRAWAL]: (
+          // TODO: ITS MOCK ORDER TYPE
+          data: API.Orders.V2.Create.ByOrderType.TBD_SWIFT_WITHDRAWAL.Request
+        ): Promise<API.Orders.V2.Create.ByOrderType.TBD_SWIFT_WITHDRAWAL.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.TBD_SWIFT_WITHDRAWAL.Response>(
+            '/v2/orders/TBD_SWIFT_WITHDRAWAL',
+            { data }
           ),
       },
     },
