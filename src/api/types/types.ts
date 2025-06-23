@@ -333,6 +333,7 @@ export namespace API {
     export interface TransactionsList {
       data: TransactionItem[];
       has_more: boolean;
+      count: number;
     }
 
     export interface SensitiveData {
