@@ -2026,6 +2026,43 @@ export namespace API {
               id: string;
             }
           }
+          export namespace HIFI_CRYPTO_TRANSFER {
+            export interface Request {
+              request_id: string;
+              counterparty_account_id: string;
+              amount: number;
+              wallet_id: string;
+              wallet_account_id: string;
+              currency_id: string;
+            }
+
+            export interface Response {
+              created_at: string;
+              order_uuid: string;
+              wallet_uuid: string;
+              from_uuid: string;
+              to_uuid: string;
+              amount_from: number;
+              order_type: 'OMNIBUS_CRYPTO_WITHDRAWAL';
+              status: OrderStatuses;
+              amount_to: number;
+              info: string;
+              meta: {
+                fee: number;
+                order_uuid: string;
+                to_address: string;
+                fee_currency: string;
+                request_id: string;
+                counterparty_account_id: string;
+                billing_amount: number;
+                billing_currency: string;
+                transaction_amount: number;
+                transaction_currency: string;
+                network_fee: number;
+              };
+              id: string;
+            }
+          }
         }
       }
 

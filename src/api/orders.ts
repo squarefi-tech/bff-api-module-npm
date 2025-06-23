@@ -205,6 +205,15 @@ export const orders = {
               data,
             }
           ),
+
+        [OrderType.HIFI_CRYPTO_TRANSFER]: (
+          data: API.Orders.V2.Create.ByOrderType.HIFI_CRYPTO_TRANSFER.Request
+        ): Promise<API.Orders.V2.Create.ByOrderType.HIFI_CRYPTO_TRANSFER.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.HIFI_CRYPTO_TRANSFER.Response>(
+            '/v2/orders/HIFI_CRYPTO_TRANSFER',
+            { data }
+          ),
+
         [OrderType.TBD_SWIFT_WITHDRAWAL]: (
           // TODO: ITS MOCK ORDER TYPE
           data: API.Orders.V2.Create.ByOrderType.TBD_SWIFT_WITHDRAWAL.Request
