@@ -199,7 +199,7 @@ export const orders = {
           data: API.Orders.V2.Create.ByOrderType.OMNIBUS_CRYPTO_TRANSFER.Request
         ): Promise<API.Orders.V2.Create.ByOrderType.OMNIBUS_CRYPTO_TRANSFER.Response> =>
           apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.OMNIBUS_CRYPTO_TRANSFER.Response>(
-            '/v2/orders/OMNIBUS_CRYPTO_WITHDRAWAL',
+            '/v2/orders/OMNIBUS_CRYPTO_TRANSFER',
             {
               data,
             }
