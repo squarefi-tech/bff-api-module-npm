@@ -140,15 +140,14 @@ export const issuing = {
           ),
       },
       withoutCards: {
-        getAll: (
-          wallet_uuid: string,
-          limit: number,
-          offset: number
-        ): Promise<API.Issuing.SubAccounts.WithoutCards.Response> =>
+        getAll: ({
+          wallet_uuid,
+          ...params
+        }: API.Issuing.SubAccounts.WithoutCards.Request): Promise<API.Issuing.SubAccounts.WithoutCards.Response> =>
           apiClientV1.getRequest<API.Issuing.SubAccounts.WithoutCards.Response>(
             `/issuing/sub_account/list/${wallet_uuid}`,
             {
-              params: { limit, offset, pagination: true },
+              params: { ...params, pagination: true },
             }
           ),
       },

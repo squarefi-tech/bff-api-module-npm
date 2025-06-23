@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.21.2] - 2025-06-17
+
+### Added
+
+- Version bump for latest changes
+
+## [1.21.1] - 2025-06-17
+
+### Fixed
+
+- Correct endpoint for OMNIBUS_CRYPTO_TRANSFER in orders API
+
+## [1.21.0] - 2025-06-17
+
+### Added
+
+- Implemented v2 orders functionality with enhanced order management capabilities
+
+## [1.19.4] - 2025-06-17
+
+### Added
+
+- Extended OTPVerificationChannelType to include 'TG_TEST' for enhanced testing capabilities
+
+## [1.19.3] - 2025-06-17
+
+### Fixed
+
+- Updated OTP verification endpoint to include 'create' in the URL for accurate request handling
+
+## [1.19.2] - 2025-06-17
+
+### Added
+
+- Added OTP request functionality with updated types to improve verification process
+
 ## [1.19.1] - 2025-06-12
 
 ### Changed
@@ -16,12 +52,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Integrated Time-based One-Time Password (TOTP) functionality with new types and API client methods
-
-## [1.19.2] - 2025-06-17
-
-### Added
-
-- Added OTP request functionality with updated types to improve verification process
 
 ## [1.18.9] - 2025-05-24
 

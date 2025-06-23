@@ -983,6 +983,12 @@ export namespace API {
         }
       }
       export namespace WithoutCards {
+        export interface Request {
+          wallet_uuid: string;
+          limit: number;
+          offset: number;
+          type?: SubAccountType;
+        }
         export interface Response {
           count: number;
           data: SubAccount[];
