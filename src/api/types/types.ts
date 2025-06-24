@@ -1749,7 +1749,8 @@ export namespace API {
               counterparty_account_id: string;
               amount: number;
               wallet_id: string;
-              currency_id: string;
+              from_currency_id: string;
+              to_currency_id: string;
             }
 
             export interface Response {
@@ -1785,7 +1786,8 @@ export namespace API {
               counterparty_account_id: string;
               amount: number;
               wallet_id: string;
-              currency_id: string;
+              from_currency_id: string;
+              to_currency_id: string;
             }
 
             export interface Response {
@@ -1821,7 +1823,8 @@ export namespace API {
               counterparty_account_id: string;
               amount: number;
               wallet_id: string;
-              currency_id: string;
+              from_currency_id: string;
+              to_currency_id: string;
             }
 
             export interface Response {
@@ -1856,7 +1859,8 @@ export namespace API {
               counterparty_account_id: string;
               amount: number;
               wallet_id: string;
-              currency_id: string;
+              from_currency_id: string;
+              to_currency_id: string;
             }
 
             export interface Response {
@@ -1891,7 +1895,8 @@ export namespace API {
               counterparty_account_id: string;
               amount: number;
               wallet_id: string;
-              currency_id: string;
+              from_currency_id: string;
+              to_currency_id: string;
             }
 
             export interface Response {
@@ -1926,7 +1931,8 @@ export namespace API {
               counterparty_account_id: string;
               amount: number;
               wallet_id: string;
-              currency_id: string;
+              from_currency_id: string;
+              to_currency_id: string;
             }
 
             export interface Response {
@@ -1960,7 +1966,8 @@ export namespace API {
               counterparty_account_id: string;
               amount: number;
               wallet_id: string;
-              currency_id: string;
+              from_currency_id: string;
+              to_currency_id: string;
             }
 
             export interface Response {
