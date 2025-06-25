@@ -1692,8 +1692,8 @@ export namespace API {
     export namespace V2 {
       export namespace Calc {
         interface CommonRequestParams {
-          from_currency: string;
-          to_currency: string;
+          from_currency_id: string;
+          to_currency_id: string;
           amount: number;
           is_reverse?: boolean;
           signal?: AbortSignal;
