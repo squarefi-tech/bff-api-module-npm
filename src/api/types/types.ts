@@ -2003,7 +2003,7 @@ export namespace API {
               amount: number;
               wallet_id: string;
               wallet_account_id: string;
-              currency_id: string;
+              from_currency_id: string;
             }
 
             export interface Response {
@@ -2040,7 +2040,7 @@ export namespace API {
               amount: number;
               wallet_id: string;
               wallet_account_id: string;
-              currency_id: string;
+              from_currency_id: string;
             }
 
             export interface Response {
