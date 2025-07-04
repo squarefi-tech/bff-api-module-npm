@@ -1108,7 +1108,6 @@ export interface components {
             kyc_status: "APPROVED" | "DECLINED" | "PENDING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | null;
             referral_name: string | null;
             tenant_id: string;
-            turnover_limit: number;
             user_id: string;
             default_currency: string;
             user_groups_id: string | null;

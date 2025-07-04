@@ -25,12 +25,15 @@
   "dependencies": {
     "@telegram-apps/sdk-react": "^3.1.2",
     "axios": "^1.6.7",
+    "lodash.debounce": "^4.0.8",
     "node-rsa": "^1.1.1"
   },
   "devDependencies": {
     "@types/jest": "^29.x.x",
+    "@types/lodash.debounce": "^4.0.9",
     "@types/node": "^20.17.47",
     "@types/node-rsa": "^1.1.4",
+    "@types/react": "^19.1.8",
     "dotenv": "^16.5.0",
     "husky": "^9.1.7",
     "jest": "^29.x.x",
