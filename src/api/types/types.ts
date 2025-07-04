@@ -248,7 +248,7 @@ export namespace API {
       type: string;
       tokenizable: boolean;
       issuing_programs: API.Cards.Config.Program;
-      limits: API.Cards.Limits.Limits;
+      limits?: API.Cards.Limits.Limits;
     }
 
     export interface SubAccountCardListItem {
