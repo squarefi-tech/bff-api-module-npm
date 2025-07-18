@@ -2417,6 +2417,7 @@ export namespace API {
           offset: number;
           limit: number;
           pagination?: boolean;
+          wallet_id: string;
         }
         export interface Response {
           data: Program[];
