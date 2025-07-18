@@ -175,8 +175,8 @@ export const issuing = {
   },
   config: {
     programs: {
-      getAll: (): Promise<API.Issuing.Programs.Response['data']> =>
-        apiClientV1.getRequest<API.Issuing.Programs.Response>('/issuing/config/programs').then(({ data }) => data),
+      getAll: (params: API.Issuing.Programs.Request): Promise<API.Issuing.Programs.Response> =>
+        apiClientV1.getRequest<API.Issuing.Programs.Response>('/issuing/config/programs', { params }),
     },
   },
 };

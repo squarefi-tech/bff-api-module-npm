@@ -915,6 +915,9 @@ export namespace API {
 
   export namespace Issuing {
     export namespace Programs {
+      export type Request = {
+        wallet_id: string;
+      };
       export type Response = {
         count: number;
         data: API.Cards.Config.Program[];
