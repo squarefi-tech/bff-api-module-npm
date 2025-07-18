@@ -2439,34 +2439,24 @@ export namespace API {
     export namespace UpdateUser {
       export namespace Phone {
         export namespace RequestOTP {
-          export type Request = {
-            phone: string;
-            access_token: string;
-            refresh_token: string;
-          };
+          export type Request =
+            operations['AuthenticatedUserController_changePhone']['requestBody']['content']['application/json'];
         }
         export namespace Confirm {
-          export type Request = {
-            phone: string;
-            token: string;
-          };
+          export type Request =
+            operations['AuthenticatedUserController_changePhoneNumberConfirm']['requestBody']['content']['application/json'];
         }
       }
 
       export namespace Email {
         export namespace RequestOTP {
-          export type Request = {
-            email: string;
-            access_token: string;
-            refresh_token: string;
-          };
+          export type Request =
+            operations['AuthenticatedUserController_changeEmail']['requestBody']['content']['application/json'];
         }
 
         export namespace Confirm {
-          export type Request = {
-            email: string;
-            token: string;
-          };
+          export type Request =
+            operations['AuthenticatedUserController_changeEmail']['requestBody']['content']['application/json'];
         }
       }
     }
