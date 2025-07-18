@@ -3,12 +3,12 @@ import { API } from './types/types';
 import { apiClientV2 } from '../utils/apiClientFactory';
 
 export const user = {
-  get: (): Promise<API.User.User> => apiClientV2.getRequest<API.User.User>('/user'),
+  get: (): Promise<API.User.Get.Response> => apiClientV2.getRequest<API.User.Get.Response>('/user'),
   userData: {
-    get: (): Promise<API.User.UserData.UserData> =>
-      apiClientV2.getRequest<API.User.UserData.UserData>('/user/user-data'),
-    update: (data: API.User.UserData.UpdateUserData.Request): Promise<API.User.UserData.UpdateUserData.Response> =>
-      apiClientV2.patchRequest<API.User.UserData.UpdateUserData.Response>('/user/user-data', { data }),
+    get: (): Promise<API.User.UserData.Get.Response> =>
+      apiClientV2.getRequest<API.User.UserData.Get.Response>('/user/user-data'),
+    update: (data: API.User.UserData.Update.Request): Promise<API.User.UserData.Update.Response> =>
+      apiClientV2.patchRequest<API.User.UserData.Update.Response>('/user/user-data', { data }),
   },
   update: {
     phone: {

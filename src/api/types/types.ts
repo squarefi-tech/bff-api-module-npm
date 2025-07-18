@@ -2425,28 +2425,11 @@ export namespace API {
   }
 
   export namespace User {
-    export interface User {
-      id: string;
-      aud: string;
-      confirmation_sent_at: string;
-      recovery_sent_at: string;
-      email_change_sent_at: string;
-      new_email: string;
-      new_phone: string;
-      invited_at: string;
-      action_link: string;
-      email: string;
-      phone: string;
-      created_at: string;
-      confirmed_at: string;
-      email_confirmed_at: string;
-      phone_confirmed_at: string;
-      last_sign_in_at: string;
-      role: string;
-      updated_at: string;
-      identities: string[];
-      is_anonymous: boolean;
-      factors: string[];
+    export type User = components['schemas']['UserEntity'];
+
+    export namespace Get {
+      export type Request = operations['UserController_getMe']['parameters']['query'];
+      export type Response = operations['UserController_getMe']['responses']['200']['content']['application/json'];
     }
 
     export namespace UpdateUser {
@@ -2485,22 +2468,15 @@ export namespace API {
     }
 
     export namespace UserData {
-      export interface UserData {
-        can_invite: boolean;
-        created_at: string;
-        id: number;
-        kyc_date: string;
-        kyc_status: KYCStatuses | string;
-        referral_name: string;
-        tenant_id: string;
-        turnover_limit: number;
-        user_id: string;
-        default_currency: string;
-        is_developer: boolean; // have to add in API V2
-        user_group_id: string | null; // have to add in API V2
+      export type UserData = components['schemas']['UserDataEntity'];
+
+      export namespace Get {
+        export type Request = operations['UserController_getMyUserData']['parameters']['query'];
+        export type Response =
+          operations['UserController_getMyUserData']['responses']['200']['content']['application/json'];
       }
 
-      export namespace UpdateUserData {
+      export namespace Update {
         export type Request =
           operations['UserController_updateMyUserData']['requestBody']['content']['application/json'];
 
