@@ -1041,6 +1041,8 @@ export interface components {
             is_developer: boolean;
             first_name?: string | null;
             last_name?: string | null;
+            /** @description User birth date in ISO 8601 format */
+            birth_date?: string | null;
         };
         SignInByEmailWithPasswordDto: {
             password: string;
@@ -1061,6 +1063,8 @@ export interface components {
             default_currency?: string;
             first_name?: string | null;
             last_name?: string | null;
+            /** @description User birth date in ISO 8601 format */
+            birth_date?: string | null;
         };
         ChangeEmailDto: {
             access_token: string;
