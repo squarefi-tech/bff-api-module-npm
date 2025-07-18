@@ -440,40 +440,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/webhook/accepta/crypto": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Accepta webhook */
-        post: operations["AcceptaWebhooksController_postCrypto"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/webhook/utila/crypto": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Utila webhook */
-        post: operations["UtilaWebhooksController_postCrypto"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/exchange/rates": {
         parameters: {
             query?: never;
@@ -635,23 +601,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/kyc/sumsub/generate-token": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Generate Sumsub access token */
-        post: operations["KycController_createToken"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/kyc/forms/{rail_id}": {
         parameters: {
             query?: never;
@@ -662,54 +611,6 @@ export interface paths {
         get: operations["KycFormsController_getFormConfigByType"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/webhook/kyc/sumsub": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["KycWebhooksController_sumsub"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/webhook/kyc/hifibridge": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["KycWebhooksController_hifiBridgeWebhook"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/webhook/kyc/raincards": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["KycWebhooksController_raincardsWebhook"];
         delete?: never;
         options?: never;
         head?: never;
@@ -763,6 +664,23 @@ export interface paths {
         put?: never;
         /** Submit KYC verification */
         post: operations["WalletKycRailsController_update"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/kyc/{wallet_id}/rails/{rail_id}/terms-and-conditions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm terms and conditions for KYC rail */
+        post: operations["WalletKycRailsController_confirmTermsAndConditions"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1029,8 +947,8 @@ export interface components {
             access_token: string;
             expires_in: number;
             expires_at?: number;
-            refresh_token: string;
             token_type: string;
+            refresh_token: string;
         };
         VerifyPhoneDto: {
             phone: string;
@@ -1054,6 +972,15 @@ export interface components {
             username: string;
             invite_code?: string;
             referrer?: string;
+        };
+        TelegramSessionDto: {
+            provider_token?: string | null;
+            provider_refresh_token?: string | null;
+            access_token: string;
+            expires_in: number;
+            expires_at?: number;
+            token_type: string;
+            refresh_token?: string | null;
         };
         TelegramSignInByTgIdDto: {
             tg_id: string;
@@ -1112,6 +1039,8 @@ export interface components {
             default_currency: string;
             user_groups_id: string | null;
             is_developer: boolean;
+            first_name?: string | null;
+            last_name?: string | null;
         };
         SignInByEmailWithPasswordDto: {
             password: string;
@@ -1129,14 +1058,18 @@ export interface components {
             phone: string;
         };
         UpdateUserDataDto: {
-            default_currency: string;
+            default_currency?: string;
+            first_name?: string | null;
+            last_name?: string | null;
         };
         ChangeEmailDto: {
             access_token: string;
-            refresh_token: string;
             email: string;
+            refresh_token?: string | null;
         };
         ChangeEmailConfirmDto: {
+            access_token: string;
+            refresh_token?: string | null;
             /** @description Verification email */
             email: string;
             /** @description Verification code */
@@ -1523,9 +1456,6 @@ export interface components {
             /** @enum {string} */
             role: "READ_ONLY" | "DEVELOPER" | "OWNER";
         };
-        KycTokenDto: {
-            token: string;
-        };
         KycFormFieldOptionDto: {
             label: string;
             value: string;
@@ -1851,6 +1781,8 @@ export interface components {
             message: string | null;
             /** @enum {string} */
             readonly status: "APPROVED" | "DECLINED" | "PENDING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS";
+            /** @default false */
+            terms_confirmed: boolean;
             extra_actions?: components["schemas"]["WalletKycRailExtraActionDto"][];
             /** @description Accepted terms and conditions data */
             terms_and_conditions: components["schemas"]["WalletKycRailTermsAndConditionsDto"][];
@@ -2201,7 +2133,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SessionDto"];
+                    "application/json": components["schemas"]["TelegramSessionDto"];
                 };
             };
             /** @description Invalid tenant */
@@ -2238,7 +2170,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SessionDto"];
+                    "application/json": components["schemas"]["TelegramSessionDto"];
                 };
             };
             /** @description Invalid tenant */
@@ -3028,40 +2960,6 @@ export interface operations {
             };
         };
     };
-    AcceptaWebhooksController_postCrypto: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    UtilaWebhooksController_postCrypto: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     ExchangeRatesController_findAll: {
         parameters: {
             query: {
@@ -3463,32 +3361,6 @@ export interface operations {
             };
         };
     };
-    KycController_createToken: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["KycTokenDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     KycFormsController_getFormConfigByType: {
         parameters: {
             query?: never;
@@ -3507,57 +3379,6 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["KycFormFieldContainerDto"][];
                 };
-            };
-        };
-    };
-    KycWebhooksController_sumsub: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    KycWebhooksController_hifiBridgeWebhook: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    KycWebhooksController_raincardsWebhook: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };
@@ -3757,6 +3578,49 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description You don`t have access to current wallet */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WalletKycRailsController_confirmTermsAndConditions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wallet_id: string;
+                rail_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Terms and conditions confirmed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletKycRailTypeDto"];
+                };
             };
             /** @description Unauthorized */
             401: {

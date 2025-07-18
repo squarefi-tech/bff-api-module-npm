@@ -1575,13 +1575,18 @@ export namespace API {
     }
 
     export namespace OrderTypes {
+      export type OrderTypeKycRail = {
+        id: string;
+        kyc_rail_id: string;
+      };
       export interface OrderInfo {
         id: string;
         transaction_type: string;
         description: string | null;
         direction: 'deposit' | 'withdrawal';
         is_internal: boolean;
-        kyc_rails_id: string | null;
+        // kyc_rails_id: string | null; // deprecated use order_types_kyc_rails instead
+        order_types_kyc_rails: OrderTypeKycRail[];
         payment_method: OrderType | string;
       }
 
@@ -2496,11 +2501,11 @@ export namespace API {
       }
 
       export namespace UpdateUserData {
-        export type Request = {
-          default_currency: string;
-        };
+        export type Request =
+          operations['UserController_updateMyUserData']['requestBody']['content']['application/json'];
 
-        export type Response = API.User.UserData.UserData;
+        export type Response =
+          operations['UserController_updateMyUserData']['responses']['200']['content']['application/json'];
       }
     }
   }
