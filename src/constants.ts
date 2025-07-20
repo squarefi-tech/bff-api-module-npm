@@ -160,6 +160,7 @@ export enum KYCStatuses {
 export enum OrderStatuses {
   NEW = 'NEW',
   PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
   CANCELED = 'CANCELED',
   COMPLETE = 'COMPLETE',
   ERROR = 'ERROR',
