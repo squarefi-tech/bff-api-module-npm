@@ -2501,7 +2501,7 @@ export namespace API {
 
         export namespace Confirm {
           export type Request =
-            operations['AuthenticatedUserController_changeEmail']['requestBody']['content']['application/json'];
+            operations['AuthenticatedUserController_changeEmailConfirm']['requestBody']['content']['application/json'];
         }
       }
     }

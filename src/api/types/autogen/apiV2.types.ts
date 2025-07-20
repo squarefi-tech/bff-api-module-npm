@@ -707,6 +707,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/integration-vendors/sync-data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["IntegrationVendorsController_syncVendorData"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/storage/kyc": {
         parameters: {
             query?: never;
@@ -1826,6 +1842,24 @@ export interface components {
             tld: string | null;
             translations: components["schemas"]["CountryTranslations"][] | null;
             wikiDataId: string | null;
+        };
+        LoadIntegrationVendorDataDto: {
+            /** @description Wallet ID */
+            wallet_id: string;
+            /** @description Integration vendor ID */
+            integration_vendor_id: string;
+            /**
+             * @description Integration vendor type
+             * @enum {string}
+             */
+            type: "hifibridge" | "raincards";
+            /**
+             * @description Vendor user type
+             * @enum {string}
+             */
+            user_type: "business" | "individual";
+            /** @description Provider ID from external system */
+            provider_id: string;
         };
         StorageUploadFileResponseDto: {
             fullPath: string;
@@ -3663,6 +3697,27 @@ export interface operations {
             };
             /** @description Unauthorized */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    IntegrationVendorsController_syncVendorData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoadIntegrationVendorDataDto"];
+            };
+        };
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
