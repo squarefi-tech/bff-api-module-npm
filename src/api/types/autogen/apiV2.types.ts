@@ -1182,11 +1182,9 @@ export interface components {
             id: number;
             amount: number;
             created_at: string;
-            from: string | null;
             info: string | null;
             /** @enum {string} */
             status: "complete" | "pending" | "canceled" | "failed" | "processing" | "new";
-            to: string | null;
             txid: string | null;
             /** @enum {string} */
             type: "deposit_crypto" | "withdrawal_crypto" | "deposit_fiat" | "withdrawal_fiat" | "deposit_vcard" | "withdrawal_vcard" | "deposit" | "withdrawal";
@@ -1200,10 +1198,8 @@ export interface components {
         };
         TransactionsFilter: {
             created_at?: string;
-            from?: string | null;
             /** @enum {string} */
             status?: "complete" | "pending" | "canceled" | "failed" | "processing" | "new";
-            to?: string | null;
             /** @enum {string} */
             type?: "deposit_crypto" | "withdrawal_crypto" | "deposit_fiat" | "withdrawal_fiat" | "deposit_vcard" | "withdrawal_vcard" | "deposit" | "withdrawal";
             /** @enum {string|null} */
@@ -1242,7 +1238,7 @@ export interface components {
             code: string | null;
             name: string;
             /** @enum {string|null} */
-            type: "individual" | "business" | null;
+            type: "individual" | "business" | "universal" | null;
             /** @description Current terms and conditions data */
             terms_and_conditions?: components["schemas"]["KycRailTermsAndConditionsEntity"][];
         };
@@ -1595,7 +1591,7 @@ export interface components {
         };
         KycEntityDto: {
             /** @enum {string} */
-            type: "individual" | "business";
+            type: "individual" | "business" | "universal";
             id_number?: string | null;
             /** @enum {string|null} */
             id_type?: "PASSPORT" | "ID_CARD" | "DRIVERS" | "NIN" | null;
@@ -1686,7 +1682,7 @@ export interface components {
         };
         CreateOrUpdateKycEntityDto: {
             /** @enum {string} */
-            type: "individual" | "business";
+            type: "individual" | "business" | "universal";
             id_number?: string | null;
             /** @enum {string|null} */
             id_type?: "PASSPORT" | "ID_CARD" | "DRIVERS" | "NIN" | null;
@@ -4293,7 +4289,7 @@ export interface operations {
             header?: never;
             path: {
                 wallet_id: string;
-                type: "individual" | "business";
+                type: "individual" | "business" | "universal";
             };
             cookie?: never;
         };

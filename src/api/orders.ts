@@ -191,9 +191,7 @@ export const orders = {
         ): Promise<API.Orders.V2.Create.ByOrderType.HIFI_SEPA_OFFRAMP.Response> =>
           apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.HIFI_SEPA_OFFRAMP.Response>(
             '/v2/orders/HIFI_SEPA_OFFRAMP',
-            {
-              data,
-            }
+            { data }
           ),
 
         [OrderType.OMNIBUS_CRYPTO_TRANSFER]: (
@@ -201,9 +199,7 @@ export const orders = {
         ): Promise<API.Orders.V2.Create.ByOrderType.OMNIBUS_CRYPTO_TRANSFER.Response> =>
           apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.OMNIBUS_CRYPTO_TRANSFER.Response>(
             '/v2/orders/OMNIBUS_CRYPTO_TRANSFER',
-            {
-              data,
-            }
+            { data }
           ),
 
         [OrderType.HIFI_CRYPTO_TRANSFER]: (
@@ -211,6 +207,13 @@ export const orders = {
         ): Promise<API.Orders.V2.Create.ByOrderType.HIFI_CRYPTO_TRANSFER.Response> =>
           apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.HIFI_CRYPTO_TRANSFER.Response>(
             '/v2/orders/HIFI_CRYPTO_TRANSFER',
+            { data }
+          ),
+        [OrderType.SEGREGATED_CRYPTO_TRANSFER]: (
+          data: API.Orders.V2.Create.ByOrderType.SEGREGATED_CRYPTO_TRANSFER.Request
+        ): Promise<API.Orders.V2.Create.ByOrderType.SEGREGATED_CRYPTO_TRANSFER.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.SEGREGATED_CRYPTO_TRANSFER.Response>(
+            '/v2/orders/SEGREGATED_CRYPTO_TRANSFER',
             { data }
           ),
 
