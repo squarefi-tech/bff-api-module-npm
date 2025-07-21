@@ -518,7 +518,7 @@ export namespace API {
       export namespace Create {
         export type Request = {
           nickname: string;
-          type: CounterpartyDestinationType;
+          type: components['schemas']['CounterpartyDestinationDto']['type'];
           external_banking_data?: components['schemas']['CreateCounterpartyExternalBankingDataDto'];
           external_crypto_data?: components['schemas']['CreateCounterpartyExternalCryptoDataDto'];
           counterparty_account_id: string;
