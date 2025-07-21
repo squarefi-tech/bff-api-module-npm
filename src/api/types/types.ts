@@ -548,8 +548,7 @@ export namespace API {
     }
 
     export namespace GetById {
-      export type Request = operations['CounterpartyAccountsController_findOne']['parameters']['path'] &
-        operations['CounterpartyAccountsController_findOne']['parameters']['query'];
+      export type Request = operations['CounterpartyAccountsController_findOne']['parameters']['path'];
 
       export type Response =
         operations['CounterpartyAccountsController_findOne']['responses']['200']['content']['application/json'];
