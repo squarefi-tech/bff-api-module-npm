@@ -516,11 +516,14 @@ export namespace API {
       }
 
       export namespace Create {
-        export type Request =
-          operations['CounterpartyDestinationsController_create']['requestBody']['content']['application/json'] &
-            operations['CounterpartyDestinationsController_create']['parameters']['path'] & {
-              wallet_id: string;
-            };
+        export type Request = {
+          nickname: string;
+          type: CounterpartyDestinationType;
+          external_banking_data?: components['schemas']['CreateCounterpartyExternalBankingDataDto'];
+          external_crypto_data?: components['schemas']['CreateCounterpartyExternalCryptoDataDto'];
+          counterparty_account_id: string;
+          wallet_id: string;
+        };
 
         export type Response =
           operations['CounterpartyDestinationsController_create']['responses']['200']['content']['application/json'];
