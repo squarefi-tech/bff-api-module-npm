@@ -430,44 +430,20 @@ export namespace API {
   }
 
   export namespace Counterparties {
-    export interface Counterparty {
-      id: string;
-      email?: string | null;
-      phone?: string | null;
-      name: string;
-      nickname?: string | null;
-      type: CounterpartyType | string;
-      created_at: string;
-    }
+    export type Counterparty = components['schemas']['CounterpartyAccountDto'];
     export namespace Destination {
       export namespace List {
         export interface DestinationListItemCommonFields {
           id: string;
           nickname: string;
-          type: CounterpartyDestinationType | string;
+          type: components['schemas']['CounterpartyDestinationDto']['type'];
           created_at: string;
         }
 
-        export interface DestinationListItemExternalBankingData {
-          account_number: string;
-          routing_number: string;
-          bank_name: string;
-          note: string;
-          swift_bic: string;
-          address: {
-            city: string;
-            country_id: number;
-            postcode: string;
-            street1: string;
-            street2?: string;
-          };
-        }
+        export type DestinationListItemExternalBankingData =
+          components['schemas']['CounterpartyExternalBankingDataDto'];
 
-        export interface DestinationListItemExternalCryptoData {
-          address: string;
-          currency_id: string;
-          memo?: string;
-        }
+        export type DestinationListItemExternalCryptoData = components['schemas']['CounterpartyExternalCryptoDataDto'];
 
         export interface DestinationListItemWithExternalBankingData extends DestinationListItemCommonFields {
           type:
@@ -489,26 +465,13 @@ export namespace API {
           | DestinationListItemWithExternalBankingData
           | DestinationListItemWithExternalCryptoData;
 
-        export interface Request {
+        export type Request = operations['CounterpartyAccountsController_findAll']['parameters']['query'] & {
           wallet_id: string;
           counterparty_account_id: string;
-          limit?: number;
-          offset?: number;
-          search?: string;
-          type?: CounterpartyDestinationType | string;
-          sort_by?: 'created_at' | 'nickname' | 'type';
-          sort_order?: SortingDirection;
-          filter?: {
-            type?: CounterpartyDestinationType;
-            nickname?: string;
-            created_at?: string;
-          };
-        }
-
-        export type Response = {
-          total: number;
-          data: CounterpartyDestinationListItem[];
         };
+
+        export type Response =
+          operations['CounterpartyAccountsController_findAll']['responses']['200']['content']['application/json'];
       }
 
       export namespace Detail {
@@ -522,10 +485,8 @@ export namespace API {
           };
         }
 
-        export interface DestinationDetailItemExternalCryptoData
-          extends API.Counterparties.Destination.List.DestinationListItemExternalCryptoData {
-          currency: API.Currencies.Currency;
-        }
+        export type DestinationDetailItemExternalCryptoData =
+          API.Counterparties.Destination.List.DestinationListItemExternalCryptoData;
 
         export interface DestinationDetailItemWithExternalBankingData extends DestinationDetailItemCommonFields {
           type:
@@ -546,97 +507,78 @@ export namespace API {
         export type DestinationDetailItem =
           | DestinationDetailItemWithExternalBankingData
           | DestinationDetailItemWithExternalCryptoData;
-        export interface Request {
+        export type Request = operations['CounterpartyDestinationsController_findOne']['parameters']['path'] & {
           wallet_id: string;
-          counterparty_account_id: string;
-          counterparty_destination_id: string;
-        }
+        };
 
-        export type Response = DestinationDetailItem;
+        export type Response =
+          operations['CounterpartyDestinationsController_findOne']['responses']['200']['content']['application/json'];
       }
 
       export namespace Create {
-        export interface Request {
-          wallet_id: string;
-          counterparty_account_id: string;
-          type: CounterpartyDestinationType;
-          nickname: string;
-          external_banking_data?: API.Counterparties.Destination.Detail.DestinationDetailItemExternalBankingData;
+        export type Request =
+          operations['CounterpartyDestinationsController_create']['requestBody']['content']['application/json'] &
+            operations['CounterpartyDestinationsController_create']['parameters']['path'] & {
+              wallet_id: string;
+            };
 
-          external_crypto_data?: Pick<
-            API.Counterparties.Destination.Detail.DestinationDetailItemExternalCryptoData,
-            'currency_id' | 'address' | 'memo'
-          >;
-        }
-
-        export type Response = API.Counterparties.Destination.Detail.DestinationDetailItem;
+        export type Response =
+          operations['CounterpartyDestinationsController_create']['responses']['200']['content']['application/json'];
       }
 
       export namespace Delete {
-        export interface Request {
+        export type Request = operations['CounterpartyDestinationsController_delete']['parameters']['path'] & {
           wallet_id: string;
-          counterparty_account_id: string;
-          counterparty_destination_id: string;
-        }
+        };
+
+        export type Response =
+          operations['CounterpartyDestinationsController_delete']['responses']['200']['content']['application/json'];
       }
 
       export namespace Update {
-        export interface Request {
-          wallet_id: string;
-          counterparty_account_id: string;
-          counterparty_destination_id: string;
-          nickname: string;
-        }
+        export type Request =
+          operations['CounterpartyDestinationsController_update']['requestBody']['content']['application/json'] &
+            operations['CounterpartyDestinationsController_update']['parameters']['path'] & {
+              wallet_id: string;
+            };
 
-        export type Response = API.Counterparties.Destination.Detail.DestinationDetailItemCommonFields;
+        export type Response =
+          operations['CounterpartyDestinationsController_update']['responses']['200']['content']['application/json'];
       }
     }
 
     export namespace GetById {
-      export interface Request {
-        wallet_id: string;
-        counterparty_account_id: string;
-      }
+      export type Request = operations['CounterpartyAccountsController_findOne']['parameters']['path'] &
+        operations['CounterpartyAccountsController_findOne']['parameters']['query'];
 
-      export type Response = Counterparty;
+      export type Response =
+        operations['CounterpartyAccountsController_findOne']['responses']['200']['content']['application/json'];
     }
 
     export namespace List {
-      export interface Request {
-        wallet_id: string;
-        offset?: number;
-        limit?: number;
-        sort_by?: 'created_at' | 'nickname' | 'type' | 'email' | 'phone';
-        sort_order?: SortingDirection;
-        filter?: {
-          type?: CounterpartyDestinationType;
-          nickname?: string;
-          created_at?: string;
-          search?: string;
-        };
-      }
+      export type Request = operations['CounterpartyAccountsController_findAll']['parameters']['query'] &
+        operations['CounterpartyAccountsController_findAll']['parameters']['path'];
 
-      export type Response = {
-        total: number;
-        data: Counterparty[];
-      };
+      export type Response =
+        operations['CounterpartyAccountsController_findAll']['responses']['200']['content']['application/json'];
     }
 
     export namespace Create {
-      export type Request = Omit<Counterparty, 'id' | 'created_at'> & {
-        wallet_id: string;
-      };
+      export type Request =
+        operations['CounterpartyAccountsController_create']['requestBody']['content']['application/json'] &
+          operations['CounterpartyAccountsController_create']['parameters']['path'];
 
-      export type Response = Counterparty;
+      export type Response =
+        operations['CounterpartyAccountsController_create']['responses']['200']['content']['application/json'];
     }
 
     export namespace Update {
-      export type Request = Partial<Omit<Counterparty, 'id' | 'created_at'>> & {
-        wallet_id: string;
-        counterparty_account_id: string;
-      };
+      export type Request =
+        operations['CounterpartyAccountsController_update']['requestBody']['content']['application/json'] &
+          operations['CounterpartyAccountsController_update']['parameters']['path'];
 
-      export type Response = Counterparty;
+      export type Response =
+        operations['CounterpartyAccountsController_update']['responses']['200']['content']['application/json'];
     }
   }
 

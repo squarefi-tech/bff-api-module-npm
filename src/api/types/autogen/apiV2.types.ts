@@ -1865,7 +1865,7 @@ export interface components {
             fullPath: string;
         };
         CounterpartiesFilter: {
-            email?: string | null;
+            email?: string;
             /** @description Phone number */
             phone?: string;
             name?: string;
@@ -1877,9 +1877,9 @@ export interface components {
         };
         CounterpartyAccountDto: {
             id: string;
-            email?: string | null;
+            email: string;
             /** @description Phone number */
-            phone?: string;
+            phone: string;
             name: string;
             nickname?: string | null;
             /** @enum {string} */
@@ -1893,16 +1893,16 @@ export interface components {
             data: components["schemas"]["CounterpartyAccountDto"][];
         };
         CreateCounterpartyAccountDto: {
-            email?: string | null;
+            email: string;
             /** @description Phone number */
-            phone?: string;
+            phone: string;
             name: string;
             nickname?: string | null;
             /** @enum {string} */
             type: "INDIVIDUAL" | "BUSINESS";
         };
         UpdateCounterpartyAccountDto: {
-            email?: string | null;
+            email?: string;
             /** @description Phone number */
             phone?: string;
             name?: string;
