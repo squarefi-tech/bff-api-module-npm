@@ -1865,7 +1865,7 @@ export interface components {
             fullPath: string;
         };
         CounterpartiesFilter: {
-            email?: string | null;
+            email?: string;
             /** @description Phone number */
             phone?: string;
             name?: string;
@@ -1877,9 +1877,9 @@ export interface components {
         };
         CounterpartyAccountDto: {
             id: string;
-            email?: string | null;
+            email: string;
             /** @description Phone number */
-            phone?: string;
+            phone: string;
             name: string;
             nickname?: string | null;
             /** @enum {string} */
@@ -1893,16 +1893,16 @@ export interface components {
             data: components["schemas"]["CounterpartyAccountDto"][];
         };
         CreateCounterpartyAccountDto: {
-            email?: string | null;
+            email: string;
             /** @description Phone number */
-            phone?: string;
+            phone: string;
             name: string;
             nickname?: string | null;
             /** @enum {string} */
             type: "INDIVIDUAL" | "BUSINESS";
         };
         UpdateCounterpartyAccountDto: {
-            email?: string | null;
+            email?: string;
             /** @description Phone number */
             phone?: string;
             name?: string;
@@ -1925,11 +1925,12 @@ export interface components {
             description?: string | null;
         };
         CounterpartyExternalBankingDataDto: {
-            account_number: string;
-            routing_number: string | null;
+            account_number?: string | null;
+            routing_number?: string | null;
             bank_name: string | null;
             note: string | null;
-            swift_bic: string | null;
+            swift_bic?: string | null;
+            iban?: string | null;
             address?: components["schemas"]["AddressEntity"];
         };
         CryptoEntity: {
@@ -1960,8 +1961,8 @@ export interface components {
             /** @enum {string} */
             type: "DOMESTIC_WIRE" | "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL";
             created_at: string;
-            external_banking_data: components["schemas"]["CounterpartyExternalBankingDataDto"];
-            external_crypto_data: components["schemas"]["CounterpartyExternalCryptoDataDto"];
+            external_banking_data?: components["schemas"]["CounterpartyExternalBankingDataDto"];
+            external_crypto_data?: components["schemas"]["CounterpartyExternalCryptoDataDto"];
         };
         FindAllCounterpartyDestinationsResponseDto: {
             /** @example 20 */
@@ -1978,11 +1979,12 @@ export interface components {
             description?: string | null;
         };
         CreateCounterpartyExternalBankingDataDto: {
-            account_number: string;
-            routing_number: string | null;
+            account_number?: string | null;
+            routing_number?: string | null;
             bank_name: string | null;
             note: string | null;
-            swift_bic: string | null;
+            swift_bic?: string | null;
+            iban?: string | null;
             address?: components["schemas"]["CreateCounterpartyExternalBankingDataAddressDto"];
         };
         CreateCounterpartyExternalCryptoDataDto: {
@@ -3990,6 +3992,7 @@ export interface operations {
             header?: never;
             path: {
                 counterparty_account_id: string;
+                wallet_id: unknown;
             };
             cookie?: never;
         };
@@ -4031,6 +4034,7 @@ export interface operations {
             header?: never;
             path: {
                 counterparty_account_id: string;
+                wallet_id: unknown;
             };
             cookie?: never;
         };
@@ -4077,6 +4081,7 @@ export interface operations {
             path: {
                 counterparty_account_id: string;
                 counterparty_destination_id: string;
+                wallet_id: unknown;
             };
             cookie?: never;
         };
@@ -4119,6 +4124,7 @@ export interface operations {
             path: {
                 counterparty_account_id: string;
                 counterparty_destination_id: string;
+                wallet_id: unknown;
             };
             cookie?: never;
         };
@@ -4161,6 +4167,7 @@ export interface operations {
             path: {
                 counterparty_account_id: string;
                 counterparty_destination_id: string;
+                wallet_id: unknown;
             };
             cookie?: never;
         };

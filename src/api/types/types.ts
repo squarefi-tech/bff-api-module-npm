@@ -432,8 +432,8 @@ export namespace API {
   export namespace Counterparties {
     export interface Counterparty {
       id: string;
-      email?: string | null;
-      phone?: string | null;
+      email: string;
+      phone: string;
       name: string;
       nickname?: string | null;
       type: CounterpartyType | string;
@@ -1877,6 +1877,8 @@ export namespace API {
               wallet_id: string;
               from_currency_id: string;
               to_currency_id: string;
+              refference?: string;
+              note?: string;
             }
 
             export interface Response {
@@ -1913,6 +1915,8 @@ export namespace API {
               wallet_id: string;
               from_currency_id: string;
               to_currency_id: string;
+              refference?: string;
+              note?: string;
             }
 
             export interface Response {
@@ -1949,6 +1953,8 @@ export namespace API {
               wallet_id: string;
               from_currency_id: string;
               to_currency_id: string;
+              refference?: string;
+              note?: string;
             }
 
             export interface Response {
@@ -2020,6 +2026,7 @@ export namespace API {
               wallet_id: string;
               wallet_account_id: string;
               from_currency_id: string;
+              note?: string;
             }
 
             export interface Response {
@@ -2057,6 +2064,7 @@ export namespace API {
               wallet_id: string;
               wallet_account_id: string;
               from_currency_id: string;
+              note?: string;
             }
 
             export interface Response {
@@ -2094,6 +2102,7 @@ export namespace API {
               wallet_id: string;
               wallet_account_id: string;
               from_currency_id: string;
+              note?: string;
             }
 
             export interface Response {
