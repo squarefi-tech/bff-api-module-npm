@@ -520,6 +520,7 @@ export namespace API {
           extends API.Counterparties.Destination.List.DestinationListItemExternalBankingData {
           address: API.Counterparties.Destination.List.DestinationListItemExternalBankingData['address'] & {
             country?: API.Location.Countries.Country;
+            state?: API.Location.States.State;
           };
         }
 
