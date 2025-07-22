@@ -457,6 +457,7 @@ export namespace API {
           address: {
             city: string;
             country_id: number;
+            state_id: number;
             postcode: string;
             street1: string;
             street2?: string;
