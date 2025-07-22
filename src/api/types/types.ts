@@ -449,11 +449,11 @@ export namespace API {
         }
 
         export interface DestinationListItemExternalBankingData {
-          account_number: string;
-          routing_number: string;
+          account_number?: string;
+          routing_number?: string;
           bank_name: string;
           note: string;
-          swift_bic: string;
+          swift_bic?: string;
           address: {
             city: string;
             country_id: number;
@@ -558,6 +558,13 @@ export namespace API {
       }
 
       export namespace Create {
+        export interface ExternalBankingData {
+          account_number: string;
+          routing_number: string;
+          bank_name: string;
+          note: string;
+          swift_bic: string;
+        }
         export interface Request {
           wallet_id: string;
           counterparty_account_id: string;
