@@ -899,6 +899,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/system/states/{country_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List of states of country */
+        get: operations["SystemController_states"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/system/exchange-rates": {
         parameters: {
             query?: never;
@@ -1914,6 +1931,24 @@ export interface components {
             type?: "DOMESTIC_WIRE" | "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL";
             created_at?: string;
         };
+        StateEntity: {
+            id: number;
+            name: string;
+            country_id: number;
+            country_code: string;
+            fips_code: string | null;
+            iso2: string | null;
+            type: string | null;
+            level: number | null;
+            parent_id: number | null;
+            native: string | null;
+            latitude: number | null;
+            longitude: number | null;
+            created_at: string | null;
+            updated_at: string;
+            flag: number;
+            wikiDataId: string | null;
+        };
         AddressEntity: {
             id?: string;
             city?: string | null;
@@ -1923,6 +1958,8 @@ export interface components {
             street1?: string | null;
             street2?: string | null;
             description?: string | null;
+            state_id?: number | null;
+            readonly state?: components["schemas"]["StateEntity"] | null;
         };
         CounterpartyExternalBankingDataDto: {
             account_number?: string | null;
@@ -1977,6 +2014,7 @@ export interface components {
             street1?: string | null;
             street2?: string | null;
             description?: string | null;
+            state_id?: number | null;
         };
         CreateCounterpartyExternalBankingDataDto: {
             account_number?: string | null;
@@ -2021,6 +2059,28 @@ export interface components {
         SystemCountriesResponseDto: {
             total: number;
             data: components["schemas"]["CountryDto"][];
+        };
+        StateDto: {
+            id: number;
+            name: string;
+            country_id: number;
+            country_code: string;
+            fips_code: string | null;
+            iso2: string | null;
+            type: string | null;
+            level: number | null;
+            parent_id: number | null;
+            native: string | null;
+            latitude: number | null;
+            longitude: number | null;
+            created_at: string | null;
+            updated_at: string;
+            flag: number;
+            wikiDataId: string | null;
+        };
+        SystemStatesResponseDto: {
+            total: number;
+            data: components["schemas"]["StateDto"][];
         };
         SystemExchangeRatesResponseDto: {
             total: number;
@@ -4304,6 +4364,34 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SystemCountriesResponseDto"];
+                };
+            };
+            /** @description Invalid tenant */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    SystemController_states: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                country_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemStatesResponseDto"];
                 };
             };
             /** @description Invalid tenant */

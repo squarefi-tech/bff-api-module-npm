@@ -19,4 +19,8 @@ export const list = {
     getAll: (params?: AxiosRequestConfig): Promise<API.Location.Countries.List.Response> =>
       apiClientV2.getRequest<API.Location.Countries.List.Response>('/system/countries', params),
   },
+  states: {
+    getAll: ({ country_id }: API.Location.States.List.Request): Promise<API.Location.States.List.Response> =>
+      apiClientV2.getRequest<API.Location.States.List.Response>(`/system/states/${country_id}`),
+  },
 };

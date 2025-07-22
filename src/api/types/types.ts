@@ -1154,6 +1154,13 @@ export namespace API {
         };
       }
     }
+    export namespace States {
+      export type State = components['schemas']['StateDto'];
+      export namespace List {
+        export type Request = operations['SystemController_states']['parameters']['path'];
+        export type Response = operations['SystemController_states']['responses']['200']['content']['application/json'];
+      }
+    }
   }
   export namespace Orders {
     export namespace Create {
