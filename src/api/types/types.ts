@@ -2205,6 +2205,11 @@ export namespace API {
           meta?: {
             currency?: string;
             description?: string;
+            counterparty_account_id?: string;
+            from_currency_id?: string;
+            to_currency_id?: string;
+            note?: string;
+            refference?: string;
           };
         };
 
