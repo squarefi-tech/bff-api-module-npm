@@ -32,8 +32,12 @@ export async function refreshTokens(): Promise<ITokens> {
   }
 
   if (isTMA()) {
+    console.log('miniApp.isSupported()', miniApp.isSupported());
+    console.log('miniApp.isMounted()', miniApp.isMounted());
     initTelegramSDK();
     miniApp.isSupported() && !miniApp.isMounted() && miniApp.mount();
+    console.log('miniApp.isSupported()', miniApp.isSupported());
+    console.log('miniApp.isMounted()', miniApp.isMounted());
 
     const tg_id = initData.user()?.id;
     const hash = initData.hash();
