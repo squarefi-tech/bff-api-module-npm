@@ -31,8 +31,8 @@ export const auth = {
           data: { phone: convertPhoneToSupabaseFormat(phone), ...data },
         }),
     },
-    telegram: (data: API.Auth.Telegram.Signin): Promise<API.Auth.Tokens> =>
-      apiClientV2.postRequest<API.Auth.Tokens>(telegramSignInPath, { data }),
+    telegram: (data: API.Auth.Telegram.Signin.Request): Promise<API.Auth.Telegram.Signin.Response> =>
+      apiClientV2.postRequest<API.Auth.Telegram.Signin.Response>(telegramSignInPath, { data }),
     password: (
       email: string,
       password: string // check on backend V2
@@ -46,8 +46,8 @@ export const auth = {
       apiClientV2.postRequest<API.Auth.Tokens>('/auth/sign-up/password/email', {
         data: { email, password },
       }),
-    telegram: (data: API.Auth.Telegram.Signup): Promise<API.Auth.Tokens> =>
-      apiClientV2.postRequest<API.Auth.Tokens>(telegramSignUpPath, { data }),
+    telegram: (data: API.Auth.Telegram.Signup.Request): Promise<API.Auth.Telegram.Signup.Response> =>
+      apiClientV2.postRequest<API.Auth.Telegram.Signup.Response>(telegramSignUpPath, { data }),
   },
   refresh: {
     refresh_token: (refresh_token: string): Promise<API.Auth.Tokens> =>

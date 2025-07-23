@@ -24,21 +24,15 @@ import { components, operations } from './autogen/apiV2.types';
 export namespace API {
   export namespace Auth {
     export namespace Telegram {
-      export interface Signin {
-        tg_id: number;
-        hash: string;
-        init_data_raw: string;
+      export namespace Signin {
+        export type Request = operations['AuthTelegramController_signIn']['requestBody']['content']['application/json'];
+        export type Response =
+          operations['AuthTelegramController_signIn']['responses']['200']['content']['application/json'];
       }
-      export interface Signup {
-        phone: string;
-        tg_id: number;
-        first_name: string;
-        last_name?: string;
-        hash: string;
-        init_data_raw: string;
-        referrer?: string;
-        invite_code?: string;
-        username: string;
+      export namespace Signup {
+        export type Request = operations['AuthTelegramController_signUp']['requestBody']['content']['application/json'];
+        export type Response =
+          operations['AuthTelegramController_signUp']['responses']['200']['content']['application/json'];
       }
     }
 
