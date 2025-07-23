@@ -78,16 +78,6 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
           isRetryRequest;
 
         const isRefreshAvailable = !isTokenRefreshing && !isRefreshNotRequired;
-        console.log('isRefreshAvailable', isRefreshAvailable);
-        console.log('isLogoutNeccesary', isLogoutNeccesary);
-        console.log('isRetryRequest', isRetryRequest);
-        console.log('isTelegramSignInRequest', isTelegramSignInRequest);
-        console.log('isTelegramSignUpRequest', isTelegramSignUpRequest);
-        console.log('isRefreshTokenRequest', isRefreshTokenRequest);
-        console.log('isRefreshNotRequired', isRefreshNotRequired);
-        console.log('isTokenRefreshing', isTokenRefreshing);
-        console.log('refreshToken', refreshToken);
-        console.log('isTMA', isTMA());
 
         if (isLogoutNeccesary) {
           if (typeof window !== 'undefined') {

@@ -21,8 +21,6 @@ export function deleteTokens() {
 
 export async function refreshTokens(): Promise<ITokens> {
   const refresh_token = getFromLocalStorage('refresh_token');
-  console.log('refresh_token in tokensFactory', refresh_token);
-  console.log('isTMA in tokensFactory', isTMA());
 
   if (refresh_token) {
     const refreshResponse = await auth.refresh.refresh_token({ refresh_token });
@@ -33,18 +31,9 @@ export async function refreshTokens(): Promise<ITokens> {
 
   if (isTMA()) {
     initData.restore();
-    console.log('initData.restore()', initData.restore);
-
     const tg_id = initData.user()?.id;
     const hash = initData.hash();
     const init_data_raw = initData.raw();
-
-    console.log('initData in tokensFactory', initData);
-    console.log('miniApp in tokensFactory', miniApp);
-    console.log('initData.user()', initData.user());
-    console.log('initData.hash()', initData.hash());
-    console.log('initData.raw()', initData.raw());
-
     if (!tg_id || !hash || !init_data_raw) {
       return Promise.reject(new Error('No TG ID, hash or init data raw found in tokensFactory'));
     }
