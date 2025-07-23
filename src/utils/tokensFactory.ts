@@ -37,6 +37,10 @@ export async function refreshTokens(): Promise<ITokens> {
     const hash = initData.hash();
     const init_data_raw = initData.raw();
 
+    console.log('initData.user()', initData.user());
+    console.log('initData.hash()', initData.hash());
+    console.log('initData.raw()', initData.raw());
+
     if (!tg_id || !hash || !init_data_raw) {
       return Promise.reject(new Error('No TG ID, hash or init data raw found in tokensFactory'));
     }
