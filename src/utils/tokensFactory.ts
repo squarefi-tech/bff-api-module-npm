@@ -20,8 +20,10 @@ export function deleteTokens() {
   deleteFromLocalStorage('refresh_token');
 }
 
-export async function refreshTokens(): Promise<ITokens | null> {
+export async function refreshTokens(): Promise<ITokens> {
   const refresh_token = getFromLocalStorage('refresh_token');
+  console.log('refresh_token in tokensFactory', refresh_token);
+  console.log('isTMA in tokensFactory', isTMA());
 
   if (refresh_token) {
     const refreshResponse = await auth.refresh.refresh_token({ refresh_token });
@@ -36,7 +38,7 @@ export async function refreshTokens(): Promise<ITokens | null> {
     const init_data_raw = initData.raw();
 
     if (!tg_id || !hash || !init_data_raw) {
-      return null;
+      return Promise.reject(new Error('No TG ID, hash or init data raw found in tokensFactory'));
     }
 
     const telegramSignInResponse = await auth.signin.telegram({
@@ -49,7 +51,7 @@ export async function refreshTokens(): Promise<ITokens | null> {
     return telegramSignInResponse;
   }
 
-  return null;
+  return Promise.reject(new Error('No refresh token found'));
 }
 
 export function getTokens() {
