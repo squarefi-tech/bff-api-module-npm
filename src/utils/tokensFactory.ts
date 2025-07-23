@@ -35,7 +35,7 @@ export async function refreshTokens(): Promise<ITokens> {
     console.log('miniApp.isSupported()', miniApp.isSupported());
     console.log('miniApp.isMounted()', miniApp.isMounted());
     initTelegramSDK();
-    miniApp.isSupported() && !miniApp.isMounted() && miniApp.mount();
+    miniApp.isSupported() && !miniApp.isMounted() && (await miniApp.mount());
     console.log('miniApp.isSupported()', miniApp.isSupported());
     console.log('miniApp.isMounted()', miniApp.isMounted());
 
