@@ -5,6 +5,192 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.25.0] - 2025-07-23
+
+### Changed
+
+- Enhanced refresh token handling for Telegram sign-in methods in TMA
+- Updated Telegram auth types to use request/response structures for improved type safety with optional refresh_token
+
+### Added
+
+- Improved Telegram authentication workflow with better token management
+
+## [1.24.0] - 2025-07-23
+
+### Changed
+
+- Version release for accumulated features
+
+## [1.23.5] - 2025-07-22
+
+### Added
+
+- Additional optional fields to meta for enhanced transaction details
+
+## [1.23.4] - 2025-07-22
+
+### Changed
+
+- Made account_number, routing_number, and swift_bic optional in ExternalBankingData for improved flexibility
+
+## [1.23.3] - 2025-07-22
+
+### Added
+
+- Optional state field to address type for improved address detail accuracy
+
+## [1.23.2] - 2025-07-22
+
+### Added
+
+- Added state_id to address type for enhanced address details
+
+## [1.23.1] - 2025-07-22
+
+### Added
+
+- States API endpoint and related types for fetching states by country_id
+
+## [1.23.0] - 2025-07-22
+
+### Fixed
+
+- Updated Counterparty and related DTOs to require email and phone fields for improved data integrity
+- Added note to orderRequests
+
+## [1.22.13] - 2025-07-21
+
+### Fixed
+
+- Corrected Confirm.Request type to reference changeEmailConfirm operation for accurate API request handling
+
+## [1.22.12] - 2025-07-20
+
+### Added
+
+- PROCESSING status to OrderStatuses enum for enhanced order tracking
+
+## [1.22.11] - 2025-07-20
+
+### Fixed
+
+- Updated WithdrawCryptoRequest to include SEGREGATED_CRYPTO_TRANSFER in order_type for improved transaction handling
+
+## [1.22.10] - 2025-07-20
+
+### Added
+
+- SEGREGATED_CRYPTO_TRANSFER to WalletTransactionRecordType enum for expanded transaction support
+
+## [1.22.9] - 2025-07-20
+
+### Added
+
+- SEGREGATED_CRYPTO_TRANSFER order type and corresponding request/response types for enhanced order processing
+
+## [1.22.8] - 2025-07-18
+
+### Changed
+
+- Streamlined user phone and email request types by leveraging OpenAPI operations for improved type safety and maintainability
+
+## [1.22.7] - 2025-07-18
+
+### Added
+
+- wallet_id to pagination request in VirtualAccountPrograms Request
+- wallet_id to issuing_programs request
+
+## [1.22.6] - 2025-07-18
+
+### Added
+
+- Optional birth_date field to user types in API schema for enhanced user data handling
+
+## [1.22.5] - 2025-07-18
+
+### Changed
+
+- Updated user and userData types to align with new API schema
+- Enhanced type safety in user requests
+
+## [1.22.4] - 2025-07-18
+
+### Added
+
+- New OrderTypeKycRail type and updated OrderInfo structure
+
+### Changed
+
+- Removed deprecated kyc_rails_id
+
+## [1.22.3] - 2025-07-18
+
+### Fixed
+
+- Made limits property optional in card configuration for flexibility
+
+## [1.22.2] - 2025-07-05
+
+### Added
+
+- Exported hooks from the hooks module for improved functionality
+
+## [1.22.1] - 2025-07-04
+
+### Added
+
+- useCalc hook for enhanced calculation functionality
+
+## [1.22.0] - 2025-07-04
+
+### Fixed
+
+- Renamed currency_id to from_currency_id in request parameters for clarity
+
+## [1.21.9] - 2025-06-26
+
+### Fixed
+
+- Renamed currency parameters in Calc.CommonRequestParams to use IDs for improved clarity
+
+## [1.21.8] - 2025-06-25
+
+### Fixed
+
+- Updated orderType request params to include to_currency
+
+## [1.21.7] - 2025-06-24
+
+### Added
+
+- HIFI_CRYPTO_TRANSFER order type with request and response types for enhanced order processing
+
+## [1.21.6] - 2025-06-24
+
+### Added
+
+- New wallet transaction record types for enhanced transaction handling
+
+## [1.21.5] - 2025-06-24
+
+### Added
+
+- count property to TransactionsList interface for improved transaction data handling
+
+## [1.21.4] - 2025-06-23
+
+### Changed
+
+- Refactored getAll method in issuing API to accept parameters as an object and updated types for improved flexibility
+
+## [1.21.3] - 2025-06-23
+
+### Added
+
+- TBD_SWIFT_WITHDRAWAL order type with request and response types
+
 ## [1.21.2] - 2025-06-17
 
 ### Added
