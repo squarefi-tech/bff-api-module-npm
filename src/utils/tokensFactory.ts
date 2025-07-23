@@ -1,9 +1,8 @@
-import { initData, isTMA } from '@telegram-apps/sdk-react';
+import { initData, isTMA, miniApp } from '@telegram-apps/sdk-react';
 
 import { deleteFromLocalStorage, getFromLocalStorage, setToLocalStorage } from './storage';
 
 import { auth } from '../api/auth';
-import { API } from '../api/types/types';
 
 type ITokens = {
   access_token: string;
@@ -37,6 +36,8 @@ export async function refreshTokens(): Promise<ITokens> {
     const hash = initData.hash();
     const init_data_raw = initData.raw();
 
+    console.log('initData in tokensFactory', initData);
+    console.log('miniApp in tokensFactory', miniApp);
     console.log('initData.user()', initData.user());
     console.log('initData.hash()', initData.hash());
     console.log('initData.raw()', initData.raw());
