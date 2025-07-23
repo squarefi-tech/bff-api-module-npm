@@ -67,10 +67,17 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
         const isRetryRequest = failedRequest.headers['X-Retry-Request'];
 
         const isRefreshTokenRequest = response?.config?.url.includes(refreshTokenPath);
-        const isRefreshNotRequired = !refreshToken;
-        const isLogoutNeccesary = isRefreshNotRequired || isRefreshTokenRequest || isRetryRequest;
+        const isTelegramSignInRequest = response?.config?.url.includes(telegramSignInPath);
+        const isTelegramSignUpRequest = response?.config?.url.includes(telegramSignUpPath);
+        const isRefreshNotRequired = !refreshToken && !isTMA();
+        const isLogoutNeccesary =
+          isRefreshNotRequired ||
+          isTelegramSignInRequest ||
+          isTelegramSignUpRequest ||
+          isRefreshTokenRequest ||
+          isRetryRequest;
 
-        const isRefreshAvailable = (!isTokenRefreshing && typeof refreshToken === 'string') || isTMA();
+        const isRefreshAvailable = !isTokenRefreshing && !isRefreshNotRequired;
 
         if (isLogoutNeccesary) {
           if (typeof window !== 'undefined') {
@@ -81,6 +88,7 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
           return Promise.reject(response);
         }
         if (isRefreshAvailable) {
+          isTokenRefreshing = true;
           refreshTokens()
             .then((data) => {
               if (data?.access_token) {

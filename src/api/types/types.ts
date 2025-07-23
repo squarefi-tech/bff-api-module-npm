@@ -23,6 +23,11 @@ import { components, operations } from './autogen/apiV2.types';
 
 export namespace API {
   export namespace Auth {
+    export namespace RefreshToken {
+      export type Request = operations['AuthController_refreshToken']['requestBody']['content']['application/json'];
+      export type Response =
+        operations['AuthController_refreshToken']['responses']['200']['content']['application/json'];
+    }
     export namespace Telegram {
       export namespace Signin {
         export type Request = operations['AuthTelegramController_signIn']['requestBody']['content']['application/json'];
