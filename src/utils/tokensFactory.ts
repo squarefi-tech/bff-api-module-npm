@@ -1,4 +1,4 @@
-import { initData, isTMA, miniApp } from '@telegram-apps/sdk-react';
+import { initData, isTMA, miniApp, init as initTelegramSDK } from '@telegram-apps/sdk-react';
 
 import { deleteFromLocalStorage, getFromLocalStorage, setToLocalStorage } from './storage';
 
@@ -32,6 +32,9 @@ export async function refreshTokens(): Promise<ITokens> {
   }
 
   if (isTMA()) {
+    initTelegramSDK();
+    miniApp.isSupported() && !miniApp.isMounted() && miniApp.mount();
+
     const tg_id = initData.user()?.id;
     const hash = initData.hash();
     const init_data_raw = initData.raw();
