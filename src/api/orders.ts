@@ -216,6 +216,13 @@ export const orders = {
             '/v2/orders/SEGREGATED_CRYPTO_TRANSFER',
             { data }
           ),
+        [OrderType.RN_CARDS_OFFRAMP]: (
+          data: API.Orders.V2.Create.ByOrderType.RN_CARDS_OFFRAMP.Request
+        ): Promise<API.Orders.V2.Create.ByOrderType.RN_CARDS_OFFRAMP.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.RN_CARDS_OFFRAMP.Response>(
+            '/v2/orders/RN_CARDS_OFFRAMP',
+            { data }
+          ),
 
         [OrderType.TBD_SWIFT_WITHDRAWAL]: (
           // TODO: ITS MOCK ORDER TYPE

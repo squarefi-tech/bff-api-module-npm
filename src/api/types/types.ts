@@ -2147,6 +2147,43 @@ export namespace API {
               id: string;
             }
           }
+          export namespace RN_CARDS_OFFRAMP {
+            export interface Request {
+              request_id: string;
+              sub_account_id: string;
+              amount: number;
+              wallet_id: string;
+              from_currency_id: string;
+              to_currency_id: string;
+            }
+
+            export interface Response {
+              order_uuid: string;
+              wallet_uuid: string;
+              from_uuid: string;
+              to_uuid: string;
+              amount_from: number;
+              amount_to: number;
+              order_type: 'RN_CARDS_OFFRAMP';
+              status: OrderStatuses;
+              created_at: string;
+              info: string;
+              meta: {
+                request_id: string;
+                sub_account_id: string;
+                to_address: string;
+                deposit_chain_id: number;
+                fee: number;
+                fee_currency: string;
+                billing_amount: number;
+                billing_currency: string;
+                transaction_amount: number;
+                transaction_currency: string;
+                order_uuid: string;
+              };
+              id: string;
+            }
+          }
         }
       }
 
