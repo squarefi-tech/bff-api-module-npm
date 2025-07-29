@@ -136,6 +136,7 @@ export namespace API {
         account_currency: string;
         brand: string;
         form_factor: CardFormFactor | string;
+        consent_text: string | null;
         name: string;
         card_limit: number;
         realtime_auth: boolean;

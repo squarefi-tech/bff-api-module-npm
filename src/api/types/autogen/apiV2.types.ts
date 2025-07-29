@@ -344,7 +344,11 @@ export interface paths {
         /** Wallet address for chain */
         get: operations["WalletsAddressesController_viewWalletAddressByChain"];
         put?: never;
-        /** Create a new address */
+        /**
+         * Create a new address
+         * @deprecated
+         * @description Use viewWalletAddressByChain method to create and/or view address
+         */
         post: operations["WalletsAddressesController_createAddress"];
         delete?: never;
         options?: never;
@@ -415,6 +419,26 @@ export interface paths {
          * @deprecated
          */
         get: operations["ChainsController_all"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/currencies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List of currencies
+         * @deprecated
+         */
+        get: operations["CurrenciesController_all"];
         put?: never;
         post?: never;
         delete?: never;
@@ -504,26 +528,6 @@ export interface paths {
         };
         /** Get transactions for a specific Fiat Account by ID */
         get: operations["TransactionsController_findAll"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/currencies": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List of currencies
-         * @deprecated
-         */
-        get: operations["CurrenciesController_all"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1243,6 +1247,54 @@ export interface components {
             total: number;
             data: components["schemas"]["ChainDto"][];
         };
+        CryptoCurrencyMetaDto: {
+            icon: string;
+            name: string;
+            description: string;
+            symbol: string;
+            chain_id: number;
+            contract: string;
+            chain_name: string;
+        };
+        CryptoCurrencyDto: {
+            uuid: string;
+            decimal: number | null;
+            render_decimal: number;
+            is_stablecoin: boolean;
+            is_memo: boolean;
+            /** @enum {string|null} */
+            type: "token" | "native" | null;
+            meta: components["schemas"]["CryptoCurrencyMetaDto"];
+            is_enabled: boolean;
+            /** @example true */
+            is_crypto: boolean;
+        };
+        FiatCurrencyMetaDto: {
+            icon: string;
+            name: string;
+            description: string;
+            symbol: string;
+            code: string;
+            iso_code: number;
+            sign: string;
+        };
+        FiatCurrencyDto: {
+            uuid: string;
+            decimal: number | null;
+            render_decimal: number;
+            is_stablecoin: boolean;
+            is_memo: boolean;
+            /** @enum {string|null} */
+            type: "token" | "native" | null;
+            meta: components["schemas"]["FiatCurrencyMetaDto"];
+            is_enabled: boolean;
+            /** @example false */
+            is_crypto: boolean;
+        };
+        AllCurrenciesResponseDto: {
+            total: number;
+            data: (components["schemas"]["CryptoCurrencyDto"] | components["schemas"]["FiatCurrencyDto"])[];
+        };
         KycRailTermsAndConditionsEntity: {
             id: string;
             description: string | null;
@@ -1290,28 +1342,6 @@ export interface components {
             /** @enum {string|null} */
             type: "CREDIT" | "DEBIT" | null;
             kyc_rail: components["schemas"]["KycRailEntity"] | null;
-        };
-        FiatCurrencyMetaDto: {
-            icon: string;
-            name: string;
-            description: string;
-            symbol: string;
-            code: string;
-            iso_code: number;
-            sign: string;
-        };
-        FiatCurrencyDto: {
-            uuid: string;
-            decimal: number | null;
-            render_decimal: number;
-            is_stablecoin: boolean;
-            is_memo: boolean;
-            /** @enum {string|null} */
-            type: "token" | "native" | null;
-            meta: components["schemas"]["FiatCurrencyMetaDto"];
-            is_enabled: boolean;
-            /** @example false */
-            is_crypto: boolean;
         };
         FiatAccountIssuingCardDto: {
             card_id: string;
@@ -1437,32 +1467,6 @@ export interface components {
             has_more: boolean;
             count: number;
             data: components["schemas"]["FiatAccountTransactionDto"][];
-        };
-        CryptoCurrencyMetaDto: {
-            icon: string;
-            name: string;
-            description: string;
-            symbol: string;
-            chain_id: number;
-            contract: string;
-            chain_name: string;
-        };
-        CryptoCurrencyDto: {
-            uuid: string;
-            decimal: number | null;
-            render_decimal: number;
-            is_stablecoin: boolean;
-            is_memo: boolean;
-            /** @enum {string|null} */
-            type: "token" | "native" | null;
-            meta: components["schemas"]["CryptoCurrencyMetaDto"];
-            is_enabled: boolean;
-            /** @example true */
-            is_crypto: boolean;
-        };
-        AllCurrenciesResponseDto: {
-            total: number;
-            data: (components["schemas"]["CryptoCurrencyDto"] | components["schemas"]["FiatCurrencyDto"])[];
         };
         CreateDeveloperAccessDto: {
             name: string;
@@ -2994,6 +2998,36 @@ export interface operations {
             };
         };
     };
+    CurrenciesController_all: {
+        parameters: {
+            query?: {
+                is_crypto?: boolean;
+                chain_id?: number;
+                symbol?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Invalid tenant */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AllCurrenciesResponseDto"];
+                };
+            };
+        };
+    };
     ProgramsController_getPrograms: {
         parameters: {
             query?: never;
@@ -3213,36 +3247,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    CurrenciesController_all: {
-        parameters: {
-            query?: {
-                is_crypto?: boolean;
-                chain_id?: number;
-                symbol?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AllCurrenciesResponseDto"];
-                };
             };
         };
     };
