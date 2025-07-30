@@ -12,12 +12,20 @@ export const issuing = {
         balance: async (data: API.Cards.Create.StandAloneRequest): Promise<API.Cards.Create.SubAccountResponse> => {
           const { id: sub_account_id } = await issuing.sub_accounts.create(data.wallet_id, data.program_id);
 
-          return apiClientV1.postRequest<API.Cards.Create.SubAccountResponse>('/issuing/cards/balance', {
-            data: {
-              ...data,
-              sub_account_id,
-            },
-          });
+          const response = await apiClientV1.postRequest<API.Cards.Create.SubAccountResponse>(
+            '/issuing/cards/balance',
+            {
+              data: {
+                ...data,
+                sub_account_id,
+              },
+            }
+          );
+
+          return {
+            ...response,
+            sub_account_id,
+          };
         },
       },
       subAccountCard: (data: API.Cards.Create.SubAccountRequest): Promise<API.Cards.Create.SubAccountResponse> =>

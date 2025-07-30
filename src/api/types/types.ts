@@ -377,7 +377,11 @@ export namespace API {
       }
 
       export type StandAloneResponse = IssuingCardDetailItem;
-      export type SubAccountResponse = IssuingCardDetailItem;
+      export type SubAccountResponse = {
+        card_id: string;
+        status: string;
+        sub_account_id: string;
+      };
     }
   }
 
