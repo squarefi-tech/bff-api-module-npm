@@ -9,7 +9,9 @@ export const issuing = {
       standAloneCard: {
         prepaid: (data: API.Cards.Create.StandAloneRequest): Promise<API.Cards.Create.StandAloneResponse> =>
           apiClientV1.postRequest<API.Cards.Create.StandAloneResponse>('/issuing/cards/create', { data }),
-        balance: async (data: API.Cards.Create.StandAloneRequest): Promise<API.Cards.Create.SubAccountResponse> => {
+        balance: async (
+          data: API.Cards.Create.StandAloneRequest
+        ): Promise<API.Cards.Create.ExtendedSubAccountResponse> => {
           const { id: sub_account_id } = await issuing.sub_accounts.create(data.wallet_id, data.program_id);
 
           const response = await apiClientV1.postRequest<API.Cards.Create.SubAccountResponse>(
@@ -28,8 +30,17 @@ export const issuing = {
           };
         },
       },
-      subAccountCard: (data: API.Cards.Create.SubAccountRequest): Promise<API.Cards.Create.SubAccountResponse> =>
-        apiClientV1.postRequest<API.Cards.Create.SubAccountResponse>('/issuing/cards/balance', { data }),
+      subAccountCard: async (
+        data: API.Cards.Create.SubAccountRequest
+      ): Promise<API.Cards.Create.ExtendedSubAccountResponse> => {
+        const response = await apiClientV1.postRequest<API.Cards.Create.SubAccountResponse>('/issuing/cards/balance', {
+          data,
+        });
+        return {
+          ...response,
+          sub_account_id: data.sub_account_id,
+        };
+      },
     },
     byWalletUuid: {
       getAll: (params: API.Cards.CardsList.Request.ByWalletUuid): Promise<API.Cards.CardsList.Response> =>

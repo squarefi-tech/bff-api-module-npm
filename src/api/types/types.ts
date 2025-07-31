@@ -380,6 +380,9 @@ export namespace API {
       export type SubAccountResponse = {
         card_id: string;
         status: string;
+      };
+
+      export type ExtendedSubAccountResponse = SubAccountResponse & {
         sub_account_id: string;
       };
     }
