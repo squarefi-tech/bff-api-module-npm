@@ -2418,8 +2418,23 @@ export namespace API {
         bankName: string;
         bankAddress: string;
         beneficiary: API.VirtualAccounts.VirtualAccount.Beneficiary;
-        accountNumber: string;
-        routingNumber: string;
+        swiftCode: string;
+        ach?: {
+          accountNumber: string;
+          routingNumber: string;
+        };
+        rtp?: {
+          accountNumber: string;
+          routingNumber: string;
+        };
+        wire?: {
+          accountNumber: string;
+          routingNumber: string;
+        };
+        swift?: {
+          accountNumber: string;
+          routingNumber: string;
+        };
       }
 
       export interface PaymentRail {

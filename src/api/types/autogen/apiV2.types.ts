@@ -1236,6 +1236,8 @@ export interface components {
             from_created_at?: string;
             /** Format: date-time */
             to_created_at?: string;
+            /** @default false */
+            show_low_balance: boolean;
         };
         ChainDto: {
             id: number;
@@ -2762,7 +2764,9 @@ export interface operations {
     };
     WalletsController_view: {
         parameters: {
-            query?: never;
+            query?: {
+                show_low_balance?: boolean;
+            };
             header?: never;
             path: {
                 wallet_id: string;
