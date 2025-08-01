@@ -790,6 +790,56 @@ export namespace API {
     }
   }
 
+  export namespace Frontend {
+    export namespace Access {
+      export namespace Keys {
+        export interface Key {
+          id: string;
+          key: string;
+          name: string;
+          role: APIKeyRole;
+          wallet_id: string;
+          created_at: string;
+        }
+        export namespace Create {
+          export type Request = {
+            name: string;
+            role: APIKeyRole;
+            wallet_id: string;
+          };
+          export type Response = {
+            success: boolean;
+            data: API.Frontend.Access.Keys.Key;
+          };
+        }
+
+        export namespace List {
+          export type Response = {
+            success: boolean;
+            data: API.Frontend.Access.Keys.Key[];
+          };
+        }
+
+        export namespace Regenerate {
+          export type Response = {
+            success: boolean;
+            data: API.Frontend.Access.Keys.Key;
+          };
+        }
+
+        export namespace Revoke {
+          export type Response = {
+            success: boolean;
+            data: {
+              id: string;
+              revoked_at: string;
+            };
+          };
+        }
+      }
+    }
+  }
+
   export namespace SubAccountsV2 {
     export type SubAccountDetails = {
       iban: string;
