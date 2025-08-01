@@ -795,12 +795,16 @@ export namespace API {
       export namespace Keys {
         export interface Key {
           id: string;
-          key: string;
           name: string;
           role: APIKeyRole;
           wallet_id: string;
           created_at: string;
         }
+
+        export interface ExtendedKey extends Key {
+          key: string;
+        }
+
         export namespace Create {
           export type Request = {
             name: string;
@@ -809,7 +813,7 @@ export namespace API {
           };
           export type Response = {
             success: boolean;
-            data: API.Frontend.Access.Keys.Key;
+            data: API.Frontend.Access.Keys.ExtendedKey;
           };
         }
 
@@ -823,7 +827,7 @@ export namespace API {
         export namespace Regenerate {
           export type Response = {
             success: boolean;
-            data: API.Frontend.Access.Keys.Key;
+            data: API.Frontend.Access.Keys.ExtendedKey;
           };
         }
 
