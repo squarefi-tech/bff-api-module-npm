@@ -2,7 +2,17 @@ import debounce from 'lodash.debounce';
 import { useEffect, useRef, useState } from 'react';
 import { API } from '../api/types/types';
 
+type CalcData = API.Orders.V2.Calc.Response & {
+  is_subtract: boolean;
+  is_reverse: boolean;
+};
+
 export type OrderCalcHandlerProps = Omit<API.Orders.V2.Calc.Request, 'order_type'>;
+
+type UpdateCalculationsProps = {
+  is_reverse: boolean;
+  is_subtract: boolean;
+};
 
 export type UseOrderCalcProps = {
   from_currency_id: string | null | undefined;
@@ -13,7 +23,7 @@ export type UseOrderCalcProps = {
 };
 
 export type UseOrderCalcData = {
-  calcData: API.Orders.V2.Calc.Response | null;
+  calcData: CalcData | null;
   sellingAmount: number;
   setSellingAmount: (value: number) => void;
   buyingAmount: number;
@@ -29,7 +39,7 @@ export const useOrderCalc: UseOrderCalc = (props: UseOrderCalcProps) => {
 
   const [sellingAmount, setSellingAmount] = useState(0);
   const [buyingAmount, setBuyingAmount] = useState(0);
-  const [calcData, setCalcData] = useState<API.Orders.V2.Calc.Response | null>(null);
+  const [calcData, setCalcData] = useState<CalcData | null>(null);
   const [isSellingValuePending, setIsSellingValuePending] = useState(false);
   const [isBuyingValuePending, setIsBuyingValuePending] = useState(false);
 
@@ -49,7 +59,7 @@ export const useOrderCalc: UseOrderCalc = (props: UseOrderCalcProps) => {
     }
   };
 
-  const updateCalculations = async ({ is_reverse = false }) => {
+  const updateCalculations = async ({ is_reverse, is_subtract }: UpdateCalculationsProps) => {
     if (disableCalculation) {
       return;
     }
@@ -70,6 +80,7 @@ export const useOrderCalc: UseOrderCalc = (props: UseOrderCalcProps) => {
       to_currency_id,
       amount: is_reverse ? buyingAmount : sellingAmount,
       is_reverse,
+      is_subtract,
       to_address,
       signal: abortControllerRef.current.signal,
     };
@@ -82,7 +93,11 @@ export const useOrderCalc: UseOrderCalc = (props: UseOrderCalcProps) => {
     try {
       is_reverse ? setIsSellingValuePending(true) : setIsBuyingValuePending(true);
       const data = await calcHandler(calcParams);
-      setCalcData(data);
+      setCalcData({
+        ...data,
+        is_reverse,
+        is_subtract,
+      });
 
       setSellingAmount(data.from_amount);
 
@@ -109,7 +124,7 @@ export const useOrderCalc: UseOrderCalc = (props: UseOrderCalcProps) => {
   const onSellingValueUpdate = debounce(
     (value: number) => {
       if (value !== calcData?.from_amount || isBuyingValuePending) {
-        updateCalculations({ is_reverse: false });
+        updateCalculations({ is_reverse: false, is_subtract: true });
       }
     },
     abortControllerRef.current?.signal ? undefined : 1000
@@ -118,7 +133,7 @@ export const useOrderCalc: UseOrderCalc = (props: UseOrderCalcProps) => {
   const onBuyingValueUpdate = debounce(
     (value: number) => {
       if (value !== calcData?.result_amount || isSellingValuePending) {
-        updateCalculations({ is_reverse: true });
+        updateCalculations({ is_reverse: true, is_subtract: false });
       }
     },
     abortControllerRef.current?.signal ? undefined : 1000
@@ -126,14 +141,14 @@ export const useOrderCalc: UseOrderCalc = (props: UseOrderCalcProps) => {
 
   const onToAddressUpdate = debounce(
     () => {
-      updateCalculations({ is_reverse: false });
+      updateCalculations({ is_reverse: false, is_subtract: true });
     },
     abortControllerRef.current?.signal ? undefined : 1000
   );
 
   useEffect(() => {
     abortCurrentCalculation();
-    updateCalculations({ is_reverse: false });
+    updateCalculations({ is_reverse: false, is_subtract: true });
   }, [from_currency_id, to_currency_id]);
 
   useEffect(() => {
