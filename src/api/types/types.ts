@@ -1778,8 +1778,8 @@ export namespace API {
               to_wallet_uuid: string;
               amount: number;
               request_id: string;
-              is_subtract?: boolean;
-              is_reverse?: boolean;
+              is_subtract: boolean;
+              is_reverse: boolean;
             }
 
             export type Response = null;
@@ -1793,8 +1793,8 @@ export namespace API {
               wallet_id: string;
               from_currency_id: string;
               to_currency_id: string;
-              is_subtract?: boolean;
-              is_reverse?: boolean;
+              is_subtract: boolean;
+              is_reverse: boolean;
             }
 
             export interface Response {
@@ -1832,8 +1832,8 @@ export namespace API {
               wallet_id: string;
               from_currency_id: string;
               to_currency_id: string;
-              is_subtract?: boolean;
-              is_reverse?: boolean;
+              is_subtract: boolean;
+              is_reverse: boolean;
             }
 
             export interface Response {
@@ -1871,8 +1871,8 @@ export namespace API {
               wallet_id: string;
               from_currency_id: string;
               to_currency_id: string;
-              is_subtract?: boolean;
-              is_reverse?: boolean;
+              is_subtract: boolean;
+              is_reverse: boolean;
             }
 
             export interface Response {
@@ -1911,8 +1911,8 @@ export namespace API {
               to_currency_id: string;
               refference?: string;
               note?: string;
-              is_subtract?: boolean;
-              is_reverse?: boolean;
+              is_subtract: boolean;
+              is_reverse: boolean;
             }
 
             export interface Response {
@@ -1951,8 +1951,8 @@ export namespace API {
               to_currency_id: string;
               refference?: string;
               note?: string;
-              is_subtract?: boolean;
-              is_reverse?: boolean;
+              is_subtract: boolean;
+              is_reverse: boolean;
             }
 
             export interface Response {
@@ -1991,8 +1991,8 @@ export namespace API {
               to_currency_id: string;
               refference?: string;
               note?: string;
-              is_subtract?: boolean;
-              is_reverse?: boolean;
+              is_subtract: boolean;
+              is_reverse: boolean;
             }
 
             export interface Response {
@@ -2028,8 +2028,8 @@ export namespace API {
               wallet_id: string;
               from_currency_id: string;
               to_currency_id: string;
-              is_subtract?: boolean;
-              is_reverse?: boolean;
+              is_subtract: boolean;
+              is_reverse: boolean;
             }
 
             export interface Response {
@@ -2067,8 +2067,8 @@ export namespace API {
               wallet_account_id: string;
               from_currency_id: string;
               note?: string;
-              is_subtract?: boolean;
-              is_reverse?: boolean;
+              is_subtract: boolean;
+              is_reverse: boolean;
             }
 
             export interface Response {
@@ -2107,8 +2107,8 @@ export namespace API {
               wallet_account_id: string;
               from_currency_id: string;
               note?: string;
-              is_subtract?: boolean;
-              is_reverse?: boolean;
+              is_subtract: boolean;
+              is_reverse: boolean;
             }
 
             export interface Response {
@@ -2147,8 +2147,8 @@ export namespace API {
               wallet_account_id: string;
               from_currency_id: string;
               note?: string;
-              is_subtract?: boolean;
-              is_reverse?: boolean;
+              is_subtract: boolean;
+              is_reverse: boolean;
             }
 
             export interface Response {
@@ -2186,8 +2186,8 @@ export namespace API {
               wallet_id: string;
               from_currency_id: string;
               to_currency_id: string;
-              is_subtract?: boolean;
-              is_reverse?: boolean;
+              is_subtract: boolean;
+              is_reverse: boolean;
             }
 
             export interface Response {
