@@ -224,7 +224,7 @@ export namespace API {
       nick_name: string | null;
       wallet_id: string;
       program_id: string;
-
+      limits?: API.Cards.Limits.Limits;
       fiat_account: API.Issuing.SubAccounts.SubAccount;
       last4: string;
       request_id: string;

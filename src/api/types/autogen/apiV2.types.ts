@@ -954,6 +954,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/load-data-from-hifibridge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["LoadDataFromHifibridgeController_syncData"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1120,6 +1136,8 @@ export interface components {
             tg_bot_name: string | null;
             theme_switch: boolean;
             enable_exchange: boolean;
+            enable_auto_exchange: boolean;
+            enable_crypto_withdrawal: boolean;
         };
         PaginationResponseDto: {
             /** @example 20 */
@@ -2019,6 +2037,9 @@ export interface components {
             tg_bot_name: string | null;
             theme_switch: boolean;
             enable_exchange: boolean;
+            enable_auto_exchange: boolean;
+            enable_crypto_withdrawal: boolean;
+            base_currency: string;
         };
         SystemChainsResponseDto: {
             total: number;
@@ -2072,6 +2093,12 @@ export interface components {
             total: number;
             /** @description Data */
             data: components["schemas"]["IntegrationPersonaTemplateEntityDto"][];
+        };
+        SyncDataFromHifibridgeDto: {
+            /** @description Wallet to load data from Hifibridge */
+            wallet_id: string;
+            /** @description Hifibridge ID to load data to wallet */
+            hifibridge_id: string;
         };
     };
     responses: never;
@@ -4447,6 +4474,27 @@ export interface operations {
                 content?: never;
             };
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    LoadDataFromHifibridgeController_syncData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SyncDataFromHifibridgeDto"];
+            };
+        };
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
