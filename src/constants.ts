@@ -260,6 +260,7 @@ export enum CounterpartyDestinationType {
 export enum CardTransactionStatus {
   APPROVED = 'APPROVED',
   CLEARED = 'CLEARED',
+  COMPLETED = 'COMPLETED',
   EXPIRED = 'EXPIRED',
   FAILED = 'FAILED',
   CANCELLED = 'CANCELLED',
