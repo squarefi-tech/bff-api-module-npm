@@ -267,4 +267,5 @@ export enum CardTransactionStatus {
   CANCELED = 'CANCELED',
   PENDING = 'PENDING',
   REVERSED = 'REVERSED',
+  DECLINED = 'DECLINED',
 }
