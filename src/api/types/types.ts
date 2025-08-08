@@ -1184,6 +1184,13 @@ export namespace API {
           export type Response = components['schemas']['WalletKycRailTypeDto'];
         }
       }
+
+      export namespace Terms {
+        export namespace Confirm {
+          export type Request = operations['WalletKycRailsController_confirmTermsAndConditions']['parameters']['path'];
+          export type Response = components['schemas']['WalletKycRailTypeDto'];
+        }
+      }
     }
   }
 

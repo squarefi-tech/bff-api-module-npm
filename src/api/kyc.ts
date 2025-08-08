@@ -28,5 +28,14 @@ export const kyc = {
       }: API.KYC.Rails.Submit.Single.Request): Promise<API.KYC.Rails.Submit.Single.Response> =>
         apiClientV2.postRequest<API.KYC.Rails.Submit.Single.Response>(`/kyc/${wallet_id}/rails/${rail_id}`),
     },
+    terms: {
+      confirm: ({
+        wallet_id,
+        rail_id,
+      }: API.KYC.Rails.Terms.Confirm.Request): Promise<API.KYC.Rails.Terms.Confirm.Response> =>
+        apiClientV2.postRequest<API.KYC.Rails.Terms.Confirm.Response>(
+          `/kyc/${wallet_id}/rails/${rail_id}/terms-and-conditions`
+        ),
+    },
   },
 };
