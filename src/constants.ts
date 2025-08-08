@@ -33,6 +33,7 @@ export enum CardTransactionType {
   FEE = 'FEE',
   DEPOSIT = 'DEPOSIT',
   WITHDRAWAL = 'WITHDRAWAL',
+  PAYMENT = 'PAYMENT',
 }
 
 export enum WalletTransactionType {
