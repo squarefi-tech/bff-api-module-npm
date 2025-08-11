@@ -1017,8 +1017,8 @@ export namespace API {
       export namespace TransactionList {
         export interface Request {
           sub_account_id: string;
-          limit?: number;
-          offset?: number;
+          limit: number;
+          offset: number;
           card_id?: string;
           from_timestamp?: string;
           to_timestamp?: string;
