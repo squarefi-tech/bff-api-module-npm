@@ -369,6 +369,7 @@ export namespace API {
         wallet_id: string;
         initial_topup?: number;
         currency_id?: string;
+        user_data_id: string;
       }
       export type StandAloneRequest = CommonRequest;
 
@@ -1013,11 +1014,22 @@ export namespace API {
         memo?: string;
       };
 
-      export type TransactionList = {
-        count: number;
-        data: Transaction[];
-        has_more: boolean;
-      };
+      export namespace TransactionList {
+        export interface Request {
+          sub_account_id: string;
+          limit?: number;
+          offset?: number;
+          card_id?: string;
+          from_timestamp?: string;
+          to_timestamp?: string;
+          status?: string;
+        }
+        export interface Response {
+          count: number;
+          data: Transaction[];
+          has_more: boolean;
+        }
+      }
       export interface SubAccount {
         balance: number;
         cards_count: number;

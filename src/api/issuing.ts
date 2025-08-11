@@ -179,15 +179,14 @@ export const issuing = {
         data: { wallet_id, program_id },
       }),
     transactions: {
-      get: (
-        sub_account_id: string,
-        limit?: number,
-        offset?: number
-      ): Promise<API.Issuing.SubAccounts.TransactionList> =>
-        apiClientV1.getRequest<API.Issuing.SubAccounts.TransactionList>(
+      get: ({
+        sub_account_id,
+        ...params
+      }: API.Issuing.SubAccounts.TransactionList.Request): Promise<API.Issuing.SubAccounts.TransactionList.Response> =>
+        apiClientV1.getRequest<API.Issuing.SubAccounts.TransactionList.Response>(
           `/issuing/sub_account/${sub_account_id}/transactions`,
           {
-            params: { limit, offset },
+            params,
           }
         ),
     },
