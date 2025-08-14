@@ -2822,7 +2822,8 @@ export namespace API {
           operations['WalletsTransactionsController_viewTransactionsByWallet']['parameters']['query'] & {
             wallet_uuid: string;
           };
-        export type Response = operations['WalletsTransactionsController_viewTransactionsByWallet']['responses']['200'];
+        export type Response =
+          operations['WalletsTransactionsController_viewTransactionsByWallet']['responses']['200']['content']['application/json'];
       }
     }
   }
