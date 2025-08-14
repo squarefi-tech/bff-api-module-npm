@@ -45,32 +45,6 @@ export namespace API {
       access_token: string;
       refresh_token: string;
     }
-    export namespace UserData {
-      export namespace Update {
-        export interface Request {
-          default_currency: string;
-        }
-      }
-
-      export interface UserData {
-        id: number;
-        created_at: string;
-        user_id: string;
-        kyc_status: KYCStatuses | string;
-        kyc_date: string;
-        turnover_limit?: number;
-        default_currency: string;
-        tenant_id: string;
-        user_group_id: string;
-        is_developer: boolean;
-        can_invite: boolean;
-        total_turnover: {
-          onramp: number;
-          offramp: number;
-          total: number;
-        };
-      }
-    }
 
     export namespace Update {
       export namespace Phone {
@@ -2846,8 +2820,8 @@ export namespace API {
       export namespace TransactionList {
         export type Request = {
           wallet_uuid: string;
-          limit?: number;
-          offset?: number;
+          limit: number;
+          offset: number;
           filter?: {
             created_at?: string;
             from?: string;
