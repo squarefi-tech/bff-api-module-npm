@@ -2818,10 +2818,24 @@ export namespace API {
       }
 
       export namespace TransactionList {
-        export type Request =
-          operations['WalletsTransactionsController_viewTransactionsByWallet']['parameters']['query'] & {
-            wallet_uuid: string;
+        export type Request = {
+          wallet_uuid: string;
+          limit: number;
+          offset: number;
+          filter?: {
+            created_at?: string;
+            status?: WalletTransactionStatus;
+            type?: WalletTransactionType;
+            method?: WalletTransactionMethod;
+            record_type?: WalletTransactionRecordType;
+            'currency.uuid'?: string;
+            'meta.billing_amount_currency'?: string;
+            'meta.transaction_amount_currency'?: string;
+            address?: string;
+            from_created_at?: string;
+            to_created_at?: string;
           };
+        };
         export type Response = {
           total: number;
           data: Transaction[];
