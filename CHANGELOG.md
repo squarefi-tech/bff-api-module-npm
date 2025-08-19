@@ -4,20 +4,219 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+ƒ
 
-## [1.25.2] - 2025-07-28
+## [1.25.0] - 2025-08-19
+
+### Added
+
+- Real-time functionality with Supabase integration
+
+## [1.24.35] - 2025-08-19
+
+### Changed
+
+- Updated CSV export functionality for wallet transactions to use apiClientV2 and enhanced request type
+
+## [1.24.34] - 2025-08-14
+
+### Changed
+
+- Enhanced TransactionList request type by adding pagination and filtering options
+
+## [1.24.33] - 2025-08-14
+
+### Changed
+
+- Updated response type for WalletsTransactionsController to include total and data fields
+
+## [1.24.32] - 2025-08-14
+
+### Changed
+
+- Updated response type for WalletsTransactionsController to include JSON content structure
+
+## [1.24.31] - 2025-08-14
+
+### Changed
+
+- Streamlined TransactionList request type by integrating existing operations and removing redundant fields
+
+## [1.24.30] - 2025-08-14
+
+### Changed
+
+- Removed unused UserData types and enforced required fields for transaction list request
+
+## [1.24.29] - 2025-08-11
+
+### Added
+
+- PURCHASE type to CardTransactionType enum
+
+## [1.24.28] - 2025-08-11
+
+### Fixed
+
+- Enforced required fields for transaction list request parameters
+
+## [1.24.27] - 2025-08-11
+
+### Changed
+
+- Updated transaction list API types and simplified transaction retrieval parameters
+
+## [1.24.26] - 2025-08-08
+
+### Added
+
+- Terms confirmation endpoint and types for KYC process
+
+## [1.24.25] - 2025-08-08
+
+### Added
+
+- PAYMENT type to CardTransactionType enum
+
+## [1.24.24] - 2025-08-08
+
+### Added
+
+- DECLINED status to CardTransactionStatus enum
+
+## [1.24.23] - 2025-08-08
+
+### Added
+
+- COMPLETED status to CardTransactionStatus enum
+
+## [1.24.22] - 2025-08-06
+
+### Fixed
+
+- Updated tenant config endpoint and added optional limits property to API types
+
+## [1.24.21] - 2025-08-01
+
+### Changed
+
+- Introduced ExtendedKey interface to enhance key management types in API
+
+## [1.24.20] - 2025-08-01
+
+### Added
+
+- Integrated frontend module into API structure for enhanced functionality
+
+## [1.24.19] - 2025-08-01
+
+### Added
+
+- Frontend access key management types for creating, listing, regenerating, and revoking API keys
+
+## [1.24.18] - 2025-08-01
+
+### Changed
+
+- Made is_subtract and is_reverse fields mandatory in API types for consistency
+
+## [1.24.17] - 2025-08-01
+
+### Fixed
+
+- Corrected spelling of is_subsctract to is_subtract in API types and updated related calculations in useCalc hook
+
+## [1.24.16] - 2025-08-01
+
+### Added
+
+- Optional is_subsctract and is_reverse fields to various transaction types for improved flexibility
+
+## [1.24.15] - 2025-07-31
+
+### Added
+
+- Extended account details with optional ACH, RTP, wire, and SWIFT structures for enhanced payment processing
+
+## [1.24.14] - 2025-07-31
+
+### Changed
+
+- Enhanced issuing API methods to return ExtendedSubAccountResponse with sub_account_id
+
+## [1.24.13] - 2025-07-30
+
+### Changed
+
+- Updated SubAccountResponse type and enhanced balance method to return sub_account_id
+
+## [1.24.12] - 2025-07-29
+
+### Added
+
+- consent_text field to card details type for enhanced data handling
+
+## [1.24.11] - 2025-07-28
 
 ### Added
 
 - New wallet transaction record types for card transfers
 
-## [1.25.1] - 2025-07-28
+## [1.24.10] - 2025-07-28
 
 ### Added
 
 - RN_CARDS_OFFRAMP order type and corresponding API request/response structures
 
-## [1.25.0] - 2025-07-23
+## [1.24.9] - 2025-07-23
+
+### Changed
+
+- Removed unnecessary console logs from apiClientFactory and tokensFactory for cleaner code
+
+## [1.24.8] - 2025-07-23
+
+### Changed
+
+- Streamlined refreshTokens by removing miniApp logs and integrating initData restoration
+
+## [1.24.7] - 2025-07-23
+
+### Fixed
+
+- Awaited miniApp.mount() in refreshTokens to ensure proper initialization of the SDK
+
+## [1.24.6] - 2025-07-23
+
+### Added
+
+- Telegram SDK initialization in tokensFactory
+
+## [1.24.4] - 2025-07-23
+
+### Added
+
+- Console logs in tokensFactory for enhanced debugging of initData and miniApp
+
+## [1.24.3] - 2025-07-23
+
+### Added
+
+- Additional console logs in refreshTokens for improved debugging of token handling
+
+## [1.24.2] - 2025-07-23
+
+### Changed
+
+- Improved error handling in refreshTokens function and added debug logs for better traceability
+
+## [1.24.1] - 2025-07-23
+
+### Added
+
+- Console logs for token refresh handling and authentication flow insights
+
+## [1.24.0] - 2025-07-23
 
 ### Changed
 
@@ -27,12 +226,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Improved Telegram authentication workflow with better token management
-
-## [1.24.0] - 2025-07-23
-
-### Changed
-
-- Version release for accumulated features
 
 ## [1.23.5] - 2025-07-22
 
