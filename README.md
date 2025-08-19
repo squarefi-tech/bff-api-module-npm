@@ -49,9 +49,19 @@ const cards = await api.issuing.cards.byWalletUuid.getAll({
 
 // 3) Exchange rates helper
 await api.exchange.byOrderType[OrderType.DEPOSIT_FIAT_SEPA].getByFromCurrency(firstWalletUuid);
-```
 
-See the [Examples](#examples) section below for more real-life snippets.
+// 4) Real-time subscriptions (React only)
+import { useSupabaseSubscription } from 'squarefi-bff-api-module';
+
+const { isConnected } = useSupabaseSubscription({
+  config: {
+    channelName: 'my-channel',
+    table: 'transactions',
+    event: '*',
+  },
+  callback: (payload) => console.log('Real-time update:', payload),
+});
+```
 
 ---
 
@@ -59,16 +69,56 @@ See the [Examples](#examples) section below for more real-life snippets.
 
 The SDK reads connection details from process-level variables. When bundling for the browser, tools like **Vite**, **Webpack DefinePlugin**, or **Next.js** can safely inline those values at build time.
 
-| Name                       | Description                                                          | Required                      | Example                       |
-| -------------------------- | -------------------------------------------------------------------- | ----------------------------- | ----------------------------- |
-| `API_URL`                  | Base URL of the BFF **v1** service                                   | ✅                            | `https://api-v1.squarefi.com` |
-| `API_V2_URL`               | Base URL of the BFF **v2** service                                   | ✅                            | `https://api-v2.squarefi.com` |
-| `API_TOTP_URL`             | Base URL of the **TOTP / OTP** micro-service                         | ⚠️ _If you use TOTP features_ | `https://totp.squarefi.com`   |
-| `TENANT_ID`                | Your tenant / organisation identifier                                | ✅                            | `tenant_12345`                |
-| `LOGOUT_URL`               | Frontend route where the user is redirected when refresh token fails | ❌                            | `/auth/logout`                |
-| `SERVER_PUBLIC_KEY_BASE64` | PEM encoded key (base64) used for request signing                    | ✅                            | `MIIBIjANBgkqh…`              |
+| Name                       | Description                                                          | Required                       | Example                       |
+| -------------------------- | -------------------------------------------------------------------- | ------------------------------ | ----------------------------- |
+| `API_URL`                  | Base URL of the BFF **v1** service                                   | ✅                             | `https://api-v1.squarefi.com` |
+| `API_V2_URL`               | Base URL of the BFF **v2** service                                   | ✅                             | `https://api-v2.squarefi.com` |
+| `API_TOTP_URL`             | Base URL of the **TOTP / OTP** micro-service                         | ⚠️ _If you use TOTP features_  | `https://totp.squarefi.com`   |
+| `TENANT_ID`                | Your tenant / organisation identifier                                | ✅                             | `tenant_12345`                |
+| `LOGOUT_URL`               | Frontend route where the user is redirected when refresh token fails | ❌                             | `/auth/logout`                |
+| `SERVER_PUBLIC_KEY_BASE64` | PEM encoded key (base64) used for request signing                    | ✅                             | `MIIBIjANBgkqh…`              |
+| `SUPABASE_URL`             | Supabase project URL for real-time subscriptions                     | ⚠️ _If you use Supabase hooks_ | `https://xyz.supabase.co`     |
+| `SUPABASE_PUBLIC_KEY`      | Supabase public anon key for client authentication                   | ⚠️ _If you use Supabase hooks_ | `eyJhbGciOiJIUzI1NiIs…`       |
 
 > ℹ️ When running in Node.js you can place these variables in a `.env` file and load them with [dotenv](https://npmjs.com/package/dotenv).
+
+---
+
+## 🔄 React Hooks
+
+The SDK includes React hooks for real-time functionality powered by Supabase:
+
+### useSupabaseSubscription
+
+A hook for subscribing to real-time database changes via Supabase.
+
+```tsx
+import { useSupabaseSubscription } from 'squarefi-bff-api-module';
+
+function MyComponent() {
+  const { isConnected, isClientAvailable } = useSupabaseSubscription({
+    config: {
+      channelName: 'wallet-transactions',
+      table: 'transactions',
+      schema: 'public',
+      event: 'INSERT', // 'INSERT' | 'UPDATE' | 'DELETE' | '*'
+      filter: 'wallet_id=eq.123',
+    },
+    callback: (payload) => {
+      console.log('New transaction:', payload);
+    },
+    enabled: true,
+  });
+
+  if (!isClientAvailable) {
+    return <div>Supabase not configured</div>;
+  }
+
+  return <div>Status: {isConnected ? 'Connected' : 'Disconnected'}</div>;
+}
+```
+
+> ⚠️ **Important**: The hook will throw an error if Supabase environment variables are missing and you attempt to use it. Make sure to set `SUPABASE_URL` and `SUPABASE_PUBLIC_KEY` environment variables.
 
 ---
 

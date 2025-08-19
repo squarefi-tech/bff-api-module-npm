@@ -23,6 +23,7 @@
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
+    "@supabase/supabase-js": "^2.55.0",
     "@telegram-apps/sdk-react": "^3.1.2",
     "axios": "^1.6.7",
     "lodash.debounce": "^4.0.8",
