@@ -1238,8 +1238,6 @@ export interface components {
         TransactionsFilter: {
             created_at?: string;
             /** @enum {string} */
-            status?: "complete" | "pending" | "canceled" | "failed" | "processing" | "new";
-            /** @enum {string} */
             type?: "deposit_crypto" | "withdrawal_crypto" | "deposit_fiat" | "withdrawal_fiat" | "deposit_vcard" | "withdrawal_vcard" | "deposit" | "withdrawal";
             /** @enum {string|null} */
             method?: "p2p" | "crypto" | "bank_transfer" | "exchange" | "sbp" | "internal_fiat" | null;
@@ -1256,6 +1254,7 @@ export interface components {
             to_created_at?: string;
             /** @default false */
             show_low_balance: boolean;
+            status?: ("complete" | "pending" | "canceled" | "failed" | "processing" | "new")[];
         };
         ChainDto: {
             id: number;
@@ -2985,7 +2984,9 @@ export interface operations {
     };
     WalletsTransactionsController_export: {
         parameters: {
-            query?: never;
+            query?: {
+                status?: ("complete" | "pending" | "canceled" | "failed" | "processing" | "new")[];
+            };
             header?: never;
             path: {
                 wallet_id: string;

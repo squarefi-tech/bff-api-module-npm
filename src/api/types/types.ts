@@ -819,144 +819,144 @@ export namespace API {
     }
   }
 
-  export namespace SubAccountsV2 {
-    export type SubAccountDetails = {
-      iban: string;
-      bank_name: string;
-      swift_code: string;
-      bank_address: string;
-      receiver_name: string;
-      payment_details: string;
-      reference_number: string;
-      registration_number: string;
-    };
+  // export namespace SubAccountsV2 {
+  //   export type SubAccountDetails = {
+  //     iban: string;
+  //     bank_name: string;
+  //     swift_code: string;
+  //     bank_address: string;
+  //     receiver_name: string;
+  //     payment_details: string;
+  //     reference_number: string;
+  //     registration_number: string;
+  //   };
 
-    export interface SubAccount {
-      balance: number;
-      cards_count: number;
-      created_at: string;
-      currency: API.Currencies.FiatCurrency;
-      fiat_balance: number;
-      id: string;
-      issuing_program: API.Cards.Config.Program;
-      nick_name: string;
-      program_id: string;
-      realtimeauth_balance: number;
-      status: string;
-      total_balance: number;
-      wallet_id: string;
-    }
+  //   export interface SubAccount {
+  //     balance: number;
+  //     cards_count: number;
+  //     created_at: string;
+  //     currency: API.Currencies.FiatCurrency;
+  //     fiat_balance: number;
+  //     id: string;
+  //     issuing_program: API.Cards.Config.Program;
+  //     nick_name: string;
+  //     program_id: string;
+  //     realtimeauth_balance: number;
+  //     status: string;
+  //     total_balance: number;
+  //     wallet_id: string;
+  //   }
 
-    export namespace ExtendedSubAccount {
-      export interface ExtendedSubAccount extends SubAccount {
-        account_details?: SubAccountDetails;
-        payment_types: Array<{ order_type: OrderType }>;
-        realtime_auth: [
-          {
-            crypto_token: string;
-            fiat_account: string;
-            id: string;
-            priority: number;
-          }
-        ];
-      }
-      export interface Request {
-        wallet_uuid: string;
-        fiat_account_id: string;
-      }
+  //   export namespace ExtendedSubAccount {
+  //     export interface ExtendedSubAccount extends SubAccount {
+  //       account_details?: SubAccountDetails;
+  //       payment_types: Array<{ order_type: OrderType }>;
+  //       realtime_auth: [
+  //         {
+  //           crypto_token: string;
+  //           fiat_account: string;
+  //           id: string;
+  //           priority: number;
+  //         }
+  //       ];
+  //     }
+  //     export interface Request {
+  //       wallet_uuid: string;
+  //       fiat_account_id: string;
+  //     }
 
-      export type Response = ExtendedSubAccount;
-    }
+  //     export type Response = ExtendedSubAccount;
+  //   }
 
-    export interface SubAccountWithCards extends SubAccount {
-      cards: API.Cards.IssuingCardListItem[];
-    }
+  //   export interface SubAccountWithCards extends SubAccount {
+  //     cards: API.Cards.IssuingCardListItem[];
+  //   }
 
-    export interface SubAccountsList<T extends SubAccount | SubAccountWithCards> {
-      count: number;
-      data: T[];
-    }
+  //   export interface SubAccountsList<T extends SubAccount | SubAccountWithCards> {
+  //     count: number;
+  //     data: T[];
+  //   }
 
-    export type SubAccountsListWithCards = SubAccountsList<SubAccountWithCards>;
-    export type SubAccountsListWithoutCards = SubAccountsList<SubAccount>;
+  //   export type SubAccountsListWithCards = SubAccountsList<SubAccountWithCards>;
+  //   export type SubAccountsListWithoutCards = SubAccountsList<SubAccount>;
 
-    export namespace CreateSubAccount {
-      export interface Request {
-        wallet_id: string;
-        program_id: string;
-      }
-      export type Response = {
-        id: string;
-        balance: number;
-        nick_name: string;
-        wallet_id: string;
-        created_at: string;
-        account_currency: string;
-        type: SubAccountType | string;
-        program_id: string;
-        status: 'ACTIVE';
-        fiat: {
-          code: string;
-          uuid: string;
-          symbol: string;
-          enabled: boolean;
-          coingecko: string;
-        };
-        issuing_program: {
-          id: string;
-          form_factor: CardFormFactor | string;
-          brand: string;
-          tokenizable: boolean;
-          type: CardType | string;
-        };
-      };
-    }
+  //   export namespace CreateSubAccount {
+  //     export interface Request {
+  //       wallet_id: string;
+  //       program_id: string;
+  //     }
+  //     export type Response = {
+  //       id: string;
+  //       balance: number;
+  //       nick_name: string;
+  //       wallet_id: string;
+  //       created_at: string;
+  //       account_currency: string;
+  //       type: SubAccountType | string;
+  //       program_id: string;
+  //       status: 'ACTIVE';
+  //       fiat: {
+  //         code: string;
+  //         uuid: string;
+  //         symbol: string;
+  //         enabled: boolean;
+  //         coingecko: string;
+  //       };
+  //       issuing_program: {
+  //         id: string;
+  //         form_factor: CardFormFactor | string;
+  //         brand: string;
+  //         tokenizable: boolean;
+  //         type: CardType | string;
+  //       };
+  //     };
+  //   }
 
-    export namespace Transactions {
-      // export type Transaction = API.Cards.TransactionItem;
-      export type Transaction = {
-        vendor_transaction_id: string;
-        created_at: string;
-        cleared_at: string;
-        merchant: {
-          name: string;
-          category_code: string;
-          city: string;
-          country: string;
-        };
-        last4: string;
-        title: string;
-        billing_amount: number;
-        billing_currency: string;
-        transaction_amount: number;
-        transaction_currency: string;
-        vendor_sub_account_id: string;
-        failure_reason: string;
-        status: string;
-        transaction_type: string;
-        is_credit: boolean;
-        has_receipt: boolean;
-        adjustment_type: string;
-        review_status: string;
-        group: string;
-        total_amount: number;
-      };
+  //   export namespace Transactions {
+  //     // export type Transaction = API.Cards.TransactionItem;
+  //     export type Transaction = {
+  //       vendor_transaction_id: string;
+  //       created_at: string;
+  //       cleared_at: string;
+  //       merchant: {
+  //         name: string;
+  //         category_code: string;
+  //         city: string;
+  //         country: string;
+  //       };
+  //       last4: string;
+  //       title: string;
+  //       billing_amount: number;
+  //       billing_currency: string;
+  //       transaction_amount: number;
+  //       transaction_currency: string;
+  //       vendor_sub_account_id: string;
+  //       failure_reason: string;
+  //       status: string;
+  //       transaction_type: string;
+  //       is_credit: boolean;
+  //       has_receipt: boolean;
+  //       adjustment_type: string;
+  //       review_status: string;
+  //       group: string;
+  //       total_amount: number;
+  //     };
 
-      export namespace TransactionList {
-        export interface Request {
-          fiat_account_id: string;
-          wallet_uuid: string;
-          limit?: number;
-          offset?: number;
-        }
-        export interface Response {
-          count: number;
-          data: Transaction[];
-          has_more: boolean;
-        }
-      }
-    }
-  }
+  //     export namespace TransactionList {
+  //       export interface Request {
+  //         fiat_account_id: string;
+  //         wallet_uuid: string;
+  //         limit?: number;
+  //         offset?: number;
+  //       }
+  //       export interface Response {
+  //         count: number;
+  //         data: Transaction[];
+  //         has_more: boolean;
+  //       }
+  //     }
+  //   }
+  // }
 
   export namespace Issuing {
     export namespace Programs {
@@ -2824,7 +2824,7 @@ export namespace API {
           offset: number;
           filter?: {
             created_at?: string;
-            status?: WalletTransactionStatus;
+            status?: WalletTransactionStatus[];
             type?: WalletTransactionType;
             method?: WalletTransactionMethod;
             record_type?: WalletTransactionRecordType;
@@ -2840,6 +2840,16 @@ export namespace API {
           total: number;
           data: Transaction[];
         };
+
+        export namespace ExportCsv {
+          export type Request = {
+            wallet_uuid: string;
+            status?: WalletTransactionStatus[];
+            from_created_at?: string;
+            to_created_at?: string;
+          };
+          export type Response = string;
+        }
       }
     }
   }
