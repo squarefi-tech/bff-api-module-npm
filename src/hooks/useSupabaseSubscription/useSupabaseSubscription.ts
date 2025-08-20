@@ -23,7 +23,7 @@ export const useSupabaseSubscription = ({ config, callback, enabled = true, key 
     }
 
     const subscription = supabaseClient
-      .channel(config.channelName)
+      .channel(key || config.channelName)
       .on(
         'postgres_changes' as any,
         {
