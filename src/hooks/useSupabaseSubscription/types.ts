@@ -10,10 +10,9 @@ export interface UseSupabaseSubscriptionProps {
   config: SubscriptionConfig;
   callback: (payload?: unknown) => void;
   enabled?: boolean;
+  key?: string;
 }
 
-export interface UseWalletTransactionsSubscriptionProps {
+export interface UseWalletTransactionsSubscriptionProps extends Omit<UseSupabaseSubscriptionProps, 'config'> {
   walletId: string | undefined;
-  callback: () => void;
-  enabled?: boolean;
 }

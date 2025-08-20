@@ -1,22 +1,20 @@
+'use client';
+
 import { useEffect, useRef } from 'react';
 
 import { UseSupabaseSubscriptionProps } from './types';
 
 import { supabaseClient } from '../../utils/supabase';
 
-export const useSupabaseSubscription = ({ config, callback, enabled = true }: UseSupabaseSubscriptionProps) => {
+export const useSupabaseSubscription = ({ config, callback, enabled = true, key }: UseSupabaseSubscriptionProps) => {
   const subscriptionRef = useRef<any>(null);
   const callbackRef = useRef(callback);
 
   callbackRef.current = callback;
 
   useEffect(() => {
-    if (!enabled) {
+    if (!enabled || !supabaseClient) {
       return;
-    }
-
-    if (!supabaseClient) {
-      throw new Error('Supabase client is not available');
     }
 
     if (subscriptionRef.current) {
@@ -46,7 +44,7 @@ export const useSupabaseSubscription = ({ config, callback, enabled = true }: Us
         subscriptionRef.current = null;
       }
     };
-  }, [enabled, config.channelName, config.table, config.schema, config.event, config.filter]);
+  }, [enabled, config.channelName, config.table, config.schema, config.event, config.filter, supabaseClient, key]);
 
   return {
     isConnected: !!subscriptionRef.current,

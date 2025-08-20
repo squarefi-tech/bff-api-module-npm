@@ -2,13 +2,8 @@ import { createWalletTransactionsConfig } from './config';
 import { UseWalletTransactionsSubscriptionProps } from './types';
 import { useSupabaseSubscription } from './useSupabaseSubscription';
 
-export const useWalletTransactionsSubscription = ({
-  walletId,
-  callback,
-  enabled = true,
-}: UseWalletTransactionsSubscriptionProps) =>
+export const useWalletTransactionsSubscription = ({ walletId, ...props }: UseWalletTransactionsSubscriptionProps) =>
   useSupabaseSubscription({
+    ...props,
     config: createWalletTransactionsConfig(walletId || ''),
-    callback,
-    enabled: enabled && !!walletId,
   });
