@@ -2822,19 +2822,7 @@ export namespace API {
           wallet_uuid: string;
           limit: number;
           offset: number;
-          filter?: {
-            created_at?: string;
-            status?: WalletTransactionStatus[];
-            type?: WalletTransactionType;
-            method?: WalletTransactionMethod;
-            record_type?: WalletTransactionRecordType;
-            'currency.uuid'?: string;
-            'meta.billing_amount_currency'?: string;
-            'meta.transaction_amount_currency'?: string;
-            address?: string;
-            from_created_at?: string;
-            to_created_at?: string;
-          };
+          filter?: components['schemas']['TransactionsFilter'];
         };
         export type Response = {
           total: number;
@@ -2844,20 +2832,7 @@ export namespace API {
         export namespace ExportCsv {
           export type Request = {
             wallet_uuid: string;
-            filter: {
-              created_at: string;
-              type: WalletTransactionType;
-              method: WalletTransactionMethod;
-              record_type: WalletTransactionRecordType;
-              'currency.uuid': string;
-              'meta.billing_amount_currency': string;
-              'meta.transaction_amount_currency': string;
-              address: string;
-              from_created_at: string;
-              to_created_at: string;
-              show_low_balance: boolean;
-              status: WalletTransactionStatus[];
-            };
+            filter?: components['schemas']['TransactionsFilter'];
           };
           export type Response = string;
         }

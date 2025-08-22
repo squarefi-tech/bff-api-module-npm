@@ -2985,7 +2985,7 @@ export interface operations {
     WalletsTransactionsController_export: {
         parameters: {
             query?: {
-                status?: ("complete" | "pending" | "canceled" | "failed" | "processing" | "new")[];
+                filter?: components["schemas"]["TransactionsFilter"];
             };
             header?: never;
             path: {
