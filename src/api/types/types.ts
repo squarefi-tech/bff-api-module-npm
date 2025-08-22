@@ -2822,7 +2822,7 @@ export namespace API {
           wallet_uuid: string;
           limit: number;
           offset: number;
-          filter?: components['schemas']['TransactionsFilter'];
+          filter?: Partial<components['schemas']['TransactionsFilter']>;
         };
         export type Response = {
           total: number;
@@ -2832,7 +2832,7 @@ export namespace API {
         export namespace ExportCsv {
           export type Request = {
             wallet_uuid: string;
-            filter?: components['schemas']['TransactionsFilter'];
+            filter?: Partial<components['schemas']['TransactionsFilter']>;
           };
           export type Response = string;
         }
