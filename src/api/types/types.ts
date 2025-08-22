@@ -2844,9 +2844,20 @@ export namespace API {
         export namespace ExportCsv {
           export type Request = {
             wallet_uuid: string;
-            status?: WalletTransactionStatus[];
-            from_created_at?: string;
-            to_created_at?: string;
+            filter: {
+              created_at: string;
+              type: WalletTransactionType;
+              method: WalletTransactionMethod;
+              record_type: WalletTransactionRecordType;
+              'currency.uuid': string;
+              'meta.billing_amount_currency': string;
+              'meta.transaction_amount_currency': string;
+              address: string;
+              from_created_at: string;
+              to_created_at: string;
+              show_low_balance: boolean;
+              status: WalletTransactionStatus[];
+            };
           };
           export type Response = string;
         }
