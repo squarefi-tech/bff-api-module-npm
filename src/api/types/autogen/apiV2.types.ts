@@ -72,6 +72,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/sign-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sign in user by type */
+        post: operations["AuthController_signIn"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/sign-up": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sign up user by type */
+        post: operations["AuthController_signUp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/sign-up/telegram": {
         parameters: {
             query?: never;
@@ -937,6 +971,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/persona/inquiries/{wallet_id}/{inquiry_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PersonaController_resumeInquiry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/kyc/integration-persona-templates": {
         parameters: {
             query?: never;
@@ -964,6 +1014,23 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["LoadDataFromHifibridgeController_syncData"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/bank-data": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Returns bank data by account number */
+        get: operations["BankDataController_getBankDataByAccountNumber"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -998,6 +1065,18 @@ export interface components {
         };
         RefreshTokenDto: {
             refresh_token: string;
+        };
+        SignInByTypeDto: {
+            login: string;
+            /** @enum {string} */
+            type: "email" | "phone";
+        };
+        SignUpByTypeDto: {
+            invite_code?: string;
+            referrer?: string;
+            /** @enum {string} */
+            type: "email" | "phone";
+            login: string;
         };
         TelegramSignUpByPhoneDto: {
             phone: string;
@@ -2086,6 +2165,10 @@ export interface components {
             /** @example inq_E6U4KitBucNKpfrDMb997AaTkQTt */
             inquiryId: string | null;
         };
+        ResumeInquiryResponseDto: {
+            inquiryId: string;
+            sessionId: string;
+        };
         IntegrationPersonaTemplateEntityDto: Record<string, never>;
         FindAllIntegrationPersonaTemplatesResponseDto: {
             /** @example 20 */
@@ -2098,6 +2181,71 @@ export interface components {
             wallet_id: string;
             /** @description Hifibridge ID to load data to wallet */
             hifibridge_id: string;
+        };
+        CityDto: {
+            id: string;
+            country_id: string;
+            name: string;
+        };
+        BankDto: {
+            id: string;
+            country_id: string;
+            code: string;
+            name: string;
+        };
+        SwiftDto: {
+            id: string;
+            address: string;
+            postcode: string;
+            branch_name: string;
+            branch_code: string;
+            country: components["schemas"]["CountryDto"];
+            city: components["schemas"]["CityDto"];
+            bank: components["schemas"]["BankDto"];
+        };
+        IbanDataDto: {
+            id: string;
+            account_number: string;
+            national_bank_code: string;
+            national_branch_code: string;
+            swift: components["schemas"]["SwiftDto"];
+            country: components["schemas"]["CountryDto"];
+        };
+        WireDto: {
+            telegraphic_name: string;
+            is_funds_transfer_allowed: boolean;
+            is_settlement_only: boolean;
+            is_securities_transfer_allowed: boolean;
+            change_date: Record<string, never> | null;
+            bank: components["schemas"]["BankDto"];
+            city: components["schemas"]["CityDto"];
+        };
+        AchDto: {
+            new_id: Record<string, never> | null;
+            servicing_frb_id: string;
+            address: string;
+            postcode: string;
+            phone: string;
+            record_type_code: number;
+            is_main_office: boolean;
+            change_date: Record<string, never> | null;
+            bank: components["schemas"]["BankDto"];
+            city: components["schemas"]["CityDto"];
+        };
+        RtnDataDto: {
+            id: string;
+            wire: components["schemas"]["WireDto"];
+            ach: components["schemas"]["AchDto"];
+        };
+        SwiftDataDto: {
+            id: string;
+            address: string;
+            postcode: string;
+            branch_name: string;
+            branch_code: string;
+            country: components["schemas"]["CountryDto"];
+            city: components["schemas"]["CityDto"];
+            bank: components["schemas"]["BankDto"];
         };
     };
     responses: never;
@@ -2206,6 +2354,57 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["SessionDto"];
                 };
+            };
+        };
+    };
+    AuthController_signIn: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignInByTypeDto"];
+            };
+        };
+        responses: {
+            /** @description Invalid tenant */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_signUp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignUpByTypeDto"];
+            };
+        };
+        responses: {
+            /** @description Invite code is required */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Invalid tenant */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -4450,6 +4649,49 @@ export interface operations {
             };
         };
     };
+    PersonaController_resumeInquiry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wallet_id: string;
+                inquiry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResumeInquiryResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description You don`t have access to current wallet */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Persona reference or Inquiry not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     IntegrationPersonaTemplateController_findAll: {
         parameters: {
             query?: never;
@@ -4496,6 +4738,36 @@ export interface operations {
         };
         responses: {
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    BankDataController_getBankDataByAccountNumber: {
+        parameters: {
+            query: {
+                /** @description Account number string must be a valid IBAN, RTN or SWIFT code */
+                account_number: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bank data */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IbanDataDto"] | components["schemas"]["RtnDataDto"] | components["schemas"]["SwiftDataDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };

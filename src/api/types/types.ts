@@ -2445,6 +2445,16 @@ export namespace API {
           data?: string;
         };
       }
+
+      export namespace Status {
+        export type Response = {
+          success?: boolean;
+          error?: boolean;
+          message?: string;
+          details?: string;
+          has_active_totp?: boolean;
+        };
+      }
     }
   }
 

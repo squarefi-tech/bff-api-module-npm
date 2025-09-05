@@ -44,5 +44,8 @@ export const totp = {
         data,
       });
     },
+    status: (): Promise<API.TOTP.TOTP.Status.Response> => {
+      return apiClientTOTP.getRequest<API.TOTP.TOTP.Status.Response>('/api/totp/status');
+    },
   },
 };
