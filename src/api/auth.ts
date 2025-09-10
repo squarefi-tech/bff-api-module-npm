@@ -24,13 +24,15 @@ export const auth = {
   },
   signin: {
     omni: {
-      email: (data: API.Auth.SignIn.Email.OTP.Request): Promise<API.Auth.Tokens> =>
-        apiClientV2.postRequest<API.Auth.Tokens>('/auth/sign-in/omni/email/otp', { data }),
-      phone: ({ phone, ...data }: API.Auth.SignIn.Phone.OTP.Request): Promise<API.Auth.Tokens> =>
-        apiClientV2.postRequest<API.Auth.Tokens>('/auth/sign-in/omni/phone/otp', {
+      email: (data: API.Auth.SignIn.Omni.Email.OTP.Request): Promise<API.Auth.Tokens> =>
+        apiClientV2.postRequest('/auth/sign-in/omni/email/otp', { data }),
+      phone: ({ phone, ...data }: API.Auth.SignIn.Omni.Phone.OTP.Request): Promise<API.Auth.Tokens> =>
+        apiClientV2.postRequest('/auth/sign-in/omni/phone/otp', {
           data: { phone: convertPhoneToSupabaseFormat(phone), ...data },
         }),
     },
+    byType: (data: API.Auth.SignIn.ByType.Request): Promise<API.Auth.Tokens> =>
+      apiClientV2.postRequest('/auth/sign-in', { data }),
     telegram: (data: API.Auth.Telegram.Signin.Request): Promise<API.Auth.Telegram.Signin.Response> =>
       apiClientV2.postRequest<API.Auth.Telegram.Signin.Response>(telegramSignInPath, { data }),
     password: (
@@ -42,6 +44,8 @@ export const auth = {
       }),
   },
   signup: {
+    byType: (data: API.Auth.SignUp.ByType.Request): Promise<API.Auth.Tokens> =>
+      apiClientV2.postRequest('/auth/sign-up', { data }),
     password: (email: string, password: string): Promise<API.Auth.Tokens> =>
       apiClientV2.postRequest<API.Auth.Tokens>('/auth/sign-up/password/email', {
         data: { email, password },

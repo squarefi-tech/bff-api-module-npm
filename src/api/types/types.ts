@@ -55,29 +55,39 @@ export namespace API {
     }
 
     export namespace SignIn {
-      export namespace Email {
-        export namespace OTP {
-          export interface Request {
-            email: string;
-            invite_code?: string;
-            referrer?: string;
-            redirect_url?: string;
-          }
-        }
+      export namespace ByType {
+        export type Request = operations['AuthController_signIn']['requestBody']['content']['application/json'];
       }
 
-      export namespace Phone {
-        export namespace OTP {
-          export interface Request {
-            phone: string;
-            invite_code?: string;
-            referrer?: string;
+      export namespace Omni {
+        export namespace Email {
+          export namespace OTP {
+            export interface Request {
+              email: string;
+              invite_code?: string;
+              referrer?: string;
+              redirect_url?: string;
+            }
+          }
+        }
+
+        export namespace Phone {
+          export namespace OTP {
+            export interface Request {
+              phone: string;
+              invite_code?: string;
+              referrer?: string;
+            }
           }
         }
       }
     }
 
     export namespace SignUp {
+      export namespace ByType {
+        export type Request = operations['AuthController_signUp']['requestBody']['content']['application/json'];
+      }
+
       export namespace Password {
         export interface Request {
           email: string;

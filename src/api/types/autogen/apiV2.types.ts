@@ -1889,6 +1889,7 @@ export interface components {
             /** @enum {string} */
             action: "verification";
             type: string;
+            full_name: string | null;
             url: string;
         };
         WalletKycRailTermsAndConditionsDto: {
