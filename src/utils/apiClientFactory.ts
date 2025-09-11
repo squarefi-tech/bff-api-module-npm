@@ -66,7 +66,10 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
       if (typeof window === 'undefined') {
         return Promise.reject(error);
       }
-      if (error?.response?.status === ResponseStatus.UNAUTHORIZED) {
+      if (
+        error?.response?.status === ResponseStatus.UNAUTHORIZED &&
+        !error?.response?.config.context?.bypassUnauthorizedHandler
+      ) {
         const { response, config: failedRequestConfig } = error;
         const { refresh_token } = getTokens();
         const isRetryRequest = failedRequestConfig.context?.isRetryRequest;
