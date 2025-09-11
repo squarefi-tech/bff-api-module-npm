@@ -1,12 +1,12 @@
 /* eslint-disable no-console */
 import { isTMA } from '@telegram-apps/sdk-react';
-import axios, { AxiosRequestConfig, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
 import { telegramSignUpPath, telegramSignInPath, refreshTokenPath } from '../api/auth';
 
 import { AppEnviroment, ResponseStatus } from '../constants';
-import { getFromLocalStorage } from '../utils/storage';
-import { deleteTokens, refreshTokens } from '../utils/tokensFactory';
+
+import { deleteTokens, getTokens, refreshTokens } from './tokensFactory';
 
 // eslint-disable-next-line no-constant-condition
 
@@ -16,31 +16,37 @@ const apiTOTPBaseURL = process.env.API_TOTP_URL ?? 'ENV variable API_TOTP_URL is
 const envTenantId = process.env.TENANT_ID ?? 'ENV variable TENANT_ID is not defined';
 const envLogoutURL = process.env.LOGOUT_URL ?? '/auth/logout';
 
+type AxiosError = {
+  response: AxiosResponse;
+  config: InternalAxiosRequestConfig;
+};
+
 type CreateApiClientOptions = {
   baseURL: string;
   tenantId: string;
   isBearerToken?: boolean;
 };
 
-export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiClientOptions) => {
-  type RequestQueueItem = {
-    resolve: Function;
-    reject: Function;
-  };
+type RequestQueueItem = {
+  resolve: Function;
+  reject: Function;
+};
 
+let isTokenRefreshing = false;
+let requestQueue: RequestQueueItem[] = [];
+
+export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiClientOptions) => {
   const instance = axios.create({
     baseURL,
     timeout: 60000,
   });
 
   instance.interceptors.request.use((config) => {
-    const access_token = getFromLocalStorage('access_token');
+    const { access_token } = getTokens();
 
     const modifiedHeaders = {
       ...config.headers,
-      'App-Enviroment': isTMA() ? AppEnviroment.TELEGRAM : AppEnviroment.WEB,
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
       'x-tenant-id': tenantId,
     };
 
@@ -49,27 +55,26 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
       modifiedHeaders.Authorization = authHeader;
     }
 
+    config.context = { ...config.context, appEnvironment: isTMA() ? AppEnviroment.TELEGRAM : AppEnviroment.WEB };
+
     return { ...config, headers: modifiedHeaders } as unknown as InternalAxiosRequestConfig;
   });
 
-  let isTokenRefreshing = false;
-  let requestQueue: RequestQueueItem[] = [];
-
   instance.interceptors.response.use(
     (response) => response,
-    (error) => {
+    (error: AxiosError) => {
       if (typeof window === 'undefined') {
         return Promise.reject(error);
       }
       if (error?.response?.status === ResponseStatus.UNAUTHORIZED) {
-        const { response, config: failedRequest } = error;
-        const refreshToken = getFromLocalStorage('refresh_token');
-        const isRetryRequest = failedRequest.headers['X-Retry-Request'];
+        const { response, config: failedRequestConfig } = error;
+        const { refresh_token } = getTokens();
+        const isRetryRequest = failedRequestConfig.context?.isRetryRequest;
 
-        const isRefreshTokenRequest = response?.config?.url.includes(refreshTokenPath);
-        const isTelegramSignInRequest = response?.config?.url.includes(telegramSignInPath);
-        const isTelegramSignUpRequest = response?.config?.url.includes(telegramSignUpPath);
-        const isRefreshNotRequired = !refreshToken && !isTMA();
+        const isRefreshTokenRequest = failedRequestConfig.url?.includes(refreshTokenPath);
+        const isTelegramSignInRequest = failedRequestConfig.url?.includes(telegramSignInPath);
+        const isTelegramSignUpRequest = failedRequestConfig.url?.includes(telegramSignUpPath);
+        const isRefreshNotRequired = !refresh_token && !isTMA();
         const isLogoutNeccesary =
           isRefreshNotRequired ||
           isTelegramSignInRequest ||
@@ -111,10 +116,10 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
         return new Promise((res, rej) => {
           requestQueue.push({
             resolve: () => {
-              failedRequest.headers['X-Retry-Request'] = 'true';
-              return res(instance(failedRequest));
+              failedRequestConfig.context = { ...failedRequestConfig.context, isRetryRequest: true };
+              return res(instance(failedRequestConfig));
             },
-            reject: () => rej(instance(failedRequest)),
+            reject: () => rej(instance(failedRequestConfig)),
           });
         });
       }

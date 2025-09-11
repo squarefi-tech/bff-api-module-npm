@@ -1,4 +1,4 @@
-import { initData, isTMA, miniApp, init as initTelegramSDK } from '@telegram-apps/sdk-react';
+import { initData, isTMA } from '@telegram-apps/sdk-react';
 
 import { deleteFromLocalStorage, getFromLocalStorage, setToLocalStorage } from './storage';
 
