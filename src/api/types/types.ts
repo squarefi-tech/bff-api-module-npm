@@ -122,7 +122,8 @@ export namespace API {
         form_factor: CardFormFactor | string;
         consent_text: string | null;
         name: string;
-        card_limit: number;
+        // card_limit: number;   deprecated, use max_cards instead
+        max_cards: number;
         realtime_auth: boolean;
         tokenizable: boolean;
         kyc_rails_id: string;
