@@ -2304,6 +2304,11 @@ export namespace API {
         export type Response =
           operations['PersonaController_initInquiry']['responses']['200']['content']['application/json'];
       }
+      export namespace Resume {
+        export type Request = operations['PersonaController_resumeInquiry']['parameters']['path'];
+        export type Response =
+          operations['PersonaController_resumeInquiry']['responses']['200']['content']['application/json'];
+      }
     }
   }
 
