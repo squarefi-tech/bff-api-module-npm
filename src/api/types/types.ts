@@ -110,7 +110,8 @@ export namespace API {
   export namespace BankData {
     export namespace GetBankDataByAccountNumber {
       export type Request = operations['BankDataController_getBankDataByAccountNumber']['parameters']['query'];
-      export type Response = operations['BankDataController_getBankDataByAccountNumber']['responses']['200']['content']['application/json'];
+      export type Response =
+        operations['BankDataController_getBankDataByAccountNumber']['responses']['200']['content']['application/json'];
     }
   }
 
@@ -2370,7 +2371,7 @@ export namespace API {
           message?: string;
           details?: string;
           validity?: number;
-          request_made?: number;
+          requests_made?: number;
           max_requests?: number;
         };
       }
