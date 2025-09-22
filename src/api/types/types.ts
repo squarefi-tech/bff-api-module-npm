@@ -472,10 +472,10 @@ export namespace API {
 
         export interface DestinationListItemWithExternalBankingData extends DestinationListItemCommonFields {
           type:
-            | CounterpartyDestinationType.DOMESTIC_WIRE
-            | CounterpartyDestinationType.ACH
-            | CounterpartyDestinationType.SWIFT
-            | CounterpartyDestinationType.SEPA;
+          | CounterpartyDestinationType.DOMESTIC_WIRE
+          | CounterpartyDestinationType.ACH
+          | CounterpartyDestinationType.SWIFT
+          | CounterpartyDestinationType.SEPA;
           external_banking_data: DestinationListItemExternalBankingData;
           external_crypto_data?: never;
         }
@@ -531,10 +531,10 @@ export namespace API {
 
         export interface DestinationDetailItemWithExternalBankingData extends DestinationDetailItemCommonFields {
           type:
-            | CounterpartyDestinationType.DOMESTIC_WIRE
-            | CounterpartyDestinationType.ACH
-            | CounterpartyDestinationType.SWIFT
-            | CounterpartyDestinationType.SEPA;
+          | CounterpartyDestinationType.DOMESTIC_WIRE
+          | CounterpartyDestinationType.ACH
+          | CounterpartyDestinationType.SWIFT
+          | CounterpartyDestinationType.SEPA;
           external_banking_data: DestinationDetailItemExternalBankingData;
           external_crypto_data?: never;
         }
@@ -792,6 +792,7 @@ export namespace API {
           role: APIKeyRole;
           wallet_id: string;
           created_at: string;
+          is_enabled: boolean;
         }
 
         export interface ExtendedKey extends Key {
@@ -1638,10 +1639,10 @@ export namespace API {
 
       export interface WithdrawCryptoRequest extends CommonRequestParams {
         order_type:
-          | OrderType.WITHDRAWAL_CRYPTO
-          | OrderType.TRANSFER_INTERNAL
-          | OrderType.OMNIBUS_CRYPTO_TRANSFER
-          | OrderType.SEGREGATED_CRYPTO_TRANSFER;
+        | OrderType.WITHDRAWAL_CRYPTO
+        | OrderType.TRANSFER_INTERNAL
+        | OrderType.OMNIBUS_CRYPTO_TRANSFER
+        | OrderType.SEGREGATED_CRYPTO_TRANSFER;
         to_address?: string;
       }
 
@@ -1802,10 +1803,10 @@ export namespace API {
 
         export interface WithdrawCryptoRequest extends CommonRequestParams {
           order_type:
-            | OrderType.WITHDRAWAL_CRYPTO
-            | OrderType.TRANSFER_INTERNAL
-            | OrderType.OMNIBUS_CRYPTO_TRANSFER
-            | OrderType.SEGREGATED_CRYPTO_TRANSFER;
+          | OrderType.WITHDRAWAL_CRYPTO
+          | OrderType.TRANSFER_INTERNAL
+          | OrderType.OMNIBUS_CRYPTO_TRANSFER
+          | OrderType.SEGREGATED_CRYPTO_TRANSFER;
           to_address?: string;
         }
 
