@@ -1020,22 +1020,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/persona-admin/{wallet_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["PersonaAdminController_syncKycEntityWithPersona"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/bank-data": {
         parameters: {
             query?: never;
@@ -1806,24 +1790,12 @@ export interface components {
             selfie_url?: string | null;
             annual_salary?: string | null;
             expected_monthly_volume?: string | null;
-            monthly_crypto_deposits?: string | null;
-            monthly_crypto_investment_deposit?: string | null;
-            monthly_crypto_investment_withdrawal?: string | null;
-            monthly_crypto_withdrawals?: string | null;
-            monthly_investment_deposit?: string | null;
-            monthly_investment_withdrawal?: string | null;
-            monthly_withdrawals?: string | null;
-            usd_value_of_crypto?: string | null;
-            usd_value_of_fiat?: string | null;
             occupation?: string | null;
             /**
              * @default UNVERIFIED
              * @enum {string}
              */
             status: "APPROVED" | "DECLINED" | "PENDING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
-            /** @enum {string|null} */
-            employment_status?: "EMPLOYEE" | "SELF_EMPLOYED" | "RETIRED" | "UNEMPLOYED" | "OTHER" | null;
-            employment_description?: string | null;
             address?: components["schemas"]["KycAddressDto"] | null;
             beneficial_owners?: components["schemas"]["KycBeneficialOwnerDto"][] | null;
         };
@@ -1909,19 +1881,7 @@ export interface components {
             selfie_url?: string | null;
             annual_salary?: string | null;
             expected_monthly_volume?: string | null;
-            monthly_crypto_deposits?: string | null;
-            monthly_crypto_investment_deposit?: string | null;
-            monthly_crypto_investment_withdrawal?: string | null;
-            monthly_crypto_withdrawals?: string | null;
-            monthly_investment_deposit?: string | null;
-            monthly_investment_withdrawal?: string | null;
-            monthly_withdrawals?: string | null;
-            usd_value_of_crypto?: string | null;
-            usd_value_of_fiat?: string | null;
             occupation?: string | null;
-            /** @enum {string|null} */
-            employment_status?: "EMPLOYEE" | "SELF_EMPLOYED" | "RETIRED" | "UNEMPLOYED" | "OTHER" | null;
-            employment_description?: string | null;
             address?: components["schemas"]["KycAddressDto"] | null;
             beneficial_owners?: components["schemas"]["KycBeneficialOwnerDto"][] | null;
         };
@@ -4779,26 +4739,6 @@ export interface operations {
         };
         responses: {
             201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PersonaAdminController_syncKycEntityWithPersona: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Invalid tenant */
-            401: {
                 headers: {
                     [name: string]: unknown;
                 };
