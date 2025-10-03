@@ -2538,7 +2538,8 @@ export namespace API {
         va_programs_id: string;
       }
 
-      export type Response = API.VirtualAccounts.VirtualAccount.VirtualAccount;
+      export type Response =
+        API.VirtualAccounts.VirtualAccount.VirtualAccountDetailItem;
     }
 
     export namespace GetByUuid {
@@ -2546,7 +2547,8 @@ export namespace API {
         uuid: string;
       }
 
-      export type Response = API.VirtualAccounts.VirtualAccount.VirtualAccount;
+      export type Response =
+        API.VirtualAccounts.VirtualAccount.VirtualAccountDetailItem;
     }
 
     export namespace GetAll {
@@ -2559,7 +2561,7 @@ export namespace API {
       export type Response = {
         count: number;
         has_more: boolean;
-        data: API.VirtualAccounts.VirtualAccount.VirtualAccount[];
+        data: API.VirtualAccounts.VirtualAccount.VirtualAccountListItem[];
       };
     }
 
@@ -2640,7 +2642,7 @@ export namespace API {
         order_type_id: string;
       }
 
-      export interface VirtualAccount {
+      export interface VirtualAccountListItem {
         id: string;
         created_at: string;
         wallet_id: string;
@@ -2654,6 +2656,31 @@ export namespace API {
         meta: API.VirtualAccounts.VirtualAccount.Meta.Meta;
         account_details: API.VirtualAccounts.VirtualAccount.AccountDetails;
         virtual_accounts_program: API.VirtualAccounts.Programs.Program;
+      }
+      export interface VirtualAccountDetailItem {
+        account_currency: string;
+        account_currency_details: API.Currencies.Currency;
+        account_details: API.VirtualAccounts.VirtualAccount.AccountDetails;
+        balance: number;
+        crypto_deposit_details: {
+          currency_id: string;
+          deposit_address: string;
+          chain_id: number;
+        }[];
+        created_at: string;
+        destination_address: string;
+        destination_currency: string;
+        destination_currency_details: API.Currencies.Currency;
+        id: string;
+        integration_vendor_id: string;
+        meta: API.VirtualAccounts.VirtualAccount.Meta.Meta;
+        order_types: string[];
+        status: string;
+        total_balance: number;
+        va_programs_id: string;
+        vendor_account_id: string;
+        virtual_accounts_program: API.VirtualAccounts.Programs.Program;
+        wallet_id: string;
       }
     }
     export namespace Programs {
