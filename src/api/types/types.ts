@@ -17,27 +17,30 @@ import {
   WalletTransactionRecordType,
   WalletTransactionStatus,
   WalletTransactionType,
-} from '../../constants';
-import { WalletType } from '../..';
-import { components, operations } from './autogen/apiV2.types';
+} from "../../constants";
+import { WalletType } from "../..";
+import { components, operations } from "./autogen/apiV2.types";
 
 export namespace API {
   export namespace Auth {
     export namespace RefreshToken {
-      export type Request = operations['AuthController_refreshToken']['requestBody']['content']['application/json'];
+      export type Request =
+        operations["AuthController_refreshToken"]["requestBody"]["content"]["application/json"];
       export type Response =
-        operations['AuthController_refreshToken']['responses']['200']['content']['application/json'];
+        operations["AuthController_refreshToken"]["responses"]["200"]["content"]["application/json"];
     }
     export namespace Telegram {
       export namespace Signin {
-        export type Request = operations['AuthTelegramController_signIn']['requestBody']['content']['application/json'];
+        export type Request =
+          operations["AuthTelegramController_signIn"]["requestBody"]["content"]["application/json"];
         export type Response =
-          operations['AuthTelegramController_signIn']['responses']['200']['content']['application/json'];
+          operations["AuthTelegramController_signIn"]["responses"]["200"]["content"]["application/json"];
       }
       export namespace Signup {
-        export type Request = operations['AuthTelegramController_signUp']['requestBody']['content']['application/json'];
+        export type Request =
+          operations["AuthTelegramController_signUp"]["requestBody"]["content"]["application/json"];
         export type Response =
-          operations['AuthTelegramController_signUp']['responses']['200']['content']['application/json'];
+          operations["AuthTelegramController_signUp"]["responses"]["200"]["content"]["application/json"];
       }
     }
 
@@ -56,7 +59,8 @@ export namespace API {
 
     export namespace SignIn {
       export namespace ByType {
-        export type Request = operations['AuthController_signIn']['requestBody']['content']['application/json'];
+        export type Request =
+          operations["AuthController_signIn"]["requestBody"]["content"]["application/json"];
       }
 
       export namespace Omni {
@@ -85,7 +89,8 @@ export namespace API {
 
     export namespace SignUp {
       export namespace ByType {
-        export type Request = operations['AuthController_signUp']['requestBody']['content']['application/json'];
+        export type Request =
+          operations["AuthController_signUp"]["requestBody"]["content"]["application/json"];
       }
 
       export namespace Password {
@@ -104,14 +109,19 @@ export namespace API {
     // }
 
     export namespace VerifyOtp {
-      export type Response = { access_token: string; refresh_token: string; error?: string };
+      export type Response = {
+        access_token: string;
+        refresh_token: string;
+        error?: string;
+      };
     }
   }
   export namespace BankData {
     export namespace GetBankDataByAccountNumber {
-      export type Request = operations['BankDataController_getBankDataByAccountNumber']['parameters']['query'];
+      export type Request =
+        operations["BankDataController_getBankDataByAccountNumber"]["parameters"]["query"];
       export type Response =
-        operations['BankDataController_getBankDataByAccountNumber']['responses']['200']['content']['application/json'];
+        operations["BankDataController_getBankDataByAccountNumber"]["responses"]["200"]["content"]["application/json"];
     }
   }
 
@@ -267,20 +277,29 @@ export namespace API {
     export namespace CardsList {
       export namespace Request {
         export type CardsListSortingFields = Partial<
-          Pick<IssuingCardListItem, 'created_at' | 'card_status' | 'last4' | 'nick_name' | 'name_on_card' | 'card_id'>
+          Pick<
+            IssuingCardListItem,
+            | "created_at"
+            | "card_status"
+            | "last4"
+            | "nick_name"
+            | "name_on_card"
+            | "card_id"
+          >
         >;
         export type CardsListFilteringFields = Partial<IssuingCardListItem>;
 
-        export type CardsListRequestCommonParams = API.Common.Pagination.Request &
-          API.Common.Sorting.Request<CardsListSortingFields> &
-          API.Common.Filtering.Request<CardsListFilteringFields>;
+        export type CardsListRequestCommonParams =
+          API.Common.Pagination.Request &
+            API.Common.Sorting.Request<CardsListSortingFields> &
+            API.Common.Filtering.Request<CardsListFilteringFields>;
 
         export interface ByWalletUuid extends CardsListRequestCommonParams {
           wallet_uuid: string;
         }
 
         export interface BySubaccountAndWalletUuid extends ByWalletUuid {
-          filter?: Record<'fiat_account', Record<'type', SubAccountType>>;
+          filter?: Record<"fiat_account", Record<"type", SubAccountType>>;
         }
 
         export type BySubAccountAndWalletId = ByWalletUuid & {
@@ -470,18 +489,22 @@ export namespace API {
           memo?: string;
         }
 
-        export interface DestinationListItemWithExternalBankingData extends DestinationListItemCommonFields {
+        export interface DestinationListItemWithExternalBankingData
+          extends DestinationListItemCommonFields {
           type:
-          | CounterpartyDestinationType.DOMESTIC_WIRE
-          | CounterpartyDestinationType.ACH
-          | CounterpartyDestinationType.SWIFT
-          | CounterpartyDestinationType.SEPA;
+            | CounterpartyDestinationType.DOMESTIC_WIRE
+            | CounterpartyDestinationType.ACH
+            | CounterpartyDestinationType.SWIFT
+            | CounterpartyDestinationType.SEPA;
           external_banking_data: DestinationListItemExternalBankingData;
           external_crypto_data?: never;
         }
 
-        export interface DestinationListItemWithExternalCryptoData extends DestinationListItemCommonFields {
-          type: CounterpartyDestinationType.CRYPTO_EXTERNAL | CounterpartyDestinationType.CRYPTO_INTERNAL;
+        export interface DestinationListItemWithExternalCryptoData
+          extends DestinationListItemCommonFields {
+          type:
+            | CounterpartyDestinationType.CRYPTO_EXTERNAL
+            | CounterpartyDestinationType.CRYPTO_INTERNAL;
           external_banking_data?: never;
           external_crypto_data: DestinationListItemExternalCryptoData;
         }
@@ -497,7 +520,7 @@ export namespace API {
           offset?: number;
           search?: string;
           type?: CounterpartyDestinationType | string;
-          sort_by?: 'created_at' | 'nickname' | 'type';
+          sort_by?: "created_at" | "nickname" | "type";
           sort_order?: SortingDirection;
           filter?: {
             type?: CounterpartyDestinationType;
@@ -517,30 +540,36 @@ export namespace API {
           API.Counterparties.Destination.List.DestinationListItemCommonFields;
 
         export interface DestinationDetailItemExternalBankingData
-          extends API.Counterparties.Destination.List.DestinationListItemExternalBankingData {
-          address: API.Counterparties.Destination.List.DestinationListItemExternalBankingData['address'] & {
+          extends API.Counterparties.Destination.List
+            .DestinationListItemExternalBankingData {
+          address: API.Counterparties.Destination.List.DestinationListItemExternalBankingData["address"] & {
             country?: API.Location.Countries.Country;
             state?: API.Location.States.State;
           };
         }
 
         export interface DestinationDetailItemExternalCryptoData
-          extends API.Counterparties.Destination.List.DestinationListItemExternalCryptoData {
+          extends API.Counterparties.Destination.List
+            .DestinationListItemExternalCryptoData {
           currency: API.Currencies.Currency;
         }
 
-        export interface DestinationDetailItemWithExternalBankingData extends DestinationDetailItemCommonFields {
+        export interface DestinationDetailItemWithExternalBankingData
+          extends DestinationDetailItemCommonFields {
           type:
-          | CounterpartyDestinationType.DOMESTIC_WIRE
-          | CounterpartyDestinationType.ACH
-          | CounterpartyDestinationType.SWIFT
-          | CounterpartyDestinationType.SEPA;
+            | CounterpartyDestinationType.DOMESTIC_WIRE
+            | CounterpartyDestinationType.ACH
+            | CounterpartyDestinationType.SWIFT
+            | CounterpartyDestinationType.SEPA;
           external_banking_data: DestinationDetailItemExternalBankingData;
           external_crypto_data?: never;
         }
 
-        export interface DestinationDetailItemWithExternalCryptoData extends DestinationDetailItemCommonFields {
-          type: CounterpartyDestinationType.CRYPTO_EXTERNAL | CounterpartyDestinationType.CRYPTO_INTERNAL;
+        export interface DestinationDetailItemWithExternalCryptoData
+          extends DestinationDetailItemCommonFields {
+          type:
+            | CounterpartyDestinationType.CRYPTO_EXTERNAL
+            | CounterpartyDestinationType.CRYPTO_INTERNAL;
           external_banking_data?: never;
           external_crypto_data: DestinationDetailItemExternalCryptoData;
         }
@@ -574,11 +603,12 @@ export namespace API {
 
           external_crypto_data?: Pick<
             API.Counterparties.Destination.Detail.DestinationDetailItemExternalCryptoData,
-            'currency_id' | 'address' | 'memo'
+            "currency_id" | "address" | "memo"
           >;
         }
 
-        export type Response = API.Counterparties.Destination.Detail.DestinationDetailItem;
+        export type Response =
+          API.Counterparties.Destination.Detail.DestinationDetailItem;
       }
 
       export namespace Delete {
@@ -597,7 +627,8 @@ export namespace API {
           nickname: string;
         }
 
-        export type Response = API.Counterparties.Destination.Detail.DestinationDetailItemCommonFields;
+        export type Response =
+          API.Counterparties.Destination.Detail.DestinationDetailItemCommonFields;
       }
     }
 
@@ -615,7 +646,7 @@ export namespace API {
         wallet_id: string;
         offset?: number;
         limit?: number;
-        sort_by?: 'created_at' | 'nickname' | 'type' | 'email' | 'phone';
+        sort_by?: "created_at" | "nickname" | "type" | "email" | "phone";
         sort_order?: SortingDirection;
         filter?: {
           type?: CounterpartyDestinationType;
@@ -632,7 +663,7 @@ export namespace API {
     }
 
     export namespace Create {
-      export type Request = Omit<Counterparty, 'id' | 'created_at'> & {
+      export type Request = Omit<Counterparty, "id" | "created_at"> & {
         wallet_id: string;
       };
 
@@ -640,7 +671,7 @@ export namespace API {
     }
 
     export namespace Update {
-      export type Request = Partial<Omit<Counterparty, 'id' | 'created_at'>> & {
+      export type Request = Partial<Omit<Counterparty, "id" | "created_at">> & {
         wallet_id: string;
         counterparty_account_id: string;
       };
@@ -667,7 +698,7 @@ export namespace API {
     }
     export interface CryptoCurrency extends CommonCurrencyFields {
       is_crypto: true;
-      meta: CommonCurrencyFields['meta'] & {
+      meta: CommonCurrencyFields["meta"] & {
         chain_id: number;
         contract: string;
         chain_name: string;
@@ -675,7 +706,7 @@ export namespace API {
     }
     export interface FiatCurrency extends CommonCurrencyFields {
       is_crypto: false;
-      meta: CommonCurrencyFields['meta'] & {
+      meta: CommonCurrencyFields["meta"] & {
         code: string;
         iso_code: number;
         sign: string;
@@ -1090,27 +1121,28 @@ export namespace API {
     }
 
     export namespace Entity {
-      export type Entity = components['schemas']['KycEntityDto'];
+      export type Entity = components["schemas"]["KycEntityDto"];
       export namespace Get {
-        export type Request = operations['KycEntitiesController_findOne']['parameters']['path'];
+        export type Request =
+          operations["KycEntitiesController_findOne"]["parameters"]["path"];
         export type Response =
-          operations['KycEntitiesController_findOne']['responses']['200']['content']['application/json'];
+          operations["KycEntitiesController_findOne"]["responses"]["200"]["content"]["application/json"];
       }
     }
     export namespace Forms {
       export namespace FormField {
         export type FormFieldType =
-          | 'text'
-          | 'email'
-          | 'password'
-          | 'radio'
-          | 'select'
-          | 'checkbox'
-          | 'textarea'
-          | 'number'
-          | 'date'
-          | 'switch'
-          | 'file';
+          | "text"
+          | "email"
+          | "password"
+          | "radio"
+          | "select"
+          | "checkbox"
+          | "textarea"
+          | "number"
+          | "date"
+          | "switch"
+          | "file";
 
         export interface FormFieldValidation {
           pattern?: string;
@@ -1141,13 +1173,13 @@ export namespace API {
       }
 
       export namespace FormGroup {
-        export type FormGroupFieldType = 'group' | 'field';
+        export type FormGroupFieldType = "group" | "field";
         export interface FormGroupFieldGroup {
-          type: 'group';
+          type: "group";
           fields: API.KYC.Forms.FormGroup.FormGroup[];
         }
         export interface FormGroupFieldField {
-          type: 'field';
+          type: "field";
           field: API.KYC.Forms.FormField.FormField;
         }
         export interface FormGroup {
@@ -1160,18 +1192,22 @@ export namespace API {
     }
 
     export namespace Rails {
-      export type RailStatus = components['schemas']['WalletKycRailDto']['status'];
+      export type RailStatus =
+        components["schemas"]["WalletKycRailDto"]["status"];
 
-      export type WalletRail = components['schemas']['WalletKycRailDto'];
-      export type WalletRailExtraActions = components['schemas']['WalletKycRailExtraActionDto'];
+      export type WalletRail = components["schemas"]["WalletKycRailDto"];
+      export type WalletRailExtraActions =
+        components["schemas"]["WalletKycRailExtraActionDto"];
 
-      export type WalletRailTermsAndConditions = components['schemas']['WalletKycRailTermsAndConditionsDto'];
+      export type WalletRailTermsAndConditions =
+        components["schemas"]["WalletKycRailTermsAndConditionsDto"];
 
       export namespace RailInfo {
-        export type RailInfo = components['schemas']['WalletKycRailTypeDto'];
+        export type RailInfo = components["schemas"]["WalletKycRailTypeDto"];
 
         export namespace SingleRail {
-          export type Request = operations['WalletKycRailsController_findOne']['parameters']['path'];
+          export type Request =
+            operations["WalletKycRailsController_findOne"]["parameters"]["path"];
           export type Response = RailInfo;
         }
 
@@ -1179,21 +1215,24 @@ export namespace API {
           export type Request = {
             wallet_id: string;
           };
-          export type Response = components['schemas']['GetWalletKycRailsResponseDto'];
+          export type Response =
+            components["schemas"]["GetWalletKycRailsResponseDto"];
         }
       }
 
       export namespace Submit {
         export namespace Single {
-          export type Request = operations['WalletKycRailsController_findOne']['parameters']['path'];
-          export type Response = components['schemas']['WalletKycRailTypeDto'];
+          export type Request =
+            operations["WalletKycRailsController_findOne"]["parameters"]["path"];
+          export type Response = components["schemas"]["WalletKycRailTypeDto"];
         }
       }
 
       export namespace Terms {
         export namespace Confirm {
-          export type Request = operations['WalletKycRailsController_confirmTermsAndConditions']['parameters']['path'];
-          export type Response = components['schemas']['WalletKycRailTypeDto'];
+          export type Request =
+            operations["WalletKycRailsController_confirmTermsAndConditions"]["parameters"]["path"];
+          export type Response = components["schemas"]["WalletKycRailTypeDto"];
         }
       }
     }
@@ -1237,10 +1276,12 @@ export namespace API {
       }
     }
     export namespace States {
-      export type State = components['schemas']['StateDto'];
+      export type State = components["schemas"]["StateDto"];
       export namespace List {
-        export type Request = operations['SystemController_states']['parameters']['path'];
-        export type Response = operations['SystemController_states']['responses']['200']['content']['application/json'];
+        export type Request =
+          operations["SystemController_states"]["parameters"]["path"];
+        export type Response =
+          operations["SystemController_states"]["responses"]["200"]["content"]["application/json"];
       }
     }
   }
@@ -1262,7 +1303,7 @@ export namespace API {
             from_uuid: string;
             to_uuid: string;
             amount_from: number;
-            order_type: 'EXCHANGE_CRYPTO_INTERNAL';
+            order_type: "EXCHANGE_CRYPTO_INTERNAL";
             status: OrderStatuses;
             amount_to: number;
             info: string;
@@ -1296,7 +1337,7 @@ export namespace API {
             from_uuid: string;
             to_uuid: string;
             amount_from: number;
-            order_type: 'TRANSFER_CARD_PREPAID';
+            order_type: "TRANSFER_CARD_PREPAID";
             status: OrderStatuses;
             amount_to: number;
             info: string;
@@ -1332,7 +1373,7 @@ export namespace API {
             to_uuid: string;
             amount_from: number;
             amount_to: number;
-            order_type: 'HIFI_WIRE_ONRAMP';
+            order_type: "HIFI_WIRE_ONRAMP";
             status: OrderStatuses;
             created_at: string;
             info: string;
@@ -1367,7 +1408,7 @@ export namespace API {
             to_uuid: string;
             amount_from: number;
             amount_to: number;
-            order_type: 'HIFI_ACH_ONRAMP';
+            order_type: "HIFI_ACH_ONRAMP";
             status: OrderStatuses;
             created_at: string;
             info: string;
@@ -1402,7 +1443,7 @@ export namespace API {
             to_uuid: string;
             amount_from: number;
             amount_to: number;
-            order_type: 'HIFI_SEPA_ONRAMP';
+            order_type: "HIFI_SEPA_ONRAMP";
             status: OrderStatuses;
             created_at: string;
             info: string;
@@ -1437,7 +1478,7 @@ export namespace API {
             to_uuid: string;
             amount_from: number;
             amount_to: number;
-            order_type: 'HIFI_WIRE_OFFRAMP';
+            order_type: "HIFI_WIRE_OFFRAMP";
             status: OrderStatuses;
             created_at: string;
             info: string;
@@ -1472,7 +1513,7 @@ export namespace API {
             to_uuid: string;
             amount_from: number;
             amount_to: number;
-            order_type: 'HIFI_ACH_OFFRAMP';
+            order_type: "HIFI_ACH_OFFRAMP";
             status: OrderStatuses;
             created_at: string;
             info: string;
@@ -1529,7 +1570,7 @@ export namespace API {
             from_uuid: string;
             to_uuid: string;
             amount_from: number;
-            order_type: 'OMNIBUS_CRYPTO_WITHDRAWAL';
+            order_type: "OMNIBUS_CRYPTO_WITHDRAWAL";
             status: OrderStatuses;
             amount_to: number;
             info: string;
@@ -1639,10 +1680,10 @@ export namespace API {
 
       export interface WithdrawCryptoRequest extends CommonRequestParams {
         order_type:
-        | OrderType.WITHDRAWAL_CRYPTO
-        | OrderType.TRANSFER_INTERNAL
-        | OrderType.OMNIBUS_CRYPTO_TRANSFER
-        | OrderType.SEGREGATED_CRYPTO_TRANSFER;
+          | OrderType.WITHDRAWAL_CRYPTO
+          | OrderType.TRANSFER_INTERNAL
+          | OrderType.OMNIBUS_CRYPTO_TRANSFER
+          | OrderType.SEGREGATED_CRYPTO_TRANSFER;
         to_address?: string;
       }
 
@@ -1666,7 +1707,7 @@ export namespace API {
         network_fee: number;
         transaction_fee: number;
         rate: number;
-        direction: 'c2f' | 'f2c' | 'c2c';
+        direction: "c2f" | "f2c" | "c2c";
       }
     }
 
@@ -1679,7 +1720,7 @@ export namespace API {
         id: string;
         transaction_type: string;
         description: string | null;
-        direction: 'deposit' | 'withdrawal';
+        direction: "deposit" | "withdrawal";
         is_internal: boolean;
         // kyc_rails_id: string | null; // deprecated use order_types_kyc_rails instead
         order_types_kyc_rails: OrderTypeKycRail[];
@@ -1803,10 +1844,10 @@ export namespace API {
 
         export interface WithdrawCryptoRequest extends CommonRequestParams {
           order_type:
-          | OrderType.WITHDRAWAL_CRYPTO
-          | OrderType.TRANSFER_INTERNAL
-          | OrderType.OMNIBUS_CRYPTO_TRANSFER
-          | OrderType.SEGREGATED_CRYPTO_TRANSFER;
+            | OrderType.WITHDRAWAL_CRYPTO
+            | OrderType.TRANSFER_INTERNAL
+            | OrderType.OMNIBUS_CRYPTO_TRANSFER
+            | OrderType.SEGREGATED_CRYPTO_TRANSFER;
           to_address?: string;
         }
 
@@ -1830,7 +1871,7 @@ export namespace API {
           network_fee: number;
           transaction_fee: number;
           rate: number;
-          direction: 'c2f' | 'f2c' | 'c2c';
+          direction: "c2f" | "f2c" | "c2c";
         }
       }
 
@@ -1870,7 +1911,7 @@ export namespace API {
               to_uuid: string;
               amount_from: number;
               amount_to: number;
-              order_type: 'HIFI_WIRE_ONRAMP';
+              order_type: "HIFI_WIRE_ONRAMP";
               status: OrderStatuses;
               created_at: string;
               info: string;
@@ -1909,7 +1950,7 @@ export namespace API {
               to_uuid: string;
               amount_from: number;
               amount_to: number;
-              order_type: 'HIFI_ACH_ONRAMP';
+              order_type: "HIFI_ACH_ONRAMP";
               status: OrderStatuses;
               created_at: string;
               info: string;
@@ -1948,7 +1989,7 @@ export namespace API {
               to_uuid: string;
               amount_from: number;
               amount_to: number;
-              order_type: 'HIFI_SEPA_ONRAMP';
+              order_type: "HIFI_SEPA_ONRAMP";
               status: OrderStatuses;
               created_at: string;
               info: string;
@@ -1988,7 +2029,7 @@ export namespace API {
               to_uuid: string;
               amount_from: number;
               amount_to: number;
-              order_type: 'HIFI_WIRE_OFFRAMP';
+              order_type: "HIFI_WIRE_OFFRAMP";
               status: OrderStatuses;
               created_at: string;
               info: string;
@@ -2028,7 +2069,7 @@ export namespace API {
               to_uuid: string;
               amount_from: number;
               amount_to: number;
-              order_type: 'HIFI_ACH_OFFRAMP';
+              order_type: "HIFI_ACH_OFFRAMP";
               status: OrderStatuses;
               created_at: string;
               info: string;
@@ -2068,7 +2109,7 @@ export namespace API {
               to_uuid: string;
               amount_from: number;
               amount_to: number;
-              order_type: 'HIFI_SEPA_OFFRAMP';
+              order_type: "HIFI_SEPA_OFFRAMP";
               status: OrderStatuses;
               created_at: string;
               info: string;
@@ -2105,7 +2146,7 @@ export namespace API {
               to_uuid: string;
               amount_from: number;
               amount_to: number;
-              order_type: 'HIFI_SEPA_OFFRAMP';
+              order_type: "HIFI_SEPA_OFFRAMP";
               status: OrderStatuses;
               created_at: string;
               info: string;
@@ -2144,7 +2185,7 @@ export namespace API {
               from_uuid: string;
               to_uuid: string;
               amount_from: number;
-              order_type: 'OMNIBUS_CRYPTO_WITHDRAWAL';
+              order_type: "OMNIBUS_CRYPTO_WITHDRAWAL";
               status: OrderStatuses;
               amount_to: number;
               info: string;
@@ -2184,7 +2225,7 @@ export namespace API {
               from_uuid: string;
               to_uuid: string;
               amount_from: number;
-              order_type: 'OMNIBUS_CRYPTO_WITHDRAWAL';
+              order_type: "OMNIBUS_CRYPTO_WITHDRAWAL";
               status: OrderStatuses;
               amount_to: number;
               info: string;
@@ -2224,7 +2265,7 @@ export namespace API {
               from_uuid: string;
               to_uuid: string;
               amount_from: number;
-              order_type: 'OMNIBUS_CRYPTO_WITHDRAWAL';
+              order_type: "OMNIBUS_CRYPTO_WITHDRAWAL";
               status: OrderStatuses;
               amount_to: number;
               info: string;
@@ -2263,7 +2304,7 @@ export namespace API {
               to_uuid: string;
               amount_from: number;
               amount_to: number;
-              order_type: 'RN_CARDS_OFFRAMP';
+              order_type: "RN_CARDS_OFFRAMP";
               status: OrderStatuses;
               created_at: string;
               info: string;
@@ -2291,7 +2332,7 @@ export namespace API {
           id: string;
           transaction_type: string;
           description: string | null;
-          direction: 'deposit' | 'withdrawal';
+          direction: "deposit" | "withdrawal";
           is_internal: boolean;
           kyc_rails_id: string | null;
           payment_method: OrderType | string;
@@ -2306,24 +2347,32 @@ export namespace API {
 
   export namespace Persona {
     export namespace Inquiries {
-      export type InquiryType = operations['PersonaController_initInquiry']['parameters']['path']['type'];
+      export type InquiryType =
+        operations["PersonaController_initInquiry"]["parameters"]["path"]["type"];
       export namespace Init {
-        export type Request = operations['PersonaController_initInquiry']['parameters']['path'];
+        export type Request =
+          operations["PersonaController_initInquiry"]["parameters"]["path"];
         export type Response =
-          operations['PersonaController_initInquiry']['responses']['200']['content']['application/json'];
+          operations["PersonaController_initInquiry"]["responses"]["200"]["content"]["application/json"];
       }
       export namespace Resume {
-        export type Request = operations['PersonaController_resumeInquiry']['parameters']['path'];
+        export type Request =
+          operations["PersonaController_resumeInquiry"]["parameters"]["path"];
         export type Response =
-          operations['PersonaController_resumeInquiry']['responses']['200']['content']['application/json'];
+          operations["PersonaController_resumeInquiry"]["responses"]["200"]["content"]["application/json"];
       }
     }
   }
 
   export namespace TOTP {
     export namespace OTPVerification {
-      export type OTPVerificationChannelType = 'EMAIL' | 'SMS' | 'TOTP' | 'APP' | 'TG_TEST';
-      export type OTPVerificationStatus = 'PENDING' | 'APPROVED' | 'DENIED';
+      export type OTPVerificationChannelType =
+        | "EMAIL"
+        | "SMS"
+        | "TOTP"
+        | "APP"
+        | "TG_TEST";
+      export type OTPVerificationStatus = "PENDING" | "APPROVED" | "DENIED";
       export type OTPVerificationChannelInfo = {
         channel: OTPVerificationChannelType;
         validity: number;
@@ -2489,7 +2538,8 @@ export namespace API {
         va_programs_id: string;
       }
 
-      export type Response = API.VirtualAccounts.VirtualAccount.VirtualAccount;
+      export type Response =
+        API.VirtualAccounts.VirtualAccount.VirtualAccountDetailItem;
     }
 
     export namespace GetByUuid {
@@ -2497,7 +2547,8 @@ export namespace API {
         uuid: string;
       }
 
-      export type Response = API.VirtualAccounts.VirtualAccount.VirtualAccount;
+      export type Response =
+        API.VirtualAccounts.VirtualAccount.VirtualAccountDetailItem;
     }
 
     export namespace GetAll {
@@ -2510,7 +2561,7 @@ export namespace API {
       export type Response = {
         count: number;
         has_more: boolean;
-        data: API.VirtualAccounts.VirtualAccount.VirtualAccount[];
+        data: API.VirtualAccounts.VirtualAccount.VirtualAccountListItem[];
       };
     }
 
@@ -2591,7 +2642,7 @@ export namespace API {
         order_type_id: string;
       }
 
-      export interface VirtualAccount {
+      export interface VirtualAccountListItem {
         id: string;
         created_at: string;
         wallet_id: string;
@@ -2605,6 +2656,31 @@ export namespace API {
         meta: API.VirtualAccounts.VirtualAccount.Meta.Meta;
         account_details: API.VirtualAccounts.VirtualAccount.AccountDetails;
         virtual_accounts_program: API.VirtualAccounts.Programs.Program;
+      }
+      export interface VirtualAccountDetailItem {
+        account_currency: string;
+        account_currency_details: API.Currencies.Currency;
+        account_details: API.VirtualAccounts.VirtualAccount.AccountDetails;
+        balance: number;
+        crypto_deposit_details: {
+          currency_id: string;
+          deposit_address: string;
+          chain_id: number;
+        }[];
+        created_at: string;
+        destination_address: string;
+        destination_currency: string;
+        destination_currency_details: API.Currencies.Currency;
+        id: string;
+        integration_vendor_id: string;
+        meta: API.VirtualAccounts.VirtualAccount.Meta.Meta;
+        order_types: string[];
+        status: string;
+        total_balance: number;
+        va_programs_id: string;
+        vendor_account_id: string;
+        virtual_accounts_program: API.VirtualAccounts.Programs.Program;
+        wallet_id: string;
       }
     }
     export namespace Programs {
@@ -2669,53 +2745,56 @@ export namespace API {
   }
 
   export namespace User {
-    export type User = components['schemas']['UserEntity'];
+    export type User = components["schemas"]["UserEntity"];
 
     export namespace Get {
-      export type Request = operations['UserController_getMe']['parameters']['query'];
-      export type Response = operations['UserController_getMe']['responses']['200']['content']['application/json'];
+      export type Request =
+        operations["UserController_getMe"]["parameters"]["query"];
+      export type Response =
+        operations["UserController_getMe"]["responses"]["200"]["content"]["application/json"];
     }
 
     export namespace UpdateUser {
       export namespace Phone {
         export namespace RequestOTP {
           export type Request =
-            operations['AuthenticatedUserController_changePhone']['requestBody']['content']['application/json'];
+            operations["AuthenticatedUserController_changePhone"]["requestBody"]["content"]["application/json"];
         }
         export namespace Confirm {
           export type Request =
-            operations['AuthenticatedUserController_changePhoneNumberConfirm']['requestBody']['content']['application/json'];
+            operations["AuthenticatedUserController_changePhoneNumberConfirm"]["requestBody"]["content"]["application/json"];
         }
       }
 
       export namespace Email {
         export namespace RequestOTP {
           export type Request =
-            operations['AuthenticatedUserController_changeEmail']['requestBody']['content']['application/json'];
+            operations["AuthenticatedUserController_changeEmail"]["requestBody"]["content"]["application/json"];
         }
 
         export namespace Confirm {
           export type Request =
-            operations['AuthenticatedUserController_changeEmailConfirm']['requestBody']['content']['application/json'];
+            operations["AuthenticatedUserController_changeEmailConfirm"]["requestBody"]["content"]["application/json"];
         }
       }
     }
 
     export namespace UserData {
-      export type UserData = components['schemas']['UserDataEntity'];
+      export type UserData = components["schemas"]["UserDataEntity"];
 
       export namespace Get {
-        export type Request = operations['UserController_getMyUserData']['parameters']['query'];
+        export type Request =
+          operations["UserController_getMyUserData"]["parameters"]["query"];
         export type Response =
-          operations['UserController_getMyUserData']['responses']['200']['content']['application/json'];
+          operations["UserController_getMyUserData"]["responses"]["200"]["content"]["application/json"];
       }
 
       export namespace Update {
         export type Request =
-          operations['UserController_updateMyUserData']['requestBody']['content']['application/json'];
+          operations["UserController_updateMyUserData"]["requestBody"]["content"]["application/json"];
 
         export type Response =
-          operations['UserController_updateMyUserData']['responses']['200']['content']['application/json'];
+          operations["UserController_updateMyUserData"]["responses"]["200"]["content"]["application/json"];
       }
     }
   }
@@ -2856,7 +2935,7 @@ export namespace API {
           wallet_uuid: string;
           limit: number;
           offset: number;
-          filter?: Partial<components['schemas']['TransactionsFilter']>;
+          filter?: Partial<components["schemas"]["TransactionsFilter"]>;
         };
         export type Response = {
           total: number;
@@ -2866,7 +2945,7 @@ export namespace API {
         export namespace ExportCsv {
           export type Request = {
             wallet_uuid: string;
-            filter?: Partial<components['schemas']['TransactionsFilter']>;
+            filter?: Partial<components["schemas"]["TransactionsFilter"]>;
           };
           export type Response = string;
         }
