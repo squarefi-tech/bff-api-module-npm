@@ -2667,7 +2667,7 @@ export namespace API {
         vendor_account_id: string;
         account_details: API.VirtualAccounts.VirtualAccount.AccountDetails;
         virtual_accounts_program: API.VirtualAccounts.Programs.Program;
-        deposit_instructions: API.VirtualAccounts.VirtualAccount.DepositInstruction.DepositInstruction[];
+        deposit_instructions?: API.VirtualAccounts.VirtualAccount.DepositInstruction.DepositInstruction[];
       }
       export interface VirtualAccountDetailItem {
         account_currency: string;
@@ -2683,6 +2683,7 @@ export namespace API {
         destination_address: string;
         destination_currency: string;
         destination_currency_details: API.Currencies.Currency;
+        deposit_instructions?: API.VirtualAccounts.VirtualAccount.DepositInstruction.DepositInstruction[];
         id: string;
         integration_vendor_id: string;
         order_types: string[];
