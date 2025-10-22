@@ -119,9 +119,9 @@ export namespace API {
   export namespace BankData {
     export namespace GetBankDataByAccountNumber {
       export type Request =
-        operations["BankDataController_getBankDataByAccountNumber"]["parameters"]["query"];
+        operations["BankDataController_getBankDataByCode"]["parameters"]["query"];
       export type Response =
-        operations["BankDataController_getBankDataByAccountNumber"]["responses"]["200"]["content"]["application/json"];
+        operations["BankDataController_getBankDataByCode"]["responses"]["200"]["content"]["application/json"];
     }
   }
 
@@ -2605,37 +2605,49 @@ export namespace API {
         walletAddress: string;
       }
 
-      export interface MicroDeposits {
-        data: any[];
-        count: number;
-      }
+      export namespace DepositInstruction {
+        export type InstructionType = "ACH" | "FEDWIRE" | "SWIFT";
 
-      export interface DepositInstructions {
-        bankName: string;
-        bankAddress: string;
-        beneficiary: API.VirtualAccounts.VirtualAccount.Beneficiary;
-        accountNumber: string;
-        routingNumber: string;
-      }
-
-      export interface AccountInfo {
-        id: string;
-        source: API.VirtualAccounts.VirtualAccount.PaymentRail;
-        status: string;
-        userId: string;
-        destination: API.VirtualAccounts.VirtualAccount.Destination;
-        microDeposits: API.VirtualAccounts.VirtualAccount.MicroDeposits;
-        depositInstructions: API.VirtualAccounts.VirtualAccount.DepositInstructions;
-      }
-
-      export namespace Meta {
-        export interface HifiResponse {
-          message: string;
-          accountInfo: API.VirtualAccounts.VirtualAccount.AccountInfo;
+        export interface Address {
+          city: string;
+          state: string;
+          postal_code: string;
+          country_code: string;
+          address_line1: string;
+          address_line2: string;
         }
-        export interface Meta {
-          hifi_response: API.VirtualAccounts.VirtualAccount.Meta.HifiResponse;
+
+        export interface Common {
+          memo: string;
+          asset_type_id: string;
+          account_number: string;
+          institution_name: string;
+          instruction_type: InstructionType;
+          account_holder_address?: Address;
+          institution_address?: Address;
+          account_holder_name?: string;
+          account_routing_number?: string;
+          swift_bic?: string;
         }
+        export interface ACH extends Common {
+          instruction_type: "ACH";
+        }
+        export interface FEDWIRE extends Common {
+          instruction_type: "FEDWIRE";
+          account_holder_name: string;
+          account_routing_number: string;
+          institution_address: Address;
+          account_holder_address: Address;
+        }
+
+        export interface SWIFT extends Common {
+          instruction_type: "SWIFT";
+          swift_bic: string;
+          institution_address: Address;
+          account_holder_address: Address;
+        }
+
+        export type DepositInstruction = ACH | FEDWIRE | SWIFT | Common;
       }
 
       export interface OrderType {
@@ -2653,9 +2665,9 @@ export namespace API {
         destination_address: string;
         integration_vendor_id: string;
         vendor_account_id: string;
-        meta: API.VirtualAccounts.VirtualAccount.Meta.Meta;
         account_details: API.VirtualAccounts.VirtualAccount.AccountDetails;
         virtual_accounts_program: API.VirtualAccounts.Programs.Program;
+        deposit_instructions: API.VirtualAccounts.VirtualAccount.DepositInstruction.DepositInstruction[];
       }
       export interface VirtualAccountDetailItem {
         account_currency: string;
@@ -2673,7 +2685,6 @@ export namespace API {
         destination_currency_details: API.Currencies.Currency;
         id: string;
         integration_vendor_id: string;
-        meta: API.VirtualAccounts.VirtualAccount.Meta.Meta;
         order_types: string[];
         status: string;
         total_balance: number;

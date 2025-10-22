@@ -1043,8 +1043,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Returns bank data by account number */
-        get: operations["BankDataController_getBankDataByAccountNumber"];
+        /** Returns bank data by code */
+        get: operations["BankDataController_getBankDataByCode"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1239,6 +1239,8 @@ export interface components {
             total: number;
             /** @description Data */
             data: Record<string, never>[];
+            /** @description Has more data flag */
+            readonly has_more: boolean;
         };
         WalletDto: {
             uuid: string;
@@ -1360,6 +1362,7 @@ export interface components {
         AllChainsResponseDto: {
             total: number;
             data: components["schemas"]["ChainDto"][];
+            readonly has_more: boolean;
         };
         CryptoCurrencyMetaDto: {
             icon: string;
@@ -1959,6 +1962,8 @@ export interface components {
             total: number;
             /** @description Data */
             data: components["schemas"]["WalletKycRailTypeDto"][];
+            /** @description Has more data flag */
+            readonly has_more: boolean;
         };
         CountryDto: {
             id: number;
@@ -2011,12 +2016,16 @@ export interface components {
             /** @enum {string} */
             type: "INDIVIDUAL" | "BUSINESS";
             created_at: string;
+            /** @default false */
+            is_pinned: boolean;
         };
         FindAllCounterpartyAccountsResponseDto: {
             /** @example 20 */
             total: number;
             /** @description Data */
             data: components["schemas"]["CounterpartyAccountDto"][];
+            /** @description Has more data flag */
+            readonly has_more: boolean;
         };
         CreateCounterpartyAccountDto: {
             email: string;
@@ -2026,6 +2035,8 @@ export interface components {
             nickname?: string | null;
             /** @enum {string} */
             type: "INDIVIDUAL" | "BUSINESS";
+            /** @default false */
+            is_pinned: boolean;
         };
         UpdateCounterpartyAccountDto: {
             email?: string;
@@ -2115,6 +2126,8 @@ export interface components {
             total: number;
             /** @description Data */
             data: components["schemas"]["CounterpartyDestinationDto"][];
+            /** @description Has more data flag */
+            readonly has_more: boolean;
         };
         CreateCounterpartyExternalBankingDataAddressDto: {
             city?: string | null;
@@ -2163,6 +2176,7 @@ export interface components {
         SystemChainsResponseDto: {
             total: number;
             data: components["schemas"]["ChainDto"][];
+            readonly has_more: boolean;
         };
         SystemCurrenciesResponseDto: {
             total: number;
@@ -2216,6 +2230,8 @@ export interface components {
             total: number;
             /** @description Data */
             data: components["schemas"]["IntegrationPersonaTemplateEntityDto"][];
+            /** @description Has more data flag */
+            readonly has_more: boolean;
         };
         SyncDataFromHifibridgeDto: {
             /** @description Wallet to load data from Hifibridge */
@@ -2223,70 +2239,20 @@ export interface components {
             /** @description Hifibridge ID to load data to wallet */
             hifibridge_id: string;
         };
-        CityDto: {
-            id: string;
-            country_id: string;
-            name: string;
+        BankDataAddressDto: {
+            city?: string | null;
+            country_id?: number | null;
+            postcode?: string | null;
+            street1?: string | null;
+            street2?: string | null;
+            state_id?: number | null;
         };
-        BankDto: {
-            id: string;
-            country_id: string;
-            code: string;
-            name: string;
-        };
-        SwiftDto: {
-            id: string;
-            address: string;
-            postcode: string;
-            branch_name: string;
-            branch_code: string;
-            country: components["schemas"]["CountryDto"];
-            city: components["schemas"]["CityDto"];
-            bank: components["schemas"]["BankDto"];
-        };
-        IbanDataDto: {
-            id: string;
-            account_number: string;
-            national_bank_code: string;
-            national_branch_code: string;
-            swift: components["schemas"]["SwiftDto"];
-            country: components["schemas"]["CountryDto"];
-        };
-        WireDto: {
-            telegraphic_name: string;
-            is_funds_transfer_allowed: boolean;
-            is_settlement_only: boolean;
-            is_securities_transfer_allowed: boolean;
-            change_date: Record<string, never> | null;
-            bank: components["schemas"]["BankDto"];
-            city: components["schemas"]["CityDto"];
-        };
-        AchDto: {
-            new_id: Record<string, never> | null;
-            servicing_frb_id: string;
-            address: string;
-            postcode: string;
-            phone: string;
-            record_type_code: number;
-            is_main_office: boolean;
-            change_date: Record<string, never> | null;
-            bank: components["schemas"]["BankDto"];
-            city: components["schemas"]["CityDto"];
-        };
-        RtnDataDto: {
-            id: string;
-            wire: components["schemas"]["WireDto"];
-            ach: components["schemas"]["AchDto"];
-        };
-        SwiftDataDto: {
-            id: string;
-            address: string;
-            postcode: string;
-            branch_name: string;
-            branch_code: string;
-            country: components["schemas"]["CountryDto"];
-            city: components["schemas"]["CityDto"];
-            bank: components["schemas"]["BankDto"];
+        GetBankDataByCodeResponseDto: {
+            bank_name: string;
+            address: components["schemas"]["BankDataAddressDto"];
+            routing_number?: string;
+            iban?: string;
+            swift_bic?: string;
         };
     };
     responses: never;
@@ -4806,11 +4772,11 @@ export interface operations {
             };
         };
     };
-    BankDataController_getBankDataByAccountNumber: {
+    BankDataController_getBankDataByCode: {
         parameters: {
             query: {
-                /** @description Account number string must be a valid IBAN, RTN or SWIFT code */
-                account_number: string;
+                /** @description Bank code string must be a valid IBAN, RTN or SWIFT */
+                code: string;
             };
             header?: never;
             path?: never;
@@ -4818,14 +4784,20 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Bank data */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["IbanDataDto"] | components["schemas"]["RtnDataDto"] | components["schemas"]["SwiftDataDto"];
+                    "application/json": components["schemas"]["GetBankDataByCodeResponseDto"];
                 };
+            };
+            /** @description No data by code */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Unauthorized */
             401: {
