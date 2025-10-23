@@ -208,13 +208,6 @@ export const orders = {
             { data },
           ),
 
-        [OrderType.HIFI_CRYPTO_TRANSFER]: (
-          data: API.Orders.V2.Create.ByOrderType.HIFI_CRYPTO_TRANSFER.Request,
-        ): Promise<API.Orders.V2.Create.ByOrderType.HIFI_CRYPTO_TRANSFER.Response> =>
-          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.HIFI_CRYPTO_TRANSFER.Response>(
-            '/v2/orders/HIFI_CRYPTO_TRANSFER',
-            { data },
-          ),
         [OrderType.SEGREGATED_CRYPTO_TRANSFER]: (
           data: API.Orders.V2.Create.ByOrderType.SEGREGATED_CRYPTO_TRANSFER.Request,
         ): Promise<API.Orders.V2.Create.ByOrderType.SEGREGATED_CRYPTO_TRANSFER.Response> =>

@@ -1839,6 +1839,110 @@ export namespace API {
       }
 
       export namespace Create {
+        export namespace Common {
+          export namespace Request {
+            export interface BaseOrderParams {
+              request_id: string;
+              amount: number;
+              wallet_id: string;
+              from_currency_id: string;
+              to_currency_id: string;
+              is_subtract: boolean;
+              reference?: string;
+              note?: string;
+            }
+
+            export interface OrderWithCounterpartyParams extends BaseOrderParams {
+              counterparty_destination_id: string;
+            }
+
+            export interface CryptoTransferOrderParams extends BaseOrderParams {
+              wallet_account_id: string;
+              note?: string;
+            }
+
+            export interface OrderWithVirtualAccountParams extends BaseOrderParams {
+              virtual_account_id: string;
+            }
+
+            export interface OrderWithSubAccountParams extends BaseOrderParams {
+              sub_account_id: string;
+            }
+          }
+
+          export namespace Response {
+            export interface BaseOrderResponse {
+              order_uuid: string;
+              wallet_uuid: string;
+              from_uuid: string;
+              to_uuid: string;
+              amount_from: number;
+              amount_to: number;
+              status: OrderStatuses;
+              created_at: string;
+              info: string;
+              id: string;
+            }
+
+            export interface HifiOrderResponse extends BaseOrderResponse {
+              order_type: string;
+              meta: {
+                request_id: string;
+                counterparty_account_id: string;
+                fee: number;
+                fee_currency: string;
+                billing_amount: number;
+                billing_currency: string;
+                transaction_amount: number;
+                transaction_currency: string;
+                order_uuid: string;
+              };
+            }
+
+            export interface CryptoTransferResponse extends BaseOrderResponse {
+              order_type: 'OMNIBUS_CRYPTO_WITHDRAWAL';
+              meta: {
+                fee: number;
+                order_uuid: string;
+                to_address: string;
+                fee_currency: string;
+                request_id: string;
+                counterparty_account_id: string;
+                billing_amount: number;
+                billing_currency: string;
+                transaction_amount: number;
+                transaction_currency: string;
+                network_fee: number;
+              };
+            }
+
+            export interface RnCardsResponse extends BaseOrderResponse {
+              order_type: 'RN_CARDS_OFFRAMP';
+              meta: {
+                request_id: string;
+                sub_account_id: string;
+                to_address: string;
+                deposit_chain_id: number;
+                fee: number;
+                fee_currency: string;
+                billing_amount: number;
+                billing_currency: string;
+                transaction_amount: number;
+                transaction_currency: string;
+                order_uuid: string;
+              };
+            }
+
+            export interface L2FResponse extends BaseOrderResponse {
+              order_type: string;
+              meta: {
+                request_id: string;
+                virtual_account_id: string;
+              };
+            }
+          }
+        }
+
         export namespace ByOrderType {
           export namespace INTERNAL_TRANSFER {
             export interface Request {
@@ -1856,568 +1960,74 @@ export namespace API {
           }
 
           export namespace HIFI_WIRE_ONRAMP {
-            export interface Request {
-              request_id: string;
-              counterparty_account_id: string;
-              amount: number;
-              wallet_id: string;
-              from_currency_id: string;
-              to_currency_id: string;
-              is_subtract: boolean;
-              is_reverse: boolean;
-            }
-
-            export interface Response {
-              order_uuid: string;
-              wallet_uuid: string;
-              from_uuid: string;
-              to_uuid: string;
-              amount_from: number;
-              amount_to: number;
-              order_type: 'HIFI_WIRE_ONRAMP';
-              status: OrderStatuses;
-              created_at: string;
-              info: string;
-              meta: {
-                request_id: string;
-                counterparty_account_id: string;
-                fee: number;
-                fee_currency: string;
-                billing_amount: number;
-                billing_currency: string;
-                transaction_amount: number;
-                transaction_currency: string;
-                order_uuid: string;
-              };
-
-              id: string;
-            }
+            export type Request = Common.Request.OrderWithCounterpartyParams;
+            export type Response = Common.Response.HifiOrderResponse & { order_type: 'HIFI_WIRE_ONRAMP' };
           }
 
           export namespace HIFI_ACH_ONRAMP {
-            export interface Request {
-              request_id: string;
-              counterparty_account_id: string;
-              amount: number;
-              wallet_id: string;
-              from_currency_id: string;
-              to_currency_id: string;
-              is_subtract: boolean;
-              is_reverse: boolean;
-            }
-
-            export interface Response {
-              order_uuid: string;
-              wallet_uuid: string;
-              from_uuid: string;
-              to_uuid: string;
-              amount_from: number;
-              amount_to: number;
-              order_type: 'HIFI_ACH_ONRAMP';
-              status: OrderStatuses;
-              created_at: string;
-              info: string;
-              meta: {
-                request_id: string;
-                counterparty_account_id: string;
-                fee: number;
-                fee_currency: string;
-                billing_amount: number;
-                billing_currency: string;
-                transaction_amount: number;
-                transaction_currency: string;
-                order_uuid: string;
-              };
-
-              id: string;
-            }
+            export type Request = Common.Request.OrderWithCounterpartyParams;
+            export type Response = Common.Response.HifiOrderResponse & { order_type: 'HIFI_ACH_ONRAMP' };
           }
 
           export namespace HIFI_SEPA_ONRAMP {
-            export interface Request {
-              request_id: string;
-              counterparty_account_id: string;
-              amount: number;
-              wallet_id: string;
-              from_currency_id: string;
-              to_currency_id: string;
-              is_subtract: boolean;
-              is_reverse: boolean;
-            }
-
-            export interface Response {
-              order_uuid: string;
-              wallet_uuid: string;
-              from_uuid: string;
-              to_uuid: string;
-              amount_from: number;
-              amount_to: number;
-              order_type: 'HIFI_SEPA_ONRAMP';
-              status: OrderStatuses;
-              created_at: string;
-              info: string;
-              meta: {
-                request_id: string;
-                counterparty_account_id: string;
-                fee: number;
-                fee_currency: string;
-                billing_amount: number;
-                billing_currency: string;
-                transaction_amount: number;
-                transaction_currency: string;
-                order_uuid: string;
-              };
-              id: string;
-            }
+            export type Request = Common.Request.OrderWithCounterpartyParams;
+            export type Response = Common.Response.HifiOrderResponse & { order_type: 'HIFI_SEPA_ONRAMP' };
           }
 
           export namespace HIFI_WIRE_OFFRAMP {
-            export interface Request {
-              request_id: string;
-              counterparty_account_id: string;
-              amount: number;
-              wallet_id: string;
-              from_currency_id: string;
-              to_currency_id: string;
-              refference?: string;
-              note?: string;
-              is_subtract: boolean;
-              is_reverse: boolean;
-            }
-
-            export interface Response {
-              order_uuid: string;
-              wallet_uuid: string;
-              from_uuid: string;
-              to_uuid: string;
-              amount_from: number;
-              amount_to: number;
-              order_type: 'HIFI_WIRE_OFFRAMP';
-              status: OrderStatuses;
-              created_at: string;
-              info: string;
-              meta: {
-                request_id: string;
-                counterparty_account_id: string;
-                fee: number;
-                fee_currency: string;
-                billing_amount: number;
-                billing_currency: string;
-                transaction_amount: number;
-                transaction_currency: string;
-                order_uuid: string;
-              };
-              id: string;
-            }
+            export type Request = Common.Request.OrderWithCounterpartyParams;
+            export type Response = Common.Response.HifiOrderResponse & { order_type: 'HIFI_WIRE_OFFRAMP' };
           }
 
           export namespace HIFI_ACH_OFFRAMP {
-            export interface Request {
-              request_id: string;
-              counterparty_account_id: string;
-              amount: number;
-              wallet_id: string;
-              from_currency_id: string;
-              to_currency_id: string;
-              refference?: string;
-              note?: string;
-              is_subtract: boolean;
-              is_reverse: boolean;
-            }
-
-            export interface Response {
-              order_uuid: string;
-              wallet_uuid: string;
-              from_uuid: string;
-              to_uuid: string;
-              amount_from: number;
-              amount_to: number;
-              order_type: 'HIFI_ACH_OFFRAMP';
-              status: OrderStatuses;
-              created_at: string;
-              info: string;
-              meta: {
-                request_id: string;
-                counterparty_account_id: string;
-                fee: number;
-                fee_currency: string;
-                billing_amount: number;
-                billing_currency: string;
-                transaction_amount: number;
-                transaction_currency: string;
-                order_uuid: string;
-              };
-              id: string;
-            }
+            export type Request = Common.Request.OrderWithCounterpartyParams;
+            export type Response = Common.Response.HifiOrderResponse & { order_type: 'HIFI_ACH_OFFRAMP' };
           }
 
           export namespace HIFI_SEPA_OFFRAMP {
-            export interface Request {
-              request_id: string;
-              counterparty_account_id: string;
-              amount: number;
-              wallet_id: string;
-              from_currency_id: string;
-              to_currency_id: string;
-              refference?: string;
-              note?: string;
-              is_subtract: boolean;
-              is_reverse: boolean;
-            }
-
-            export interface Response {
-              order_uuid: string;
-              wallet_uuid: string;
-              from_uuid: string;
-              to_uuid: string;
-              amount_from: number;
-              amount_to: number;
-              order_type: 'HIFI_SEPA_OFFRAMP';
-              status: OrderStatuses;
-              created_at: string;
-              info: string;
-              meta: {
-                request_id: string;
-                counterparty_account_id: string;
-                fee: number;
-                fee_currency: string;
-                billing_amount: number;
-                billing_currency: string;
-                transaction_amount: number;
-                transaction_currency: string;
-                order_uuid: string;
-              };
-              id: string;
-            }
+            export type Request = Common.Request.OrderWithCounterpartyParams;
+            export type Response = Common.Response.HifiOrderResponse & { order_type: 'HIFI_SEPA_OFFRAMP' };
           }
           export namespace TBD_SWIFT_WITHDRAWAL {
-            export interface Request {
-              request_id: string;
-              counterparty_account_id: string;
-              amount: number;
-              wallet_id: string;
-              from_currency_id: string;
-              to_currency_id: string;
-              is_subtract: boolean;
-              is_reverse: boolean;
-            }
-
-            export interface Response {
-              order_uuid: string;
-              wallet_uuid: string;
-              from_uuid: string;
-              to_uuid: string;
-              amount_from: number;
-              amount_to: number;
-              order_type: 'HIFI_SEPA_OFFRAMP';
-              status: OrderStatuses;
-              created_at: string;
-              info: string;
-              meta: {
-                request_id: string;
-                counterparty_account_id: string;
-                fee: number;
-                fee_currency: string;
-                billing_amount: number;
-                billing_currency: string;
-                transaction_amount: number;
-                transaction_currency: string;
-                order_uuid: string;
-              };
-              id: string;
-            }
+            export type Request = Common.Request.OrderWithCounterpartyParams;
+            export type Response = Common.Response.HifiOrderResponse & { order_type: 'HIFI_SEPA_OFFRAMP' };
           }
 
           export namespace OMNIBUS_CRYPTO_TRANSFER {
-            export interface Request {
-              request_id: string;
-              counterparty_account_id: string;
-              amount: number;
-              wallet_id: string;
-              wallet_account_id: string;
-              from_currency_id: string;
-              note?: string;
-              is_subtract: boolean;
-              is_reverse: boolean;
-            }
-
-            export interface Response {
-              created_at: string;
-              order_uuid: string;
-              wallet_uuid: string;
-              from_uuid: string;
-              to_uuid: string;
-              amount_from: number;
-              order_type: 'OMNIBUS_CRYPTO_WITHDRAWAL';
-              status: OrderStatuses;
-              amount_to: number;
-              info: string;
-              meta: {
-                fee: number;
-                order_uuid: string;
-                to_address: string;
-                fee_currency: string;
-                request_id: string;
-                counterparty_account_id: string;
-                billing_amount: number;
-                billing_currency: string;
-                transaction_amount: number;
-                transaction_currency: string;
-                network_fee: number;
-              };
-              id: string;
-            }
+            export type Request = Common.Request.OrderWithCounterpartyParams;
+            export type Response = Common.Response.CryptoTransferResponse;
           }
           export namespace SEGREGATED_CRYPTO_TRANSFER {
-            export interface Request {
-              request_id: string;
-              counterparty_account_id: string;
-              amount: number;
-              wallet_id: string;
-              wallet_account_id: string;
-              from_currency_id: string;
-              note?: string;
-              is_subtract: boolean;
-              is_reverse: boolean;
-            }
-
-            export interface Response {
-              created_at: string;
-              order_uuid: string;
-              wallet_uuid: string;
-              from_uuid: string;
-              to_uuid: string;
-              amount_from: number;
-              order_type: 'OMNIBUS_CRYPTO_WITHDRAWAL';
-              status: OrderStatuses;
-              amount_to: number;
-              info: string;
-              meta: {
-                fee: number;
-                order_uuid: string;
-                to_address: string;
-                fee_currency: string;
-                request_id: string;
-                counterparty_account_id: string;
-                billing_amount: number;
-                billing_currency: string;
-                transaction_amount: number;
-                transaction_currency: string;
-                network_fee: number;
-              };
-              id: string;
-            }
-          }
-          export namespace HIFI_CRYPTO_TRANSFER {
-            export interface Request {
-              request_id: string;
-              counterparty_account_id: string;
-              amount: number;
-              wallet_id: string;
-              wallet_account_id: string;
-              from_currency_id: string;
-              note?: string;
-              is_subtract: boolean;
-              is_reverse: boolean;
-            }
-
-            export interface Response {
-              created_at: string;
-              order_uuid: string;
-              wallet_uuid: string;
-              from_uuid: string;
-              to_uuid: string;
-              amount_from: number;
-              order_type: 'OMNIBUS_CRYPTO_WITHDRAWAL';
-              status: OrderStatuses;
-              amount_to: number;
-              info: string;
-              meta: {
-                fee: number;
-                order_uuid: string;
-                to_address: string;
-                fee_currency: string;
-                request_id: string;
-                counterparty_account_id: string;
-                billing_amount: number;
-                billing_currency: string;
-                transaction_amount: number;
-                transaction_currency: string;
-                network_fee: number;
-              };
-              id: string;
-            }
+            export type Request = Common.Request.OrderWithCounterpartyParams;
+            export type Response = Common.Response.CryptoTransferResponse;
           }
           export namespace RN_CARDS_OFFRAMP {
-            export interface Request {
-              request_id: string;
-              sub_account_id: string;
-              amount: number;
-              wallet_id: string;
-              from_currency_id: string;
-              to_currency_id: string;
-              is_subtract: boolean;
-              is_reverse: boolean;
-            }
-
-            export interface Response {
-              order_uuid: string;
-              wallet_uuid: string;
-              from_uuid: string;
-              to_uuid: string;
-              amount_from: number;
-              amount_to: number;
-              order_type: 'RN_CARDS_OFFRAMP';
-              status: OrderStatuses;
-              created_at: string;
-              info: string;
-              meta: {
-                request_id: string;
-                sub_account_id: string;
-                to_address: string;
-                deposit_chain_id: number;
-                fee: number;
-                fee_currency: string;
-                billing_amount: number;
-                billing_currency: string;
-                transaction_amount: number;
-                transaction_currency: string;
-                order_uuid: string;
-              };
-              id: string;
-            }
+            export type Request = Common.Request.OrderWithSubAccountParams;
+            export type Response = Common.Response.RnCardsResponse;
           }
 
           export namespace L2F_SEPA_OFFRAMP {
-            export interface Request {
-              request_id: string;
-              virtual_account_id: string;
-              counterparty_destination_id: string;
-              amount: number;
-              wallet_id: string;
-              from_currency_id: string;
-              to_currency_id: string;
-              is_reverse: boolean;
-              reference: string;
-              note: string;
-            }
-
-            export interface Response {
-              order_uuid: string;
-              wallet_uuid: string;
-              from_uuid: string;
-              to_uuid: string;
-              amount_from: number;
-              amount_to: number;
-              order_type: 'L2F_SEPA_OFFRAMP';
-              status: OrderStatuses;
-              created_at: string;
-              info: string;
-              meta: {
-                request_id: string;
-                virtual_account_id: string;
-              };
-              id: string;
-            }
+            export type Request = Common.Request.OrderWithVirtualAccountParams &
+              Common.Request.OrderWithCounterpartyParams;
+            export type Response = Common.Response.L2FResponse & { order_type: 'L2F_SEPA_OFFRAMP' };
           }
 
           export namespace L2F_SWIFT_OFFRAMP {
-            export interface Request {
-              request_id: string;
-              virtual_account_id: string;
-              counterparty_destination_id: string;
-              amount: number;
-              wallet_id: string;
-              from_currency_id: string;
-              to_currency_id: string;
-              is_reverse: boolean;
-              reference: string;
-              note: string;
-            }
-
-            export interface Response {
-              order_uuid: string;
-              wallet_uuid: string;
-              from_uuid: string;
-              to_uuid: string;
-              amount_from: number;
-              amount_to: number;
-              order_type: 'L2F_SWIFT_OFFRAMP';
-              status: OrderStatuses;
-              created_at: string;
-              info: string;
-              meta: {
-                request_id: string;
-                virtual_account_id: string;
-              };
-              id: string;
-            }
+            export type Request = Common.Request.OrderWithVirtualAccountParams &
+              Common.Request.OrderWithCounterpartyParams;
+            export type Response = Common.Response.L2FResponse & { order_type: 'L2F_SWIFT_OFFRAMP' };
           }
 
           export namespace L2F_ACH_OFFRAMP {
-            export interface Request {
-              request_id: string;
-              virtual_account_id: string;
-              counterparty_destination_id: string;
-              amount: number;
-              wallet_id: string;
-              from_currency_id: string;
-              to_currency_id: string;
-              is_reverse: boolean;
-              reference: string;
-              note: string;
-            }
-
-            export interface Response {
-              order_uuid: string;
-              wallet_uuid: string;
-              from_uuid: string;
-              to_uuid: string;
-              amount_from: number;
-              amount_to: number;
-              order_type: 'L2F_ACH_OFFRAMP';
-              status: OrderStatuses;
-              created_at: string;
-              info: string;
-              meta: {
-                request_id: string;
-                virtual_account_id: string;
-              };
-              id: string;
-            }
+            export type Request = Common.Request.OrderWithVirtualAccountParams &
+              Common.Request.OrderWithCounterpartyParams;
+            export type Response = Common.Response.L2FResponse & { order_type: 'L2F_ACH_OFFRAMP' };
           }
 
           export namespace L2F_WIRE_OFFRAMP {
-            export interface Request {
-              request_id: string;
-              virtual_account_id: string;
-              counterparty_destination_id: string;
-              amount: number;
-              wallet_id: string;
-              from_currency_id: string;
-              to_currency_id: string;
-              is_reverse: boolean;
-              reference: string;
-              note: string;
-            }
-
-            export interface Response {
-              order_uuid: string;
-              wallet_uuid: string;
-              from_uuid: string;
-              to_uuid: string;
-              amount_from: number;
-              amount_to: number;
-              order_type: 'L2F_WIRE_OFFRAMP';
-              status: OrderStatuses;
-              created_at: string;
-              info: string;
-              meta: {
-                request_id: string;
-                virtual_account_id: string;
-              };
-              id: string;
-            }
+            export type Request = Common.Request.OrderWithVirtualAccountParams &
+              Common.Request.OrderWithCounterpartyParams;
+            export type Response = Common.Response.L2FResponse & { order_type: 'L2F_WIRE_OFFRAMP' };
           }
         }
       }
