@@ -34,7 +34,7 @@ export const kyc = {
         rail_id,
       }: API.KYC.Rails.Terms.Confirm.Request): Promise<API.KYC.Rails.Terms.Confirm.Response> =>
         apiClientV2.postRequest<API.KYC.Rails.Terms.Confirm.Response>(
-          `/kyc/${wallet_id}/rails/${rail_id}/terms-and-conditions`
+          `/kyc/${wallet_id}/rails/${rail_id}/terms-and-conditions`,
         ),
     },
   },

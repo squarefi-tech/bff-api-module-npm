@@ -4,4808 +4,5106 @@
  */
 
 export interface paths {
-    "/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Health check endpoint */
-        get: operations["AppController_getHealth"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+  '/': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/auth/verify/email/otp": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Verify email by OTP */
-        post: operations["AuthController_verifyEmail"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Health check endpoint */
+    get: operations['AppController_getHealth'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/auth/verify/email/otp': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/auth/verify/phone/otp": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Verify phone by OTP */
-        post: operations["AuthController_verifyPhone"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Verify email by OTP */
+    post: operations['AuthController_verifyEmail'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/auth/verify/phone/otp': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/auth/refresh/refresh-token": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Refresh session */
-        post: operations["AuthController_refreshToken"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Verify phone by OTP */
+    post: operations['AuthController_verifyPhone'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/auth/refresh/refresh-token': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/auth/sign-in": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Sign in user by type */
-        post: operations["AuthController_signIn"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Refresh session */
+    post: operations['AuthController_refreshToken'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/auth/sign-in': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/auth/sign-up": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Sign up user by type */
-        post: operations["AuthController_signUp"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Sign in user by type */
+    post: operations['AuthController_signIn'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/auth/sign-up': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/auth/sign-up/telegram": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Sign up new user with telegram data */
-        post: operations["AuthTelegramController_signUp"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Sign up user by type */
+    post: operations['AuthController_signUp'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/auth/sign-up/telegram': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/auth/sign-in/telegram": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Sign in user with telegram data */
-        post: operations["AuthTelegramController_signIn"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Sign up new user with telegram data */
+    post: operations['AuthTelegramController_signUp'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/auth/sign-in/telegram': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/auth/sign-up/password/email": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Sign up user by email+password with OTP */
-        post: operations["AuthPasswordController_signUpByEmail"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Sign in user with telegram data */
+    post: operations['AuthTelegramController_signIn'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/auth/sign-up/password/email': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/auth/sign-up/password/email/resend": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Resend OTP by email */
-        post: operations["AuthPasswordController_resendSignUpByEmail"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Sign up user by email+password with OTP */
+    post: operations['AuthPasswordController_signUpByEmail'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/auth/sign-up/password/email/resend': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/auth/sign-up/password/email/finalize": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Final step to sign up user by email with verified session */
-        post: operations["AuthPasswordController_signUpByEmailFinalize"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Resend OTP by email */
+    post: operations['AuthPasswordController_resendSignUpByEmail'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/auth/sign-up/password/email/finalize': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/auth/sign-in/password/email": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Sign in user by email+password */
-        post: operations["AuthPasswordController_signInByEmail"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Final step to sign up user by email with verified session */
+    post: operations['AuthPasswordController_signUpByEmailFinalize'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/auth/sign-in/password/email': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/auth/sign-in/omni/email/{type}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Sign in/up user by email using OTP */
-        post: operations["AuthOmniController_signInOmniByEmail"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Sign in user by email+password */
+    post: operations['AuthPasswordController_signInByEmail'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/auth/sign-in/omni/email/{type}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/auth/sign-in/omni/phone/otp": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Sign in/up user by phone using OTP */
-        post: operations["AuthOmniController_signInOmniByPhone"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Sign in/up user by email using OTP */
+    post: operations['AuthOmniController_signInOmniByEmail'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/auth/sign-in/omni/phone/otp': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/user": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Current user */
-        get: operations["UserController_getMe"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Sign in/up user by phone using OTP */
+    post: operations['AuthOmniController_signInOmniByPhone'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/user': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/user/user-data": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Current user data */
-        get: operations["UserController_getMyUserData"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update current user data */
-        patch: operations["UserController_updateMyUserData"];
-        trace?: never;
+    /** Current user */
+    get: operations['UserController_getMe'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/user/user-data': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/user/email": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Confirm email change */
-        post: operations["AuthenticatedUserController_changeEmailConfirm"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Request email change/add */
-        patch: operations["AuthenticatedUserController_changeEmail"];
-        trace?: never;
+    /** Current user data */
+    get: operations['UserController_getMyUserData'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Update current user data */
+    patch: operations['UserController_updateMyUserData'];
+    trace?: never;
+  };
+  '/user/email': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/user/phone": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Confirm phone change */
-        post: operations["AuthenticatedUserController_changePhoneNumberConfirm"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Request phone change/add */
-        patch: operations["AuthenticatedUserController_changePhone"];
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Confirm email change */
+    post: operations['AuthenticatedUserController_changeEmailConfirm'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Request email change/add */
+    patch: operations['AuthenticatedUserController_changeEmail'];
+    trace?: never;
+  };
+  '/user/phone': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/tenant/config": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Current tenant config
-         * @deprecated
-         */
-        get: operations["TenantsConfigsController_getTenantConfig"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Confirm phone change */
+    post: operations['AuthenticatedUserController_changePhoneNumberConfirm'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Request phone change/add */
+    patch: operations['AuthenticatedUserController_changePhone'];
+    trace?: never;
+  };
+  '/tenant/config': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/wallets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get user wallets */
-        get: operations["WalletsController_all"];
-        put?: never;
-        /** Create a new wallet */
-        post: operations["WalletsController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * Current tenant config
+     * @deprecated
+     */
+    get: operations['TenantsConfigsController_getTenantConfig'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/wallets': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/wallets/{wallet_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get specific user wallet with balances */
-        get: operations["WalletsController_view"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Get user wallets */
+    get: operations['WalletsController_all'];
+    put?: never;
+    /** Create a new wallet */
+    post: operations['WalletsController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/wallets/{wallet_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/wallets/{wallet_id}/addresses/{chain}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Wallet address for chain */
-        get: operations["WalletsAddressesController_viewWalletAddressByChain"];
-        put?: never;
-        /**
-         * Create a new address
-         * @deprecated
-         * @description Use viewWalletAddressByChain method to create and/or view address
-         */
-        post: operations["WalletsAddressesController_createAddress"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Get specific user wallet with balances */
+    get: operations['WalletsController_view'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/wallets/{wallet_id}/addresses/{chain}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/wallets/{wallet_id}/transactions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List of transactions for wallet */
-        get: operations["WalletsTransactionsController_viewTransactionsByWallet"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Wallet address for chain */
+    get: operations['WalletsAddressesController_viewWalletAddressByChain'];
+    put?: never;
+    /**
+     * Create a new address
+     * @deprecated
+     * @description Use viewWalletAddressByChain method to create and/or view address
+     */
+    post: operations['WalletsAddressesController_createAddress'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/wallets/{wallet_id}/transactions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/wallets/{wallet_id}/transactions/{transaction_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get transaction by id for wallet */
-        get: operations["WalletsTransactionsController_viewTransactionByWallet"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List of transactions for wallet */
+    get: operations['WalletsTransactionsController_viewTransactionsByWallet'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/wallets/{wallet_id}/transactions/{transaction_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/wallets/{wallet_id}/transactions/export/csv": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export all wallet transactions */
-        get: operations["WalletsTransactionsController_export"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Get transaction by id for wallet */
+    get: operations['WalletsTransactionsController_viewTransactionByWallet'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/wallets/{wallet_id}/transactions/export/csv': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/chains": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List of chains
-         * @deprecated
-         */
-        get: operations["ChainsController_all"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Export all wallet transactions */
+    get: operations['WalletsTransactionsController_export'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/chains': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/currencies": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List of currencies
-         * @deprecated
-         */
-        get: operations["CurrenciesController_all"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * List of chains
+     * @deprecated
+     */
+    get: operations['ChainsController_all'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/currencies': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/issuing/programs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get issuing Programs */
-        get: operations["ProgramsController_getPrograms"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * List of currencies
+     * @deprecated
+     */
+    get: operations['CurrenciesController_all'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/issuing/programs': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/exchange/rates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List of exchange rates from fiat to crypto
-         * @deprecated
-         */
-        get: operations["ExchangeRatesController_findAll"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Get issuing Programs */
+    get: operations['ProgramsController_getPrograms'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/exchange/rates': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fiat-accounts/{wallet_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List of fiat accounts by wallet id */
-        get: operations["FiatAccountsController_findAllByWallet"];
-        put?: never;
-        /** Create a new fiat account */
-        post: operations["FiatAccountsController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * List of exchange rates from fiat to crypto
+     * @deprecated
+     */
+    get: operations['ExchangeRatesController_findAll'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/fiat-accounts/{wallet_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fiat-accounts/{wallet_id}/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get a specific fiat account by ID */
-        get: operations["FiatAccountsController_findOne"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List of fiat accounts by wallet id */
+    get: operations['FiatAccountsController_findAllByWallet'];
+    put?: never;
+    /** Create a new fiat account */
+    post: operations['FiatAccountsController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/fiat-accounts/{wallet_id}/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/fiat-accounts/{wallet_id}/{id}/transactions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get transactions for a specific Fiat Account by ID */
-        get: operations["TransactionsController_findAll"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Get a specific fiat account by ID */
+    get: operations['FiatAccountsController_findOne'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/fiat-accounts/{wallet_id}/{id}/transactions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/developer/accesses": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List of external access */
-        get: operations["DeveloperAccessesController_findAll"];
-        put?: never;
-        /** Create external access */
-        post: operations["DeveloperAccessesController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Get transactions for a specific Fiat Account by ID */
+    get: operations['TransactionsController_findAll'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/developer/accesses': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/developer/accesses/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update external access */
-        patch: operations["DeveloperAccessesController_update"];
-        trace?: never;
+    /** List of external access */
+    get: operations['DeveloperAccessesController_findAll'];
+    put?: never;
+    /** Create external access */
+    post: operations['DeveloperAccessesController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/developer/accesses/{id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/developer/accesses/{id}/rotate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Rotate external access */
-        patch: operations["DeveloperAccessesController_rotate"];
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Update external access */
+    patch: operations['DeveloperAccessesController_update'];
+    trace?: never;
+  };
+  '/developer/accesses/{id}/rotate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/developer/vendors": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List of vendors */
-        get: operations["DeveloperVendorsController_findAll"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Rotate external access */
+    patch: operations['DeveloperAccessesController_rotate'];
+    trace?: never;
+  };
+  '/developer/vendors': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/kyc/forms/{rail_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["KycFormsController_getFormConfigByType"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List of vendors */
+    get: operations['DeveloperVendorsController_findAll'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/kyc/forms/{rail_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/kyc/{wallet_id}/entity": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Return kyc entity */
-        get: operations["KycEntitiesController_findOne"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update kyc entity data */
-        patch: operations["KycEntitiesController_update"];
-        trace?: never;
+    get: operations['KycFormsController_getFormConfigByType'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/kyc/{wallet_id}/entity': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/kyc/{wallet_id}/rails": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** All kyc rails info */
-        get: operations["WalletKycRailsController_findAll"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Return kyc entity */
+    get: operations['KycEntitiesController_findOne'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Update kyc entity data */
+    patch: operations['KycEntitiesController_update'];
+    trace?: never;
+  };
+  '/kyc/{wallet_id}/rails': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/kyc/{wallet_id}/rails/{rail_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Single rail info */
-        get: operations["WalletKycRailsController_findOne"];
-        put?: never;
-        /** Submit KYC verification */
-        post: operations["WalletKycRailsController_update"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** All kyc rails info */
+    get: operations['WalletKycRailsController_findAll'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/kyc/{wallet_id}/rails/{rail_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/kyc/{wallet_id}/rails/{rail_id}/terms-and-conditions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Confirm terms and conditions for KYC rail */
-        post: operations["WalletKycRailsController_confirmTermsAndConditions"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Single rail info */
+    get: operations['WalletKycRailsController_findOne'];
+    put?: never;
+    /** Submit KYC verification */
+    post: operations['WalletKycRailsController_update'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/kyc/{wallet_id}/rails/{rail_id}/terms-and-conditions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/countries": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List of countries
-         * @deprecated
-         */
-        get: operations["CountriesController_findAll"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    /** Confirm terms and conditions for KYC rail */
+    post: operations['WalletKycRailsController_confirmTermsAndConditions'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/countries': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/storage/kyc": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get KYC file */
-        get: operations["StorageController_getFileUrl"];
-        put?: never;
-        /** Upload KYC file */
-        post: operations["StorageController_uploadKycFile"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /**
+     * List of countries
+     * @deprecated
+     */
+    get: operations['CountriesController_findAll'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/storage/kyc': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/storage/kyc/{folderId}/{fileId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get KYC file by ID */
-        get: operations["StorageController_getKycFile"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Get KYC file */
+    get: operations['StorageController_getFileUrl'];
+    put?: never;
+    /** Upload KYC file */
+    post: operations['StorageController_uploadKycFile'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/storage/kyc/{folderId}/{fileId}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/counterparties/{wallet_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Return list of counterparty accounts */
-        get: operations["CounterpartyAccountsController_findAll"];
-        put?: never;
-        /** Create new counterparty account */
-        post: operations["CounterpartyAccountsController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Get KYC file by ID */
+    get: operations['StorageController_getKycFile'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/counterparties/{wallet_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/counterparties/{wallet_id}/{counterparty_account_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Return counterparty account */
-        get: operations["CounterpartyAccountsController_findOne"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update counterparty account */
-        patch: operations["CounterpartyAccountsController_update"];
-        trace?: never;
+    /** Return list of counterparty accounts */
+    get: operations['CounterpartyAccountsController_findAll'];
+    put?: never;
+    /** Create new counterparty account */
+    post: operations['CounterpartyAccountsController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/counterparties/{wallet_id}/{counterparty_account_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/counterparties/{wallet_id}/{counterparty_account_id}/destinations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Return list of counterparty destinations */
-        get: operations["CounterpartyDestinationsController_findAll"];
-        put?: never;
-        /** Create new counterparty destination */
-        post: operations["CounterpartyDestinationsController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Return counterparty account */
+    get: operations['CounterpartyAccountsController_findOne'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Update counterparty account */
+    patch: operations['CounterpartyAccountsController_update'];
+    trace?: never;
+  };
+  '/counterparties/{wallet_id}/{counterparty_account_id}/destinations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/counterparties/{wallet_id}/{counterparty_account_id}/destinations/{counterparty_destination_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Return counterparty destination */
-        get: operations["CounterpartyDestinationsController_findOne"];
-        put?: never;
-        post?: never;
-        /** Delete counterparty destination */
-        delete: operations["CounterpartyDestinationsController_delete"];
-        options?: never;
-        head?: never;
-        /** Update counterparty destination */
-        patch: operations["CounterpartyDestinationsController_update"];
-        trace?: never;
+    /** Return list of counterparty destinations */
+    get: operations['CounterpartyDestinationsController_findAll'];
+    put?: never;
+    /** Create new counterparty destination */
+    post: operations['CounterpartyDestinationsController_create'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/counterparties/{wallet_id}/{counterparty_account_id}/destinations/{counterparty_destination_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/system/config": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** System config */
-        get: operations["SystemController_config"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Return counterparty destination */
+    get: operations['CounterpartyDestinationsController_findOne'];
+    put?: never;
+    post?: never;
+    /** Delete counterparty destination */
+    delete: operations['CounterpartyDestinationsController_delete'];
+    options?: never;
+    head?: never;
+    /** Update counterparty destination */
+    patch: operations['CounterpartyDestinationsController_update'];
+    trace?: never;
+  };
+  '/system/config': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/system/chains": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List of chains */
-        get: operations["SystemController_chains"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** System config */
+    get: operations['SystemController_config'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/system/chains': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/system/currencies": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List of currencies */
-        get: operations["SystemController_currencies"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List of chains */
+    get: operations['SystemController_chains'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/system/currencies': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/system/countries": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List of countries */
-        get: operations["SystemController_countries"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List of currencies */
+    get: operations['SystemController_currencies'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/system/countries': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/system/states/{country_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List of states of country */
-        get: operations["SystemController_states"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List of countries */
+    get: operations['SystemController_countries'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/system/states/{country_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/system/exchange-rates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List of exchange rates from currency to crypto */
-        get: operations["SystemController_findAll"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List of states of country */
+    get: operations['SystemController_states'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/system/exchange-rates': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/persona/inquiries/init/{wallet_id}/{type}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["PersonaController_initInquiry"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** List of exchange rates from currency to crypto */
+    get: operations['SystemController_findAll'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/persona/inquiries/init/{wallet_id}/{type}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/persona/inquiries/{wallet_id}/{inquiry_id}/resume": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["PersonaController_resumeInquiry"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['PersonaController_initInquiry'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/persona/inquiries/{wallet_id}/{inquiry_id}/resume': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/kyc/integration-persona-templates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get KYC integration Persona templates */
-        get: operations["IntegrationPersonaTemplateController_findAll"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['PersonaController_resumeInquiry'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/kyc/integration-persona-templates': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/load-data-from-hifibridge": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["LoadDataFromHifibridgeController_syncData"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    /** Get KYC integration Persona templates */
+    get: operations['IntegrationPersonaTemplateController_findAll'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/load-data-from-hifibridge': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/persona-admin/{wallet_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["PersonaAdminController_syncKycEntityWithPersona"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['LoadDataFromHifibridgeController_syncData'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/persona-admin/{wallet_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
-    "/bank-data": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Returns bank data by code */
-        get: operations["BankDataController_getBankDataByCode"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
+    get?: never;
+    put?: never;
+    post: operations['PersonaAdminController_syncKycEntityWithPersona'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/bank-data': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
     };
+    /** Returns bank data by code */
+    get: operations['BankDataController_getBankDataByCode'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-    schemas: {
-        VerifyEmailDto: {
-            email: string;
-            token: string;
-        };
-        SessionDto: {
-            provider_token?: string | null;
-            provider_refresh_token?: string | null;
-            access_token: string;
-            expires_in: number;
-            expires_at?: number;
-            token_type: string;
-            refresh_token: string;
-        };
-        VerifyPhoneDto: {
-            phone: string;
-            token: string;
-            /**
-             * @default sms
-             * @enum {string}
-             */
-            type: "phone_change" | "sms";
-        };
-        RefreshTokenDto: {
-            refresh_token: string;
-        };
-        SignInByTypeDto: {
-            login: string;
-            /** @enum {string} */
-            type: "email" | "phone";
-        };
-        SignUpByTypeDto: {
-            invite_code?: string;
-            referrer?: string;
-            /** @enum {string} */
-            type: "email" | "phone";
-            login: string;
-        };
-        TelegramSignUpByPhoneDto: {
-            phone: string;
-            tg_id: string;
-            first_name: string;
-            last_name: string;
-            hash: string;
-            init_data_raw: string;
-            username: string;
-            invite_code?: string;
-            referrer?: string;
-        };
-        TelegramSessionDto: {
-            provider_token?: string | null;
-            provider_refresh_token?: string | null;
-            access_token: string;
-            expires_in: number;
-            expires_at?: number;
-            token_type: string;
-            refresh_token?: string | null;
-        };
-        TelegramSignInByTgIdDto: {
-            tg_id: string;
-            hash: string;
-            init_data_raw: string;
-        };
-        SignUpByEmailWithPasswordDto: {
-            password: string;
-            email: string;
-        };
-        UserEntity: {
-            id: string;
-            app_metadata: Record<string, never>;
-            user_metadata: Record<string, never>;
-            aud: string;
-            confirmation_sent_at?: string;
-            recovery_sent_at?: string;
-            email_change_sent_at?: string;
-            new_email?: string;
-            new_phone?: string;
-            invited_at?: string;
-            action_link?: string;
-            email?: string;
-            phone?: string;
-            created_at: string;
-            confirmed_at?: string;
-            email_confirmed_at?: string;
-            phone_confirmed_at?: string;
-            last_sign_in_at?: string;
-            role?: string;
-            updated_at?: string;
-            identities?: string[];
-            is_anonymous?: boolean;
-            factors?: string[];
-        };
-        ResendSignUpOtpByEmailDto: {
-            email: string;
-        };
-        SignUpWithPasswordFinalizeDto: {
-            invite_code?: string;
-            referrer?: string;
-        };
-        UserDataEntity: {
-            can_invite: boolean;
-            created_at: string;
-            id: number;
-            kyc_date: string | null;
-            /**
-             * @default UNVERIFIED
-             * @enum {string|null}
-             */
-            kyc_status: "APPROVED" | "DECLINED" | "PENDING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW" | null;
-            referral_name: string | null;
-            tenant_id: string;
-            user_id: string;
-            default_currency: string;
-            user_groups_id: string | null;
-            is_developer: boolean;
-            first_name?: string | null;
-            last_name?: string | null;
-            /** @description User birth date in ISO 8601 format */
-            birth_date?: string | null;
-        };
-        SignInByEmailWithPasswordDto: {
-            password: string;
-            email: string;
-        };
-        SignInByEmailDto: {
-            invite_code?: string;
-            referrer?: string;
-            email: string;
-            redirect_url?: string;
-        };
-        SignInByPhoneDto: {
-            invite_code?: string;
-            referrer?: string;
-            phone: string;
-        };
-        UpdateUserDataDto: {
-            default_currency?: string;
-            first_name?: string | null;
-            last_name?: string | null;
-            /** @description User birth date in ISO 8601 format */
-            birth_date?: string | null;
-        };
-        ChangeEmailDto: {
-            access_token: string;
-            email: string;
-            refresh_token?: string | null;
-        };
-        ChangeEmailConfirmDto: {
-            access_token: string;
-            refresh_token?: string | null;
-            /** @description Verification email */
-            email: string;
-            /** @description Verification code */
-            token: string;
-        };
-        ChangePhoneDto: {
-            access_token: string;
-            refresh_token: string;
-            /** @description New phone number */
-            phone: string;
-        };
-        ChangePhoneConfirmDto: {
-            /** @description Verification phone number */
-            phone: string;
-            /** @description Verification code */
-            token: string;
-        };
-        TenantConfigEntity: {
-            tenant_id: string;
-            /** @enum {string} */
-            default_theme_mode: "dark" | "light";
-            enable_kyc: boolean;
-            tg_bot_name: string | null;
-            theme_switch: boolean;
-            enable_exchange: boolean;
-            enable_auto_exchange: boolean;
-            enable_crypto_withdrawal: boolean;
-        };
-        PaginationResponseDto: {
-            /** @example 20 */
-            total: number;
-            /** @description Data */
-            data: Record<string, never>[];
-            /** @description Has more data flag */
-            readonly has_more: boolean;
-        };
-        WalletDto: {
-            uuid: string;
-            /** @enum {string|null} */
-            type: "personal" | "business" | "trading" | "merchant" | "staking" | "saving" | "escrow" | "exchange" | "vault" | null;
-            created_at: string;
-        };
-        CreateWalletDto: {
-            /**
-             * @default personal
-             * @enum {string}
-             */
-            type: "personal" | "business" | "trading" | "merchant" | "staking" | "saving" | "escrow" | "exchange" | "vault";
-        };
-        AggregatedBalanceDetailsDto: {
-            uuid: string;
-            amount: number;
-            fiat_amount: number;
-            currency: components["schemas"]["CryptoCurrencyDto"] | components["schemas"]["FiatCurrencyDto"];
-        };
-        AggregatedBalanceDto: {
-            symbol: string;
-            icon: string;
-            name: string;
-            is_crypto: boolean;
-            decimal: number;
-            amount: number;
-            fiat_amount: number;
-            details: components["schemas"]["AggregatedBalanceDetailsDto"][];
-        };
-        WalletExtendedDto: {
-            uuid: string;
-            /** @enum {string|null} */
-            type: "personal" | "business" | "trading" | "merchant" | "staking" | "saving" | "escrow" | "exchange" | "vault" | null;
-            created_at: string;
-            fiat_total: number;
-            crypto_total: number;
-            total_amount: number;
-            balance: components["schemas"]["AggregatedBalanceDto"][];
-        };
-        WalletAddressDto: {
-            address: string | null;
-            chain: number | null;
-            created_at: string;
-            uuid: string | null;
-            wallet_uuid: string | null;
-        };
-        CreateWalletAddressDto: {
-            label: string;
-        };
-        TransactionMetaEntity: {
-            billing_amount: number;
-            billing_amount_currency: string;
-            exchange_rate: number;
-            fee: number;
-            fee_currency: string;
-            transaction_amount: number;
-            transaction_amount_currency: string;
-            network_fee?: number;
-            network_fee_currency?: string;
-            order_id?: string;
-            fiat_account_id?: string;
-            txid?: string;
-            chain_id?: number;
-            from_address?: string;
-            to_address?: string;
-            from_user_data?: number;
-            to_user_data?: number;
-            to_card_id?: string;
-            to_card_last4?: string;
-            to_fiat_account_id?: string;
-            to_vendor_id?: string;
-        };
-        WalletTransactionDto: {
-            id: number;
-            amount: number;
-            created_at: string;
-            info: string | null;
-            /** @enum {string} */
-            status: "complete" | "pending" | "canceled" | "failed" | "processing" | "new";
-            txid: string | null;
-            /** @enum {string} */
-            type: "deposit_crypto" | "withdrawal_crypto" | "deposit_fiat" | "withdrawal_fiat" | "deposit_vcard" | "withdrawal_vcard" | "deposit" | "withdrawal";
-            wallet_id: string | null;
-            /** @enum {string|null} */
-            method: "p2p" | "crypto" | "bank_transfer" | "exchange" | "sbp" | "internal_fiat" | null;
-            meta: components["schemas"]["TransactionMetaEntity"] | null;
-            /** @enum {string|null} */
-            record_type: "CARD_PROVIDER_DEPOSIT" | "CARD_PROVIDER_REFUND" | "DEPOSIT_CRYPTO_EXTERNAL" | "DEPOSIT_CRYPTO_INTERNAL" | "EXCHANGE_CRYPTO_INTERNAL" | "EXT_EXCHANGE" | "FEE" | "NETWORK_FEE" | "REFUND" | "WITHDRAWAL_CRYPTO_EXTERNAL" | "WITHDRAWAL_CRYPTO_INTERNAL" | "WHOLESALE_CARD_DEPOSIT" | null;
-            currency: components["schemas"]["CryptoCurrencyDto"] | components["schemas"]["FiatCurrencyDto"];
-        };
-        TransactionsFilter: {
-            created_at?: string;
-            /** @enum {string} */
-            type?: "deposit_crypto" | "withdrawal_crypto" | "deposit_fiat" | "withdrawal_fiat" | "deposit_vcard" | "withdrawal_vcard" | "deposit" | "withdrawal";
-            /** @enum {string|null} */
-            method?: "p2p" | "crypto" | "bank_transfer" | "exchange" | "sbp" | "internal_fiat" | null;
-            /** @enum {string|null} */
-            record_type?: "CARD_PROVIDER_DEPOSIT" | "CARD_PROVIDER_REFUND" | "DEPOSIT_CRYPTO_EXTERNAL" | "DEPOSIT_CRYPTO_INTERNAL" | "EXCHANGE_CRYPTO_INTERNAL" | "EXT_EXCHANGE" | "FEE" | "NETWORK_FEE" | "REFUND" | "WITHDRAWAL_CRYPTO_EXTERNAL" | "WITHDRAWAL_CRYPTO_INTERNAL" | "WHOLESALE_CARD_DEPOSIT" | null;
-            "currency.uuid"?: string;
-            "meta.billing_amount_currency"?: string;
-            "meta.transaction_amount_currency"?: string;
-            /** @description Filters items by "from OR to" fields */
-            address?: string;
-            /** Format: date-time */
-            from_created_at?: string;
-            /** Format: date-time */
-            to_created_at?: string;
-            /** @default false */
-            show_low_balance: boolean;
-            status?: ("complete" | "pending" | "canceled" | "failed" | "processing" | "new")[];
-        };
-        ChainDto: {
-            id: number;
-            name: string | null;
-            symbol: string | null;
-            is_beta: boolean | null;
-        };
-        AllChainsResponseDto: {
-            total: number;
-            data: components["schemas"]["ChainDto"][];
-            readonly has_more: boolean;
-        };
-        CryptoCurrencyMetaDto: {
-            icon: string;
-            name: string;
-            description: string;
-            symbol: string;
-            chain_id: number;
-            contract: string;
-            chain_name: string;
-        };
-        CryptoCurrencyDto: {
-            uuid: string;
-            decimal: number | null;
-            render_decimal: number;
-            is_stablecoin: boolean;
-            is_memo: boolean;
-            /** @enum {string|null} */
-            type: "token" | "native" | null;
-            meta: components["schemas"]["CryptoCurrencyMetaDto"];
-            is_enabled: boolean;
-            /** @example true */
-            is_crypto: boolean;
-        };
-        FiatCurrencyMetaDto: {
-            icon: string;
-            name: string;
-            description: string;
-            symbol: string;
-            code: string;
-            iso_code: number;
-            sign: string;
-        };
-        FiatCurrencyDto: {
-            uuid: string;
-            decimal: number | null;
-            render_decimal: number;
-            is_stablecoin: boolean;
-            is_memo: boolean;
-            /** @enum {string|null} */
-            type: "token" | "native" | null;
-            meta: components["schemas"]["FiatCurrencyMetaDto"];
-            is_enabled: boolean;
-            /** @example false */
-            is_crypto: boolean;
-        };
-        AllCurrenciesResponseDto: {
-            total: number;
-            data: (components["schemas"]["CryptoCurrencyDto"] | components["schemas"]["FiatCurrencyDto"])[];
-        };
-        KycRailTermsAndConditionsEntity: {
-            id: string;
-            description: string | null;
-            kyc_rail_id: string;
-            link: string;
-            title: string;
-        };
-        KycRailEntity: {
-            id: string;
-            code: string | null;
-            name: string;
-            /** @enum {string|null} */
-            type: "individual" | "business" | "universal" | null;
-            /** @description Current terms and conditions data */
-            terms_and_conditions?: components["schemas"]["KycRailTermsAndConditionsEntity"][];
-        };
-        IssuingProgramDto: {
-            id: string;
-            /** @enum {string|null} */
-            form_factor: "PHYSICAL" | "VIRTUAL" | null;
-            /** @enum {string|null} */
-            brand: "VISA" | "MASTERCARD" | "AMEX" | "UNIONPAY" | null;
-            tokenizable: boolean;
-            /** @enum {string|null} */
-            type: "CREDIT" | "DEBIT" | null;
-            kyc_rail: components["schemas"]["KycRailEntity"] | null;
-        };
-        ExchangeRateDto: {
-            from: string;
-            from_uuid: string | null;
-            inverted_rate: number;
-            rate: number;
-            /** @enum {string|null} */
-            rate_source: "cryptomus" | "coingecko" | null;
-            to: string;
-            to_uuid: string | null;
-        };
-        IssuingProgram: {
-            id: string;
-            /** @enum {string|null} */
-            form_factor: "PHYSICAL" | "VIRTUAL" | null;
-            /** @enum {string|null} */
-            brand: "VISA" | "MASTERCARD" | "AMEX" | "UNIONPAY" | null;
-            tokenizable: boolean;
-            /** @enum {string|null} */
-            type: "CREDIT" | "DEBIT" | null;
-            kyc_rail: components["schemas"]["KycRailEntity"] | null;
-        };
-        FiatAccountIssuingCardDto: {
-            card_id: string;
-            program_id: string;
-            wallet_id: string;
-            nick_name: string;
-            name_on_card?: string;
-            /** @enum {string} */
-            card_status: "ACTIVE" | "CANCELED" | "FROZEN" | "INACTIVE" | "CLOSED" | "BLOCKED";
-            /** @enum {string} */
-            brand?: "VISA" | "MASTERCARD" | "AMEX" | "UNIONPAY";
-            /** @enum {string} */
-            type?: "CREDIT" | "DEBIT";
-            /** @enum {string} */
-            form_factor: "PHYSICAL" | "VIRTUAL";
-            tokenizable: boolean;
-            request_id: string;
-            created_at: string;
-            last4?: string;
-        };
-        FiatAccountDto: {
-            id: string;
-            balance: number | null;
-            nick_name: string | null;
-            wallet_id: string;
-            created_at: string;
-            /** @enum {string} */
-            status: "ACTIVE" | "CANCELED" | "FROZEN" | "INACTIVE" | "CLOSED" | "BLOCKED";
-            issuing_program: components["schemas"]["IssuingProgram"] | null;
-            currency: components["schemas"]["FiatCurrencyDto"];
-            total_balance: number;
-            realtimeauth_balance: number;
-            fiat_balance: number;
-            cards_count: number;
-            cards?: components["schemas"]["FiatAccountIssuingCardDto"][];
-        };
-        CreateFiatAccountDto: {
-            program_id: string;
-        };
-        FiatAccountEntity: {
-            id: string;
-            balance: number | null;
-            nick_name: string | null;
-            wallet_id: string;
-            created_at: string;
-            account_currency: string;
-            /** @enum {string} */
-            type: "balance" | "prepaid";
-            program_id: string | null;
-            /** @enum {string} */
-            status: "ACTIVE" | "CANCELED" | "FROZEN" | "INACTIVE" | "CLOSED" | "BLOCKED";
-            issuing_program: components["schemas"]["IssuingProgram"] | null;
-        };
-        FiatAccountDetailsDto: {
-            iban: string;
-            bank_name: string;
-            swift_code: string;
-            bank_address: string;
-            receiver_name: string;
-            payment_details: string;
-            reference_number: string;
-            registration_number: string;
-        };
-        FiatAccountRealtimeauthEntity: {
-            id: string;
-            crypto_token: Record<string, never> | null;
-            priority: Record<string, never> | null;
-            fiat_account: Record<string, never> | null;
-        };
-        FiatAccountOrderTypeEntity: {
-            /** @enum {string|null} */
-            order_type: "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_PREPAID" | "WITHDRAWAL_CRYPTO" | "DEPOSIT_CRYPTO" | "DEPOSIT_FIAT_SEPA" | "DEPOSIT_FIAT_SWIFT" | "EXCHANGE_CRYPTO_INTERNAL" | "WITHDRAWAL_FIAT_SEPA" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_WHOLESALE" | "CARD_ISSUING_FEE" | null;
-        };
-        FiatAccountExtendedDto: {
-            id: string;
-            balance: number | null;
-            nick_name: string | null;
-            wallet_id: string;
-            created_at: string;
-            /** @enum {string} */
-            status: "ACTIVE" | "CANCELED" | "FROZEN" | "INACTIVE" | "CLOSED" | "BLOCKED";
-            issuing_program: components["schemas"]["IssuingProgram"] | null;
-            currency: components["schemas"]["FiatCurrencyDto"];
-            total_balance: number;
-            realtimeauth_balance: number;
-            fiat_balance: number;
-            cards_count: number;
-            cards?: components["schemas"]["FiatAccountIssuingCardDto"][];
-            account_details: components["schemas"]["FiatAccountDetailsDto"];
-            realtime_auth: components["schemas"]["FiatAccountRealtimeauthEntity"][];
-            payment_types: components["schemas"]["FiatAccountOrderTypeEntity"][];
-        };
-        MerchantDto: {
-            name: string;
-            category_code: string;
-            city: string;
-            country: string;
-        };
-        FiatAccountTransactionDto: {
-            vendor_transaction_id: string;
-            created_at: string;
-            cleared_at: string;
-            merchant: components["schemas"]["MerchantDto"];
-            last4: string;
-            title: string;
-            billing_amount: number;
-            billing_currency: string;
-            transaction_amount: number;
-            transaction_currency: string;
-            vendor_sub_account_id: string;
-            failure_reason: string;
-            status: string;
-            /** @enum {string} */
-            transaction_type: "AUTHORIZATION" | "CLEARING" | "REFUND" | "REVERSAL" | "ORIGINAL_CREDIT" | "FEE" | "DEPOSIT" | "WITHDRAWAL";
-            is_credit: boolean;
-            has_receipt: boolean;
-            adjustment_type: string;
-            review_status: string;
-            group: string;
-            total_amount: number;
-        };
-        FindAllFiatAccountTransactionsDto: {
-            has_more: boolean;
-            count: number;
-            data: components["schemas"]["FiatAccountTransactionDto"][];
-        };
-        CreateDeveloperAccessDto: {
-            name: string;
-            /** @enum {string} */
-            role: "READ_ONLY" | "DEVELOPER" | "OWNER";
-        };
-        UpdateDeveloperAccessDto: {
-            /** @enum {string} */
-            role: "READ_ONLY" | "DEVELOPER" | "OWNER";
-        };
-        KycFormFieldOptionDto: {
-            label: string;
-            value: string;
-        };
-        KycFormFieldValidationDto: {
-            pattern?: string;
-            message?: string;
-            minLength?: number;
-            maxLength?: number;
-            min?: number;
-            max?: number;
-        };
-        KycFormFieldDto: {
-            name: string;
-            /** @enum {string} */
-            type: "text" | "email" | "password" | "radio" | "select" | "checkbox" | "textarea" | "number" | "date" | "switch" | "file";
-            label: string;
-            placeholder?: string;
-            required?: boolean;
-            order?: number;
-            options?: components["schemas"]["KycFormFieldOptionDto"][];
-            validation?: components["schemas"]["KycFormFieldValidationDto"];
-            rows?: number;
-            value?: string;
-            accept?: string;
-        };
-        KycFormFieldContainerDto: {
-            /** @enum {string} */
-            type: "field" | "group";
-            field?: components["schemas"]["KycFormFieldDto"];
-            group?: components["schemas"]["KycFormFieldGroupDto"];
-        };
-        KycFormFieldGroupDto: {
-            name?: string;
-            isArray?: boolean;
-            fields: components["schemas"]["KycFormFieldContainerDto"][];
-            label: string;
-        };
-        KycEntityAmlQuestionnaireEntity: Record<string, never>;
-        GeneralInfo: Record<string, never>;
-        ContactPersonInfo: Record<string, never>;
-        LegalRepresentativeInfo: Record<string, never>;
-        DirectorsInfo: Record<string, never>;
-        OwnershipStructure: Record<string, never>;
-        KycEntityDueDiligenceFormEntity: {
-            general_info: components["schemas"]["GeneralInfo"];
-            contact_person_info: components["schemas"]["ContactPersonInfo"];
-            legal_representative_info: components["schemas"]["LegalRepresentativeInfo"];
-            directors_info: components["schemas"]["DirectorsInfo"][];
-            ownership_structure: components["schemas"]["OwnershipStructure"][];
-        };
-        KycEntitySofEuQuestionnaireEntity: Record<string, never>;
-        CountryTimezone: Record<string, never>;
-        CountryTranslations: Record<string, never>;
-        CountryEntity: {
-            id: number;
-            capital: string | null;
-            currency: string | null;
-            currency_name: string | null;
-            currency_symbol: string | null;
-            emoji: string | null;
-            emojiU: string | null;
-            flag: number;
-            iso2: string | null;
-            iso3: string | null;
-            latitude: number | null;
-            longitude: number | null;
-            name: string;
-            nationality: string | null;
-            native: string | null;
-            numeric_code: string | null;
-            phonecode: string | null;
-            region: string | null;
-            region_id: number | null;
-            subregion: string | null;
-            subregion_id: number | null;
-            timezones: components["schemas"]["CountryTimezone"][] | null;
-            tld: string | null;
-            translations: components["schemas"]["CountryTranslations"][] | null;
-            wikiDataId: string | null;
-            created_at: string | null;
-            updated_at: string;
-        };
-        KycAddressDto: {
-            address_line1?: string | null;
-            address_line2?: string | null;
-            city?: string | null;
-            readonly country?: components["schemas"]["CountryEntity"] | null;
-            country_id: number | null;
-            postal_code?: string | null;
-            state_province_region?: string | null;
-            id?: string;
-        };
-        KycBeneficialOwnerDto: {
-            auth_letter_url: string | null;
-            business_title: string | null;
-            country_of_birth: string | null;
-            date_of_birth: string | null;
-            email: string | null;
-            first_name: string | null;
-            first_name_local: string | null;
-            last_name: string | null;
-            last_name_local: string | null;
-            middle_name: string | null;
-            middle_name_local: string | null;
-            gov_id_back_url: string | null;
-            gov_id_country: string | null;
-            gov_id_expiration_date: string | null;
-            gov_id_front_url: string | null;
-            gov_id_issuance_authority: string | null;
-            gov_id_issuance_date: string | null;
-            gov_id_number: string | null;
-            /** @enum {string|null} */
-            gov_id_type: "PASSPORT" | "ID_CARD" | "DRIVERS" | null;
-            has_control: boolean | null;
-            has_ownership: boolean | null;
-            is_signer: boolean | null;
-            nationality: string | null;
-            phone: string | null;
-            /** @enum {string|null} */
-            proof_of_address_type: "UTILITY_BILL" | "BANK_STATEMENT" | "RENTAL_AGREEMENT" | "TAX_DOCUMENT" | null;
-            proof_of_address_url: string | null;
-            relationship_established_at: string | null;
-            /** @enum {string|null} */
-            role?: "OWNER_OR_OPERATOR" | "PARTNER" | "UBO" | "DIRECTOR_CONTROL_PERSON_OR_LEGAL_REP" | "AGENT_OR_AUTHORISED_PERSON" | null;
-            share_proportion: string | null;
-            supplementary_info: string | null;
-            supplementary_url: string | null;
-            tax_identification_number: string | null;
-            selfie_url?: string | null;
-            id?: string;
-            address?: components["schemas"]["KycAddressDto"] | null;
-        };
-        KycEntityDto: {
-            /** @enum {string} */
-            type: "individual" | "business" | "universal";
-            id_number?: string | null;
-            /** @enum {string|null} */
-            id_type?: "PASSPORT" | "ID_CARD" | "DRIVERS" | "NIN" | null;
-            additional_id_number?: string | null;
-            additional_id_type?: string | null;
-            aml_questionnaire?: components["schemas"]["KycEntityAmlQuestionnaireEntity"] | null;
-            articles_of_association_url?: string | null;
-            business_description?: string | null;
-            business_industry?: string | null;
-            business_name?: string | null;
-            business_name_local?: string | null;
-            business_registration_doc_url?: string | null;
-            /** @enum {string|null} */
-            business_type?: "cooperative" | "s_corporation" | "b_corporation" | "c_corporation" | "close_corporation" | "nonprofit_corporation" | "general_partnership" | "limited_partnership" | "limited_liability_company" | "other" | "sole_proprietorship" | "trust" | null;
-            certificate_number?: string | null;
-            certificate_of_incumbency_url?: string | null;
-            /** @enum {string|null} */
-            certificate_of_registration_doc_type?: "ACRA" | "GST" | "MSME" | "CERTIFICATE_OF_REGISTRATION" | null;
-            certificate_of_registration_doc_url?: string | null;
-            compliance_screening_explanation?: string | null;
-            constitution_or_annual_report_url?: string | null;
-            country_of_birth?: string | null;
-            /** @default false */
-            dao_status: boolean | null;
-            date_of_birth?: string | null;
-            due_diligence_form?: components["schemas"]["KycEntityDueDiligenceFormEntity"] | null;
-            email?: string | null;
-            export_country?: string | null;
-            first_name?: string | null;
-            first_name_local?: string | null;
-            formation_date?: string | null;
-            formation_doc_url?: string | null;
-            gov_id_back_url?: string | null;
-            gov_id_country?: string | null;
-            gov_id_expiration_date?: string | null;
-            gov_id_front_url?: string | null;
-            gov_id_hand_hold_url?: string | null;
-            gov_id_issuance_authority?: string | null;
-            gov_id_issuance_date?: string | null;
-            gov_id_number?: string | null;
-            /** @enum {string|null} */
-            gov_id_type?: "PASSPORT" | "ID_CARD" | "DRIVERS" | null;
-            incorporation_number?: string | null;
-            last_name?: string | null;
-            last_name_local?: string | null;
-            license_expiration_date?: string | null;
-            middle_name?: string | null;
-            middle_name_local?: string | null;
-            nationality?: string | null;
-            partnership_deed_url?: string | null;
-            partnership_mins_of_meeting_url?: string | null;
-            phone?: string | null;
-            product_service_category?: string | null;
-            /** @enum {string|null} */
-            proof_of_address_type?: "UTILITY_BILL" | "BANK_STATEMENT" | "RENTAL_AGREEMENT" | "TAX_DOCUMENT" | null;
-            proof_of_address_url?: string | null;
-            proof_of_ownership_url?: string | null;
-            /** @enum {string|null} */
-            purpose?: "charitable_donations" | "ecommerce_retail_payments" | "investment_purposes" | "other" | "payments_to_friends_or_family_abroad" | "payroll" | "personal_or_living_expenses" | "protect_wealth" | "purchase_goods_and_services" | "receive_payments_for_goods_and_services" | "tax_optimization" | "third_party_money_transmission" | "treasury_management" | "operating_a_company" | "receive_payment_for_freelancing" | "receive_salary" | null;
-            purpose_other?: string | null;
-            registration_number?: string | null;
-            share_structure_url?: string | null;
-            sof_eu_questionnaire?: components["schemas"]["KycEntitySofEuQuestionnaireEntity"] | null;
-            source_of_funds?: string | null;
-            supplementary_info?: string | null;
-            supplementary_url?: string | null;
-            tax_identification_number?: string | null;
-            /** @enum {string|null} */
-            tax_identification_number_type?: "EIN" | "SSN" | "VAT" | "TIN" | "UTR" | null;
-            trade_name?: string | null;
-            /** @enum {string|null} */
-            trade_type?: "00" | "01" | "02" | "03" | "04" | "05" | "06" | "07" | "08" | "09" | "10" | "11" | "12" | "13" | "14" | "15" | "16" | "17" | "18" | "19" | "20" | "21" | "22" | "23" | "24" | "25" | "26" | "27" | "28" | "29" | "30" | "31" | "32" | "33" | "34" | "35" | "36" | "37" | "38" | "39" | "40" | "41" | null;
-            /** @default false */
-            transmits_customer_funds: boolean | null;
-            ubo_declaration_url?: string | null;
-            website?: string | null;
-            selfie_url?: string | null;
-            annual_salary?: string | null;
-            expected_monthly_volume?: string | null;
-            monthly_crypto_deposits?: string | null;
-            monthly_crypto_investment_deposit?: string | null;
-            monthly_crypto_investment_withdrawal?: string | null;
-            monthly_crypto_withdrawals?: string | null;
-            monthly_investment_deposit?: string | null;
-            monthly_investment_withdrawal?: string | null;
-            monthly_withdrawals?: string | null;
-            usd_value_of_crypto?: string | null;
-            usd_value_of_fiat?: string | null;
-            occupation?: string | null;
-            /**
-             * @default UNVERIFIED
-             * @enum {string}
-             */
-            status: "APPROVED" | "DECLINED" | "PENDING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
-            /** @enum {string|null} */
-            employment_status?: "EMPLOYEE" | "SELF_EMPLOYED" | "RETIRED" | "UNEMPLOYED" | "OTHER" | null;
-            employment_description?: string | null;
-            address?: components["schemas"]["KycAddressDto"] | null;
-            beneficial_owners?: components["schemas"]["KycBeneficialOwnerDto"][] | null;
-        };
-        CreateOrUpdateKycEntityDto: {
-            /** @enum {string} */
-            type: "individual" | "business" | "universal";
-            id_number?: string | null;
-            /** @enum {string|null} */
-            id_type?: "PASSPORT" | "ID_CARD" | "DRIVERS" | "NIN" | null;
-            additional_id_number?: string | null;
-            additional_id_type?: string | null;
-            aml_questionnaire?: components["schemas"]["KycEntityAmlQuestionnaireEntity"] | null;
-            articles_of_association_url?: string | null;
-            business_description?: string | null;
-            business_industry?: string | null;
-            business_name?: string | null;
-            business_name_local?: string | null;
-            business_registration_doc_url?: string | null;
-            /** @enum {string|null} */
-            business_type?: "cooperative" | "s_corporation" | "b_corporation" | "c_corporation" | "close_corporation" | "nonprofit_corporation" | "general_partnership" | "limited_partnership" | "limited_liability_company" | "other" | "sole_proprietorship" | "trust" | null;
-            certificate_number?: string | null;
-            certificate_of_incumbency_url?: string | null;
-            /** @enum {string|null} */
-            certificate_of_registration_doc_type?: "ACRA" | "GST" | "MSME" | "CERTIFICATE_OF_REGISTRATION" | null;
-            certificate_of_registration_doc_url?: string | null;
-            compliance_screening_explanation?: string | null;
-            constitution_or_annual_report_url?: string | null;
-            country_of_birth?: string | null;
-            /** @default false */
-            dao_status: boolean | null;
-            date_of_birth?: string | null;
-            due_diligence_form?: components["schemas"]["KycEntityDueDiligenceFormEntity"] | null;
-            email?: string | null;
-            export_country?: string | null;
-            first_name?: string | null;
-            first_name_local?: string | null;
-            formation_date?: string | null;
-            formation_doc_url?: string | null;
-            gov_id_back_url?: string | null;
-            gov_id_country?: string | null;
-            gov_id_expiration_date?: string | null;
-            gov_id_front_url?: string | null;
-            gov_id_hand_hold_url?: string | null;
-            gov_id_issuance_authority?: string | null;
-            gov_id_issuance_date?: string | null;
-            gov_id_number?: string | null;
-            /** @enum {string|null} */
-            gov_id_type?: "PASSPORT" | "ID_CARD" | "DRIVERS" | null;
-            incorporation_number?: string | null;
-            last_name?: string | null;
-            last_name_local?: string | null;
-            license_expiration_date?: string | null;
-            middle_name?: string | null;
-            middle_name_local?: string | null;
-            nationality?: string | null;
-            partnership_deed_url?: string | null;
-            partnership_mins_of_meeting_url?: string | null;
-            phone?: string | null;
-            product_service_category?: string | null;
-            /** @enum {string|null} */
-            proof_of_address_type?: "UTILITY_BILL" | "BANK_STATEMENT" | "RENTAL_AGREEMENT" | "TAX_DOCUMENT" | null;
-            proof_of_address_url?: string | null;
-            proof_of_ownership_url?: string | null;
-            /** @enum {string|null} */
-            purpose?: "charitable_donations" | "ecommerce_retail_payments" | "investment_purposes" | "other" | "payments_to_friends_or_family_abroad" | "payroll" | "personal_or_living_expenses" | "protect_wealth" | "purchase_goods_and_services" | "receive_payments_for_goods_and_services" | "tax_optimization" | "third_party_money_transmission" | "treasury_management" | "operating_a_company" | "receive_payment_for_freelancing" | "receive_salary" | null;
-            purpose_other?: string | null;
-            registration_number?: string | null;
-            share_structure_url?: string | null;
-            sof_eu_questionnaire?: components["schemas"]["KycEntitySofEuQuestionnaireEntity"] | null;
-            source_of_funds?: string | null;
-            supplementary_info?: string | null;
-            supplementary_url?: string | null;
-            tax_identification_number?: string | null;
-            /** @enum {string|null} */
-            tax_identification_number_type?: "EIN" | "SSN" | "VAT" | "TIN" | "UTR" | null;
-            trade_name?: string | null;
-            /** @enum {string|null} */
-            trade_type?: "00" | "01" | "02" | "03" | "04" | "05" | "06" | "07" | "08" | "09" | "10" | "11" | "12" | "13" | "14" | "15" | "16" | "17" | "18" | "19" | "20" | "21" | "22" | "23" | "24" | "25" | "26" | "27" | "28" | "29" | "30" | "31" | "32" | "33" | "34" | "35" | "36" | "37" | "38" | "39" | "40" | "41" | null;
-            /** @default false */
-            transmits_customer_funds: boolean | null;
-            ubo_declaration_url?: string | null;
-            website?: string | null;
-            selfie_url?: string | null;
-            annual_salary?: string | null;
-            expected_monthly_volume?: string | null;
-            monthly_crypto_deposits?: string | null;
-            monthly_crypto_investment_deposit?: string | null;
-            monthly_crypto_investment_withdrawal?: string | null;
-            monthly_crypto_withdrawals?: string | null;
-            monthly_investment_deposit?: string | null;
-            monthly_investment_withdrawal?: string | null;
-            monthly_withdrawals?: string | null;
-            usd_value_of_crypto?: string | null;
-            usd_value_of_fiat?: string | null;
-            occupation?: string | null;
-            /** @enum {string|null} */
-            employment_status?: "EMPLOYEE" | "SELF_EMPLOYED" | "RETIRED" | "UNEMPLOYED" | "OTHER" | null;
-            employment_description?: string | null;
-            address?: components["schemas"]["KycAddressDto"] | null;
-            beneficial_owners?: components["schemas"]["KycBeneficialOwnerDto"][] | null;
-        };
-        WalletKycRailExtraActionDto: {
-            /** @enum {string} */
-            action: "verification";
-            type: string;
-            full_name: string | null;
-            url: string;
-        };
-        WalletKycRailTermsAndConditionsDto: {
-            description: string | null;
-            link: string;
-            title: string;
-        };
-        WalletKycRailDto: {
-            message: string | null;
-            /** @enum {string} */
-            readonly status: "APPROVED" | "DECLINED" | "PENDING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
-            /** @default false */
-            terms_confirmed: boolean;
-            extra_actions?: components["schemas"]["WalletKycRailExtraActionDto"][];
-            /** @description Accepted terms and conditions data */
-            terms_and_conditions: components["schemas"]["WalletKycRailTermsAndConditionsDto"][];
-        };
-        WalletKycRailTypeDto: {
-            id: string;
-            code: string | null;
-            name: string;
-            wallet_rail: components["schemas"]["WalletKycRailDto"] | null;
-            terms_and_conditions: components["schemas"]["WalletKycRailTermsAndConditionsDto"][];
-        };
-        GetWalletKycRailsResponseDto: {
-            /** @example 20 */
-            total: number;
-            /** @description Data */
-            data: components["schemas"]["WalletKycRailTypeDto"][];
-            /** @description Has more data flag */
-            readonly has_more: boolean;
-        };
-        CountryDto: {
-            id: number;
-            capital: string | null;
-            currency: string | null;
-            currency_name: string | null;
-            currency_symbol: string | null;
-            emoji: string | null;
-            emojiU: string | null;
-            flag: number;
-            iso2: string | null;
-            iso3: string | null;
-            latitude: number | null;
-            longitude: number | null;
-            name: string;
-            nationality: string | null;
-            native: string | null;
-            numeric_code: string | null;
-            phonecode: string | null;
-            region: string | null;
-            region_id: number | null;
-            subregion: string | null;
-            subregion_id: number | null;
-            timezones: components["schemas"]["CountryTimezone"][] | null;
-            tld: string | null;
-            translations: components["schemas"]["CountryTranslations"][] | null;
-            wikiDataId: string | null;
-        };
-        StorageUploadFileResponseDto: {
-            fullPath: string;
-        };
-        CounterpartiesFilter: {
-            email?: string;
-            /** @description Phone number */
-            phone?: string;
-            name?: string;
-            nickname?: string | null;
-            /** @enum {string} */
-            type?: "INDIVIDUAL" | "BUSINESS";
-            created_at?: string;
-            search: string;
-        };
-        CounterpartyAccountDto: {
-            id: string;
-            email: string;
-            /** @description Phone number */
-            phone: string;
-            name: string;
-            nickname?: string | null;
-            /** @enum {string} */
-            type: "INDIVIDUAL" | "BUSINESS";
-            created_at: string;
-            /** @default false */
-            is_pinned: boolean;
-        };
-        FindAllCounterpartyAccountsResponseDto: {
-            /** @example 20 */
-            total: number;
-            /** @description Data */
-            data: components["schemas"]["CounterpartyAccountDto"][];
-            /** @description Has more data flag */
-            readonly has_more: boolean;
-        };
-        CreateCounterpartyAccountDto: {
-            email: string;
-            /** @description Phone number */
-            phone: string;
-            name: string;
-            nickname?: string | null;
-            /** @enum {string} */
-            type: "INDIVIDUAL" | "BUSINESS";
-            /** @default false */
-            is_pinned: boolean;
-        };
-        UpdateCounterpartyAccountDto: {
-            email?: string;
-            /** @description Phone number */
-            phone?: string;
-            name?: string;
-            nickname?: string | null;
-        };
-        CounterpartyDestinationsFilter: {
-            nickname?: string | null;
-            /** @enum {string} */
-            type?: "DOMESTIC_WIRE" | "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL";
-            created_at?: string;
-        };
-        StateEntity: {
-            id: number;
-            name: string;
-            country_id: number;
-            country_code: string;
-            fips_code: string | null;
-            iso2: string | null;
-            type: string | null;
-            level: number | null;
-            parent_id: number | null;
-            native: string | null;
-            latitude: number | null;
-            longitude: number | null;
-            created_at: string | null;
-            updated_at: string;
-            flag: number;
-            wikiDataId: string | null;
-        };
-        AddressEntity: {
-            id?: string;
-            city?: string | null;
-            country_id?: number | null;
-            readonly country?: components["schemas"]["CountryEntity"] | null;
-            postcode?: string | null;
-            street1?: string | null;
-            street2?: string | null;
-            description?: string | null;
-            state_id?: number | null;
-            readonly state?: components["schemas"]["StateEntity"] | null;
-        };
-        CounterpartyExternalBankingDataDto: {
-            account_number?: string | null;
-            routing_number?: string | null;
-            bank_name: string | null;
-            note: string | null;
-            swift_bic?: string | null;
-            iban?: string | null;
-            address?: components["schemas"]["AddressEntity"];
-        };
-        CryptoEntity: {
-            icon: string | null;
-            name: string;
-            uuid: string;
-            chain: string | null;
-            symbol: string;
-            decimal: number | null;
-            contract: string | null;
-            render_decimal: number;
-            meta: components["schemas"]["CryptoEntity"];
-            is_crypto: boolean;
-            is_stablecoin: boolean;
-            is_memo: boolean;
-            /** @enum {string|null} */
-            type: "token" | "native" | null;
-        };
-        CounterpartyExternalCryptoDataDto: {
-            address: string;
-            memo?: string | null;
-            currency_id: string;
-            readonly currency: components["schemas"]["CryptoEntity"] | null;
-        };
-        CounterpartyDestinationDto: {
-            id: string;
-            nickname: string | null;
-            /** @enum {string} */
-            type: "DOMESTIC_WIRE" | "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL";
-            created_at: string;
-            external_banking_data?: components["schemas"]["CounterpartyExternalBankingDataDto"];
-            external_crypto_data?: components["schemas"]["CounterpartyExternalCryptoDataDto"];
-        };
-        FindAllCounterpartyDestinationsResponseDto: {
-            /** @example 20 */
-            total: number;
-            /** @description Data */
-            data: components["schemas"]["CounterpartyDestinationDto"][];
-            /** @description Has more data flag */
-            readonly has_more: boolean;
-        };
-        CreateCounterpartyExternalBankingDataAddressDto: {
-            city?: string | null;
-            country_id?: number | null;
-            postcode?: string | null;
-            street1?: string | null;
-            street2?: string | null;
-            description?: string | null;
-            state_id?: number | null;
-        };
-        CreateCounterpartyExternalBankingDataDto: {
-            account_number?: string | null;
-            routing_number?: string | null;
-            bank_name: string | null;
-            note: string | null;
-            swift_bic?: string | null;
-            iban?: string | null;
-            address?: components["schemas"]["CreateCounterpartyExternalBankingDataAddressDto"];
-        };
-        CreateCounterpartyExternalCryptoDataDto: {
-            address: string;
-            memo?: string | null;
-            currency_id: string;
-        };
-        CreateCounterpartyDestinationDto: {
-            nickname: string | null;
-            /** @enum {string} */
-            type: "DOMESTIC_WIRE" | "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL";
-            external_banking_data: components["schemas"]["CreateCounterpartyExternalBankingDataDto"];
-            external_crypto_data: components["schemas"]["CreateCounterpartyExternalCryptoDataDto"];
-        };
-        UpdateCounterpartyDestinationDto: {
-            nickname?: string | null;
-        };
-        SystemConfigDto: {
-            /** @enum {string} */
-            default_theme_mode: "dark" | "light";
-            enable_kyc: boolean;
-            tg_bot_name: string | null;
-            theme_switch: boolean;
-            enable_exchange: boolean;
-            enable_auto_exchange: boolean;
-            enable_crypto_withdrawal: boolean;
-            base_currency: string;
-        };
-        SystemChainsResponseDto: {
-            total: number;
-            data: components["schemas"]["ChainDto"][];
-            readonly has_more: boolean;
-        };
-        SystemCurrenciesResponseDto: {
-            total: number;
-            data: (components["schemas"]["CryptoCurrencyDto"] | components["schemas"]["FiatCurrencyDto"])[];
-        };
-        SystemCountriesResponseDto: {
-            total: number;
-            data: components["schemas"]["CountryDto"][];
-        };
-        StateDto: {
-            id: number;
-            name: string;
-            country_id: number;
-            country_code: string;
-            fips_code: string | null;
-            iso2: string | null;
-            type: string | null;
-            level: number | null;
-            parent_id: number | null;
-            native: string | null;
-            latitude: number | null;
-            longitude: number | null;
-            created_at: string | null;
-            updated_at: string;
-            flag: number;
-            wikiDataId: string | null;
-        };
-        SystemStatesResponseDto: {
-            total: number;
-            data: components["schemas"]["StateDto"][];
-        };
-        SystemExchangeRatesResponseDto: {
-            total: number;
-            data: components["schemas"]["ExchangeRateDto"][];
-        };
-        InitInquiryResponseDto: {
-            /** @example 6633328a-1713-4a4d-97e6-088f96cdf12e */
-            referenceId: string;
-            /** @example itmpl_rmUunz2XZk5xm4KQyJawGQSpappS */
-            templateId: string;
-            /** @example inq_E6U4KitBucNKpfrDMb997AaTkQTt */
-            inquiryId: string | null;
-        };
-        ResumeInquiryResponseDto: {
-            inquiryId: string;
-            sessionId: string;
-        };
-        IntegrationPersonaTemplateEntityDto: Record<string, never>;
-        FindAllIntegrationPersonaTemplatesResponseDto: {
-            /** @example 20 */
-            total: number;
-            /** @description Data */
-            data: components["schemas"]["IntegrationPersonaTemplateEntityDto"][];
-            /** @description Has more data flag */
-            readonly has_more: boolean;
-        };
-        SyncDataFromHifibridgeDto: {
-            /** @description Wallet to load data from Hifibridge */
-            wallet_id: string;
-            /** @description Hifibridge ID to load data to wallet */
-            hifibridge_id: string;
-        };
-        BankDataAddressDto: {
-            city?: string | null;
-            country_id?: number | null;
-            postcode?: string | null;
-            street1?: string | null;
-            street2?: string | null;
-            state_id?: number | null;
-        };
-        GetBankDataByCodeResponseDto: {
-            bank_name: string;
-            address: components["schemas"]["BankDataAddressDto"];
-            routing_number?: string;
-            iban?: string;
-            swift_bic?: string;
-        };
+  schemas: {
+    VerifyEmailDto: {
+      email: string;
+      token: string;
     };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
+    SessionDto: {
+      provider_token?: string | null;
+      provider_refresh_token?: string | null;
+      access_token: string;
+      expires_in: number;
+      expires_at?: number;
+      token_type: string;
+      refresh_token: string;
+    };
+    VerifyPhoneDto: {
+      phone: string;
+      token: string;
+      /**
+       * @default sms
+       * @enum {string}
+       */
+      type: 'phone_change' | 'sms';
+    };
+    RefreshTokenDto: {
+      refresh_token: string;
+    };
+    SignInByTypeDto: {
+      login: string;
+      /** @enum {string} */
+      type: 'email' | 'phone';
+    };
+    SignUpByTypeDto: {
+      invite_code?: string;
+      referrer?: string;
+      /** @enum {string} */
+      type: 'email' | 'phone';
+      login: string;
+    };
+    TelegramSignUpByPhoneDto: {
+      phone: string;
+      tg_id: string;
+      first_name: string;
+      last_name: string;
+      hash: string;
+      init_data_raw: string;
+      username: string;
+      invite_code?: string;
+      referrer?: string;
+    };
+    TelegramSessionDto: {
+      provider_token?: string | null;
+      provider_refresh_token?: string | null;
+      access_token: string;
+      expires_in: number;
+      expires_at?: number;
+      token_type: string;
+      refresh_token?: string | null;
+    };
+    TelegramSignInByTgIdDto: {
+      tg_id: string;
+      hash: string;
+      init_data_raw: string;
+    };
+    SignUpByEmailWithPasswordDto: {
+      password: string;
+      email: string;
+    };
+    UserEntity: {
+      id: string;
+      app_metadata: Record<string, never>;
+      user_metadata: Record<string, never>;
+      aud: string;
+      confirmation_sent_at?: string;
+      recovery_sent_at?: string;
+      email_change_sent_at?: string;
+      new_email?: string;
+      new_phone?: string;
+      invited_at?: string;
+      action_link?: string;
+      email?: string;
+      phone?: string;
+      created_at: string;
+      confirmed_at?: string;
+      email_confirmed_at?: string;
+      phone_confirmed_at?: string;
+      last_sign_in_at?: string;
+      role?: string;
+      updated_at?: string;
+      identities?: string[];
+      is_anonymous?: boolean;
+      factors?: string[];
+    };
+    ResendSignUpOtpByEmailDto: {
+      email: string;
+    };
+    SignUpWithPasswordFinalizeDto: {
+      invite_code?: string;
+      referrer?: string;
+    };
+    UserDataEntity: {
+      can_invite: boolean;
+      created_at: string;
+      id: number;
+      kyc_date: string | null;
+      /**
+       * @default UNVERIFIED
+       * @enum {string|null}
+       */
+      kyc_status:
+        | 'APPROVED'
+        | 'DECLINED'
+        | 'PENDING'
+        | 'HOLD'
+        | 'DOUBLE'
+        | 'SOFT_REJECT'
+        | 'REJECT'
+        | 'UNVERIFIED'
+        | 'WAITING_ON_UBOS'
+        | 'WAITING_ON_REVIEW'
+        | null;
+      referral_name: string | null;
+      tenant_id: string;
+      user_id: string;
+      default_currency: string;
+      user_groups_id: string | null;
+      is_developer: boolean;
+      first_name?: string | null;
+      last_name?: string | null;
+      /** @description User birth date in ISO 8601 format */
+      birth_date?: string | null;
+    };
+    SignInByEmailWithPasswordDto: {
+      password: string;
+      email: string;
+    };
+    SignInByEmailDto: {
+      invite_code?: string;
+      referrer?: string;
+      email: string;
+      redirect_url?: string;
+    };
+    SignInByPhoneDto: {
+      invite_code?: string;
+      referrer?: string;
+      phone: string;
+    };
+    UpdateUserDataDto: {
+      default_currency?: string;
+      first_name?: string | null;
+      last_name?: string | null;
+      /** @description User birth date in ISO 8601 format */
+      birth_date?: string | null;
+    };
+    ChangeEmailDto: {
+      access_token: string;
+      email: string;
+      refresh_token?: string | null;
+    };
+    ChangeEmailConfirmDto: {
+      access_token: string;
+      refresh_token?: string | null;
+      /** @description Verification email */
+      email: string;
+      /** @description Verification code */
+      token: string;
+    };
+    ChangePhoneDto: {
+      access_token: string;
+      refresh_token: string;
+      /** @description New phone number */
+      phone: string;
+    };
+    ChangePhoneConfirmDto: {
+      /** @description Verification phone number */
+      phone: string;
+      /** @description Verification code */
+      token: string;
+    };
+    TenantConfigEntity: {
+      tenant_id: string;
+      /** @enum {string} */
+      default_theme_mode: 'dark' | 'light';
+      enable_kyc: boolean;
+      tg_bot_name: string | null;
+      theme_switch: boolean;
+      enable_exchange: boolean;
+      enable_auto_exchange: boolean;
+      enable_crypto_withdrawal: boolean;
+    };
+    PaginationResponseDto: {
+      /** @example 20 */
+      total: number;
+      /** @description Data */
+      data: Record<string, never>[];
+      /** @description Has more data flag */
+      readonly has_more: boolean;
+    };
+    WalletDto: {
+      uuid: string;
+      /** @enum {string|null} */
+      type:
+        | 'personal'
+        | 'business'
+        | 'trading'
+        | 'merchant'
+        | 'staking'
+        | 'saving'
+        | 'escrow'
+        | 'exchange'
+        | 'vault'
+        | null;
+      created_at: string;
+    };
+    CreateWalletDto: {
+      /**
+       * @default personal
+       * @enum {string}
+       */
+      type: 'personal' | 'business' | 'trading' | 'merchant' | 'staking' | 'saving' | 'escrow' | 'exchange' | 'vault';
+    };
+    AggregatedBalanceDetailsDto: {
+      uuid: string;
+      amount: number;
+      fiat_amount: number;
+      currency: components['schemas']['CryptoCurrencyDto'] | components['schemas']['FiatCurrencyDto'];
+    };
+    AggregatedBalanceDto: {
+      symbol: string;
+      icon: string;
+      name: string;
+      is_crypto: boolean;
+      decimal: number;
+      amount: number;
+      fiat_amount: number;
+      details: components['schemas']['AggregatedBalanceDetailsDto'][];
+    };
+    WalletExtendedDto: {
+      uuid: string;
+      /** @enum {string|null} */
+      type:
+        | 'personal'
+        | 'business'
+        | 'trading'
+        | 'merchant'
+        | 'staking'
+        | 'saving'
+        | 'escrow'
+        | 'exchange'
+        | 'vault'
+        | null;
+      created_at: string;
+      fiat_total: number;
+      crypto_total: number;
+      total_amount: number;
+      balance: components['schemas']['AggregatedBalanceDto'][];
+    };
+    WalletAddressDto: {
+      address: string | null;
+      chain: number | null;
+      created_at: string;
+      uuid: string | null;
+      wallet_uuid: string | null;
+    };
+    CreateWalletAddressDto: {
+      label: string;
+    };
+    TransactionMetaEntity: {
+      billing_amount: number;
+      billing_amount_currency: string;
+      exchange_rate: number;
+      fee: number;
+      fee_currency: string;
+      transaction_amount: number;
+      transaction_amount_currency: string;
+      network_fee?: number;
+      network_fee_currency?: string;
+      order_id?: string;
+      fiat_account_id?: string;
+      txid?: string;
+      chain_id?: number;
+      from_address?: string;
+      to_address?: string;
+      from_user_data?: number;
+      to_user_data?: number;
+      to_card_id?: string;
+      to_card_last4?: string;
+      to_fiat_account_id?: string;
+      to_vendor_id?: string;
+    };
+    WalletTransactionDto: {
+      id: number;
+      amount: number;
+      created_at: string;
+      info: string | null;
+      /** @enum {string} */
+      status: 'complete' | 'pending' | 'canceled' | 'failed' | 'processing' | 'new';
+      txid: string | null;
+      /** @enum {string} */
+      type:
+        | 'deposit_crypto'
+        | 'withdrawal_crypto'
+        | 'deposit_fiat'
+        | 'withdrawal_fiat'
+        | 'deposit_vcard'
+        | 'withdrawal_vcard'
+        | 'deposit'
+        | 'withdrawal';
+      wallet_id: string | null;
+      /** @enum {string|null} */
+      method: 'p2p' | 'crypto' | 'bank_transfer' | 'exchange' | 'sbp' | 'internal_fiat' | null;
+      meta: components['schemas']['TransactionMetaEntity'] | null;
+      /** @enum {string|null} */
+      record_type:
+        | 'CARD_PROVIDER_DEPOSIT'
+        | 'CARD_PROVIDER_REFUND'
+        | 'DEPOSIT_CRYPTO_EXTERNAL'
+        | 'DEPOSIT_CRYPTO_INTERNAL'
+        | 'EXCHANGE_CRYPTO_INTERNAL'
+        | 'EXT_EXCHANGE'
+        | 'FEE'
+        | 'NETWORK_FEE'
+        | 'REFUND'
+        | 'WITHDRAWAL_CRYPTO_EXTERNAL'
+        | 'WITHDRAWAL_CRYPTO_INTERNAL'
+        | 'WHOLESALE_CARD_DEPOSIT'
+        | null;
+      currency: components['schemas']['CryptoCurrencyDto'] | components['schemas']['FiatCurrencyDto'];
+    };
+    TransactionsFilter: {
+      created_at?: string;
+      /** @enum {string} */
+      type?:
+        | 'deposit_crypto'
+        | 'withdrawal_crypto'
+        | 'deposit_fiat'
+        | 'withdrawal_fiat'
+        | 'deposit_vcard'
+        | 'withdrawal_vcard'
+        | 'deposit'
+        | 'withdrawal';
+      /** @enum {string|null} */
+      method?: 'p2p' | 'crypto' | 'bank_transfer' | 'exchange' | 'sbp' | 'internal_fiat' | null;
+      /** @enum {string|null} */
+      record_type?:
+        | 'CARD_PROVIDER_DEPOSIT'
+        | 'CARD_PROVIDER_REFUND'
+        | 'DEPOSIT_CRYPTO_EXTERNAL'
+        | 'DEPOSIT_CRYPTO_INTERNAL'
+        | 'EXCHANGE_CRYPTO_INTERNAL'
+        | 'EXT_EXCHANGE'
+        | 'FEE'
+        | 'NETWORK_FEE'
+        | 'REFUND'
+        | 'WITHDRAWAL_CRYPTO_EXTERNAL'
+        | 'WITHDRAWAL_CRYPTO_INTERNAL'
+        | 'WHOLESALE_CARD_DEPOSIT'
+        | null;
+      'currency.uuid'?: string;
+      'meta.billing_amount_currency'?: string;
+      'meta.transaction_amount_currency'?: string;
+      /** @description Filters items by "from OR to" fields */
+      address?: string;
+      /** Format: date-time */
+      from_created_at?: string;
+      /** Format: date-time */
+      to_created_at?: string;
+      /** @default false */
+      show_low_balance: boolean;
+      status?: ('complete' | 'pending' | 'canceled' | 'failed' | 'processing' | 'new')[];
+    };
+    ChainDto: {
+      id: number;
+      name: string | null;
+      symbol: string | null;
+      is_beta: boolean | null;
+    };
+    AllChainsResponseDto: {
+      total: number;
+      data: components['schemas']['ChainDto'][];
+      readonly has_more: boolean;
+    };
+    CryptoCurrencyMetaDto: {
+      icon: string;
+      name: string;
+      description: string;
+      symbol: string;
+      chain_id: number;
+      contract: string;
+      chain_name: string;
+    };
+    CryptoCurrencyDto: {
+      uuid: string;
+      decimal: number | null;
+      render_decimal: number;
+      is_stablecoin: boolean;
+      is_memo: boolean;
+      /** @enum {string|null} */
+      type: 'token' | 'native' | null;
+      meta: components['schemas']['CryptoCurrencyMetaDto'];
+      is_enabled: boolean;
+      /** @example true */
+      is_crypto: boolean;
+    };
+    FiatCurrencyMetaDto: {
+      icon: string;
+      name: string;
+      description: string;
+      symbol: string;
+      code: string;
+      iso_code: number;
+      sign: string;
+    };
+    FiatCurrencyDto: {
+      uuid: string;
+      decimal: number | null;
+      render_decimal: number;
+      is_stablecoin: boolean;
+      is_memo: boolean;
+      /** @enum {string|null} */
+      type: 'token' | 'native' | null;
+      meta: components['schemas']['FiatCurrencyMetaDto'];
+      is_enabled: boolean;
+      /** @example false */
+      is_crypto: boolean;
+    };
+    AllCurrenciesResponseDto: {
+      total: number;
+      data: (components['schemas']['CryptoCurrencyDto'] | components['schemas']['FiatCurrencyDto'])[];
+    };
+    KycRailTermsAndConditionsEntity: {
+      id: string;
+      description: string | null;
+      kyc_rail_id: string;
+      link: string;
+      title: string;
+    };
+    KycRailEntity: {
+      id: string;
+      code: string | null;
+      name: string;
+      /** @enum {string|null} */
+      type: 'individual' | 'business' | 'universal' | null;
+      /** @description Current terms and conditions data */
+      terms_and_conditions?: components['schemas']['KycRailTermsAndConditionsEntity'][];
+    };
+    IssuingProgramDto: {
+      id: string;
+      /** @enum {string|null} */
+      form_factor: 'PHYSICAL' | 'VIRTUAL' | null;
+      /** @enum {string|null} */
+      brand: 'VISA' | 'MASTERCARD' | 'AMEX' | 'UNIONPAY' | null;
+      tokenizable: boolean;
+      /** @enum {string|null} */
+      type: 'CREDIT' | 'DEBIT' | null;
+      kyc_rail: components['schemas']['KycRailEntity'] | null;
+    };
+    ExchangeRateDto: {
+      from: string;
+      from_uuid: string | null;
+      inverted_rate: number;
+      rate: number;
+      /** @enum {string|null} */
+      rate_source: 'cryptomus' | 'coingecko' | null;
+      to: string;
+      to_uuid: string | null;
+    };
+    IssuingProgram: {
+      id: string;
+      /** @enum {string|null} */
+      form_factor: 'PHYSICAL' | 'VIRTUAL' | null;
+      /** @enum {string|null} */
+      brand: 'VISA' | 'MASTERCARD' | 'AMEX' | 'UNIONPAY' | null;
+      tokenizable: boolean;
+      /** @enum {string|null} */
+      type: 'CREDIT' | 'DEBIT' | null;
+      kyc_rail: components['schemas']['KycRailEntity'] | null;
+    };
+    FiatAccountIssuingCardDto: {
+      card_id: string;
+      program_id: string;
+      wallet_id: string;
+      nick_name: string;
+      name_on_card?: string;
+      /** @enum {string} */
+      card_status: 'ACTIVE' | 'CANCELED' | 'FROZEN' | 'INACTIVE' | 'CLOSED' | 'BLOCKED';
+      /** @enum {string} */
+      brand?: 'VISA' | 'MASTERCARD' | 'AMEX' | 'UNIONPAY';
+      /** @enum {string} */
+      type?: 'CREDIT' | 'DEBIT';
+      /** @enum {string} */
+      form_factor: 'PHYSICAL' | 'VIRTUAL';
+      tokenizable: boolean;
+      request_id: string;
+      created_at: string;
+      last4?: string;
+    };
+    FiatAccountDto: {
+      id: string;
+      balance: number | null;
+      nick_name: string | null;
+      wallet_id: string;
+      created_at: string;
+      /** @enum {string} */
+      status: 'ACTIVE' | 'CANCELED' | 'FROZEN' | 'INACTIVE' | 'CLOSED' | 'BLOCKED';
+      issuing_program: components['schemas']['IssuingProgram'] | null;
+      currency: components['schemas']['FiatCurrencyDto'];
+      total_balance: number;
+      realtimeauth_balance: number;
+      fiat_balance: number;
+      cards_count: number;
+      cards?: components['schemas']['FiatAccountIssuingCardDto'][];
+    };
+    CreateFiatAccountDto: {
+      program_id: string;
+    };
+    FiatAccountEntity: {
+      id: string;
+      balance: number | null;
+      nick_name: string | null;
+      wallet_id: string;
+      created_at: string;
+      account_currency: string;
+      /** @enum {string} */
+      type: 'balance' | 'prepaid';
+      program_id: string | null;
+      /** @enum {string} */
+      status: 'ACTIVE' | 'CANCELED' | 'FROZEN' | 'INACTIVE' | 'CLOSED' | 'BLOCKED';
+      issuing_program: components['schemas']['IssuingProgram'] | null;
+    };
+    FiatAccountDetailsDto: {
+      iban: string;
+      bank_name: string;
+      swift_code: string;
+      bank_address: string;
+      receiver_name: string;
+      payment_details: string;
+      reference_number: string;
+      registration_number: string;
+    };
+    FiatAccountRealtimeauthEntity: {
+      id: string;
+      crypto_token: Record<string, never> | null;
+      priority: Record<string, never> | null;
+      fiat_account: Record<string, never> | null;
+    };
+    FiatAccountOrderTypeEntity: {
+      /** @enum {string|null} */
+      order_type:
+        | 'TRANSFER_CARD_SUBACCOUNT'
+        | 'TRANSFER_CARD_PREPAID'
+        | 'WITHDRAWAL_CRYPTO'
+        | 'DEPOSIT_CRYPTO'
+        | 'DEPOSIT_FIAT_SEPA'
+        | 'DEPOSIT_FIAT_SWIFT'
+        | 'EXCHANGE_CRYPTO_INTERNAL'
+        | 'WITHDRAWAL_FIAT_SEPA'
+        | 'TRANSFER_INTERNAL'
+        | 'TRANSFER_CARD_WHOLESALE'
+        | 'CARD_ISSUING_FEE'
+        | null;
+    };
+    FiatAccountExtendedDto: {
+      id: string;
+      balance: number | null;
+      nick_name: string | null;
+      wallet_id: string;
+      created_at: string;
+      /** @enum {string} */
+      status: 'ACTIVE' | 'CANCELED' | 'FROZEN' | 'INACTIVE' | 'CLOSED' | 'BLOCKED';
+      issuing_program: components['schemas']['IssuingProgram'] | null;
+      currency: components['schemas']['FiatCurrencyDto'];
+      total_balance: number;
+      realtimeauth_balance: number;
+      fiat_balance: number;
+      cards_count: number;
+      cards?: components['schemas']['FiatAccountIssuingCardDto'][];
+      account_details: components['schemas']['FiatAccountDetailsDto'];
+      realtime_auth: components['schemas']['FiatAccountRealtimeauthEntity'][];
+      payment_types: components['schemas']['FiatAccountOrderTypeEntity'][];
+    };
+    MerchantDto: {
+      name: string;
+      category_code: string;
+      city: string;
+      country: string;
+    };
+    FiatAccountTransactionDto: {
+      vendor_transaction_id: string;
+      created_at: string;
+      cleared_at: string;
+      merchant: components['schemas']['MerchantDto'];
+      last4: string;
+      title: string;
+      billing_amount: number;
+      billing_currency: string;
+      transaction_amount: number;
+      transaction_currency: string;
+      vendor_sub_account_id: string;
+      failure_reason: string;
+      status: string;
+      /** @enum {string} */
+      transaction_type:
+        | 'AUTHORIZATION'
+        | 'CLEARING'
+        | 'REFUND'
+        | 'REVERSAL'
+        | 'ORIGINAL_CREDIT'
+        | 'FEE'
+        | 'DEPOSIT'
+        | 'WITHDRAWAL';
+      is_credit: boolean;
+      has_receipt: boolean;
+      adjustment_type: string;
+      review_status: string;
+      group: string;
+      total_amount: number;
+    };
+    FindAllFiatAccountTransactionsDto: {
+      has_more: boolean;
+      count: number;
+      data: components['schemas']['FiatAccountTransactionDto'][];
+    };
+    CreateDeveloperAccessDto: {
+      name: string;
+      /** @enum {string} */
+      role: 'READ_ONLY' | 'DEVELOPER' | 'OWNER';
+    };
+    UpdateDeveloperAccessDto: {
+      /** @enum {string} */
+      role: 'READ_ONLY' | 'DEVELOPER' | 'OWNER';
+    };
+    KycFormFieldOptionDto: {
+      label: string;
+      value: string;
+    };
+    KycFormFieldValidationDto: {
+      pattern?: string;
+      message?: string;
+      minLength?: number;
+      maxLength?: number;
+      min?: number;
+      max?: number;
+    };
+    KycFormFieldDto: {
+      name: string;
+      /** @enum {string} */
+      type:
+        | 'text'
+        | 'email'
+        | 'password'
+        | 'radio'
+        | 'select'
+        | 'checkbox'
+        | 'textarea'
+        | 'number'
+        | 'date'
+        | 'switch'
+        | 'file';
+      label: string;
+      placeholder?: string;
+      required?: boolean;
+      order?: number;
+      options?: components['schemas']['KycFormFieldOptionDto'][];
+      validation?: components['schemas']['KycFormFieldValidationDto'];
+      rows?: number;
+      value?: string;
+      accept?: string;
+    };
+    KycFormFieldContainerDto: {
+      /** @enum {string} */
+      type: 'field' | 'group';
+      field?: components['schemas']['KycFormFieldDto'];
+      group?: components['schemas']['KycFormFieldGroupDto'];
+    };
+    KycFormFieldGroupDto: {
+      name?: string;
+      isArray?: boolean;
+      fields: components['schemas']['KycFormFieldContainerDto'][];
+      label: string;
+    };
+    KycEntityAmlQuestionnaireEntity: Record<string, never>;
+    GeneralInfo: Record<string, never>;
+    ContactPersonInfo: Record<string, never>;
+    LegalRepresentativeInfo: Record<string, never>;
+    DirectorsInfo: Record<string, never>;
+    OwnershipStructure: Record<string, never>;
+    KycEntityDueDiligenceFormEntity: {
+      general_info: components['schemas']['GeneralInfo'];
+      contact_person_info: components['schemas']['ContactPersonInfo'];
+      legal_representative_info: components['schemas']['LegalRepresentativeInfo'];
+      directors_info: components['schemas']['DirectorsInfo'][];
+      ownership_structure: components['schemas']['OwnershipStructure'][];
+    };
+    KycEntitySofEuQuestionnaireEntity: Record<string, never>;
+    CountryTimezone: Record<string, never>;
+    CountryTranslations: Record<string, never>;
+    CountryEntity: {
+      id: number;
+      capital: string | null;
+      currency: string | null;
+      currency_name: string | null;
+      currency_symbol: string | null;
+      emoji: string | null;
+      emojiU: string | null;
+      flag: number;
+      iso2: string | null;
+      iso3: string | null;
+      latitude: number | null;
+      longitude: number | null;
+      name: string;
+      nationality: string | null;
+      native: string | null;
+      numeric_code: string | null;
+      phonecode: string | null;
+      region: string | null;
+      region_id: number | null;
+      subregion: string | null;
+      subregion_id: number | null;
+      timezones: components['schemas']['CountryTimezone'][] | null;
+      tld: string | null;
+      translations: components['schemas']['CountryTranslations'][] | null;
+      wikiDataId: string | null;
+      created_at: string | null;
+      updated_at: string;
+    };
+    KycAddressDto: {
+      address_line1?: string | null;
+      address_line2?: string | null;
+      city?: string | null;
+      readonly country?: components['schemas']['CountryEntity'] | null;
+      country_id: number | null;
+      postal_code?: string | null;
+      state_province_region?: string | null;
+      id?: string;
+    };
+    KycBeneficialOwnerDto: {
+      auth_letter_url: string | null;
+      business_title: string | null;
+      country_of_birth: string | null;
+      date_of_birth: string | null;
+      email: string | null;
+      first_name: string | null;
+      first_name_local: string | null;
+      last_name: string | null;
+      last_name_local: string | null;
+      middle_name: string | null;
+      middle_name_local: string | null;
+      gov_id_back_url: string | null;
+      gov_id_country: string | null;
+      gov_id_expiration_date: string | null;
+      gov_id_front_url: string | null;
+      gov_id_issuance_authority: string | null;
+      gov_id_issuance_date: string | null;
+      gov_id_number: string | null;
+      /** @enum {string|null} */
+      gov_id_type: 'PASSPORT' | 'ID_CARD' | 'DRIVERS' | null;
+      has_control: boolean | null;
+      has_ownership: boolean | null;
+      is_signer: boolean | null;
+      nationality: string | null;
+      phone: string | null;
+      /** @enum {string|null} */
+      proof_of_address_type: 'UTILITY_BILL' | 'BANK_STATEMENT' | 'RENTAL_AGREEMENT' | 'TAX_DOCUMENT' | null;
+      proof_of_address_url: string | null;
+      relationship_established_at: string | null;
+      /** @enum {string|null} */
+      role?:
+        | 'OWNER_OR_OPERATOR'
+        | 'PARTNER'
+        | 'UBO'
+        | 'DIRECTOR_CONTROL_PERSON_OR_LEGAL_REP'
+        | 'AGENT_OR_AUTHORISED_PERSON'
+        | null;
+      share_proportion: string | null;
+      supplementary_info: string | null;
+      supplementary_url: string | null;
+      tax_identification_number: string | null;
+      selfie_url?: string | null;
+      id?: string;
+      address?: components['schemas']['KycAddressDto'] | null;
+    };
+    KycEntityDto: {
+      /** @enum {string} */
+      type: 'individual' | 'business' | 'universal';
+      id_number?: string | null;
+      /** @enum {string|null} */
+      id_type?: 'PASSPORT' | 'ID_CARD' | 'DRIVERS' | 'NIN' | null;
+      additional_id_number?: string | null;
+      additional_id_type?: string | null;
+      aml_questionnaire?: components['schemas']['KycEntityAmlQuestionnaireEntity'] | null;
+      articles_of_association_url?: string | null;
+      business_description?: string | null;
+      business_industry?: string | null;
+      business_name?: string | null;
+      business_name_local?: string | null;
+      business_registration_doc_url?: string | null;
+      /** @enum {string|null} */
+      business_type?:
+        | 'cooperative'
+        | 's_corporation'
+        | 'b_corporation'
+        | 'c_corporation'
+        | 'close_corporation'
+        | 'nonprofit_corporation'
+        | 'general_partnership'
+        | 'limited_partnership'
+        | 'limited_liability_company'
+        | 'other'
+        | 'sole_proprietorship'
+        | 'trust'
+        | null;
+      certificate_number?: string | null;
+      certificate_of_incumbency_url?: string | null;
+      /** @enum {string|null} */
+      certificate_of_registration_doc_type?: 'ACRA' | 'GST' | 'MSME' | 'CERTIFICATE_OF_REGISTRATION' | null;
+      certificate_of_registration_doc_url?: string | null;
+      compliance_screening_explanation?: string | null;
+      constitution_or_annual_report_url?: string | null;
+      country_of_birth?: string | null;
+      /** @default false */
+      dao_status: boolean | null;
+      date_of_birth?: string | null;
+      due_diligence_form?: components['schemas']['KycEntityDueDiligenceFormEntity'] | null;
+      email?: string | null;
+      export_country?: string | null;
+      first_name?: string | null;
+      first_name_local?: string | null;
+      formation_date?: string | null;
+      formation_doc_url?: string | null;
+      gov_id_back_url?: string | null;
+      gov_id_country?: string | null;
+      gov_id_expiration_date?: string | null;
+      gov_id_front_url?: string | null;
+      gov_id_hand_hold_url?: string | null;
+      gov_id_issuance_authority?: string | null;
+      gov_id_issuance_date?: string | null;
+      gov_id_number?: string | null;
+      /** @enum {string|null} */
+      gov_id_type?: 'PASSPORT' | 'ID_CARD' | 'DRIVERS' | null;
+      incorporation_number?: string | null;
+      last_name?: string | null;
+      last_name_local?: string | null;
+      license_expiration_date?: string | null;
+      middle_name?: string | null;
+      middle_name_local?: string | null;
+      nationality?: string | null;
+      partnership_deed_url?: string | null;
+      partnership_mins_of_meeting_url?: string | null;
+      phone?: string | null;
+      product_service_category?: string | null;
+      /** @enum {string|null} */
+      proof_of_address_type?: 'UTILITY_BILL' | 'BANK_STATEMENT' | 'RENTAL_AGREEMENT' | 'TAX_DOCUMENT' | null;
+      proof_of_address_url?: string | null;
+      proof_of_ownership_url?: string | null;
+      /** @enum {string|null} */
+      purpose?:
+        | 'charitable_donations'
+        | 'ecommerce_retail_payments'
+        | 'investment_purposes'
+        | 'other'
+        | 'payments_to_friends_or_family_abroad'
+        | 'payroll'
+        | 'personal_or_living_expenses'
+        | 'protect_wealth'
+        | 'purchase_goods_and_services'
+        | 'receive_payments_for_goods_and_services'
+        | 'tax_optimization'
+        | 'third_party_money_transmission'
+        | 'treasury_management'
+        | 'operating_a_company'
+        | 'receive_payment_for_freelancing'
+        | 'receive_salary'
+        | null;
+      purpose_other?: string | null;
+      registration_number?: string | null;
+      share_structure_url?: string | null;
+      sof_eu_questionnaire?: components['schemas']['KycEntitySofEuQuestionnaireEntity'] | null;
+      source_of_funds?: string | null;
+      supplementary_info?: string | null;
+      supplementary_url?: string | null;
+      tax_identification_number?: string | null;
+      /** @enum {string|null} */
+      tax_identification_number_type?: 'EIN' | 'SSN' | 'VAT' | 'TIN' | 'UTR' | null;
+      trade_name?: string | null;
+      /** @enum {string|null} */
+      trade_type?:
+        | '00'
+        | '01'
+        | '02'
+        | '03'
+        | '04'
+        | '05'
+        | '06'
+        | '07'
+        | '08'
+        | '09'
+        | '10'
+        | '11'
+        | '12'
+        | '13'
+        | '14'
+        | '15'
+        | '16'
+        | '17'
+        | '18'
+        | '19'
+        | '20'
+        | '21'
+        | '22'
+        | '23'
+        | '24'
+        | '25'
+        | '26'
+        | '27'
+        | '28'
+        | '29'
+        | '30'
+        | '31'
+        | '32'
+        | '33'
+        | '34'
+        | '35'
+        | '36'
+        | '37'
+        | '38'
+        | '39'
+        | '40'
+        | '41'
+        | null;
+      /** @default false */
+      transmits_customer_funds: boolean | null;
+      ubo_declaration_url?: string | null;
+      website?: string | null;
+      selfie_url?: string | null;
+      annual_salary?: string | null;
+      expected_monthly_volume?: string | null;
+      monthly_crypto_deposits?: string | null;
+      monthly_crypto_investment_deposit?: string | null;
+      monthly_crypto_investment_withdrawal?: string | null;
+      monthly_crypto_withdrawals?: string | null;
+      monthly_investment_deposit?: string | null;
+      monthly_investment_withdrawal?: string | null;
+      monthly_withdrawals?: string | null;
+      usd_value_of_crypto?: string | null;
+      usd_value_of_fiat?: string | null;
+      occupation?: string | null;
+      /**
+       * @default UNVERIFIED
+       * @enum {string}
+       */
+      status:
+        | 'APPROVED'
+        | 'DECLINED'
+        | 'PENDING'
+        | 'HOLD'
+        | 'DOUBLE'
+        | 'SOFT_REJECT'
+        | 'REJECT'
+        | 'UNVERIFIED'
+        | 'WAITING_ON_UBOS'
+        | 'WAITING_ON_REVIEW';
+      /** @enum {string|null} */
+      employment_status?: 'EMPLOYEE' | 'SELF_EMPLOYED' | 'RETIRED' | 'UNEMPLOYED' | 'OTHER' | null;
+      employment_description?: string | null;
+      address?: components['schemas']['KycAddressDto'] | null;
+      beneficial_owners?: components['schemas']['KycBeneficialOwnerDto'][] | null;
+    };
+    CreateOrUpdateKycEntityDto: {
+      /** @enum {string} */
+      type: 'individual' | 'business' | 'universal';
+      id_number?: string | null;
+      /** @enum {string|null} */
+      id_type?: 'PASSPORT' | 'ID_CARD' | 'DRIVERS' | 'NIN' | null;
+      additional_id_number?: string | null;
+      additional_id_type?: string | null;
+      aml_questionnaire?: components['schemas']['KycEntityAmlQuestionnaireEntity'] | null;
+      articles_of_association_url?: string | null;
+      business_description?: string | null;
+      business_industry?: string | null;
+      business_name?: string | null;
+      business_name_local?: string | null;
+      business_registration_doc_url?: string | null;
+      /** @enum {string|null} */
+      business_type?:
+        | 'cooperative'
+        | 's_corporation'
+        | 'b_corporation'
+        | 'c_corporation'
+        | 'close_corporation'
+        | 'nonprofit_corporation'
+        | 'general_partnership'
+        | 'limited_partnership'
+        | 'limited_liability_company'
+        | 'other'
+        | 'sole_proprietorship'
+        | 'trust'
+        | null;
+      certificate_number?: string | null;
+      certificate_of_incumbency_url?: string | null;
+      /** @enum {string|null} */
+      certificate_of_registration_doc_type?: 'ACRA' | 'GST' | 'MSME' | 'CERTIFICATE_OF_REGISTRATION' | null;
+      certificate_of_registration_doc_url?: string | null;
+      compliance_screening_explanation?: string | null;
+      constitution_or_annual_report_url?: string | null;
+      country_of_birth?: string | null;
+      /** @default false */
+      dao_status: boolean | null;
+      date_of_birth?: string | null;
+      due_diligence_form?: components['schemas']['KycEntityDueDiligenceFormEntity'] | null;
+      email?: string | null;
+      export_country?: string | null;
+      first_name?: string | null;
+      first_name_local?: string | null;
+      formation_date?: string | null;
+      formation_doc_url?: string | null;
+      gov_id_back_url?: string | null;
+      gov_id_country?: string | null;
+      gov_id_expiration_date?: string | null;
+      gov_id_front_url?: string | null;
+      gov_id_hand_hold_url?: string | null;
+      gov_id_issuance_authority?: string | null;
+      gov_id_issuance_date?: string | null;
+      gov_id_number?: string | null;
+      /** @enum {string|null} */
+      gov_id_type?: 'PASSPORT' | 'ID_CARD' | 'DRIVERS' | null;
+      incorporation_number?: string | null;
+      last_name?: string | null;
+      last_name_local?: string | null;
+      license_expiration_date?: string | null;
+      middle_name?: string | null;
+      middle_name_local?: string | null;
+      nationality?: string | null;
+      partnership_deed_url?: string | null;
+      partnership_mins_of_meeting_url?: string | null;
+      phone?: string | null;
+      product_service_category?: string | null;
+      /** @enum {string|null} */
+      proof_of_address_type?: 'UTILITY_BILL' | 'BANK_STATEMENT' | 'RENTAL_AGREEMENT' | 'TAX_DOCUMENT' | null;
+      proof_of_address_url?: string | null;
+      proof_of_ownership_url?: string | null;
+      /** @enum {string|null} */
+      purpose?:
+        | 'charitable_donations'
+        | 'ecommerce_retail_payments'
+        | 'investment_purposes'
+        | 'other'
+        | 'payments_to_friends_or_family_abroad'
+        | 'payroll'
+        | 'personal_or_living_expenses'
+        | 'protect_wealth'
+        | 'purchase_goods_and_services'
+        | 'receive_payments_for_goods_and_services'
+        | 'tax_optimization'
+        | 'third_party_money_transmission'
+        | 'treasury_management'
+        | 'operating_a_company'
+        | 'receive_payment_for_freelancing'
+        | 'receive_salary'
+        | null;
+      purpose_other?: string | null;
+      registration_number?: string | null;
+      share_structure_url?: string | null;
+      sof_eu_questionnaire?: components['schemas']['KycEntitySofEuQuestionnaireEntity'] | null;
+      source_of_funds?: string | null;
+      supplementary_info?: string | null;
+      supplementary_url?: string | null;
+      tax_identification_number?: string | null;
+      /** @enum {string|null} */
+      tax_identification_number_type?: 'EIN' | 'SSN' | 'VAT' | 'TIN' | 'UTR' | null;
+      trade_name?: string | null;
+      /** @enum {string|null} */
+      trade_type?:
+        | '00'
+        | '01'
+        | '02'
+        | '03'
+        | '04'
+        | '05'
+        | '06'
+        | '07'
+        | '08'
+        | '09'
+        | '10'
+        | '11'
+        | '12'
+        | '13'
+        | '14'
+        | '15'
+        | '16'
+        | '17'
+        | '18'
+        | '19'
+        | '20'
+        | '21'
+        | '22'
+        | '23'
+        | '24'
+        | '25'
+        | '26'
+        | '27'
+        | '28'
+        | '29'
+        | '30'
+        | '31'
+        | '32'
+        | '33'
+        | '34'
+        | '35'
+        | '36'
+        | '37'
+        | '38'
+        | '39'
+        | '40'
+        | '41'
+        | null;
+      /** @default false */
+      transmits_customer_funds: boolean | null;
+      ubo_declaration_url?: string | null;
+      website?: string | null;
+      selfie_url?: string | null;
+      annual_salary?: string | null;
+      expected_monthly_volume?: string | null;
+      monthly_crypto_deposits?: string | null;
+      monthly_crypto_investment_deposit?: string | null;
+      monthly_crypto_investment_withdrawal?: string | null;
+      monthly_crypto_withdrawals?: string | null;
+      monthly_investment_deposit?: string | null;
+      monthly_investment_withdrawal?: string | null;
+      monthly_withdrawals?: string | null;
+      usd_value_of_crypto?: string | null;
+      usd_value_of_fiat?: string | null;
+      occupation?: string | null;
+      /** @enum {string|null} */
+      employment_status?: 'EMPLOYEE' | 'SELF_EMPLOYED' | 'RETIRED' | 'UNEMPLOYED' | 'OTHER' | null;
+      employment_description?: string | null;
+      address?: components['schemas']['KycAddressDto'] | null;
+      beneficial_owners?: components['schemas']['KycBeneficialOwnerDto'][] | null;
+    };
+    WalletKycRailExtraActionDto: {
+      /** @enum {string} */
+      action: 'verification';
+      type: string;
+      full_name: string | null;
+      url: string;
+    };
+    WalletKycRailTermsAndConditionsDto: {
+      description: string | null;
+      link: string;
+      title: string;
+    };
+    WalletKycRailDto: {
+      message: string | null;
+      /** @enum {string} */
+      readonly status:
+        | 'APPROVED'
+        | 'DECLINED'
+        | 'PENDING'
+        | 'HOLD'
+        | 'DOUBLE'
+        | 'SOFT_REJECT'
+        | 'REJECT'
+        | 'UNVERIFIED'
+        | 'WAITING_ON_UBOS'
+        | 'WAITING_ON_REVIEW';
+      /** @default false */
+      terms_confirmed: boolean;
+      extra_actions?: components['schemas']['WalletKycRailExtraActionDto'][];
+      /** @description Accepted terms and conditions data */
+      terms_and_conditions: components['schemas']['WalletKycRailTermsAndConditionsDto'][];
+    };
+    WalletKycRailTypeDto: {
+      id: string;
+      code: string | null;
+      name: string;
+      wallet_rail: components['schemas']['WalletKycRailDto'] | null;
+      terms_and_conditions: components['schemas']['WalletKycRailTermsAndConditionsDto'][];
+    };
+    GetWalletKycRailsResponseDto: {
+      /** @example 20 */
+      total: number;
+      /** @description Data */
+      data: components['schemas']['WalletKycRailTypeDto'][];
+      /** @description Has more data flag */
+      readonly has_more: boolean;
+    };
+    CountryDto: {
+      id: number;
+      capital: string | null;
+      currency: string | null;
+      currency_name: string | null;
+      currency_symbol: string | null;
+      emoji: string | null;
+      emojiU: string | null;
+      flag: number;
+      iso2: string | null;
+      iso3: string | null;
+      latitude: number | null;
+      longitude: number | null;
+      name: string;
+      nationality: string | null;
+      native: string | null;
+      numeric_code: string | null;
+      phonecode: string | null;
+      region: string | null;
+      region_id: number | null;
+      subregion: string | null;
+      subregion_id: number | null;
+      timezones: components['schemas']['CountryTimezone'][] | null;
+      tld: string | null;
+      translations: components['schemas']['CountryTranslations'][] | null;
+      wikiDataId: string | null;
+    };
+    StorageUploadFileResponseDto: {
+      fullPath: string;
+    };
+    CounterpartiesFilter: {
+      email?: string;
+      /** @description Phone number */
+      phone?: string;
+      name?: string;
+      nickname?: string | null;
+      /** @enum {string} */
+      type?: 'INDIVIDUAL' | 'BUSINESS';
+      created_at?: string;
+      search: string;
+    };
+    CounterpartyAccountDto: {
+      id: string;
+      email: string;
+      /** @description Phone number */
+      phone: string;
+      name: string;
+      nickname?: string | null;
+      /** @enum {string} */
+      type: 'INDIVIDUAL' | 'BUSINESS';
+      created_at: string;
+      /** @default false */
+      is_pinned: boolean;
+    };
+    FindAllCounterpartyAccountsResponseDto: {
+      /** @example 20 */
+      total: number;
+      /** @description Data */
+      data: components['schemas']['CounterpartyAccountDto'][];
+      /** @description Has more data flag */
+      readonly has_more: boolean;
+    };
+    CreateCounterpartyAccountDto: {
+      email: string;
+      /** @description Phone number */
+      phone: string;
+      name: string;
+      nickname?: string | null;
+      /** @enum {string} */
+      type: 'INDIVIDUAL' | 'BUSINESS';
+      /** @default false */
+      is_pinned: boolean;
+    };
+    UpdateCounterpartyAccountDto: {
+      email?: string;
+      /** @description Phone number */
+      phone?: string;
+      name?: string;
+      nickname?: string | null;
+    };
+    CounterpartyDestinationsFilter: {
+      nickname?: string | null;
+      /** @enum {string} */
+      type?: 'DOMESTIC_WIRE' | 'ACH' | 'SWIFT' | 'SEPA' | 'CRYPTO_EXTERNAL' | 'CRYPTO_INTERNAL';
+      created_at?: string;
+    };
+    StateEntity: {
+      id: number;
+      name: string;
+      country_id: number;
+      country_code: string;
+      fips_code: string | null;
+      iso2: string | null;
+      type: string | null;
+      level: number | null;
+      parent_id: number | null;
+      native: string | null;
+      latitude: number | null;
+      longitude: number | null;
+      created_at: string | null;
+      updated_at: string;
+      flag: number;
+      wikiDataId: string | null;
+    };
+    AddressEntity: {
+      id?: string;
+      city?: string | null;
+      country_id?: number | null;
+      readonly country?: components['schemas']['CountryEntity'] | null;
+      postcode?: string | null;
+      street1?: string | null;
+      street2?: string | null;
+      description?: string | null;
+      state_id?: number | null;
+      readonly state?: components['schemas']['StateEntity'] | null;
+    };
+    CounterpartyExternalBankingDataDto: {
+      account_number?: string | null;
+      routing_number?: string | null;
+      bank_name: string | null;
+      note: string | null;
+      swift_bic?: string | null;
+      iban?: string | null;
+      address?: components['schemas']['AddressEntity'];
+    };
+    CryptoEntity: {
+      icon: string | null;
+      name: string;
+      uuid: string;
+      chain: string | null;
+      symbol: string;
+      decimal: number | null;
+      contract: string | null;
+      render_decimal: number;
+      meta: components['schemas']['CryptoEntity'];
+      is_crypto: boolean;
+      is_stablecoin: boolean;
+      is_memo: boolean;
+      /** @enum {string|null} */
+      type: 'token' | 'native' | null;
+    };
+    CounterpartyExternalCryptoDataDto: {
+      address: string;
+      memo?: string | null;
+      currency_id: string;
+      readonly currency: components['schemas']['CryptoEntity'] | null;
+    };
+    CounterpartyDestinationDto: {
+      id: string;
+      nickname: string | null;
+      /** @enum {string} */
+      type: 'DOMESTIC_WIRE' | 'ACH' | 'SWIFT' | 'SEPA' | 'CRYPTO_EXTERNAL' | 'CRYPTO_INTERNAL';
+      created_at: string;
+      external_banking_data?: components['schemas']['CounterpartyExternalBankingDataDto'];
+      external_crypto_data?: components['schemas']['CounterpartyExternalCryptoDataDto'];
+    };
+    FindAllCounterpartyDestinationsResponseDto: {
+      /** @example 20 */
+      total: number;
+      /** @description Data */
+      data: components['schemas']['CounterpartyDestinationDto'][];
+      /** @description Has more data flag */
+      readonly has_more: boolean;
+    };
+    CreateCounterpartyExternalBankingDataAddressDto: {
+      city?: string | null;
+      country_id?: number | null;
+      postcode?: string | null;
+      street1?: string | null;
+      street2?: string | null;
+      description?: string | null;
+      state_id?: number | null;
+    };
+    CreateCounterpartyExternalBankingDataDto: {
+      account_number?: string | null;
+      routing_number?: string | null;
+      bank_name: string | null;
+      note: string | null;
+      swift_bic?: string | null;
+      iban?: string | null;
+      address?: components['schemas']['CreateCounterpartyExternalBankingDataAddressDto'];
+    };
+    CreateCounterpartyExternalCryptoDataDto: {
+      address: string;
+      memo?: string | null;
+      currency_id: string;
+    };
+    CreateCounterpartyDestinationDto: {
+      nickname: string | null;
+      /** @enum {string} */
+      type: 'DOMESTIC_WIRE' | 'ACH' | 'SWIFT' | 'SEPA' | 'CRYPTO_EXTERNAL' | 'CRYPTO_INTERNAL';
+      external_banking_data: components['schemas']['CreateCounterpartyExternalBankingDataDto'];
+      external_crypto_data: components['schemas']['CreateCounterpartyExternalCryptoDataDto'];
+    };
+    UpdateCounterpartyDestinationDto: {
+      nickname?: string | null;
+    };
+    SystemConfigDto: {
+      /** @enum {string} */
+      default_theme_mode: 'dark' | 'light';
+      enable_kyc: boolean;
+      tg_bot_name: string | null;
+      theme_switch: boolean;
+      enable_exchange: boolean;
+      enable_auto_exchange: boolean;
+      enable_crypto_withdrawal: boolean;
+      base_currency: string;
+    };
+    SystemChainsResponseDto: {
+      total: number;
+      data: components['schemas']['ChainDto'][];
+      readonly has_more: boolean;
+    };
+    SystemCurrenciesResponseDto: {
+      total: number;
+      data: (components['schemas']['CryptoCurrencyDto'] | components['schemas']['FiatCurrencyDto'])[];
+    };
+    SystemCountriesResponseDto: {
+      total: number;
+      data: components['schemas']['CountryDto'][];
+    };
+    StateDto: {
+      id: number;
+      name: string;
+      country_id: number;
+      country_code: string;
+      fips_code: string | null;
+      iso2: string | null;
+      type: string | null;
+      level: number | null;
+      parent_id: number | null;
+      native: string | null;
+      latitude: number | null;
+      longitude: number | null;
+      created_at: string | null;
+      updated_at: string;
+      flag: number;
+      wikiDataId: string | null;
+    };
+    SystemStatesResponseDto: {
+      total: number;
+      data: components['schemas']['StateDto'][];
+    };
+    SystemExchangeRatesResponseDto: {
+      total: number;
+      data: components['schemas']['ExchangeRateDto'][];
+    };
+    InitInquiryResponseDto: {
+      /** @example 6633328a-1713-4a4d-97e6-088f96cdf12e */
+      referenceId: string;
+      /** @example itmpl_rmUunz2XZk5xm4KQyJawGQSpappS */
+      templateId: string;
+      /** @example inq_E6U4KitBucNKpfrDMb997AaTkQTt */
+      inquiryId: string | null;
+    };
+    ResumeInquiryResponseDto: {
+      inquiryId: string;
+      sessionId: string;
+    };
+    IntegrationPersonaTemplateEntityDto: Record<string, never>;
+    FindAllIntegrationPersonaTemplatesResponseDto: {
+      /** @example 20 */
+      total: number;
+      /** @description Data */
+      data: components['schemas']['IntegrationPersonaTemplateEntityDto'][];
+      /** @description Has more data flag */
+      readonly has_more: boolean;
+    };
+    SyncDataFromHifibridgeDto: {
+      /** @description Wallet to load data from Hifibridge */
+      wallet_id: string;
+      /** @description Hifibridge ID to load data to wallet */
+      hifibridge_id: string;
+    };
+    BankDataAddressDto: {
+      city?: string | null;
+      country_id?: number | null;
+      postcode?: string | null;
+      street1?: string | null;
+      street2?: string | null;
+      state_id?: number | null;
+    };
+    GetBankDataByCodeResponseDto: {
+      bank_name: string;
+      address: components['schemas']['BankDataAddressDto'];
+      routing_number?: string;
+      iban?: string;
+      swift_bic?: string;
+    };
+  };
+  responses: never;
+  parameters: never;
+  requestBodies: never;
+  headers: never;
+  pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    AppController_getHealth: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description System working and ready to accept requests */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_verifyEmail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["VerifyEmailDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SessionDto"];
-                };
-            };
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_verifyPhone: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["VerifyPhoneDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SessionDto"];
-                };
-            };
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_refreshToken: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RefreshTokenDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SessionDto"];
-                };
-            };
-        };
-    };
-    AuthController_signIn: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SignInByTypeDto"];
-            };
-        };
-        responses: {
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthController_signUp: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SignUpByTypeDto"];
-            };
-        };
-        responses: {
-            /** @description Invite code is required */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthTelegramController_signUp: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TelegramSignUpByPhoneDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TelegramSessionDto"];
-                };
-            };
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invite code is required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthTelegramController_signIn: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TelegramSignInByTgIdDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TelegramSessionDto"];
-                };
-            };
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthPasswordController_signUpByEmail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SignUpByEmailWithPasswordDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserEntity"];
-                };
-            };
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthPasswordController_resendSignUpByEmail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ResendSignUpOtpByEmailDto"];
-            };
-        };
-        responses: {
-            /** @description Verification data sent */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthPasswordController_signUpByEmailFinalize: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SignUpWithPasswordFinalizeDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserDataEntity"];
-                };
-            };
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invite code is required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthPasswordController_signInByEmail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SignInByEmailWithPasswordDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SessionDto"];
-                };
-            };
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthOmniController_signInOmniByEmail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                type: "otp" | "magic";
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SignInByEmailDto"];
-            };
-        };
-        responses: {
-            /** @description Verification data sent */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invite code is required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthOmniController_signInOmniByPhone: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SignInByPhoneDto"];
-            };
-        };
-        responses: {
-            /** @description Verification data sent */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invite code is required */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    UserController_getMe: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserEntity"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    UserController_getMyUserData: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserDataEntity"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    UserController_updateMyUserData: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateUserDataDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserDataEntity"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthenticatedUserController_changeEmailConfirm: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ChangeEmailConfirmDto"];
-            };
-        };
-        responses: {
-            /** @description Verification done */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthenticatedUserController_changeEmail: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ChangeEmailDto"];
-            };
-        };
-        responses: {
-            /** @description Email verification code sent */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserEntity"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthenticatedUserController_changePhoneNumberConfirm: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ChangePhoneConfirmDto"];
-            };
-        };
-        responses: {
-            /** @description Verification done */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthenticatedUserController_changePhone: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ChangePhoneDto"];
-            };
-        };
-        responses: {
-            /** @description Phone verification code sent */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserEntity"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    TenantsConfigsController_getTenantConfig: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Authenticated tenant config */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TenantConfigEntity"];
-                };
-            };
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletsController_all: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginationResponseDto"] & {
-                        data?: unknown;
-                    };
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletsController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateWalletDto"];
-            };
-        };
-        responses: {
-            /** @description Wallet created */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WalletDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletsController_view: {
-        parameters: {
-            query?: {
-                show_low_balance?: boolean;
-            };
-            header?: never;
-            path: {
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WalletExtendedDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletsAddressesController_viewWalletAddressByChain: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-                chain: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WalletAddressDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletsAddressesController_createAddress: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-                chain: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateWalletAddressDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WalletAddressDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletsTransactionsController_viewTransactionsByWallet: {
-        parameters: {
-            query?: {
-                /** @description Number of records to skip */
-                offset?: number;
-                /** @description Number of records to return */
-                limit?: number;
-                sort_order?: "ASC" | "DESC";
-                sort_by?: "created_at" | "type" | "status" | "amount" | "from" | "to" | "method" | "record_type" | null;
-                filter?: components["schemas"]["TransactionsFilter"];
-            };
-            header?: never;
-            path: {
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginationResponseDto"] & {
-                        data?: unknown;
-                    };
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletsTransactionsController_viewTransactionByWallet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-                transaction_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WalletTransactionDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletsTransactionsController_export: {
-        parameters: {
-            query?: {
-                filter?: components["schemas"]["TransactionsFilter"];
-            };
-            header?: never;
-            path: {
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ChainsController_all: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AllChainsResponseDto"];
-                };
-            };
-        };
-    };
-    CurrenciesController_all: {
-        parameters: {
-            query?: {
-                is_crypto?: boolean;
-                chain_id?: number;
-                symbol?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AllCurrenciesResponseDto"];
-                };
-            };
-        };
-    };
-    ProgramsController_getPrograms: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginationResponseDto"] & {
-                        data?: unknown;
-                    };
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ExchangeRatesController_findAll: {
-        parameters: {
-            query: {
-                order_type: "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_PREPAID" | "WITHDRAWAL_CRYPTO" | "DEPOSIT_CRYPTO" | "DEPOSIT_FIAT_SEPA" | "DEPOSIT_FIAT_SWIFT" | "EXCHANGE_CRYPTO_INTERNAL" | "WITHDRAWAL_FIAT_SEPA" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_WHOLESALE" | "CARD_ISSUING_FEE";
-                from_uuid?: string;
-                to_uuid?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ExchangeRateDto"][];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    FiatAccountsController_findAllByWallet: {
-        parameters: {
-            query?: {
-                /** @description Number of records to skip */
-                offset?: number;
-                /** @description Number of records to return */
-                limit?: number;
-                /** @description Show cards */
-                show_cards?: boolean;
-            };
-            header?: never;
-            path: {
-                /** @description UUID of the wallet */
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description List of Fiat Accounts */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginationResponseDto"] & {
-                        data?: unknown;
-                    };
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    FiatAccountsController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description UUID of the wallet */
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateFiatAccountDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FiatAccountEntity"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    FiatAccountsController_findOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description UUID of the wallet */
-                wallet_id: string;
-                /** @description Fiat Account ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FiatAccountExtendedDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    TransactionsController_findAll: {
-        parameters: {
-            query?: {
-                offset?: number;
-                limit?: number;
-            };
-            header?: never;
-            path: {
-                wallet_id: string;
-                /** @description Fiat Account ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FindAllFiatAccountTransactionsDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DeveloperAccessesController_findAll: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>[];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DeveloperAccessesController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateDeveloperAccessDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DeveloperAccessesController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateDeveloperAccessDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DeveloperAccessesController_rotate: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DeveloperVendorsController_findAll: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>[];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    KycFormsController_getFormConfigByType: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                rail_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["KycFormFieldContainerDto"][];
-                };
-            };
-        };
-    };
-    KycEntitiesController_findOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["KycEntityDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    KycEntitiesController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateOrUpdateKycEntityDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["KycEntityDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletKycRailsController_findAll: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GetWalletKycRailsResponseDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletKycRailsController_findOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-                rail_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WalletKycRailTypeDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletKycRailsController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-                rail_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description KYC verification sent */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WalletKycRailTypeDto"];
-                };
-            };
-            /** @description KYC verification already processed */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletKycRailsController_confirmTermsAndConditions: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-                rail_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Terms and conditions confirmed */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WalletKycRailTypeDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    CountriesController_findAll: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CountryDto"][];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    StorageController_getFileUrl: {
-        parameters: {
-            query: {
-                path: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/octet-stream": string;
-                };
-            };
-        };
-    };
-    StorageController_uploadKycFile: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StorageUploadFileResponseDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    StorageController_getKycFile: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                folderId: string;
-                fileId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/octet-stream": string;
-                };
-            };
-        };
-    };
-    CounterpartyAccountsController_findAll: {
-        parameters: {
-            query?: {
-                /** @description Number of records to skip */
-                offset?: number;
-                /** @description Number of records to return */
-                limit?: number;
-                sort_order?: "ASC" | "DESC";
-                sort_by?: "created_at" | "type" | "name" | "nickname" | "email" | "phone" | null;
-                filter?: components["schemas"]["CounterpartiesFilter"];
-            };
-            header?: never;
-            path: {
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FindAllCounterpartyAccountsResponseDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    CounterpartyAccountsController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateCounterpartyAccountDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CounterpartyAccountDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    CounterpartyAccountsController_findOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-                counterparty_account_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CounterpartyAccountDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current counterparty */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    CounterpartyAccountsController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-                counterparty_account_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateCounterpartyAccountDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CounterpartyAccountDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current counterparty */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    CounterpartyDestinationsController_findAll: {
-        parameters: {
-            query?: {
-                /** @description Number of records to skip */
-                offset?: number;
-                /** @description Number of records to return */
-                limit?: number;
-                sort_order?: "ASC" | "DESC";
-                sort_by?: "created_at" | "type" | "nickname" | null;
-                filter?: components["schemas"]["CounterpartyDestinationsFilter"];
-            };
-            header?: never;
-            path: {
-                counterparty_account_id: string;
-                wallet_id: unknown;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FindAllCounterpartyDestinationsResponseDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current counterparty */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    CounterpartyDestinationsController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                counterparty_account_id: string;
-                wallet_id: unknown;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateCounterpartyDestinationDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CounterpartyDestinationDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current counterparty */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    CounterpartyDestinationsController_findOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                counterparty_account_id: string;
-                counterparty_destination_id: string;
-                wallet_id: unknown;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CounterpartyDestinationDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current counterparty */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    CounterpartyDestinationsController_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                counterparty_account_id: string;
-                counterparty_destination_id: string;
-                wallet_id: unknown;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CounterpartyDestinationDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current counterparty */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    CounterpartyDestinationsController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                counterparty_account_id: string;
-                counterparty_destination_id: string;
-                wallet_id: unknown;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateCounterpartyDestinationDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CounterpartyDestinationDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current counterparty */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    SystemController_config: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SystemConfigDto"];
-                };
-            };
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    SystemController_chains: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SystemChainsResponseDto"];
-                };
-            };
-        };
-    };
-    SystemController_currencies: {
-        parameters: {
-            query?: {
-                is_crypto?: boolean;
-                chain_id?: number;
-                symbol?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SystemCurrenciesResponseDto"];
-                };
-            };
-        };
-    };
-    SystemController_countries: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SystemCountriesResponseDto"];
-                };
-            };
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    SystemController_states: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                country_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SystemStatesResponseDto"];
-                };
-            };
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    SystemController_findAll: {
-        parameters: {
-            query: {
-                order_type: "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_PREPAID" | "WITHDRAWAL_CRYPTO" | "DEPOSIT_CRYPTO" | "DEPOSIT_FIAT_SEPA" | "DEPOSIT_FIAT_SWIFT" | "EXCHANGE_CRYPTO_INTERNAL" | "WITHDRAWAL_FIAT_SEPA" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_WHOLESALE" | "CARD_ISSUING_FEE";
-                from_uuid?: string;
-                to_uuid?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SystemExchangeRatesResponseDto"];
-                };
-            };
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PersonaController_initInquiry: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-                type: "individual" | "business" | "universal";
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InitInquiryResponseDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PersonaController_resumeInquiry: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-                inquiry_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ResumeInquiryResponseDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Persona reference or Inquiry not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    IntegrationPersonaTemplateController_findAll: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FindAllIntegrationPersonaTemplatesResponseDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    LoadDataFromHifibridgeController_syncData: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SyncDataFromHifibridgeDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PersonaAdminController_syncKycEntityWithPersona: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BankDataController_getBankDataByCode: {
-        parameters: {
-            query: {
-                /** @description Bank code string must be a valid IBAN, RTN or SWIFT */
-                code: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GetBankDataByCodeResponseDto"];
-                };
-            };
-            /** @description No data by code */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
+  AppController_getHealth: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description System working and ready to accept requests */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthController_verifyEmail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['VerifyEmailDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SessionDto'];
+        };
+      };
+      /** @description Invalid tenant */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthController_verifyPhone: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['VerifyPhoneDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SessionDto'];
+        };
+      };
+      /** @description Invalid tenant */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthController_refreshToken: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RefreshTokenDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SessionDto'];
+        };
+      };
+    };
+  };
+  AuthController_signIn: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SignInByTypeDto'];
+      };
+    };
+    responses: {
+      /** @description Invalid tenant */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthController_signUp: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SignUpByTypeDto'];
+      };
+    };
+    responses: {
+      /** @description Invite code is required */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Invalid tenant */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthTelegramController_signUp: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TelegramSignUpByPhoneDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TelegramSessionDto'];
+        };
+      };
+      /** @description Invalid tenant */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Invite code is required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthTelegramController_signIn: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TelegramSignInByTgIdDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TelegramSessionDto'];
+        };
+      };
+      /** @description Invalid tenant */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthPasswordController_signUpByEmail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SignUpByEmailWithPasswordDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UserEntity'];
+        };
+      };
+      /** @description Invalid tenant */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthPasswordController_resendSignUpByEmail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ResendSignUpOtpByEmailDto'];
+      };
+    };
+    responses: {
+      /** @description Verification data sent */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Invalid tenant */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthPasswordController_signUpByEmailFinalize: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SignUpWithPasswordFinalizeDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UserDataEntity'];
+        };
+      };
+      /** @description Invalid tenant */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Invite code is required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthPasswordController_signInByEmail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SignInByEmailWithPasswordDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SessionDto'];
+        };
+      };
+      /** @description Invalid tenant */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      429: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthOmniController_signInOmniByEmail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        type: 'otp' | 'magic';
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SignInByEmailDto'];
+      };
+    };
+    responses: {
+      /** @description Verification data sent */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Invalid tenant */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Invite code is required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthOmniController_signInOmniByPhone: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SignInByPhoneDto'];
+      };
+    };
+    responses: {
+      /** @description Verification data sent */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Invalid tenant */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Invite code is required */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UserController_getMe: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UserEntity'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UserController_getMyUserData: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UserDataEntity'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  UserController_updateMyUserData: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateUserDataDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UserDataEntity'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthenticatedUserController_changeEmailConfirm: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChangeEmailConfirmDto'];
+      };
+    };
+    responses: {
+      /** @description Verification done */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthenticatedUserController_changeEmail: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChangeEmailDto'];
+      };
+    };
+    responses: {
+      /** @description Email verification code sent */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UserEntity'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthenticatedUserController_changePhoneNumberConfirm: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChangePhoneConfirmDto'];
+      };
+    };
+    responses: {
+      /** @description Verification done */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  AuthenticatedUserController_changePhone: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChangePhoneDto'];
+      };
+    };
+    responses: {
+      /** @description Phone verification code sent */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['UserEntity'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  TenantsConfigsController_getTenantConfig: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Authenticated tenant config */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TenantConfigEntity'];
+        };
+      };
+      /** @description Invalid tenant */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  WalletsController_all: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PaginationResponseDto'] & {
+            data?: unknown;
+          };
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  WalletsController_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateWalletDto'];
+      };
+    };
+    responses: {
+      /** @description Wallet created */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WalletDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  WalletsController_view: {
+    parameters: {
+      query?: {
+        show_low_balance?: boolean;
+      };
+      header?: never;
+      path: {
+        wallet_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WalletExtendedDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current wallet */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  WalletsAddressesController_viewWalletAddressByChain: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        wallet_id: string;
+        chain: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WalletAddressDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current wallet */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  WalletsAddressesController_createAddress: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        wallet_id: string;
+        chain: number;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateWalletAddressDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WalletAddressDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current wallet */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  WalletsTransactionsController_viewTransactionsByWallet: {
+    parameters: {
+      query?: {
+        /** @description Number of records to skip */
+        offset?: number;
+        /** @description Number of records to return */
+        limit?: number;
+        sort_order?: 'ASC' | 'DESC';
+        sort_by?: 'created_at' | 'type' | 'status' | 'amount' | 'from' | 'to' | 'method' | 'record_type' | null;
+        filter?: components['schemas']['TransactionsFilter'];
+      };
+      header?: never;
+      path: {
+        wallet_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PaginationResponseDto'] & {
+            data?: unknown;
+          };
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current wallet */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  WalletsTransactionsController_viewTransactionByWallet: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        wallet_id: string;
+        transaction_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WalletTransactionDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current wallet */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  WalletsTransactionsController_export: {
+    parameters: {
+      query?: {
+        filter?: components['schemas']['TransactionsFilter'];
+      };
+      header?: never;
+      path: {
+        wallet_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current wallet */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ChainsController_all: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AllChainsResponseDto'];
+        };
+      };
+    };
+  };
+  CurrenciesController_all: {
+    parameters: {
+      query?: {
+        is_crypto?: boolean;
+        chain_id?: number;
+        symbol?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Invalid tenant */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AllCurrenciesResponseDto'];
+        };
+      };
+    };
+  };
+  ProgramsController_getPrograms: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PaginationResponseDto'] & {
+            data?: unknown;
+          };
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  ExchangeRatesController_findAll: {
+    parameters: {
+      query: {
+        order_type:
+          | 'TRANSFER_CARD_SUBACCOUNT'
+          | 'TRANSFER_CARD_PREPAID'
+          | 'WITHDRAWAL_CRYPTO'
+          | 'DEPOSIT_CRYPTO'
+          | 'DEPOSIT_FIAT_SEPA'
+          | 'DEPOSIT_FIAT_SWIFT'
+          | 'EXCHANGE_CRYPTO_INTERNAL'
+          | 'WITHDRAWAL_FIAT_SEPA'
+          | 'TRANSFER_INTERNAL'
+          | 'TRANSFER_CARD_WHOLESALE'
+          | 'CARD_ISSUING_FEE';
+        from_uuid?: string;
+        to_uuid?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ExchangeRateDto'][];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FiatAccountsController_findAllByWallet: {
+    parameters: {
+      query?: {
+        /** @description Number of records to skip */
+        offset?: number;
+        /** @description Number of records to return */
+        limit?: number;
+        /** @description Show cards */
+        show_cards?: boolean;
+      };
+      header?: never;
+      path: {
+        /** @description UUID of the wallet */
+        wallet_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description List of Fiat Accounts */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PaginationResponseDto'] & {
+            data?: unknown;
+          };
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current wallet */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FiatAccountsController_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description UUID of the wallet */
+        wallet_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateFiatAccountDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FiatAccountEntity'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current wallet */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  FiatAccountsController_findOne: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        /** @description UUID of the wallet */
+        wallet_id: string;
+        /** @description Fiat Account ID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FiatAccountExtendedDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current wallet */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  TransactionsController_findAll: {
+    parameters: {
+      query?: {
+        offset?: number;
+        limit?: number;
+      };
+      header?: never;
+      path: {
+        wallet_id: string;
+        /** @description Fiat Account ID */
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FindAllFiatAccountTransactionsDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current wallet */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  DeveloperAccessesController_findAll: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': Record<string, never>[];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  DeveloperAccessesController_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateDeveloperAccessDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': Record<string, never>;
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  DeveloperAccessesController_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateDeveloperAccessDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': Record<string, never>;
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  DeveloperAccessesController_rotate: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': Record<string, never>;
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  DeveloperVendorsController_findAll: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': Record<string, never>[];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  KycFormsController_getFormConfigByType: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        rail_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['KycFormFieldContainerDto'][];
+        };
+      };
+    };
+  };
+  KycEntitiesController_findOne: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        wallet_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['KycEntityDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current wallet */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  KycEntitiesController_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        wallet_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateOrUpdateKycEntityDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['KycEntityDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current wallet */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  WalletKycRailsController_findAll: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        wallet_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetWalletKycRailsResponseDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current wallet */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  WalletKycRailsController_findOne: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        wallet_id: string;
+        rail_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WalletKycRailTypeDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current wallet */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  WalletKycRailsController_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        wallet_id: string;
+        rail_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description KYC verification sent */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WalletKycRailTypeDto'];
+        };
+      };
+      /** @description KYC verification already processed */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current wallet */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  WalletKycRailsController_confirmTermsAndConditions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        wallet_id: string;
+        rail_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Terms and conditions confirmed */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WalletKycRailTypeDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current wallet */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CountriesController_findAll: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CountryDto'][];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  StorageController_getFileUrl: {
+    parameters: {
+      query: {
+        path: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/octet-stream': string;
+        };
+      };
+    };
+  };
+  StorageController_uploadKycFile: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['StorageUploadFileResponseDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  StorageController_getKycFile: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        folderId: string;
+        fileId: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/octet-stream': string;
+        };
+      };
+    };
+  };
+  CounterpartyAccountsController_findAll: {
+    parameters: {
+      query?: {
+        /** @description Number of records to skip */
+        offset?: number;
+        /** @description Number of records to return */
+        limit?: number;
+        sort_order?: 'ASC' | 'DESC';
+        sort_by?: 'created_at' | 'type' | 'name' | 'nickname' | 'email' | 'phone' | null;
+        filter?: components['schemas']['CounterpartiesFilter'];
+      };
+      header?: never;
+      path: {
+        wallet_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FindAllCounterpartyAccountsResponseDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current wallet */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CounterpartyAccountsController_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        wallet_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateCounterpartyAccountDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CounterpartyAccountDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current wallet */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CounterpartyAccountsController_findOne: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        wallet_id: string;
+        counterparty_account_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CounterpartyAccountDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current counterparty */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CounterpartyAccountsController_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        wallet_id: string;
+        counterparty_account_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateCounterpartyAccountDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CounterpartyAccountDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current counterparty */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CounterpartyDestinationsController_findAll: {
+    parameters: {
+      query?: {
+        /** @description Number of records to skip */
+        offset?: number;
+        /** @description Number of records to return */
+        limit?: number;
+        sort_order?: 'ASC' | 'DESC';
+        sort_by?: 'created_at' | 'type' | 'nickname' | null;
+        filter?: components['schemas']['CounterpartyDestinationsFilter'];
+      };
+      header?: never;
+      path: {
+        counterparty_account_id: string;
+        wallet_id: unknown;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FindAllCounterpartyDestinationsResponseDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current counterparty */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CounterpartyDestinationsController_create: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        counterparty_account_id: string;
+        wallet_id: unknown;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateCounterpartyDestinationDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CounterpartyDestinationDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current counterparty */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CounterpartyDestinationsController_findOne: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        counterparty_account_id: string;
+        counterparty_destination_id: string;
+        wallet_id: unknown;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CounterpartyDestinationDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current counterparty */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CounterpartyDestinationsController_delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        counterparty_account_id: string;
+        counterparty_destination_id: string;
+        wallet_id: unknown;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CounterpartyDestinationDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current counterparty */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  CounterpartyDestinationsController_update: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        counterparty_account_id: string;
+        counterparty_destination_id: string;
+        wallet_id: unknown;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateCounterpartyDestinationDto'];
+      };
+    };
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CounterpartyDestinationDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current counterparty */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SystemController_config: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SystemConfigDto'];
+        };
+      };
+      /** @description Invalid tenant */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SystemController_chains: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Invalid tenant */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SystemChainsResponseDto'];
+        };
+      };
+    };
+  };
+  SystemController_currencies: {
+    parameters: {
+      query?: {
+        is_crypto?: boolean;
+        chain_id?: number;
+        symbol?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Invalid tenant */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      default: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SystemCurrenciesResponseDto'];
+        };
+      };
+    };
+  };
+  SystemController_countries: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SystemCountriesResponseDto'];
+        };
+      };
+      /** @description Invalid tenant */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SystemController_states: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        country_id: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SystemStatesResponseDto'];
+        };
+      };
+      /** @description Invalid tenant */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  SystemController_findAll: {
+    parameters: {
+      query: {
+        order_type:
+          | 'TRANSFER_CARD_SUBACCOUNT'
+          | 'TRANSFER_CARD_PREPAID'
+          | 'WITHDRAWAL_CRYPTO'
+          | 'DEPOSIT_CRYPTO'
+          | 'DEPOSIT_FIAT_SEPA'
+          | 'DEPOSIT_FIAT_SWIFT'
+          | 'EXCHANGE_CRYPTO_INTERNAL'
+          | 'WITHDRAWAL_FIAT_SEPA'
+          | 'TRANSFER_INTERNAL'
+          | 'TRANSFER_CARD_WHOLESALE'
+          | 'CARD_ISSUING_FEE';
+        from_uuid?: string;
+        to_uuid?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SystemExchangeRatesResponseDto'];
+        };
+      };
+      /** @description Invalid tenant */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PersonaController_initInquiry: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        wallet_id: string;
+        type: 'individual' | 'business' | 'universal';
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['InitInquiryResponseDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current wallet */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PersonaController_resumeInquiry: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        wallet_id: string;
+        inquiry_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ResumeInquiryResponseDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description You don`t have access to current wallet */
+      403: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Persona reference or Inquiry not found */
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  IntegrationPersonaTemplateController_findAll: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FindAllIntegrationPersonaTemplatesResponseDto'];
+        };
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  LoadDataFromHifibridgeController_syncData: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SyncDataFromHifibridgeDto'];
+      };
+    };
+    responses: {
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  PersonaAdminController_syncKycEntityWithPersona: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        wallet_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Invalid tenant */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  BankDataController_getBankDataByCode: {
+    parameters: {
+      query: {
+        /** @description Bank code string must be a valid IBAN, RTN or SWIFT */
+        code: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['GetBankDataByCodeResponseDto'];
+        };
+      };
+      /** @description No data by code */
+      400: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Unauthorized */
+      401: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
 }

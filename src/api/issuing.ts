@@ -10,7 +10,7 @@ export const issuing = {
         prepaid: (data: API.Cards.Create.StandAloneRequest): Promise<API.Cards.Create.StandAloneResponse> =>
           apiClientV1.postRequest<API.Cards.Create.StandAloneResponse>('/issuing/cards/create', { data }),
         balance: async (
-          data: API.Cards.Create.StandAloneRequest
+          data: API.Cards.Create.StandAloneRequest,
         ): Promise<API.Cards.Create.ExtendedSubAccountResponse> => {
           const { id: sub_account_id } = await issuing.sub_accounts.create(data.wallet_id, data.program_id);
 
@@ -21,7 +21,7 @@ export const issuing = {
                 ...data,
                 sub_account_id,
               },
-            }
+            },
           );
 
           return {
@@ -31,7 +31,7 @@ export const issuing = {
         },
       },
       subAccountCard: async (
-        data: API.Cards.Create.SubAccountRequest
+        data: API.Cards.Create.SubAccountRequest,
       ): Promise<API.Cards.Create.ExtendedSubAccountResponse> => {
         const response = await apiClientV1.postRequest<API.Cards.Create.SubAccountResponse>('/issuing/cards/balance', {
           data,
@@ -44,23 +44,30 @@ export const issuing = {
     },
     byWalletUuid: {
       getAll: (params: API.Cards.CardsList.Request.ByWalletUuid): Promise<API.Cards.CardsList.Response> =>
-        apiClientV1.getRequest<API.Cards.CardsList.Response>('/issuing/cards', { params }),
+        apiClientV1.getRequest<API.Cards.CardsList.Response>('/issuing/cards', {
+          params,
+        }),
       getBySubaccountType: (
-        params: API.Cards.CardsList.Request.BySubaccountAndWalletUuid
+        params: API.Cards.CardsList.Request.BySubaccountAndWalletUuid,
       ): Promise<API.Cards.CardsList.Response> =>
         apiClientV1.getRequest<API.Cards.CardsList.Response>('/issuing/cards', {
           params,
         }),
       getBySubAccount: (
-        params: API.Cards.CardsList.Request.BySubAccountAndWalletId
+        params: API.Cards.CardsList.Request.BySubAccountAndWalletId,
       ): Promise<API.Cards.CardsList.Response> =>
-        apiClientV1.getRequest<API.Cards.CardsList.Response>('/issuing/cards', { params }),
+        apiClientV1.getRequest<API.Cards.CardsList.Response>('/issuing/cards', {
+          params,
+        }),
     },
     // getById: (card_id: string) => apiClientV1.getRequest<API.Cards.IssuingCardDetailItem>(`/issuing/cards/${card_id}`),
     getById: async (card_id: string): Promise<API.Cards.IssuingCardDetailItem> => {
       const card = await apiClientV1.getRequest<API.Cards.IssuingCardDetailItem>(`/issuing/cards/${card_id}`);
       const subAccountData = await issuing.sub_accounts.getByUuid(card.fiat_account.id);
-      return { ...card, fiat_account: { ...subAccountData, type: card.fiat_account.type } };
+      return {
+        ...card,
+        fiat_account: { ...subAccountData, type: card.fiat_account.type },
+      };
     },
     sensitiveData: {
       // get: (card_id: string) => apiClientV1.getRequest<API.Cards.SensitiveData>(`/issuing/cards/${card_id}/sensitive`), deprecated from v1.13.1
@@ -110,7 +117,7 @@ export const issuing = {
     getByCardId: (
       card_id: string,
       limit = defaultPaginationParams.limit,
-      offset = defaultPaginationParams.offset
+      offset = defaultPaginationParams.offset,
     ): Promise<API.Cards.TransactionsList> =>
       apiClientV1.getRequest<API.Cards.TransactionsList>(`/issuing/transactions/`, {
         params: { limit, offset, card_id, new_scheme: true },
@@ -118,7 +125,7 @@ export const issuing = {
     getBySubAccountId: (
       fiat_account_id: string,
       limit = defaultPaginationParams.limit,
-      offset = defaultPaginationParams.offset
+      offset = defaultPaginationParams.offset,
     ): Promise<API.Cards.TransactionsList> =>
       apiClientV1.getRequest<API.Cards.TransactionsList>(`/issuing/transactions/`, {
         params: { limit, offset, fiat_account_id, new_scheme: true },
@@ -138,24 +145,31 @@ export const issuing = {
         getSinglecards: (
           wallet_uuid: string,
           limit: number,
-          offset: number
+          offset: number,
         ): Promise<API.Issuing.SubAccounts.WithCards.Response> =>
           apiClientV1.getRequest<API.Issuing.SubAccounts.WithCards.Response>(
             `/issuing/sub_account/list/${wallet_uuid}`,
             {
-              params: { limit, offset, lt_cards_limit: 2, gt_cards_limit: 0, show_cards: true, pagination: true },
-            }
+              params: {
+                limit,
+                offset,
+                lt_cards_limit: 2,
+                gt_cards_limit: 0,
+                show_cards: true,
+                pagination: true,
+              },
+            },
           ),
         getAll: (
           wallet_uuid: string,
           limit: number,
-          offset: number
+          offset: number,
         ): Promise<API.Issuing.SubAccounts.WithCards.Response> =>
           apiClientV1.getRequest<API.Issuing.SubAccounts.WithCards.Response>(
             `/issuing/sub_account/list/${wallet_uuid}`,
             {
               params: { limit, offset, show_cards: true, pagination: true },
-            }
+            },
           ),
       },
       withoutCards: {
@@ -167,7 +181,7 @@ export const issuing = {
             `/issuing/sub_account/list/${wallet_uuid}`,
             {
               params: { ...params, pagination: true },
-            }
+            },
           ),
       },
     },
@@ -187,7 +201,7 @@ export const issuing = {
           `/issuing/sub_account/${sub_account_id}/transactions`,
           {
             params,
-          }
+          },
         ),
     },
   },

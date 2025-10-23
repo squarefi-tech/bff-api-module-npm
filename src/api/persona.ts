@@ -10,7 +10,7 @@ export const persona = {
       inquiry_id,
     }: API.Persona.Inquiries.Resume.Request): Promise<API.Persona.Inquiries.Resume.Response> =>
       apiClientV2.postRequest<API.Persona.Inquiries.Resume.Response>(
-        `/persona/inquiries/${wallet_id}/${inquiry_id}/resume`
+        `/persona/inquiries/${wallet_id}/${inquiry_id}/resume`,
       ),
   },
 };

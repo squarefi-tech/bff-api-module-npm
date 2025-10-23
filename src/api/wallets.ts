@@ -16,7 +16,7 @@ export const wallets = {
 
       return apiClientV2.postRequest<API.Wallets.WalletChain.Create.Response>(
         `/wallets/${wallet_uuid}/addresses/${chain}`,
-        { data: { label } }
+        { data: { label } },
       );
     },
     get: {
@@ -29,7 +29,7 @@ export const wallets = {
   transactions: {
     byWalletUuid: {
       getAll: async (
-        data: API.Wallets.WalletTransactions.TransactionList.Request
+        data: API.Wallets.WalletTransactions.TransactionList.Request,
       ): Promise<API.Wallets.WalletTransactions.TransactionList.Response> => {
         const {
           wallet_uuid,
@@ -40,7 +40,7 @@ export const wallets = {
 
         return apiClientV2.getRequest<API.Wallets.WalletTransactions.TransactionList.Response>(
           `/wallets/${wallet_uuid}/transactions`,
-          { params: { limit, offset, ...params } }
+          { params: { limit, offset, ...params } },
         );
       },
       getByUuid: ({
@@ -48,7 +48,7 @@ export const wallets = {
         uuid,
       }: API.Wallets.WalletTransactions.GetByUuid.Request): Promise<API.Wallets.WalletTransactions.DetailedTransaction> =>
         apiClientV2.getRequest<API.Wallets.WalletTransactions.DetailedTransaction>(
-          `/wallets/${wallet_uuid}/transactions/${uuid}`
+          `/wallets/${wallet_uuid}/transactions/${uuid}`,
         ),
     },
     csv: {
@@ -58,7 +58,7 @@ export const wallets = {
       }: API.Wallets.WalletTransactions.TransactionList.ExportCsv.Request): Promise<API.Wallets.WalletTransactions.TransactionList.ExportCsv.Response> =>
         apiClientV2.getRequest<API.Wallets.WalletTransactions.TransactionList.ExportCsv.Response>(
           `/wallets/${wallet_uuid}/transactions/export/csv`,
-          { params }
+          { params },
         ),
     },
   },

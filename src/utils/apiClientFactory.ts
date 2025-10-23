@@ -55,9 +55,15 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
       modifiedHeaders.Authorization = authHeader;
     }
 
-    config.context = { ...config.context, appEnvironment: isTMA() ? AppEnviroment.TELEGRAM : AppEnviroment.WEB };
+    config.context = {
+      ...config.context,
+      appEnvironment: isTMA() ? AppEnviroment.TELEGRAM : AppEnviroment.WEB,
+    };
 
-    return { ...config, headers: modifiedHeaders } as unknown as InternalAxiosRequestConfig;
+    return {
+      ...config,
+      headers: modifiedHeaders,
+    } as unknown as InternalAxiosRequestConfig;
   });
 
   instance.interceptors.response.use(
@@ -119,7 +125,10 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
         return new Promise((res, rej) => {
           requestQueue.push({
             resolve: () => {
-              failedRequestConfig.context = { ...failedRequestConfig.context, isRetryRequest: true };
+              failedRequestConfig.context = {
+                ...failedRequestConfig.context,
+                isRetryRequest: true,
+              };
               return res(instance(failedRequestConfig));
             },
             reject: () => rej(instance(failedRequestConfig)),
@@ -130,7 +139,7 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
       console.error('Axios error', error);
 
       return Promise.reject(error);
-    }
+    },
   );
 
   const patchRequest = async <T>(url: string, config?: AxiosRequestConfig): Promise<T> => {

@@ -11,7 +11,7 @@ export const frontend = {
         apiClientV1.getRequest<API.Frontend.Access.Keys.List.Response>('/frontend/access/keys'),
       regenerate: (key_id: string): Promise<API.Frontend.Access.Keys.Regenerate.Response> =>
         apiClientV1.postRequest<API.Frontend.Access.Keys.Regenerate.Response>(
-          `/frontend/access/keys/${key_id}/regenerate`
+          `/frontend/access/keys/${key_id}/regenerate`,
         ),
       revoke: (key_id: string): Promise<API.Frontend.Access.Keys.Revoke.Response> =>
         apiClientV1.deleteRequest(`/frontend/access/keys/${key_id}`),

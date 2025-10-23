@@ -19,7 +19,11 @@ export const auth = {
         }),
       phone: (phone: string, token: string): Promise<API.Auth.VerifyOtp.Response> =>
         apiClientV2.postRequest<API.Auth.VerifyOtp.Response>('/auth/verify/phone/otp', {
-          data: { phone: convertPhoneToSupabaseFormat(phone), token, type: 'sms' },
+          data: {
+            phone: convertPhoneToSupabaseFormat(phone),
+            token,
+            type: 'sms',
+          },
           context: { bypassUnauthorizedHandler: true },
         }),
     },
@@ -27,7 +31,10 @@ export const auth = {
   signin: {
     omni: {
       email: (data: API.Auth.SignIn.Omni.Email.OTP.Request): Promise<API.Auth.Tokens> =>
-        apiClientV2.postRequest('/auth/sign-in/omni/email/otp', { data, context: { bypassUnauthorizedHandler: true } }),
+        apiClientV2.postRequest('/auth/sign-in/omni/email/otp', {
+          data,
+          context: { bypassUnauthorizedHandler: true },
+        }),
       phone: ({ phone, ...data }: API.Auth.SignIn.Omni.Phone.OTP.Request): Promise<API.Auth.Tokens> =>
         apiClientV2.postRequest('/auth/sign-in/omni/phone/otp', {
           data: { phone: convertPhoneToSupabaseFormat(phone), ...data },
@@ -35,12 +42,15 @@ export const auth = {
         }),
     },
     byType: (data: API.Auth.SignIn.ByType.Request): Promise<API.Auth.Tokens> =>
-      apiClientV2.postRequest('/auth/sign-in', { data, context: { bypassUnauthorizedHandler: true } }),
+      apiClientV2.postRequest('/auth/sign-in', {
+        data,
+        context: { bypassUnauthorizedHandler: true },
+      }),
     telegram: (data: API.Auth.Telegram.Signin.Request): Promise<API.Auth.Telegram.Signin.Response> =>
       apiClientV2.postRequest<API.Auth.Telegram.Signin.Response>(telegramSignInPath, { data }),
     password: (
       email: string,
-      password: string // check on backend V2
+      password: string, // check on backend V2
     ): Promise<API.Auth.Tokens> =>
       apiClientV2.postRequest<API.Auth.Tokens>('/auth/sign-in/password/email', {
         data: { email, password },
@@ -49,7 +59,10 @@ export const auth = {
   },
   signup: {
     byType: (data: API.Auth.SignUp.ByType.Request): Promise<API.Auth.Tokens> =>
-      apiClientV2.postRequest('/auth/sign-up', { data, context: { bypassUnauthorizedHandler: true } }),
+      apiClientV2.postRequest('/auth/sign-up', {
+        data,
+        context: { bypassUnauthorizedHandler: true },
+      }),
     password: (email: string, password: string): Promise<API.Auth.Tokens> =>
       apiClientV2.postRequest<API.Auth.Tokens>('/auth/sign-up/password/email', {
         data: { email, password },

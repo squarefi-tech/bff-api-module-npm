@@ -9,7 +9,7 @@ export const totp = {
       });
     },
     request: (
-      data: API.TOTP.OTPVerification.RequestOtp.Request
+      data: API.TOTP.OTPVerification.RequestOtp.Request,
     ): Promise<API.TOTP.OTPVerification.RequestOtp.Response> => {
       return apiClientTOTP.postRequest<API.TOTP.OTPVerification.RequestOtp.Response>('/api/otp-verification/request', {
         data,
@@ -38,7 +38,7 @@ export const totp = {
       return apiClientTOTP.postRequest<API.TOTP.TOTP.Activate.Response>('/api/totp/activate', { data });
     },
     generateEncrypted: (
-      data: API.TOTP.TOTP.GenerateEncrypted.Request
+      data: API.TOTP.TOTP.GenerateEncrypted.Request,
     ): Promise<API.TOTP.TOTP.GenerateEncrypted.Response> => {
       return apiClientTOTP.postRequest<API.TOTP.TOTP.GenerateEncrypted.Response>('/api/totp/generate-encrypted', {
         data,

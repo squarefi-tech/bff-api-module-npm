@@ -32,7 +32,7 @@ export const useSupabaseSubscription = ({ config, callback, enabled = true, key 
           table: config.table,
           ...(config.filter && { filter: config.filter }),
         },
-        (payload) => callbackRef.current(payload)
+        (payload) => callbackRef.current(payload),
       )
       .subscribe();
 

@@ -127,7 +127,7 @@ export const useOrderCalc: UseOrderCalc = (props: UseOrderCalcProps) => {
         updateCalculations({ is_reverse: false, is_subtract: true });
       }
     },
-    abortControllerRef.current?.signal ? undefined : 1000
+    abortControllerRef.current?.signal ? undefined : 1000,
   );
 
   const onBuyingValueUpdate = debounce(
@@ -136,14 +136,14 @@ export const useOrderCalc: UseOrderCalc = (props: UseOrderCalcProps) => {
         updateCalculations({ is_reverse: true, is_subtract: false });
       }
     },
-    abortControllerRef.current?.signal ? undefined : 1000
+    abortControllerRef.current?.signal ? undefined : 1000,
   );
 
   const onToAddressUpdate = debounce(
     () => {
       updateCalculations({ is_reverse: false, is_subtract: true });
     },
-    abortControllerRef.current?.signal ? undefined : 1000
+    abortControllerRef.current?.signal ? undefined : 1000,
   );
 
   useEffect(() => {
