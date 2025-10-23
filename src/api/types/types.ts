@@ -1998,10 +1998,8 @@ export namespace API {
             export type Response = Common.Response.CryptoTransferResponse;
           }
           export namespace SEGREGATED_CRYPTO_TRANSFER {
-            export type Request = Common.Request.OrderWithWalletAccountParams &
-              Common.Request.OrderWithCounterpartyParams & {
-                to_currency_id?: never;
-              };
+            export type Request = Omit<Common.Request.OrderWithWalletAccountParams, 'to_currency_id'> &
+              Omit<Common.Request.OrderWithCounterpartyParams, 'to_currency_id'>;
             export type Response = Common.Response.CryptoTransferResponse;
           }
           export namespace RN_CARDS_OFFRAMP {
