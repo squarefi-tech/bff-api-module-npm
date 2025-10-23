@@ -1848,6 +1848,7 @@ export namespace API {
               from_currency_id: string;
               to_currency_id: string;
               is_subtract: boolean;
+              is_reverse: boolean;
               reference?: string;
               note?: string;
             }
@@ -1856,9 +1857,8 @@ export namespace API {
               counterparty_destination_id: string;
             }
 
-            export interface CryptoTransferOrderParams extends BaseOrderParams {
+            export interface OrderWithWalletAccountParams extends BaseOrderParams {
               wallet_account_id: string;
-              note?: string;
             }
 
             export interface OrderWithVirtualAccountParams extends BaseOrderParams {
@@ -1934,7 +1934,7 @@ export namespace API {
             }
 
             export interface L2FResponse extends BaseOrderResponse {
-              order_type: string;
+              order_type: 'L2F_SEPA_OFFRAMP' | 'L2F_SWIFT_OFFRAMP' | 'L2F_ACH_OFFRAMP' | 'L2F_WIRE_OFFRAMP';
               meta: {
                 request_id: string;
                 virtual_account_id: string;
@@ -1998,7 +1998,8 @@ export namespace API {
             export type Response = Common.Response.CryptoTransferResponse;
           }
           export namespace SEGREGATED_CRYPTO_TRANSFER {
-            export type Request = Common.Request.OrderWithCounterpartyParams;
+            export type Request = Common.Request.OrderWithWalletAccountParams &
+              Common.Request.OrderWithCounterpartyParams;
             export type Response = Common.Response.CryptoTransferResponse;
           }
           export namespace RN_CARDS_OFFRAMP {
