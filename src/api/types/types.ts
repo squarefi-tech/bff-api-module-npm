@@ -2287,6 +2287,138 @@ export namespace API {
               id: string;
             }
           }
+
+          export namespace L2F_SEPA_OFFRAMP {
+            export interface Request {
+              request_id: string;
+              virtual_account_id: string;
+              counterparty_destination_id: string;
+              amount: number;
+              wallet_id: string;
+              from_currency_id: string;
+              to_currency_id: string;
+              is_reverse: boolean;
+              reference: string;
+              note: string;
+            }
+
+            export interface Response {
+              order_uuid: string;
+              wallet_uuid: string;
+              from_uuid: string;
+              to_uuid: string;
+              amount_from: number;
+              amount_to: number;
+              order_type: 'L2F_SEPA_OFFRAMP';
+              status: OrderStatuses;
+              created_at: string;
+              info: string;
+              meta: {
+                request_id: string;
+                virtual_account_id: string;
+              };
+              id: string;
+            }
+          }
+
+          export namespace L2F_SWIFT_OFFRAMP {
+            export interface Request {
+              request_id: string;
+              virtual_account_id: string;
+              counterparty_destination_id: string;
+              amount: number;
+              wallet_id: string;
+              from_currency_id: string;
+              to_currency_id: string;
+              is_reverse: boolean;
+              reference: string;
+              note: string;
+            }
+
+            export interface Response {
+              order_uuid: string;
+              wallet_uuid: string;
+              from_uuid: string;
+              to_uuid: string;
+              amount_from: number;
+              amount_to: number;
+              order_type: 'L2F_SWIFT_OFFRAMP';
+              status: OrderStatuses;
+              created_at: string;
+              info: string;
+              meta: {
+                request_id: string;
+                virtual_account_id: string;
+              };
+              id: string;
+            }
+          }
+
+          export namespace L2F_ACH_OFFRAMP {
+            export interface Request {
+              request_id: string;
+              virtual_account_id: string;
+              counterparty_destination_id: string;
+              amount: number;
+              wallet_id: string;
+              from_currency_id: string;
+              to_currency_id: string;
+              is_reverse: boolean;
+              reference: string;
+              note: string;
+            }
+
+            export interface Response {
+              order_uuid: string;
+              wallet_uuid: string;
+              from_uuid: string;
+              to_uuid: string;
+              amount_from: number;
+              amount_to: number;
+              order_type: 'L2F_ACH_OFFRAMP';
+              status: OrderStatuses;
+              created_at: string;
+              info: string;
+              meta: {
+                request_id: string;
+                virtual_account_id: string;
+              };
+              id: string;
+            }
+          }
+
+          export namespace L2F_WIRE_OFFRAMP {
+            export interface Request {
+              request_id: string;
+              virtual_account_id: string;
+              counterparty_destination_id: string;
+              amount: number;
+              wallet_id: string;
+              from_currency_id: string;
+              to_currency_id: string;
+              is_reverse: boolean;
+              reference: string;
+              note: string;
+            }
+
+            export interface Response {
+              order_uuid: string;
+              wallet_uuid: string;
+              from_uuid: string;
+              to_uuid: string;
+              amount_from: number;
+              amount_to: number;
+              order_type: 'L2F_WIRE_OFFRAMP';
+              status: OrderStatuses;
+              created_at: string;
+              info: string;
+              meta: {
+                request_id: string;
+                virtual_account_id: string;
+              };
+              id: string;
+            }
+          }
         }
       }
 

@@ -238,6 +238,38 @@ export const orders = {
             '/v2/orders/TBD_SWIFT_WITHDRAWAL',
             { data },
           ),
+
+        [OrderType.L2F_SEPA_OFFRAMP]: (
+          data: API.Orders.V2.Create.ByOrderType.L2F_SEPA_OFFRAMP.Request,
+        ): Promise<API.Orders.V2.Create.ByOrderType.L2F_SEPA_OFFRAMP.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.L2F_SEPA_OFFRAMP.Response>(
+            '/v2/orders/L2F_SEPA_OFFRAMP',
+            { data },
+          ),
+
+        [OrderType.L2F_SWIFT_OFFRAMP]: (
+          data: API.Orders.V2.Create.ByOrderType.L2F_SWIFT_OFFRAMP.Request,
+        ): Promise<API.Orders.V2.Create.ByOrderType.L2F_SWIFT_OFFRAMP.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.L2F_SWIFT_OFFRAMP.Response>(
+            '/v2/orders/L2F_SWIFT_OFFRAMP',
+            { data },
+          ),
+
+        [OrderType.L2F_ACH_OFFRAMP]: (
+          data: API.Orders.V2.Create.ByOrderType.L2F_ACH_OFFRAMP.Request,
+        ): Promise<API.Orders.V2.Create.ByOrderType.L2F_ACH_OFFRAMP.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.L2F_ACH_OFFRAMP.Response>(
+            '/v2/orders/L2F_ACH_OFFRAMP',
+            { data },
+          ),
+
+        [OrderType.L2F_WIRE_OFFRAMP]: (
+          data: API.Orders.V2.Create.ByOrderType.L2F_WIRE_OFFRAMP.Request,
+        ): Promise<API.Orders.V2.Create.ByOrderType.L2F_WIRE_OFFRAMP.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.L2F_WIRE_OFFRAMP.Response>(
+            '/v2/orders/L2F_WIRE_OFFRAMP',
+            { data },
+          ),
       },
     },
   },
