@@ -1999,7 +1999,9 @@ export namespace API {
           }
           export namespace SEGREGATED_CRYPTO_TRANSFER {
             export type Request = Common.Request.OrderWithWalletAccountParams &
-              Common.Request.OrderWithCounterpartyParams;
+              Common.Request.OrderWithCounterpartyParams & {
+                to_currency_id?: never;
+              };
             export type Response = Common.Response.CryptoTransferResponse;
           }
           export namespace RN_CARDS_OFFRAMP {
