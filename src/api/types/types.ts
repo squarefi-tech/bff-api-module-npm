@@ -19,7 +19,7 @@ import {
   WalletTransactionType,
 } from '../../constants';
 import { WalletType } from '../..';
-import { components, operations } from './autogen/apiV2.types';
+import { components, operations, paths } from './autogen/apiV2.types';
 
 export namespace API {
   export namespace Auth {
@@ -2065,6 +2065,10 @@ export namespace API {
           operations['PersonaController_resumeInquiry']['responses']['200']['content']['application/json'];
       }
     }
+  }
+
+  export namespace Tenant {
+    export type Config = components['schemas']['SystemConfigDto'];
   }
 
   export namespace TOTP {
