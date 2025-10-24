@@ -1579,7 +1579,7 @@ export namespace API {
         export namespace WITHDRAWAL_CRYPTO {
           export type Request = {
             amount: number;
-            is_subtract: boolean;
+            is_substract: boolean;
             wallet_uuid: string;
             crypto_uuid: string;
             to_address: string;
