@@ -1320,201 +1320,6 @@ export namespace API {
           }
         }
 
-        export namespace HIFI_WIRE_ONRAMP {
-          export interface Request {
-            idempotency_key: string;
-            counterparty_account_id: string;
-            amount: number;
-            wallet_uuid: string;
-            currency_id: string;
-          }
-
-          export interface Response {
-            order_uuid: string;
-            wallet_uuid: string;
-            from_uuid: string;
-            to_uuid: string;
-            amount_from: number;
-            amount_to: number;
-            order_type: 'HIFI_WIRE_ONRAMP';
-            status: OrderStatuses;
-            created_at: string;
-            info: string;
-            meta: {
-              idempotency_key: string;
-              counterparty_account_id: string;
-              fee: number;
-              fee_currency: string;
-              billing_amount: number;
-              billing_currency: string;
-              transaction_amount: number;
-              transaction_currency: string;
-              order_uuid: string;
-            };
-            id: string;
-          }
-        }
-
-        export namespace HIFI_ACH_ONRAMP {
-          export interface Request {
-            idempotency_key: string;
-            counterparty_account_id: string;
-            amount: number;
-            wallet_uuid: string;
-            currency_id: string;
-          }
-
-          export interface Response {
-            order_uuid: string;
-            wallet_uuid: string;
-            from_uuid: string;
-            to_uuid: string;
-            amount_from: number;
-            amount_to: number;
-            order_type: 'HIFI_ACH_ONRAMP';
-            status: OrderStatuses;
-            created_at: string;
-            info: string;
-            meta: {
-              idempotency_key: string;
-              counterparty_account_id: string;
-              fee: number;
-              fee_currency: string;
-              billing_amount: number;
-              billing_currency: string;
-              transaction_amount: number;
-              transaction_currency: string;
-              order_uuid: string;
-            };
-            id: string;
-          }
-        }
-
-        export namespace HIFI_SEPA_ONRAMP {
-          export interface Request {
-            idempotency_key: string;
-            counterparty_account_id: string;
-            amount: number;
-            wallet_uuid: string;
-            currency_id: string;
-          }
-
-          export interface Response {
-            order_uuid: string;
-            wallet_uuid: string;
-            from_uuid: string;
-            to_uuid: string;
-            amount_from: number;
-            amount_to: number;
-            order_type: 'HIFI_SEPA_ONRAMP';
-            status: OrderStatuses;
-            created_at: string;
-            info: string;
-            meta: {
-              idempotency_key: string;
-              counterparty_account_id: string;
-              fee: number;
-              fee_currency: string;
-              billing_amount: number;
-              billing_currency: string;
-              transaction_amount: number;
-              transaction_currency: string;
-              order_uuid: string;
-            };
-            id: string;
-          }
-        }
-
-        export namespace HIFI_WIRE_OFFRAMP {
-          export interface Request {
-            idempotency_key: string;
-            counterparty_account_id: string;
-            amount: number;
-            wallet_uuid: string;
-            currency_id: string;
-          }
-
-          export interface Response {
-            order_uuid: string;
-            wallet_uuid: string;
-            from_uuid: string;
-            to_uuid: string;
-            amount_from: number;
-            amount_to: number;
-            order_type: 'HIFI_WIRE_OFFRAMP';
-            status: OrderStatuses;
-            created_at: string;
-            info: string;
-            meta: {
-              idempotency_key: string;
-              counterparty_account_id: string;
-              fee: number;
-              fee_currency: string;
-              billing_amount: number;
-              billing_currency: string;
-              transaction_amount: number;
-              transaction_currency: string;
-              order_uuid: string;
-            };
-            id: string;
-          }
-        }
-
-        export namespace HIFI_ACH_OFFRAMP {
-          export interface Request {
-            idempotency_key: string;
-            counterparty_account_id: string;
-            amount: number;
-            wallet_uuid: string;
-            currency_id: string;
-          }
-
-          export interface Response {
-            order_uuid: string;
-            wallet_uuid: string;
-            from_uuid: string;
-            to_uuid: string;
-            amount_from: number;
-            amount_to: number;
-            order_type: 'HIFI_ACH_OFFRAMP';
-            status: OrderStatuses;
-            created_at: string;
-            info: string;
-            meta: {
-              idempotency_key: string;
-              counterparty_account_id: string;
-              fee: number;
-              fee_currency: string;
-              billing_amount: number;
-              billing_currency: string;
-              transaction_amount: number;
-              transaction_currency: string;
-              order_uuid: string;
-            };
-            id: string;
-          }
-        }
-
-        export namespace HIFI_SEPA_OFFRAMP {
-          export interface Request {
-            idempotency_key: string;
-            counterparty_account_id: string;
-            amount: number;
-            wallet_uuid: string;
-            currency_id: string;
-          }
-
-          export interface Response {
-            id: number;
-            created_at: string;
-            order_uuid: string;
-            wallet_uuid: string;
-            amount: number;
-            status: OrderStatuses;
-            counterparty_id: string;
-          }
-        }
-
         export namespace OMNIBUS_CRYPTO_WITHDRAWAL {
           export interface Request {
             idempotency_key: string;
@@ -1628,6 +1433,25 @@ export namespace API {
             wallet_uuid: string;
             currency_id: string;
           };
+          export type Response = null;
+        }
+        export namespace WITHDRAW_CARD_PREPAID {
+          export type Request = {
+            amount: number;
+            wallet_uuid: string;
+            card_id: string;
+          };
+
+          export type Response = null;
+        }
+
+        export namespace WITHDRAW_CARD_SUBACCOUNT {
+          export type Request = {
+            amount: number;
+            wallet_uuid: string;
+            sub_account_id: string;
+          };
+
           export type Response = null;
         }
       }

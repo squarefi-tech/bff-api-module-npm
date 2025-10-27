@@ -70,53 +70,19 @@ export const orders = {
           { data },
         ),
 
-      [OrderType.HIFI_WIRE_ONRAMP]: (
-        data: API.Orders.Create.ByOrderType.HIFI_WIRE_ONRAMP.Request,
-      ): Promise<API.Orders.Create.ByOrderType.HIFI_WIRE_ONRAMP.Response> =>
-        apiClientV1.postRequest<API.Orders.Create.ByOrderType.HIFI_WIRE_ONRAMP.Response>('/orders/HIFI_WIRE_ONRAMP', {
-          data,
-        }),
+      [OrderType.WITHDRAW_CARD_PREPAID]: (
+        data: API.Orders.Create.ByOrderType.WITHDRAW_CARD_PREPAID.Request,
+      ): Promise<API.Orders.Create.ByOrderType.WITHDRAW_CARD_PREPAID.Response> =>
+        apiClientV1.postRequest<API.Orders.Create.ByOrderType.WITHDRAW_CARD_PREPAID.Response>(
+          '/orders/WITHDRAW_CARD_PREPAID',
+          { data },
+        ),
 
-      [OrderType.HIFI_ACH_ONRAMP]: (
-        data: API.Orders.Create.ByOrderType.HIFI_ACH_ONRAMP.Request,
-      ): Promise<API.Orders.Create.ByOrderType.HIFI_ACH_ONRAMP.Response> =>
-        apiClientV1.postRequest<API.Orders.Create.ByOrderType.HIFI_ACH_ONRAMP.Response>('/orders/HIFI_ACH_ONRAMP', {
-          data,
-        }),
-
-      [OrderType.HIFI_SEPA_ONRAMP]: (
-        data: API.Orders.Create.ByOrderType.HIFI_SEPA_ONRAMP.Request,
-      ): Promise<API.Orders.Create.ByOrderType.HIFI_SEPA_ONRAMP.Response> =>
-        apiClientV1.postRequest<API.Orders.Create.ByOrderType.HIFI_SEPA_ONRAMP.Response>('/orders/HIFI_SEPA_ONRAMP', {
-          data,
-        }),
-
-      [OrderType.HIFI_WIRE_OFFRAMP]: (
-        data: API.Orders.Create.ByOrderType.HIFI_WIRE_OFFRAMP.Request,
-      ): Promise<API.Orders.Create.ByOrderType.HIFI_WIRE_OFFRAMP.Response> =>
-        apiClientV1.postRequest<API.Orders.Create.ByOrderType.HIFI_WIRE_OFFRAMP.Response>('/orders/HIFI_WIRE_OFFRAMP', {
-          data,
-        }),
-
-      [OrderType.HIFI_ACH_OFFRAMP]: (
-        data: API.Orders.Create.ByOrderType.HIFI_ACH_OFFRAMP.Request,
-      ): Promise<API.Orders.Create.ByOrderType.HIFI_ACH_OFFRAMP.Response> =>
-        apiClientV1.postRequest<API.Orders.Create.ByOrderType.HIFI_ACH_OFFRAMP.Response>('/orders/HIFI_ACH_OFFRAMP', {
-          data,
-        }),
-
-      [OrderType.HIFI_SEPA_OFFRAMP]: (
-        data: API.Orders.Create.ByOrderType.HIFI_SEPA_OFFRAMP.Request,
-      ): Promise<API.Orders.Create.ByOrderType.HIFI_SEPA_OFFRAMP.Response> =>
-        apiClientV1.postRequest<API.Orders.Create.ByOrderType.HIFI_SEPA_OFFRAMP.Response>('/orders/HIFI_SEPA_OFFRAMP', {
-          data,
-        }),
-      [OrderType.TBD_SWIFT_WITHDRAWAL]: (
-        // TODO: ITS MOCK ORDER TYPE
-        data: API.Orders.Create.ByOrderType.TBD_SWIFT_WITHDRAWAL.Request,
-      ): Promise<API.Orders.Create.ByOrderType.TBD_SWIFT_WITHDRAWAL.Response> =>
-        apiClientV1.postRequest<API.Orders.Create.ByOrderType.TBD_SWIFT_WITHDRAWAL.Response>(
-          '/orders/TBD_SWIFT_WITHDRAWAL',
+      [OrderType.WITHDRAW_CARD_SUBACCOUNT]: (
+        data: API.Orders.Create.ByOrderType.WITHDRAW_CARD_SUBACCOUNT.Request,
+      ): Promise<API.Orders.Create.ByOrderType.WITHDRAW_CARD_SUBACCOUNT.Response> =>
+        apiClientV1.postRequest<API.Orders.Create.ByOrderType.WITHDRAW_CARD_SUBACCOUNT.Response>(
+          '/orders/WITHDRAW_CARD_SUBACCOUNT',
           { data },
         ),
     },
