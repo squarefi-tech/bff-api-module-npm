@@ -70,6 +70,13 @@ export const orders = {
           { data },
         ),
 
+      [OrderType.EXCHANGE_OMNI]: (
+        data: API.Orders.Create.ByOrderType.EXCHANGE_OMNI.Request,
+      ): Promise<API.Orders.Create.ByOrderType.EXCHANGE_OMNI.Response> =>
+        apiClientV1.postRequest<API.Orders.Create.ByOrderType.EXCHANGE_OMNI.Response>('/orders/EXCHANGE_OMNI', {
+          data,
+        }),
+
       [OrderType.WITHDRAW_CARD_PREPAID]: (
         data: API.Orders.Create.ByOrderType.WITHDRAW_CARD_PREPAID.Request,
       ): Promise<API.Orders.Create.ByOrderType.WITHDRAW_CARD_PREPAID.Response> =>

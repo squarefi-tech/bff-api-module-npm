@@ -1417,6 +1417,39 @@ export namespace API {
           };
         }
 
+        export namespace EXCHANGE_OMNI {
+          export type Request = {
+            amount: number;
+            wallet_uuid: string;
+            from_uuid: string;
+            to_uuid: string;
+          };
+          export type Response = {
+            created_at: string;
+            order_uuid: string;
+            wallet_uuid: string;
+            from_uuid: string;
+            to_uuid: string;
+            amount_from: number;
+            order_type: 'EXCHANGE_OMNI';
+            status: OrderStatuses;
+            amount_to: number;
+            info: string;
+            meta: {
+              fee: number;
+              order_uuid: string;
+              to_address: string;
+              fee_currency: string;
+              billing_amount: number;
+              transaction_amount: number;
+              billing_amount_currency: string;
+              transaction_amount_currency: string;
+              network_fee: number;
+            };
+            id: string;
+          };
+        }
+
         export namespace TRANSFER_CARD_WHOLESALE {
           export type Request = {
             amount: number;

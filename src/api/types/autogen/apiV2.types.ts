@@ -1772,6 +1772,7 @@ export interface components {
             usd_value_of_crypto?: string | null;
             usd_value_of_fiat?: string | null;
             occupation?: string | null;
+            occupation_other?: string | null;
             /**
              * @default UNVERIFIED
              * @enum {string}
@@ -1875,6 +1876,7 @@ export interface components {
             usd_value_of_crypto?: string | null;
             usd_value_of_fiat?: string | null;
             occupation?: string | null;
+            occupation_other?: string | null;
             /** @enum {string|null} */
             employment_status?: "EMPLOYEE" | "SELF_EMPLOYED" | "RETIRED" | "UNEMPLOYED" | "OTHER" | null;
             employment_description?: string | null;
