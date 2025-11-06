@@ -5,3 +5,5 @@ dist/
 .DS_Store
 coverage/
 temp_types.ts
+test-storage.js
+test-storage.html

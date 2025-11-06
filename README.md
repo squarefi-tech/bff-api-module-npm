@@ -10,6 +10,7 @@ A fully-typed TypeScript / JavaScript SDK for effortless interaction with the Sq
 • Strict TypeScript types generated from the OpenAPI contract.  
 • Axios-powered HTTP client with automatic tenant & environment headers.  
 • First-class support for **Telegram Mini-Apps** as well as Web.  
+• **Supabase Storage integration** with automatic user-level security policies.  
 • Batteries included: constants, helpers & cryptography utilities.  
 • Zero-config – just provide your API URLs and tenant id.
 
@@ -119,6 +120,77 @@ function MyComponent() {
 ```
 
 > ⚠️ **Important**: The hook will throw an error if Supabase environment variables are missing and you attempt to use it. Make sure to set `SUPABASE_URL` and `SUPABASE_PUBLIC_KEY` environment variables.
+
+---
+
+## 📦 Supabase Storage Module
+
+The SDK includes a complete file storage solution powered by Supabase Storage with automatic user-level security policies. Files are automatically organized by user ID and protected with Row Level Security (RLS).
+
+### Quick Start
+
+```ts
+import { uploadFile, getSignedUrl, DEFAULT_BUCKET } from 'squarefi-bff-api-module';
+
+// Upload a file
+const result = await uploadFile({
+  file: myFile, // File or Blob
+  fileName: 'document.pdf',
+  userId: 'user-uuid',
+  bucket: DEFAULT_BUCKET,
+});
+
+if (result.success) {
+  console.log('File uploaded:', result.path);
+  console.log('Signed URL:', result.signedUrl); // Use this for secure access
+}
+
+// Get a signed URL for accessing the file
+const signedUrl = await getSignedUrl({
+  path: result.path,
+  expiresIn: 3600, // 1 hour
+});
+```
+
+### Features
+
+- ✅ Automatic file organization by user ID (`{userId}/{fileName}`)
+- ✅ Row Level Security (RLS) - users can only access their own files
+- ✅ Superadmin access to all files (configurable)
+- ✅ Multiple storage buckets: `user-files`, `documents`, `images`
+- ✅ Signed URLs for temporary secure access
+- ✅ Service URLs for permanent backend access (with service role key)
+- ✅ File listing, deletion, and download support
+
+### URL Types
+
+| Type | Expires | Use Case | Authentication |
+|------|---------|----------|----------------|
+| **Signed URL** | ✅ Yes (1 hour default) | End users, temporary access | ❌ Not required |
+| **Public URL** | ❌ Never | Backend/Superadmin access | ✅ Required (service role key) |
+
+```typescript
+// For end users (temporary, no auth needed)
+const signedUrl = await getSignedUrl({ path, expiresIn: 3600 });
+
+// For superadmin backend (permanent, requires service key)
+const publicUrl = getPublicUrl(path);
+// On backend: fetch(publicUrl, { headers: { 'Authorization': 'Bearer SERVICE_KEY' } })
+```
+
+### Setup
+
+1. Set required environment variables (see table above)
+2. Run the SQL setup script in your Supabase project:
+   ```bash
+   # Execute scripts/supabase-storage-setup.sql in Supabase SQL Editor
+   ```
+3. Customize the `is_super_admin()` function according to your user schema
+
+📖 **Documentation**:
+- **Frontend Guide** (React): [docs/FRONTEND_STORAGE_GUIDE.md](./docs/FRONTEND_STORAGE_GUIDE.md) - Quick start with ready-to-use components
+- **Full Documentation**: [docs/STORAGE_MODULE.md](./docs/STORAGE_MODULE.md) - Detailed API description
+- **Quick Start**: [docs/STORAGE_QUICK_START.md](./docs/STORAGE_QUICK_START.md) - Get started in 5 minutes
 
 ---
 
