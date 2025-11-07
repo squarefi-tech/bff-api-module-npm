@@ -2163,7 +2163,7 @@ export namespace API {
       }
 
       export namespace DepositInstruction {
-        export type InstructionType = 'ACH' | 'FEDWIRE' | 'SWIFT' | 'SEPA_CT';
+        export type InstructionType = 'ACH' | 'FEDWIRE' | 'SWIFT' | 'SEPA_CT' | 'CHAPS' | 'FPS';
 
         export interface Address {
           city: string;
@@ -2186,6 +2186,7 @@ export namespace API {
           account_routing_number?: string;
           swift_bic?: string;
           iban?: string;
+          sort_code?: string;
         }
         export interface ACH extends Common {
           instruction_type: 'ACH';
@@ -2212,7 +2213,23 @@ export namespace API {
           account_holder_address: Address;
         }
 
-        export type DepositInstruction = ACH | FEDWIRE | SWIFT | Common;
+        export interface CHAPS extends Common {
+          instruction_type: 'CHAPS';
+          account_holder_name: string;
+          sort_code: string;
+          account_holder_address: Address;
+          institution_address: Address;
+        }
+
+        export interface FPS extends Common {
+          instruction_type: 'FPS';
+          account_holder_name: string;
+          sort_code: string;
+          account_holder_address: Address;
+          institution_address: Address;
+        }
+
+        export type DepositInstruction = ACH | FEDWIRE | SWIFT | SEPA | CHAPS | FPS | Common;
       }
 
       export interface OrderType {
