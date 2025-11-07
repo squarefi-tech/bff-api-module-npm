@@ -2185,6 +2185,7 @@ export namespace API {
           account_holder_name?: string;
           account_routing_number?: string;
           swift_bic?: string;
+          iban?: string;
         }
         export interface ACH extends Common {
           instruction_type: 'ACH';
