@@ -2163,7 +2163,7 @@ export namespace API {
       }
 
       export namespace DepositInstruction {
-        export type InstructionType = 'ACH' | 'FEDWIRE' | 'SWIFT';
+        export type InstructionType = 'ACH' | 'FEDWIRE' | 'SWIFT' | 'SEPA_CT';
 
         export interface Address {
           city: string;
@@ -2199,6 +2199,13 @@ export namespace API {
 
         export interface SWIFT extends Common {
           instruction_type: 'SWIFT';
+          swift_bic: string;
+          institution_address: Address;
+          account_holder_address: Address;
+        }
+        export interface SEPA extends Common {
+          instruction_type: 'SEPA_CT';
+          iban: string;
           swift_bic: string;
           institution_address: Address;
           account_holder_address: Address;
