@@ -1905,6 +1905,177 @@ export namespace API {
           export type Response = OrderInfo[];
         }
       }
+
+      export namespace List {
+        export namespace ByWallet {
+          export interface Request {
+            wallet_uuid: string;
+            offset?: number;
+            limit?: number;
+            sort_by?: string;
+            sort_order?: 'asc' | 'desc';
+          }
+
+          export interface L2FOriginatorAddress {
+            address_line1?: string | null;
+            city?: string | null;
+            state?: string | null;
+            postal_code?: string | null;
+            country?: string | null;
+          }
+
+          export interface L2FOriginatorProfile {
+            name: string;
+            address?: L2FOriginatorAddress;
+          }
+
+          export interface L2FOriginatorAccountInfo {
+            account_number: string;
+            routing_number?: string | null;
+            swift_bic?: string | null;
+            institution_name?: string | null;
+          }
+
+          export interface L2FOriginator {
+            profile: L2FOriginatorProfile;
+            account_information: L2FOriginatorAccountInfo;
+            reference?: string | null;
+            memo?: string | null;
+          }
+
+          export interface OrderMeta {
+            order_uuid: string;
+            request_id?: string | null;
+            billing_amount: number;
+            billing_currency: string;
+            billing_amount_currency: string;
+            transaction_amount: number;
+            transaction_currency: string;
+            transaction_amount_currency: string;
+            network_fee?: number | null;
+            network_fee_currency?: string | null;
+            exchange_rate: number;
+            fee: number;
+            fee_currency: string;
+            from_currency_id: string;
+            to_currency_id: string;
+            chain_id?: number | null;
+            counterparty_destination_id?: string | null;
+            counterparty_account_id?: string | null;
+            counterparty_account_name?: string | null;
+            counterparty_account_nickname?: string | null;
+            virtual_account_id?: string | null;
+            virtual_account_name?: string | null;
+            to_crypto_address?: string | null;
+            reference?: string | null;
+            note?: string | null;
+            order_id?: string | null;
+            originator?: L2FOriginator | null;
+            sub_account_id?: string | null;
+            to_address?: string | null;
+            sub_account_currency?: string | null;
+            crypto_transaction_hash?: string | null;
+          }
+
+          export interface OrderItem {
+            id: number;
+            order_uuid: string;
+            request_id?: string | null;
+            wallet_uuid: string;
+            from_uuid: string;
+            to_uuid: string;
+            amount_from: number;
+            amount_to: number;
+            order_type: string;
+            status: 'PENDING' | 'PROCESSING' | 'COMPLETE' | 'FAILED' | 'CANCELED';
+            created_at: string;
+            updated_at?: string | null;
+            sub_account_id?: string | null;
+            meta: OrderMeta;
+            info?: string | null;
+          }
+
+          export type Response = OrderItem[];
+        }
+      }
+
+      export namespace GetById {
+        export interface Request {
+          order_uuid: string;
+        }
+
+        // Упрощенная мета (без финансовых данных, они есть в amount_from/amount_to)
+        export type OrderMetaSimplified = Pick<
+          API.Orders.V2.List.ByWallet.OrderMeta,
+          | 'order_uuid'
+          | 'request_id'
+          | 'counterparty_destination_id'
+          | 'counterparty_account_id'
+          | 'counterparty_account_name'
+          | 'counterparty_account_nickname'
+          | 'virtual_account_id'
+          | 'virtual_account_name'
+          | 'originator'
+        >;
+
+        export interface CounterpartyAccount {
+          id: string;
+          name: string;
+          type: string;
+          email?: string | null;
+          phone?: string | null;
+        }
+
+        export interface ExternalBankingData {
+          account_number: string;
+          routing_number?: string | null;
+          bank_name: string;
+          swift_bic?: string | null;
+          iban?: string | null;
+          note?: string | null;
+        }
+
+        export interface ExternalCryptoData {
+          address: string;
+          currency_id: string;
+          memo?: string | null;
+        }
+
+        export interface CounterpartyDestination {
+          id: string;
+          type: string;
+          nickname?: string | null;
+          counterparty_account: CounterpartyAccount;
+          external_banking_data?: ExternalBankingData | null;
+          external_crypto_data?: ExternalCryptoData | null;
+        }
+
+        export interface VirtualAccountDetails {
+          id: string;
+          wallet_id: string;
+          status: string;
+          vendor_account_id: string;
+          balance: number;
+          account_currency_details: API.Currencies.Currency;
+          destination_currency_details: API.Currencies.Currency;
+          integration_vendor: API.VirtualAccounts.Programs.IntegrationVendor;
+          account_details: API.VirtualAccounts.VirtualAccount.AccountDetails;
+        }
+
+        export type OrderDetails = Omit<
+          API.Orders.V2.List.ByWallet.OrderItem,
+          'meta' | 'updated_at' | 'request_id' | 'sub_account_id'
+        > & {
+          meta: OrderMetaSimplified;
+          wallet: API.Wallets.Wallet;
+          from_currency: API.Currencies.Currency;
+          to_currency: API.Currencies.Currency;
+          virtual_account?: VirtualAccountDetails | null;
+          counterparty_destination?: CounterpartyDestination | null;
+        };
+
+        export type Response = OrderDetails;
+      }
     }
   }
 

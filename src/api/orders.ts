@@ -238,5 +238,18 @@ export const orders = {
           ),
       },
     },
+
+    list: {
+      byWallet: ({
+        wallet_uuid,
+        ...params
+      }: API.Orders.V2.List.ByWallet.Request): Promise<API.Orders.V2.List.ByWallet.Response> =>
+        apiClientV1.getRequest<API.Orders.V2.List.ByWallet.Response>(`/v2/orders/list/${wallet_uuid}`, {
+          params,
+        }),
+    },
+
+    getById: ({ order_uuid }: API.Orders.V2.GetById.Request): Promise<API.Orders.V2.GetById.Response> =>
+      apiClientV1.getRequest<API.Orders.V2.GetById.Response>(`/v2/orders/id/${order_uuid}`),
   },
 };
