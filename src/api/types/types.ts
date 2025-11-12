@@ -692,6 +692,15 @@ export namespace API {
       count: number;
       data: Currency[];
     };
+
+    // Упрощенная версия валюты (используется в некоторых эндпоинтах)
+    export interface SimplifiedCurrency {
+      icon?: string | null;
+      name: string;
+      uuid: string;
+      symbol: string;
+      decimal: number;
+    }
   }
 
   export namespace Developer {
@@ -1916,7 +1925,7 @@ export namespace API {
             sort_order?: 'asc' | 'desc';
           }
 
-          export interface L2FOriginatorAddress {
+          export interface PaymentOriginatorAddress {
             address_line1?: string | null;
             city?: string | null;
             state?: string | null;
@@ -1924,21 +1933,21 @@ export namespace API {
             country?: string | null;
           }
 
-          export interface L2FOriginatorProfile {
+          export interface PaymentOriginatorProfile {
             name: string;
-            address?: L2FOriginatorAddress;
+            address?: PaymentOriginatorAddress;
           }
 
-          export interface L2FOriginatorAccountInfo {
+          export interface PaymentOriginatorAccountInfo {
             account_number: string;
             routing_number?: string | null;
             swift_bic?: string | null;
             institution_name?: string | null;
           }
 
-          export interface L2FOriginator {
-            profile: L2FOriginatorProfile;
-            account_information: L2FOriginatorAccountInfo;
+          export interface PaymentOriginator {
+            profile: PaymentOriginatorProfile;
+            account_information: PaymentOriginatorAccountInfo;
             reference?: string | null;
             memo?: string | null;
           }
@@ -1946,19 +1955,19 @@ export namespace API {
           export interface OrderMeta {
             order_uuid: string;
             request_id?: string | null;
-            billing_amount: number;
-            billing_currency: string;
-            billing_amount_currency: string;
-            transaction_amount: number;
-            transaction_currency: string;
-            transaction_amount_currency: string;
+            billing_amount?: number;
+            billing_currency?: string;
+            // billing_amount_currency?: string; // double billing_currency field
+            transaction_amount?: number;
+            transaction_currency?: string;
+            // transaction_amount_currency?: string; // double transaction_currency field
             network_fee?: number | null;
             network_fee_currency?: string | null;
-            exchange_rate: number;
-            fee: number;
-            fee_currency: string;
-            from_currency_id: string;
-            to_currency_id: string;
+            exchange_rate?: number;
+            fee?: number;
+            fee_currency?: string;
+            from_currency_id?: string;
+            to_currency_id?: string;
             chain_id?: number | null;
             counterparty_destination_id?: string | null;
             counterparty_account_id?: string | null;
@@ -1970,15 +1979,26 @@ export namespace API {
             reference?: string | null;
             note?: string | null;
             order_id?: string | null;
-            originator?: L2FOriginator | null;
+            originator?: PaymentOriginator | null;
             sub_account_id?: string | null;
             to_address?: string | null;
             sub_account_currency?: string | null;
             crypto_transaction_hash?: string | null;
+            // Дополнительные поля для разных типов ордеров
+            workflow_type?: string;
+            processing_type?: string;
+            workflow_status?: string;
+            qstash_message_id?: string;
+            vendor_account_id?: string;
+            processing_started_at?: string;
+            workflow_status_updated_at?: string;
+            card_id?: string;
+            vendor_id?: string;
+            fiat_account_id?: string;
           }
 
           export interface OrderItem {
-            id: number;
+            id: string;
             order_uuid: string;
             request_id?: string | null;
             wallet_uuid: string;
@@ -2004,18 +2024,9 @@ export namespace API {
           order_uuid: string;
         }
 
-        // Упрощенная мета (без финансовых данных, они есть в amount_from/amount_to)
-        export type OrderMetaSimplified = Pick<
+        export type OrderMetaExtended = Omit<
           API.Orders.V2.List.ByWallet.OrderMeta,
-          | 'order_uuid'
-          | 'request_id'
-          | 'counterparty_destination_id'
-          | 'counterparty_account_id'
-          | 'counterparty_account_name'
-          | 'counterparty_account_nickname'
-          | 'virtual_account_id'
-          | 'virtual_account_name'
-          | 'originator'
+          'to_crypto_address' | 'sub_account_id' | 'to_address' | 'sub_account_currency' | 'crypto_transaction_hash'
         >;
 
         export interface CounterpartyAccount {
@@ -2024,18 +2035,22 @@ export namespace API {
           type: string;
           email?: string | null;
           phone?: string | null;
+          wallet_id: string;
         }
 
         export interface ExternalBankingData {
+          id: string;
           account_number: string;
           routing_number?: string | null;
           bank_name: string;
           swift_bic?: string | null;
           iban?: string | null;
           note?: string | null;
+          address_id?: string | null;
         }
 
         export interface ExternalCryptoData {
+          id: string;
           address: string;
           currency_id: string;
           memo?: string | null;
@@ -2043,33 +2058,85 @@ export namespace API {
 
         export interface CounterpartyDestination {
           id: string;
-          type: string;
+          counterparty_account_id: string;
           nickname?: string | null;
+          type: string;
+          external_banking_data_id?: string | null;
+          external_crypto_data_id?: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at?: string | null;
+          is_deleted?: boolean | null;
           counterparty_account: CounterpartyAccount;
           external_banking_data?: ExternalBankingData | null;
           external_crypto_data?: ExternalCryptoData | null;
         }
 
-        export interface VirtualAccountDetails {
-          id: string;
-          wallet_id: string;
-          status: string;
-          vendor_account_id: string;
-          balance: number;
-          account_currency_details: API.Currencies.Currency;
-          destination_currency_details: API.Currencies.Currency;
-          integration_vendor: API.VirtualAccounts.Programs.IntegrationVendor;
-          account_details: API.VirtualAccounts.VirtualAccount.AccountDetails;
+        export interface IntegrationVendorExtended extends API.VirtualAccounts.Programs.IntegrationVendor {
+          type: string;
         }
 
-        export type OrderDetails = Omit<
-          API.Orders.V2.List.ByWallet.OrderItem,
-          'meta' | 'updated_at' | 'request_id' | 'sub_account_id'
-        > & {
-          meta: OrderMetaSimplified;
-          wallet: API.Wallets.Wallet;
-          from_currency: API.Currencies.Currency;
-          to_currency: API.Currencies.Currency;
+        export interface DepositInstructionAddress {
+          address_line1: string;
+          city: string;
+          state: string;
+          postal_code: string;
+          country_code: string;
+        }
+
+        export interface DepositInstruction {
+          instruction_type: string;
+          asset_type_id: string;
+          account_number: string;
+          routing_number?: string;
+          account_routing_number?: string;
+          institution_name: string;
+          account_holder_name?: string;
+          memo: string;
+          institution_address?: DepositInstructionAddress;
+          account_holder_address?: DepositInstructionAddress;
+        }
+
+        export interface VirtualAccountAccountDetails {
+          rail_account_id: string;
+          rail_asset_type: string;
+          rail_product_id: string;
+          rail_customer_id: string;
+        }
+
+        export interface VirtualAccountDetails {
+          id: string;
+          created_at: string;
+          wallet_id: string;
+          status: string;
+          account_currency: string;
+          destination_currency: string;
+          destination_address?: string | null;
+          va_programs_id: string;
+          integration_vendor_id: string;
+          vendor_account_id: string;
+          vendor_status: string;
+          current_balance: number;
+          available_balance: number;
+          customer_name: string;
+          asset_type_id: string;
+          deposit_type: string;
+          meta?: Record<string, unknown>;
+          account_details: VirtualAccountAccountDetails;
+          deposit_instructions?: DepositInstruction[];
+          account_currency_details: API.Currencies.SimplifiedCurrency;
+          destination_currency_details: API.Currencies.SimplifiedCurrency;
+          integration_vendor: IntegrationVendorExtended;
+        }
+
+        export type OrderDetails = Omit<API.Orders.V2.List.ByWallet.OrderItem, 'id' | 'meta'> & {
+          id: string;
+          meta: OrderMetaExtended;
+          request_id: string;
+          updated_at: string;
+          wallet: API.Wallets.SimplifiedWallet;
+          from_currency: API.Currencies.SimplifiedCurrency;
+          to_currency: API.Currencies.SimplifiedCurrency;
           virtual_account?: VirtualAccountDetails | null;
           counterparty_destination?: CounterpartyDestination | null;
         };
@@ -2562,6 +2629,13 @@ export namespace API {
   }
 
   export namespace Wallets {
+    // Упрощенная версия кошелька (используется в некоторых эндпоинтах)
+    export interface SimplifiedWallet {
+      uuid: string;
+      user_id: string;
+      tenant_id: string;
+    }
+
     export interface WallletBalanceCryptoDetails {
       uuid: string;
       amount: number;
