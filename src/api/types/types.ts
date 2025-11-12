@@ -2024,11 +2024,6 @@ export namespace API {
           order_uuid: string;
         }
 
-        export type OrderMetaExtended = Omit<
-          API.Orders.V2.List.ByWallet.OrderMeta,
-          'to_crypto_address' | 'sub_account_id' | 'to_address' | 'sub_account_currency' | 'crypto_transaction_hash'
-        >;
-
         export interface CounterpartyAccount {
           id: string;
           name: string;
@@ -2129,9 +2124,7 @@ export namespace API {
           integration_vendor: IntegrationVendorExtended;
         }
 
-        export type OrderDetails = Omit<API.Orders.V2.List.ByWallet.OrderItem, 'id' | 'meta'> & {
-          id: string;
-          meta: OrderMetaExtended;
+        export type OrderDetails = API.Orders.V2.List.ByWallet.OrderItem & {
           request_id: string;
           updated_at: string;
           wallet: API.Wallets.SimplifiedWallet;
