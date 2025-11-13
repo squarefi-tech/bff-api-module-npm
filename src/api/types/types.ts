@@ -1923,6 +1923,15 @@ export namespace API {
             limit?: number;
             sort_by?: string;
             sort_order?: 'asc' | 'desc';
+            filter: {
+              // ITS MOCK, NOT REAL FILTERS
+              from_created_at?: string;
+              to_created_at?: string;
+              status?: OrderStatuses;
+              order_type?: OrderType;
+              from_currency_id?: string;
+              to_currency_id?: string;
+            };
           }
 
           export interface PaymentOriginatorAddress {
