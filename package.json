@@ -14,7 +14,8 @@
     "test": "jest",
     "generate:openapi-types": "ts-node scripts/generate-openapi-types.ts",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "check-types": "tsc --noEmit"
   },
   "keywords": [
     "squarefi",
