@@ -9,6 +9,7 @@ import {
   CurrencyType,
   IssuingProgramStatus,
   KYCStatuses,
+  OrderPaymentMethod,
   OrderStatuses,
   OrderType,
   SortingDirection,
@@ -1901,13 +1902,13 @@ export namespace API {
 
       export namespace OrderTypes {
         export interface OrderInfo {
-          id: string;
+          id: OrderType | string;
           transaction_type: string;
           description: string | null;
-          direction: 'deposit' | 'withdrawal';
+          direction: string | null;
           is_internal: boolean;
           kyc_rails_id: string | null;
-          payment_method: OrderType | string;
+          payment_method: OrderPaymentMethod | string;
         }
 
         export namespace List {

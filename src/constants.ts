@@ -59,6 +59,17 @@ export enum WalletTransactionStatus {
   NEW = 'new',
 }
 
+export enum OrderPaymentMethod {
+  ACH = 'ACH',
+  SEPA = 'SEPA',
+  SWIFT = 'SWIFT',
+  DOMESTIC_WIRE = 'DOMESTIC_WIRE',
+  CRYPTO_EXTERNAL = 'CRYPTO_EXTERNAL',
+  CRYPTO_INTERNAL = 'CRYPTO_INTERNAL',
+  CHAPS = 'CHAPS',
+  FPS = 'FPS',
+}
+
 export enum OrderType {
   // when extend do not forget to add new order type to the enum WalletTransactionRecordType
   DEPOSIT_ISSUING_SA_CRYPTO_EXT = 'DEPOSIT_ISSUING_SA_CRYPTO_EXT',

@@ -1973,6 +1973,8 @@ export interface components {
             created_at: string;
             /** @default false */
             is_pinned: boolean;
+            /** @default false */
+            is_self: boolean;
         };
         FindAllCounterpartyAccountsResponseDto: {
             /** @example 20 */
@@ -1992,6 +1994,8 @@ export interface components {
             type: "INDIVIDUAL" | "BUSINESS";
             /** @default false */
             is_pinned: boolean;
+            /** @default false */
+            is_self: boolean;
         };
         UpdateCounterpartyAccountDto: {
             email?: string;
