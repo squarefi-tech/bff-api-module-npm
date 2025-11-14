@@ -2096,19 +2096,6 @@ export namespace API {
           country_code: string;
         }
 
-        export interface DepositInstruction {
-          instruction_type: string;
-          asset_type_id: string;
-          account_number: string;
-          routing_number?: string;
-          account_routing_number?: string;
-          institution_name: string;
-          account_holder_name?: string;
-          memo: string;
-          institution_address?: DepositInstructionAddress;
-          account_holder_address?: DepositInstructionAddress;
-        }
-
         export interface VirtualAccountAccountDetails {
           rail_account_id: string;
           rail_asset_type: string;
@@ -2135,7 +2122,7 @@ export namespace API {
           deposit_type: string;
           meta?: Record<string, unknown>;
           account_details: VirtualAccountAccountDetails;
-          deposit_instructions?: DepositInstruction[];
+          deposit_instructions?: API.VirtualAccounts.VirtualAccount.DepositInstruction.DepositInstruction[];
           account_currency_details: API.Currencies.SimplifiedCurrency;
           destination_currency_details: API.Currencies.SimplifiedCurrency;
           integration_vendor: IntegrationVendorExtended;
