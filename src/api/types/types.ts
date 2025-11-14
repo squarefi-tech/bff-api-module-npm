@@ -1983,6 +1983,7 @@ export namespace API {
             fee?: number;
             fee_currency?: string;
             from_currency_id?: string;
+            from_crypto_address?: string | null;
             to_currency_id?: string;
             chain_id?: number | null;
             counterparty_destination_id?: string | null;
