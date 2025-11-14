@@ -1901,14 +1901,20 @@ export namespace API {
       }
 
       export namespace OrderTypes {
+        export type OrderTypeKycRail = {
+          id: string;
+          kyc_rail_id: string;
+        };
         export interface OrderInfo {
           id: OrderType | string;
           transaction_type: string;
           description: string | null;
           direction: string | null;
           is_internal: boolean;
-          kyc_rails_id: string | null;
+          // kyc_rails_id: string | null; // deprecated use order_types_kyc_rails instead
           payment_method: OrderPaymentMethod | string;
+          is_trusted: boolean;
+          order_types_kyc_rails: OrderTypeKycRail[];
         }
 
         export namespace List {
