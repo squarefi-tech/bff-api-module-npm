@@ -2688,10 +2688,8 @@ export namespace API {
         created_at: string;
       }
 
-      export type Response = {
-        total: number;
-        data: WalletsListItem[];
-      };
+      export type Request = operations['WalletsController_all']['parameters']['query'];
+      export type Response = operations['WalletsController_all']['responses']['200']['content']['application/json'];
     }
 
     export namespace WalletTransactions {

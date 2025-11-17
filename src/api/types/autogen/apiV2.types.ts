@@ -1201,6 +1201,7 @@ export interface components {
             type: "personal" | "business" | "trading" | "merchant" | "staking" | "saving" | "escrow" | "exchange" | "vault" | null;
             created_at: string;
         };
+        WalletsFilter: Record<string, never>;
         CreateWalletDto: {
             /**
              * @default personal
@@ -2868,7 +2869,15 @@ export interface operations {
     };
     WalletsController_all: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Number of records to skip */
+                offset?: number;
+                /** @description Number of records to return */
+                limit?: number;
+                sort_order?: "ASC" | "DESC";
+                sort_by?: "created_at" | null;
+                filter?: components["schemas"]["WalletsFilter"];
+            };
             header?: never;
             path?: never;
             cookie?: never;
