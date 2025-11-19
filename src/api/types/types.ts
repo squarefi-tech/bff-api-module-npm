@@ -2476,6 +2476,8 @@ export namespace API {
         created_at: string;
         wallet_id: string;
         status: string;
+        balance: number;
+        total_balance: number;
         account_currency: API.Currencies.Currency;
         va_programs_id: string;
         destination_currency: API.Currencies.Currency;
