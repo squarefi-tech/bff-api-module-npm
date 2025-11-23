@@ -3,6 +3,9 @@
 ## 1️⃣ Setup (one time)
 
 ```bash
+# Copy env.example to .env and fill in your values
+# See env.example in repository root for all available variables
+
 # .env
 SUPABASE_URL=https://xxx.supabase.co
 SUPABASE_PUBLIC_KEY=eyJxxx...

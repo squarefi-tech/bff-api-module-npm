@@ -70,18 +70,22 @@ const { isConnected } = useSupabaseSubscription({
 
 The SDK reads connection details from process-level variables. When bundling for the browser, tools like **Vite**, **Webpack DefinePlugin**, or **Next.js** can safely inline those values at build time.
 
-| Name                       | Description                                                          | Required                       | Example                       |
-| -------------------------- | -------------------------------------------------------------------- | ------------------------------ | ----------------------------- |
-| `API_URL`                  | Base URL of the BFF **v1** service                                   | ✅                             | `https://api-v1.squarefi.com` |
-| `API_V2_URL`               | Base URL of the BFF **v2** service                                   | ✅                             | `https://api-v2.squarefi.com` |
-| `API_TOTP_URL`             | Base URL of the **TOTP / OTP** micro-service                         | ⚠️ _If you use TOTP features_  | `https://totp.squarefi.com`   |
-| `TENANT_ID`                | Your tenant / organisation identifier                                | ✅                             | `tenant_12345`                |
-| `LOGOUT_URL`               | Frontend route where the user is redirected when refresh token fails | ❌                             | `/auth/logout`                |
-| `SERVER_PUBLIC_KEY_BASE64` | PEM encoded key (base64) used for request signing                    | ✅                             | `MIIBIjANBgkqh…`              |
-| `SUPABASE_URL`             | Supabase project URL for real-time subscriptions                     | ⚠️ _If you use Supabase hooks_ | `https://xyz.supabase.co`     |
-| `SUPABASE_PUBLIC_KEY`      | Supabase public anon key for client authentication                   | ⚠️ _If you use Supabase hooks_ | `eyJhbGciOiJIUzI1NiIs…`       |
+| Name                       | Description                                                                                  | Required                                  | Example                       |
+| -------------------------- | -------------------------------------------------------------------------------------------- | ----------------------------------------- | ----------------------------- |
+| `API_URL`                  | Base URL of the BFF **v1** service                                                           | ✅                                        | `https://api-v1.squarefi.com` |
+| `API_V2_URL`               | Base URL of the BFF **v2** service                                                           | ✅                                        | `https://api-v2.squarefi.com` |
+| `API_TOTP_URL`             | Base URL of the **TOTP / OTP** micro-service                                                 | ⚠️ _If you use TOTP features_             | `https://totp.squarefi.com`   |
+| `TENANT_ID`                | Your tenant / organisation identifier                                                        | ✅                                        | `tenant_12345`                |
+| `LOGOUT_URL`               | Frontend route where the user is redirected when refresh token fails                         | ❌                                        | `/auth/logout`                |
+| `SERVER_PUBLIC_KEY_BASE64` | PEM encoded key (base64) used for encrypted sensitive data requests (e.g., card secret keys) | ✅                                        | `MIIBIjANBgkqh…`              |
+| `SUPABASE_URL`             | Supabase project URL for real-time subscriptions and file storage                            | ⚠️ _If you use Supabase hooks or Storage_ | `https://xyz.supabase.co`     |
+| `SUPABASE_PUBLIC_KEY`      | Supabase public anon key for client authentication                                           | ⚠️ _If you use Supabase hooks or Storage_ | `eyJhbGciOiJIUzI1NiIs…`       |
+
+> ⚠️ **Backend Only**: `SUPABASE_SERVICE_ROLE_KEY` is used for backend file access (see [Backend Service URL Guide](./docs/BACKEND_SERVICE_URL.md)). **Never expose this key on frontend/client-side code.**
 
 > ℹ️ When running in Node.js you can place these variables in a `.env` file and load them with [dotenv](https://npmjs.com/package/dotenv).
+>
+> 📝 See `env.example` file in the repository root for a complete template with all available environment variables.
 
 ---
 
@@ -164,10 +168,10 @@ const signedUrl = await getSignedUrl({
 
 ### URL Types
 
-| Type | Expires | Use Case | Authentication |
-|------|---------|----------|----------------|
-| **Signed URL** | ✅ Yes (1 hour default) | End users, temporary access | ❌ Not required |
-| **Public URL** | ❌ Never | Backend/Superadmin access | ✅ Required (service role key) |
+| Type           | Expires                 | Use Case                    | Authentication                 |
+| -------------- | ----------------------- | --------------------------- | ------------------------------ |
+| **Signed URL** | ✅ Yes (1 hour default) | End users, temporary access | ❌ Not required                |
+| **Public URL** | ❌ Never                | Backend/Superadmin access   | ✅ Required (service role key) |
 
 ```typescript
 // For end users (temporary, no auth needed)
@@ -188,6 +192,7 @@ const publicUrl = getPublicUrl(path);
 3. Customize the `is_super_admin()` function according to your user schema
 
 📖 **Documentation**:
+
 - **Frontend Guide** (React): [docs/FRONTEND_STORAGE_GUIDE.md](./docs/FRONTEND_STORAGE_GUIDE.md) - Quick start with ready-to-use components
 - **Full Documentation**: [docs/STORAGE_MODULE.md](./docs/STORAGE_MODULE.md) - Detailed API description
 - **Quick Start**: [docs/STORAGE_QUICK_START.md](./docs/STORAGE_QUICK_START.md) - Get started in 5 minutes

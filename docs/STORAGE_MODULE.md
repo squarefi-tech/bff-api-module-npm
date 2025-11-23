@@ -17,6 +17,9 @@ The module provides functions for working with Supabase file storage with automa
 ### 1. Environment Variables Setup
 
 ```bash
+# Copy env.example to .env and fill in your values
+# See env.example in repository root for all available variables
+
 SUPABASE_URL=your-supabase-url
 SUPABASE_PUBLIC_KEY=your-supabase-anon-key
 ```

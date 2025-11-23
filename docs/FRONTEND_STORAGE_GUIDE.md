@@ -7,6 +7,9 @@ A simple and quick guide for using the file upload module in React applications.
 ### 1. Environment Variables Setup
 
 ```bash
+# Copy env.example to .env and fill in your values
+# See env.example in repository root for all available variables
+
 # .env or .env.local
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_PUBLIC_KEY=your-anon-key

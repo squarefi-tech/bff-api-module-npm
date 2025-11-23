@@ -4,7 +4,302 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-ƒ
+
+## [1.31] - 2025-11-19
+
+### Changed
+
+- Updated useFileUpload hook to require bucket and support folder structure for file uploads
+- Removed useUserFiles hook
+
+## [1.30.10] - 2025-11-19
+
+### Added
+
+- Added balance and total_balance fields to wallet API response
+
+## [1.30.9] - 2025-11-17
+
+### Changed
+
+- Updated wallets API to accept query parameters and renamed type generation script in package.json
+
+## [1.30.8] - 2025-11-14
+
+### Changed
+
+- Removed outdated HIFI transaction types and added new L2F transaction types for deposits and withdrawals
+- Updated OrderType enum to include new deposit and withdrawal types for HIFI and L2F
+
+## [1.30.7] - 2025-11-14
+
+### Added
+
+- Added HIFI_ACH_WITHDRAWAL and HIFI_ACH_DEPOSIT to OrderType enum
+- Added check-types script to package.json
+
+## [1.30.6] - 2025-11-14
+
+### Changed
+
+- Removed DepositInstruction interface and updated deposit_instructions type in VirtualAccountAccountDetails
+
+## [1.30.5] - 2025-11-14
+
+### Added
+
+- Added from_crypto_address field to order request parameters in API types
+
+## [1.30.4] - 2025-11-14
+
+### Added
+
+- Added OrderTypeKycRail type and updated OrderInfo interface to include order_types_kyc_rails and is_trusted fields
+
+## [1.30.3] - 2025-11-14
+
+### Added
+
+- Added OrderPaymentMethod enum and updated OrderInfo interface to use it
+
+## [1.30.2] - 2025-11-12
+
+### Changed
+
+- Removed unused OrderMetaExtended type and simplified OrderDetails type definition
+
+## [1.30.1] - 2025-11-12
+
+### Added
+
+- Introduced new interfaces for simplified currency and wallet, renamed payment originator types, and extended order meta with additional fields
+
+## [1.30.0] - 2025-11-10
+
+### Added
+
+- Added new endpoints for listing orders by wallet and retrieving order details by ID, along with corresponding request/response types
+
+## [1.29.3] - 2025-11-07
+
+### Added
+
+- Extended DepositInstruction with CHAPS and FPS instruction types and added sort_code field
+
+## [1.29.2] - 2025-11-07
+
+### Added
+
+- Added iban field to ACH interface in API types
+
+## [1.29.1] - 2025-11-07
+
+### Added
+
+- Added SEPA_CT instruction type and corresponding SEPA interface to DepositInstruction
+
+## [1.29.0] - 2025-10-29
+
+### Added
+
+- Introduced EXCHANGE_OMNI order type and updated related API request/response types
+- Added Supabase Storage integration with user-level security and file management features
+
+## [1.28.0] - 2025-10-27
+
+### Added
+
+- Added new order types for card withdrawals and updated API types accordingly
+
+## [1.27.8] - 2025-10-24
+
+### Fixed
+
+- Corrected typo in WITHDRAWAL_CRYPTO request type by changing 'is_substract' to 'is_subsctract'
+
+## [1.27.7] - 2025-10-24
+
+### Fixed
+
+- Corrected typo in WITHDRAWAL_CRYPTO request type by changing 'is_subtract' to 'is_substract'
+
+## [1.27.6] - 2025-10-24
+
+### Changed
+
+- Enhanced tenant config type definition and removed deprecated endpoints for improved clarity and type safety
+
+## [1.27.5] - 2025-10-23
+
+### Fixed
+
+- Made virtual_account_id optional in OrderWithVirtualAccountParams for improved flexibility
+
+## [1.27.4] - 2025-10-23
+
+### Changed
+
+- Version bump for latest changes
+
+## [1.27.3] - 2025-10-23
+
+### Fixed
+
+- Simplified SEGREGATED_CRYPTO_TRANSFER request type by using Omit to exclude to_currency_id for better type safety
+
+## [1.27.2] - 2025-10-23
+
+### Fixed
+
+- Updated SEGREGATED_CRYPTO_TRANSFER request type to disallow to_currency_id for improved type safety
+
+## [1.27.1] - 2025-10-23
+
+### Added
+
+- Added is_reverse flag to transfer order parameters and refined order type definitions for improved clarity
+
+## [1.27.0] - 2025-10-23
+
+### Changed
+
+- Removed HIFI_CRYPTO_TRANSFER order type and consolidated order request/response structures for improved maintainability
+
+### Added
+
+- Added new off-ramp order types and corresponding request/response structures for ACH, Wire, SWIFT, and SEPA transactions
+- Added Prettier for code formatting and enhanced OrderType enum with new onramp/offramp types
+
+## [1.26.14] - 2025-10-22
+
+### Fixed
+
+- Made deposit_instructions optional in VirtualAccount and VirtualAccountDetailItem interfaces
+
+## [1.26.13] - 2025-10-22
+
+### Changed
+
+- Enhanced DepositInstruction types with ACH, FEDWIRE, and SWIFT interfaces and restructured related account information
+
+## [1.26.12] - 2025-10-03
+
+### Changed
+
+- Version bump for latest changes
+
+## [1.26.11] - 2025-10-03
+
+### Changed
+
+- Version bump for latest changes
+
+## [1.26.10] - 2025-10-03
+
+### Changed
+
+- Updated VirtualAccount types to include VirtualAccountDetailItem and renamed VirtualAccountListItem
+
+## [1.26.9] - 2025-10-03
+
+### Added
+
+- Added VirtualAccountDetailItem type
+
+### Changed
+
+- Formatted type definitions for clarity and added is_enabled field to APIKey interface
+
+## [1.26.8] - 2025-09-19
+
+### Fixed
+
+- Corrected type definition for bank data response and updated request field name for consistency
+
+## [1.26.7] - 2025-09-18
+
+### Changed
+
+- Version bump for latest changes
+
+## [1.26.6] - 2025-09-18
+
+### Changed
+
+- Updated bank data retrieval method to use GET with params for improved clarity and consistency
+
+## [1.26.5] - 2025-09-18
+
+### Fixed
+
+- Changed bank data retrieval method from GET to POST for improved data handling
+
+## [1.26.4] - 2025-09-18
+
+### Added
+
+- Integrated bank data module and defined TypeScript types for bank data retrieval
+
+## [1.26.3] - 2025-09-16
+
+### Added
+
+- Added resume inquiry endpoint and corresponding TypeScript types for enhanced inquiry management
+
+## [1.26.2] - 2025-09-16
+
+### Changed
+
+- Deprecated card_limit in favor of max_cards for improved clarity in card management
+
+## [1.26.1] - 2025-09-11
+
+### Fixed
+
+- Enhanced unauthorized error handling by adding context check to bypass handler
+
+## [1.26.0] - 2025-09-11
+
+### Fixed
+
+- Added context to authentication requests and updated TypeScript configuration to include type definitions
+
+## [1.25.6] - 2025-09-10
+
+### Added
+
+- Added new sign-in and sign-up endpoints
+
+## [1.25.5] - 2025-09-05
+
+### Added
+
+- Added TOTP status endpoint and response type for improved status tracking
+
+## [1.25.4] - 2025-08-22
+
+### Changed
+
+- Updated wallet transaction filter types to use Partial for improved flexibility
+
+## [1.25.3] - 2025-08-22
+
+### Changed
+
+- Streamlined wallet transaction filter types by utilizing shared schema for consistency
+- Enhanced ExportCsv request type to include comprehensive filter options for wallet transactions
+
+## [1.25.2] - 2025-08-20
+
+### Fixed
+
+- Updated channel initialization to use key prop if provided in subscription hooks
+
+## [1.25.1] - 2025-08-20
+
+### Changed
+
+- Simplified useWalletTransactionsSubscription and enhanced useSupabaseSubscription with key prop
 
 ## [1.25.0] - 2025-08-19
 

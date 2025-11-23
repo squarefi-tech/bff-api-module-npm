@@ -61,6 +61,9 @@ const publicUrl = getPublicUrl('user-123/file.pdf');
 ### Environment Setup
 
 ```bash
+# Copy env.example to .env and fill in your values
+# See env.example in repository root for all available variables
+
 # Backend only - NEVER commit to git
 SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
