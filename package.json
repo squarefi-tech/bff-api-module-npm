@@ -1,6 +1,6 @@
 {
   "name": "squarefi-bff-api-module",
-  "version": "1.29.0",
+  "version": "1.30.10",
   "description": "Squarefi BFF API client module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,9 +12,10 @@
     "build": "tsc",
     "prepare": "husky",
     "test": "jest",
-    "generate:openapi-types": "ts-node scripts/generate-openapi-types.ts",
+    "update:types": "ts-node scripts/generate-openapi-types.ts",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "check-types": "tsc --noEmit"
   },
   "keywords": [
     "squarefi",

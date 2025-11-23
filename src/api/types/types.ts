@@ -9,6 +9,7 @@ import {
   CurrencyType,
   IssuingProgramStatus,
   KYCStatuses,
+  OrderPaymentMethod,
   OrderStatuses,
   OrderType,
   SortingDirection,
@@ -692,6 +693,15 @@ export namespace API {
       count: number;
       data: Currency[];
     };
+
+    // Упрощенная версия валюты (используется в некоторых эндпоинтах)
+    export interface SimplifiedCurrency {
+      icon?: string | null;
+      name: string;
+      uuid: string;
+      symbol: string;
+      decimal: number;
+    }
   }
 
   export namespace Developer {
@@ -1891,19 +1901,244 @@ export namespace API {
       }
 
       export namespace OrderTypes {
-        export interface OrderInfo {
+        export type OrderTypeKycRail = {
           id: string;
+          kyc_rail_id: string;
+        };
+        export interface OrderInfo {
+          id: OrderType | string;
           transaction_type: string;
           description: string | null;
-          direction: 'deposit' | 'withdrawal';
+          direction: string | null;
           is_internal: boolean;
-          kyc_rails_id: string | null;
-          payment_method: OrderType | string;
+          // kyc_rails_id: string | null; // deprecated use order_types_kyc_rails instead
+          payment_method: OrderPaymentMethod | string;
+          is_trusted: boolean;
+          order_types_kyc_rails: OrderTypeKycRail[];
         }
 
         export namespace List {
           export type Response = OrderInfo[];
         }
+      }
+
+      export namespace List {
+        export namespace ByWallet {
+          export interface Request {
+            wallet_uuid: string;
+            offset?: number;
+            limit?: number;
+            sort_by?: string;
+            sort_order?: 'asc' | 'desc';
+            filter: {
+              // ITS MOCK, NOT REAL FILTERS
+              from_created_at?: string;
+              to_created_at?: string;
+              status?: OrderStatuses;
+              order_type?: OrderType;
+              from_currency_id?: string;
+              to_currency_id?: string;
+            };
+          }
+
+          export interface PaymentOriginatorAddress {
+            address_line1?: string | null;
+            city?: string | null;
+            state?: string | null;
+            postal_code?: string | null;
+            country?: string | null;
+          }
+
+          export interface PaymentOriginatorProfile {
+            name: string;
+            address?: PaymentOriginatorAddress;
+          }
+
+          export interface PaymentOriginatorAccountInfo {
+            account_number: string;
+            routing_number?: string | null;
+            swift_bic?: string | null;
+            institution_name?: string | null;
+          }
+
+          export interface PaymentOriginator {
+            profile: PaymentOriginatorProfile;
+            account_information: PaymentOriginatorAccountInfo;
+            reference?: string | null;
+            memo?: string | null;
+          }
+
+          export interface OrderMeta {
+            order_uuid: string;
+            request_id?: string | null;
+            billing_amount?: number;
+            billing_currency?: string;
+            // billing_amount_currency?: string; // double billing_currency field
+            transaction_amount?: number;
+            transaction_currency?: string;
+            // transaction_amount_currency?: string; // double transaction_currency field
+            network_fee?: number | null;
+            network_fee_currency?: string | null;
+            exchange_rate?: number;
+            fee?: number;
+            fee_currency?: string;
+            from_currency_id?: string;
+            from_crypto_address?: string | null;
+            to_currency_id?: string;
+            chain_id?: number | null;
+            counterparty_destination_id?: string | null;
+            counterparty_account_id?: string | null;
+            counterparty_account_name?: string | null;
+            counterparty_account_nickname?: string | null;
+            virtual_account_id?: string | null;
+            virtual_account_name?: string | null;
+            to_crypto_address?: string | null;
+            reference?: string | null;
+            note?: string | null;
+            order_id?: string | null;
+            originator?: PaymentOriginator | null;
+            sub_account_id?: string | null;
+            to_address?: string | null;
+            sub_account_currency?: string | null;
+            crypto_transaction_hash?: string | null;
+            // Дополнительные поля для разных типов ордеров
+            workflow_type?: string;
+            processing_type?: string;
+            workflow_status?: string;
+            qstash_message_id?: string;
+            vendor_account_id?: string;
+            processing_started_at?: string;
+            workflow_status_updated_at?: string;
+            card_id?: string;
+            vendor_id?: string;
+            fiat_account_id?: string;
+          }
+
+          export interface OrderItem {
+            id: string;
+            order_uuid: string;
+            request_id?: string | null;
+            wallet_uuid: string;
+            from_uuid: string;
+            to_uuid: string;
+            amount_from: number;
+            amount_to: number;
+            order_type: string;
+            status: 'PENDING' | 'PROCESSING' | 'COMPLETE' | 'FAILED' | 'CANCELED';
+            created_at: string;
+            updated_at?: string | null;
+            sub_account_id?: string | null;
+            meta: OrderMeta;
+            info?: string | null;
+          }
+
+          export type Response = OrderItem[];
+        }
+      }
+
+      export namespace GetById {
+        export interface Request {
+          order_uuid: string;
+        }
+
+        export interface CounterpartyAccount {
+          id: string;
+          name: string;
+          type: string;
+          email?: string | null;
+          phone?: string | null;
+          wallet_id: string;
+        }
+
+        export interface ExternalBankingData {
+          id: string;
+          account_number: string;
+          routing_number?: string | null;
+          bank_name: string;
+          swift_bic?: string | null;
+          iban?: string | null;
+          note?: string | null;
+          address_id?: string | null;
+        }
+
+        export interface ExternalCryptoData {
+          id: string;
+          address: string;
+          currency_id: string;
+          memo?: string | null;
+        }
+
+        export interface CounterpartyDestination {
+          id: string;
+          counterparty_account_id: string;
+          nickname?: string | null;
+          type: string;
+          external_banking_data_id?: string | null;
+          external_crypto_data_id?: string | null;
+          created_at: string;
+          updated_at: string;
+          deleted_at?: string | null;
+          is_deleted?: boolean | null;
+          counterparty_account: CounterpartyAccount;
+          external_banking_data?: ExternalBankingData | null;
+          external_crypto_data?: ExternalCryptoData | null;
+        }
+
+        export interface IntegrationVendorExtended extends API.VirtualAccounts.Programs.IntegrationVendor {
+          type: string;
+        }
+
+        export interface DepositInstructionAddress {
+          address_line1: string;
+          city: string;
+          state: string;
+          postal_code: string;
+          country_code: string;
+        }
+
+        export interface VirtualAccountAccountDetails {
+          rail_account_id: string;
+          rail_asset_type: string;
+          rail_product_id: string;
+          rail_customer_id: string;
+        }
+
+        export interface VirtualAccountDetails {
+          id: string;
+          created_at: string;
+          wallet_id: string;
+          status: string;
+          account_currency: string;
+          destination_currency: string;
+          destination_address?: string | null;
+          va_programs_id: string;
+          integration_vendor_id: string;
+          vendor_account_id: string;
+          vendor_status: string;
+          current_balance: number;
+          available_balance: number;
+          customer_name: string;
+          asset_type_id: string;
+          deposit_type: string;
+          meta?: Record<string, unknown>;
+          account_details: VirtualAccountAccountDetails;
+          deposit_instructions?: API.VirtualAccounts.VirtualAccount.DepositInstruction.DepositInstruction[];
+          account_currency_details: API.Currencies.SimplifiedCurrency;
+          destination_currency_details: API.Currencies.SimplifiedCurrency;
+          integration_vendor: IntegrationVendorExtended;
+        }
+
+        export type OrderDetails = API.Orders.V2.List.ByWallet.OrderItem & {
+          request_id: string;
+          updated_at: string;
+          wallet: API.Wallets.SimplifiedWallet;
+          from_currency: API.Currencies.SimplifiedCurrency;
+          to_currency: API.Currencies.SimplifiedCurrency;
+          virtual_account?: VirtualAccountDetails | null;
+          counterparty_destination?: CounterpartyDestination | null;
+        };
+
+        export type Response = OrderDetails;
       }
     }
   }
@@ -2163,7 +2398,7 @@ export namespace API {
       }
 
       export namespace DepositInstruction {
-        export type InstructionType = 'ACH' | 'FEDWIRE' | 'SWIFT';
+        export type InstructionType = 'ACH' | 'FEDWIRE' | 'SWIFT' | 'SEPA_CT' | 'CHAPS' | 'FPS';
 
         export interface Address {
           city: string;
@@ -2185,6 +2420,8 @@ export namespace API {
           account_holder_name?: string;
           account_routing_number?: string;
           swift_bic?: string;
+          iban?: string;
+          sort_code?: string;
         }
         export interface ACH extends Common {
           instruction_type: 'ACH';
@@ -2203,8 +2440,31 @@ export namespace API {
           institution_address: Address;
           account_holder_address: Address;
         }
+        export interface SEPA extends Common {
+          instruction_type: 'SEPA_CT';
+          iban: string;
+          swift_bic: string;
+          institution_address: Address;
+          account_holder_address: Address;
+        }
 
-        export type DepositInstruction = ACH | FEDWIRE | SWIFT | Common;
+        export interface CHAPS extends Common {
+          instruction_type: 'CHAPS';
+          account_holder_name: string;
+          sort_code: string;
+          account_holder_address: Address;
+          institution_address: Address;
+        }
+
+        export interface FPS extends Common {
+          instruction_type: 'FPS';
+          account_holder_name: string;
+          sort_code: string;
+          account_holder_address: Address;
+          institution_address: Address;
+        }
+
+        export type DepositInstruction = ACH | FEDWIRE | SWIFT | SEPA | CHAPS | FPS | Common;
       }
 
       export interface OrderType {
@@ -2216,6 +2476,8 @@ export namespace API {
         created_at: string;
         wallet_id: string;
         status: string;
+        balance: number;
+        total_balance: number;
         account_currency: API.Currencies.Currency;
         va_programs_id: string;
         destination_currency: API.Currencies.Currency;
@@ -2366,6 +2628,13 @@ export namespace API {
   }
 
   export namespace Wallets {
+    // Упрощенная версия кошелька (используется в некоторых эндпоинтах)
+    export interface SimplifiedWallet {
+      uuid: string;
+      user_id: string;
+      tenant_id: string;
+    }
+
     export interface WallletBalanceCryptoDetails {
       uuid: string;
       amount: number;
@@ -2421,10 +2690,8 @@ export namespace API {
         created_at: string;
       }
 
-      export type Response = {
-        total: number;
-        data: WalletsListItem[];
-      };
+      export type Request = operations['WalletsController_all']['parameters']['query'];
+      export type Response = operations['WalletsController_all']['responses']['200']['content']['application/json'];
     }
 
     export namespace WalletTransactions {

@@ -1,2 +1,2 @@
-npm run generate:openapi-types
+npm run update:types
 npm run build

@@ -6,8 +6,8 @@ import { defaultPaginationParams, WalletTypeValues } from '../constants';
 
 export const wallets = {
   create: (type: WalletTypeValues): Promise<void> => apiClientV2.postRequest('/wallets', { data: { type } }),
-  getAll: (): Promise<API.Wallets.WalletsList.Response> =>
-    apiClientV2.getRequest<API.Wallets.WalletsList.Response>('/wallets'),
+  getAll: (params: API.Wallets.WalletsList.Request): Promise<API.Wallets.WalletsList.Response> =>
+    apiClientV2.getRequest<API.Wallets.WalletsList.Response>('/wallets', { params }),
   getByUuid: (uuid: string): Promise<API.Wallets.Wallet> =>
     apiClientV2.getRequest<API.Wallets.Wallet>(`/wallets/${uuid}`),
   addresses: {
