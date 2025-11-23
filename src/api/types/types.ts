@@ -1662,6 +1662,10 @@ export namespace API {
     //   }
     // }
     export namespace V2 {
+      export interface Document {
+        url: string;
+        description: string;
+      }
       export namespace Calc {
         interface CommonRequestParams {
           from_currency_id: string;
@@ -1718,6 +1722,7 @@ export namespace API {
               is_reverse: boolean;
               reference?: string;
               note?: string;
+              documents?: Document[];
             }
 
             export interface OrderWithCounterpartyParams extends BaseOrderParams {
