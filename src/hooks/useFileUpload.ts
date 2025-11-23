@@ -2,8 +2,8 @@ import { useState, useCallback } from 'react';
 import { uploadFile, UploadFileOptions, UploadFileResult } from '../utils/fileStorage';
 
 interface UseFileUploadOptions {
-  userId: string;
-  bucket?: string;
+  bucket: string;
+  folder?: string; // Папка внутри бакета (например, 'documents', 'images/avatars'). Создается автоматически, если не существует
   authToken?: string; // JWT token для авторизации
   onSuccess?: (result: UploadFileResult) => void;
   onError?: (error: string) => void;
@@ -20,14 +20,29 @@ interface UseFileUploadReturn {
 
 /**
  * React хук для загрузки файлов в Supabase Storage
- * 
+ *
+ * Папки создаются автоматически при загрузке файла, если их не существует.
+ *
  * @example
  * ```tsx
+ * // Загрузка в корень бакета
  * const { upload, uploading, error, result } = useFileUpload({
- *   userId: 'user-123',
+ *   bucket: 'user-files',
  *   onSuccess: (result) => console.log('Загружено:', result.path),
  * });
- * 
+ *
+ * // Загрузка в конкретную папку (папка создастся автоматически)
+ * const { upload } = useFileUpload({
+ *   bucket: 'documents',
+ *   folder: 'invoices', // файл будет загружен в invoices/
+ * });
+ *
+ * // Загрузка во вложенную папку (все папки создадутся автоматически)
+ * const { upload } = useFileUpload({
+ *   bucket: 'images',
+ *   folder: 'avatars/2024', // файл будет загружен в avatars/2024/
+ * });
+ *
  * const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
  *   const file = e.target.files?.[0];
  *   if (file) await upload(file);
@@ -35,8 +50,8 @@ interface UseFileUploadReturn {
  * ```
  */
 export const useFileUpload = (options: UseFileUploadOptions): UseFileUploadReturn => {
-  const { userId, bucket, authToken, onSuccess, onError } = options;
-  
+  const { bucket, folder, authToken, onSuccess, onError } = options;
+
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -58,8 +73,8 @@ export const useFileUpload = (options: UseFileUploadOptions): UseFileUploadRetur
         const uploadOptions: UploadFileOptions = {
           file,
           fileName: customFileName || `${Date.now()}-${file.name}`,
-          userId,
           bucket,
+          folder,
           contentType: file.type,
           authToken,
         };
@@ -84,7 +99,7 @@ export const useFileUpload = (options: UseFileUploadOptions): UseFileUploadRetur
         setError(errorMsg);
         onError?.(errorMsg);
         setProgress(0);
-        
+
         return {
           success: false,
           error: errorMsg,
@@ -93,7 +108,7 @@ export const useFileUpload = (options: UseFileUploadOptions): UseFileUploadRetur
         setUploading(false);
       }
     },
-    [userId, bucket, authToken, onSuccess, onError]
+    [bucket, folder, authToken, onSuccess, onError],
   );
 
   const reset = useCallback(() => {
@@ -112,4 +127,3 @@ export const useFileUpload = (options: UseFileUploadOptions): UseFileUploadRetur
     reset,
   };
 };
-

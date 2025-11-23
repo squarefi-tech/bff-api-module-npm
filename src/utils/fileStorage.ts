@@ -6,8 +6,8 @@ import { supabaseClient } from './supabase';
 export interface UploadFileOptions {
   file: File | Blob;
   fileName: string;
-  bucket?: string;
-  userId: string;
+  bucket: string;
+  folder?: string; // Папка внутри бакета (например, 'documents', 'images/avatars'). Создается автоматически, если не существует
   contentType?: string;
   cacheControl?: string;
   upsert?: boolean;
@@ -24,7 +24,7 @@ export interface UploadFileResult {
 
 export interface GetFileUrlOptions {
   path: string;
-  bucket?: string;
+  bucket: string;
   expiresIn?: number; // в секундах
   authToken?: string; // JWT token для авторизации
 }
@@ -38,22 +38,17 @@ export const IMAGES_BUCKET = 'images';
 
 /**
  * Загружает файл в Supabase Storage
- * Файл сохраняется по пути: {userId}/{fileName}
+ * Файл сохраняется по пути: {folder}/{fileName} или {fileName}
+ *
+ * Папки создаются автоматически при загрузке файла, если их не существует.
+ * Можно указывать вложенные папки через слэш: 'images/avatars/2024'
  *
  * @param options - параметры загрузки файла
+ * @param options.folder - опциональная папка внутри бакета (например, 'documents', 'images/avatars')
  * @returns результат загрузки с ссылкой на файл
  */
 export const uploadFile = async (options: UploadFileOptions): Promise<UploadFileResult> => {
-  const {
-    file,
-    fileName,
-    bucket = DEFAULT_BUCKET,
-    userId,
-    contentType,
-    cacheControl = '3600',
-    upsert = false,
-    authToken,
-  } = options;
+  const { file, fileName, bucket, folder, contentType, cacheControl = '3600', upsert = false, authToken } = options;
 
   if (!supabaseClient) {
     return {
@@ -76,8 +71,8 @@ export const uploadFile = async (options: UploadFileOptions): Promise<UploadFile
       });
     }
 
-    // Путь к файлу: userId/fileName
-    const filePath = `${userId}/${fileName}`;
+    // Формируем путь к файлу: folder/fileName или fileName
+    const filePath = folder ? `${folder}/${fileName}` : fileName;
 
     const { data, error } = await client.storage.from(bucket).upload(filePath, file, {
       contentType,
