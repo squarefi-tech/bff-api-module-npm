@@ -1729,7 +1729,7 @@ export namespace API {
             }
 
             export interface OrderWithVirtualAccountParams extends BaseOrderParams {
-              virtual_account_id?: string;
+              virtual_account_id: string;
             }
 
             export interface OrderWithSubAccountParams extends BaseOrderParams {
