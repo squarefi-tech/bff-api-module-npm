@@ -1861,7 +1861,8 @@ export namespace API {
           }
 
           export namespace OMNIBUS_CRYPTO_TRANSFER {
-            export type Request = Common.Request.OrderWithCounterpartyParams;
+            export type Request = Omit<Common.Request.OrderWithWalletAccountParams, 'to_currency_id'> &
+              Omit<Common.Request.OrderWithCounterpartyParams, 'to_currency_id'>;
             export type Response = Common.Response.CryptoTransferResponse;
           }
           export namespace SEGREGATED_CRYPTO_TRANSFER {
