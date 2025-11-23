@@ -32,9 +32,7 @@ export interface GetFileUrlOptions {
 /**
  * Названия бакетов по умолчанию
  */
-export const DEFAULT_BUCKET = 'user-files';
-export const DOCUMENTS_BUCKET = 'documents';
-export const IMAGES_BUCKET = 'images';
+export const ORDER_DOCS_BUCKET = 'order_docs';
 
 /**
  * Загружает файл в Supabase Storage
@@ -118,7 +116,7 @@ export const uploadFile = async (options: UploadFileOptions): Promise<UploadFile
  * @returns подписанный URL или null при ошибке
  */
 export const getSignedUrl = async (options: GetFileUrlOptions): Promise<string | null> => {
-  const { path, bucket = DEFAULT_BUCKET, expiresIn = 3600, authToken } = options;
+  const { path, bucket, expiresIn = 3600, authToken } = options;
 
   if (!supabaseClient) {
     console.error('Supabase client is not initialized');
@@ -180,7 +178,7 @@ export const getSignedUrl = async (options: GetFileUrlOptions): Promise<string |
  * @param bucket - название бакета
  * @returns постоянный URL
  */
-export const getPublicUrl = (path: string, bucket: string = DEFAULT_BUCKET): string | null => {
+export const getPublicUrl = (path: string, bucket: string): string | null => {
   if (!supabaseClient) {
     console.error('Supabase client is not initialized');
     return null;
@@ -198,11 +196,7 @@ export const getPublicUrl = (path: string, bucket: string = DEFAULT_BUCKET): str
  * @param authToken - JWT token для авторизации
  * @returns true при успешном удалении
  */
-export const deleteFile = async (
-  path: string,
-  bucket: string = DEFAULT_BUCKET,
-  authToken?: string,
-): Promise<boolean> => {
+export const deleteFile = async (path: string, bucket: string, authToken?: string): Promise<boolean> => {
   if (!supabaseClient) {
     console.error('Supabase client is not initialized');
     return false;
@@ -243,11 +237,7 @@ export const deleteFile = async (
  * @param authToken - JWT token для авторизации
  * @returns true при успешном удалении всех файлов
  */
-export const deleteFiles = async (
-  paths: string[],
-  bucket: string = DEFAULT_BUCKET,
-  authToken?: string,
-): Promise<boolean> => {
+export const deleteFiles = async (paths: string[], bucket: string, authToken?: string): Promise<boolean> => {
   if (!supabaseClient) {
     console.error('Supabase client is not initialized');
     return false;
@@ -288,7 +278,7 @@ export const deleteFiles = async (
  * @param authToken - JWT token для авторизации
  * @returns список файлов или пустой массив при ошибке
  */
-export const listUserFiles = async (userId: string, bucket: string = DEFAULT_BUCKET, authToken?: string) => {
+export const listUserFiles = async (userId: string, bucket: string, authToken?: string) => {
   if (!supabaseClient) {
     console.error('Supabase client is not initialized');
     return [];
@@ -329,11 +319,7 @@ export const listUserFiles = async (userId: string, bucket: string = DEFAULT_BUC
  * @param authToken - JWT token для авторизации
  * @returns Blob файла или null при ошибке
  */
-export const downloadFile = async (
-  path: string,
-  bucket: string = DEFAULT_BUCKET,
-  authToken?: string,
-): Promise<Blob | null> => {
+export const downloadFile = async (path: string, bucket: string, authToken?: string): Promise<Blob | null> => {
   if (!supabaseClient) {
     console.error('Supabase client is not initialized');
     return null;
