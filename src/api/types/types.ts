@@ -2791,4 +2791,27 @@ export namespace API {
       }
     }
   }
+
+  export namespace Storage {
+    export namespace KYC {
+      export namespace Upload {
+        export type Response = operations['StorageController_uploadKycFile']['responses']['201']['content']['application/json'];
+      }
+
+      export namespace GetFileUrl {
+        export type Request = {
+          path: string;
+        };
+        export type Response = operations['StorageController_getFileUrl']['responses']['200']['content']['application/octet-stream'];
+      }
+
+      export namespace GetFileById {
+        export interface Request {
+          folderId: string;
+          fileId: string;
+        }
+        export type Response = operations['StorageController_getKycFile']['responses']['200']['content']['application/octet-stream'];
+      }
+    }
+  }
 }
