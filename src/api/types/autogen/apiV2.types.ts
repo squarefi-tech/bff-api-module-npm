@@ -106,6 +106,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/sign-out": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revoke session and sign out */
+        post: operations["AuthController_signOut"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/sign-up/telegram": {
         parameters: {
             query?: never;
@@ -789,7 +806,8 @@ export interface paths {
         get: operations["CounterpartyAccountsController_findOne"];
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete counterparty account */
+        delete: operations["CounterpartyAccountsController_delete"];
         options?: never;
         head?: never;
         /** Update counterparty account */
@@ -1057,6 +1075,15 @@ export interface components {
             /** @enum {string} */
             type: "email" | "phone";
             login: string;
+        };
+        SignOutDto: {
+            access_token: string;
+            refresh_token: string;
+            /**
+             * @default local
+             * @enum {string}
+             */
+            readonly scope: "global" | "local" | "others";
         };
         TelegramSignUpByPhoneDto: {
             phone: string;
@@ -1782,6 +1809,11 @@ export interface components {
             /** @enum {string|null} */
             employment_status?: "EMPLOYEE" | "SELF_EMPLOYED" | "RETIRED" | "UNEMPLOYED" | "OTHER" | null;
             employment_description?: string | null;
+            description_of_business_nature?: string | null;
+            /** @enum {string|null} */
+            primary_business?: "ACCOUNTANCY" | "ADULT_ENTERTAINMENT" | "ADULT_PRODUCTS" | "ADVERTISING_MARKETING_PR" | "ADVISOR" | "AEROSPACE" | "AGRICULTURE" | "ALCOHOL" | "ARCHITECTURE" | "ARTS_ANTIQUES" | "ASSET_WEALTH_MANAGEMENT" | "ATM" | "AUTOMOBILE_CAR_PARTS" | "AUTOMOBILE_LUXURY" | "BANK_FOREIGN" | "BANK_US" | "BARS_RESTAURANTS" | "BIO_SCIENCE" | "BOOKS_MAGAZINES_NEWSPAPERS" | "BROADCASTERS_RADIO_TV" | "BROKER" | "BUILDING_MATERIALS" | "CALL_CENTER" | "CASINO_GAMBLING" | "CHARITY" | "CHEMICAL_MANUFACTURING" | "CLOTHING_TEXTILES" | "COMMODITIES" | "COMPANY_FORMATION" | "CONSTRUCTION_TRADES" | "CRYPTO_MSB_FOREIGN" | "CRYPTO_MSB_US" | "CYBER_SECURITY" | "DATA_STORAGE_PROCESSING" | "DEFI_EXCHANGE" | "ECOMMERCE" | "ELECTRONICS_MOBILE_PHONES" | "ENGINEERING" | "EVENT_PLANNING" | "FITNESS_EQUIPMENT" | "FOOD_BEVERAGE" | "FOUNDATION" | "FREIGHT_LOGISTICS_SHIPPING" | "GOVERNMENT_FOREIGN" | "GOVERNMENT_US" | "HEALTH_SUPPLEMENTS" | "HEAVY_EQUIPMENT" | "HISTORICAL_CULTURAL_ARTIFACTS" | "HNWI" | "HOSPITALITY" | "HOSPITALS_CARE_FACILITIES" | "IMPORT_EXPORT" | "INDUSTRIAL_EQUIPMENT" | "INFLUENCER_SOCIAL_MEDIA" | "INSURANCE" | "INSURANCE_INSURANCE_COMPANIES" | "INVESTMENT_FIRMS" | "IT_MANAGED_SERVICES" | "LEGAL_SERVICES" | "LOAN" | "LOGGING_TIMBER_PAPER_MILLS" | "LUXURY_GOODS" | "LUXURY_GOODS_BROKER" | "MINER" | "MINING_EXTRACTION" | "MULTILEVEL_MARKETING" | "MUSIC_PRODUCTION" | "NFT" | "NON_BANK_CUSTODIAN" | "NON_CRYPTO_MSB_FOREIGN" | "NON_CRYPTO_MSB_US" | "OIL_GAS" | "PAWN_BROKERS" | "PAYMENT_PROCESSOR" | "PAYROLL" | "PENSION" | "POLITICAL_PARTY_GROUP" | "POOLED_INVESTMENT" | "PRECIOUS_METALS" | "PRIVATE_EQUITY" | "PRIVATE_JET_CHARTER" | "PROP_TRADING" | "PUBLIC" | "REAL_ESTATE_INVESTMENT" | "RETAILER_DURABLE" | "RETAILER_NON_DURABLE" | "SCHOOL_UNIVERSITY" | "SECURITY" | "SOFTWARE" | "SOFTWARE_BLOCKCHAIN_CRYPTO" | "SPORTING_PROFESSIONAL_CLUB" | "SPV" | "STATE_FOREIGN" | "STATE_US" | "SUPRANATIONAL_BODY" | "TAX_ADVISORS" | "TAXI_PRIVATE_TRANSPORT" | "TELECOMMUNICATIONS" | "TOBACCO" | "TOKEN_PROJECT" | "TRAVEL" | "TRUST_CORP" | "TRUST_PERSONAL" | "UTILITIES_WATER_GAS_ELECTRIC" | "VENTURE_CAPITAL" | "VIDEO_GAMES" | "WASTE_MANAGEMENT_RECYCLING" | "WEAPONS_MANUFACTURER" | "WEAPONS_MILITARY_SERVICES" | "WHV" | "WHOLESALER_DURABLE" | "WHOLESALER_NON_DURABLE" | null;
+            business_jurisdictions?: string[] | null;
+            funds_send_receive_jurisdictions?: string[] | null;
             address?: components["schemas"]["KycAddressDto"] | null;
             beneficial_owners?: components["schemas"]["KycBeneficialOwnerDto"][] | null;
         };
@@ -1881,6 +1913,11 @@ export interface components {
             /** @enum {string|null} */
             employment_status?: "EMPLOYEE" | "SELF_EMPLOYED" | "RETIRED" | "UNEMPLOYED" | "OTHER" | null;
             employment_description?: string | null;
+            description_of_business_nature?: string | null;
+            /** @enum {string|null} */
+            primary_business?: "ACCOUNTANCY" | "ADULT_ENTERTAINMENT" | "ADULT_PRODUCTS" | "ADVERTISING_MARKETING_PR" | "ADVISOR" | "AEROSPACE" | "AGRICULTURE" | "ALCOHOL" | "ARCHITECTURE" | "ARTS_ANTIQUES" | "ASSET_WEALTH_MANAGEMENT" | "ATM" | "AUTOMOBILE_CAR_PARTS" | "AUTOMOBILE_LUXURY" | "BANK_FOREIGN" | "BANK_US" | "BARS_RESTAURANTS" | "BIO_SCIENCE" | "BOOKS_MAGAZINES_NEWSPAPERS" | "BROADCASTERS_RADIO_TV" | "BROKER" | "BUILDING_MATERIALS" | "CALL_CENTER" | "CASINO_GAMBLING" | "CHARITY" | "CHEMICAL_MANUFACTURING" | "CLOTHING_TEXTILES" | "COMMODITIES" | "COMPANY_FORMATION" | "CONSTRUCTION_TRADES" | "CRYPTO_MSB_FOREIGN" | "CRYPTO_MSB_US" | "CYBER_SECURITY" | "DATA_STORAGE_PROCESSING" | "DEFI_EXCHANGE" | "ECOMMERCE" | "ELECTRONICS_MOBILE_PHONES" | "ENGINEERING" | "EVENT_PLANNING" | "FITNESS_EQUIPMENT" | "FOOD_BEVERAGE" | "FOUNDATION" | "FREIGHT_LOGISTICS_SHIPPING" | "GOVERNMENT_FOREIGN" | "GOVERNMENT_US" | "HEALTH_SUPPLEMENTS" | "HEAVY_EQUIPMENT" | "HISTORICAL_CULTURAL_ARTIFACTS" | "HNWI" | "HOSPITALITY" | "HOSPITALS_CARE_FACILITIES" | "IMPORT_EXPORT" | "INDUSTRIAL_EQUIPMENT" | "INFLUENCER_SOCIAL_MEDIA" | "INSURANCE" | "INSURANCE_INSURANCE_COMPANIES" | "INVESTMENT_FIRMS" | "IT_MANAGED_SERVICES" | "LEGAL_SERVICES" | "LOAN" | "LOGGING_TIMBER_PAPER_MILLS" | "LUXURY_GOODS" | "LUXURY_GOODS_BROKER" | "MINER" | "MINING_EXTRACTION" | "MULTILEVEL_MARKETING" | "MUSIC_PRODUCTION" | "NFT" | "NON_BANK_CUSTODIAN" | "NON_CRYPTO_MSB_FOREIGN" | "NON_CRYPTO_MSB_US" | "OIL_GAS" | "PAWN_BROKERS" | "PAYMENT_PROCESSOR" | "PAYROLL" | "PENSION" | "POLITICAL_PARTY_GROUP" | "POOLED_INVESTMENT" | "PRECIOUS_METALS" | "PRIVATE_EQUITY" | "PRIVATE_JET_CHARTER" | "PROP_TRADING" | "PUBLIC" | "REAL_ESTATE_INVESTMENT" | "RETAILER_DURABLE" | "RETAILER_NON_DURABLE" | "SCHOOL_UNIVERSITY" | "SECURITY" | "SOFTWARE" | "SOFTWARE_BLOCKCHAIN_CRYPTO" | "SPORTING_PROFESSIONAL_CLUB" | "SPV" | "STATE_FOREIGN" | "STATE_US" | "SUPRANATIONAL_BODY" | "TAX_ADVISORS" | "TAXI_PRIVATE_TRANSPORT" | "TELECOMMUNICATIONS" | "TOBACCO" | "TOKEN_PROJECT" | "TRAVEL" | "TRUST_CORP" | "TRUST_PERSONAL" | "UTILITIES_WATER_GAS_ELECTRIC" | "VENTURE_CAPITAL" | "VIDEO_GAMES" | "WASTE_MANAGEMENT_RECYCLING" | "WEAPONS_MANUFACTURER" | "WEAPONS_MILITARY_SERVICES" | "WHV" | "WHOLESALER_DURABLE" | "WHOLESALER_NON_DURABLE" | null;
+            business_jurisdictions?: string[] | null;
+            funds_send_receive_jurisdictions?: string[] | null;
             address?: components["schemas"]["KycAddressDto"] | null;
             beneficial_owners?: components["schemas"]["KycBeneficialOwnerDto"][] | null;
         };
@@ -2004,6 +2041,10 @@ export interface components {
             phone?: string;
             name?: string;
             nickname?: string | null;
+            /** @default false */
+            is_pinned: boolean;
+            /** @default false */
+            is_self: boolean;
         };
         CounterpartyDestinationsFilter: {
             nickname?: string | null;
@@ -2365,6 +2406,28 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Invalid tenant */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthController_signOut: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SignOutDto"];
+            };
+        };
+        responses: {
             /** @description Invalid tenant */
             401: {
                 headers: {
@@ -4119,6 +4182,48 @@ export interface operations {
             };
         };
     };
+    CounterpartyAccountsController_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wallet_id: string;
+                counterparty_account_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CounterpartyAccountDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description You don`t have access to current counterparty */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     CounterpartyAccountsController_update: {
         parameters: {
             query?: never;
@@ -4218,7 +4323,10 @@ export interface operations {
     CounterpartyDestinationsController_create: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                /** @description Verification request ID */
+                "verification-request-id": string;
+            };
             path: {
                 counterparty_account_id: string;
                 wallet_id: unknown;
@@ -4238,6 +4346,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["CounterpartyDestinationDto"];
                 };
+            };
+            /** @description Verification request ID is required */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Unauthorized */
             401: {

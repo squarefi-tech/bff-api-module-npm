@@ -2,8 +2,15 @@
   "name": "squarefi-bff-api-module",
   "version": "1.31.6",
   "description": "Squarefi BFF API client module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/squarefi-tech/bff-api-module-npm.git"
