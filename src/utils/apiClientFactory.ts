@@ -46,7 +46,6 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
 
     const modifiedHeaders = {
       ...config.headers,
-      'Content-Type': 'application/json',
       'x-tenant-id': tenantId,
     };
 
