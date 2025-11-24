@@ -278,7 +278,11 @@ export const deleteFiles = async (paths: string[], bucket: string, authToken?: s
  * @param authToken - JWT token для авторизации
  * @returns список файлов или пустой массив при ошибке
  */
-export const listUserFiles = async (userId: string, bucket: string, authToken?: string) => {
+export const listUserFiles = async (
+  userId: string,
+  bucket: string,
+  authToken?: string
+): Promise<Array<{ name: string; id?: string; updated_at?: string; created_at?: string; last_accessed_at?: string; metadata?: Record<string, unknown> }>> => {
   if (!supabaseClient) {
     console.error('Supabase client is not initialized');
     return [];
