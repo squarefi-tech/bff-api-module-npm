@@ -52,17 +52,11 @@ export const counterparties = {
     create: ({
       wallet_id,
       counterparty_account_id,
-      // 'verification-request-id': verificationRequestId, // TODO:verify request id not implemented yet on the backend
       ...data
     }: API.Counterparties.Destination.Create.Request): Promise<API.Counterparties.Destination.Create.Response> =>
       apiClientV2.postRequest<API.Counterparties.Destination.Create.Response>(
         `/counterparties/${wallet_id}/${counterparty_account_id}/destinations`,
-        {
-          data,
-          // headers: { TODO:verify request id not implemented yet on the backend
-          //   'verification-request-id': verificationRequestId,
-          // },
-        },
+        { data },
       ),
     update: ({
       wallet_id,
@@ -78,9 +72,9 @@ export const counterparties = {
       wallet_id,
       counterparty_account_id,
       counterparty_destination_id,
-    }: API.Counterparties.Destination.Delete.Request): Promise<API.Counterparties.Destination.Delete.Response> =>
+    }: API.Counterparties.Destination.Delete.Request): Promise<void> =>
       apiClientV2.deleteRequest(
         `/counterparties/${wallet_id}/${counterparty_account_id}/destinations/${counterparty_destination_id}`,
-      ) as Promise<API.Counterparties.Destination.Delete.Response>,
+      ),
   },
 };
