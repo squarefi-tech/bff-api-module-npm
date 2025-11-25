@@ -4323,10 +4323,7 @@ export interface operations {
     CounterpartyDestinationsController_create: {
         parameters: {
             query?: never;
-            header: {
-                /** @description Verification request ID */
-                "verification-request-id": string;
-            };
+            header?: never;
             path: {
                 counterparty_account_id: string;
                 wallet_id: unknown;
@@ -4346,13 +4343,6 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["CounterpartyDestinationDto"];
                 };
-            };
-            /** @description Verification request ID is required */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description Unauthorized */
             401: {

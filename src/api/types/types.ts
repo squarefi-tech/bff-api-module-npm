@@ -5,10 +5,8 @@ import {
   CardTransactionType,
   CardType,
   CounterpartyDestinationType,
-  CounterpartyType,
   CurrencyType,
   IssuingProgramStatus,
-  KYCStatuses,
   OrderPaymentMethod,
   OrderStatuses,
   OrderType,
@@ -435,21 +433,23 @@ export namespace API {
   }
 
   export namespace Counterparties {
+    export type CounterpartyType = components['schemas']['CounterpartyAccountDto']['type'];
     export interface Counterparty {
       id: string;
       email: string;
       phone: string;
       name: string;
       nickname?: string | null;
-      type: CounterpartyType | string;
+      type: CounterpartyType;
       created_at: string;
     }
     export namespace Destination {
+      export type CounterpartyDestinationType = components['schemas']['CounterpartyDestinationDto']['type'];
       export namespace List {
         export interface DestinationListItemCommonFields {
           id: string;
           nickname: string;
-          type: CounterpartyDestinationType | string;
+          type: CounterpartyDestinationType;
           created_at: string;
         }
 
@@ -1101,6 +1101,7 @@ export namespace API {
   }
 
   export namespace KYC {
+    export type KYCStatus = components['schemas']['KycEntityDto']['status'];
     export namespace Sumsub {
       export namespace GenerateToken {
         export interface Request {

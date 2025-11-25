@@ -1,3 +1,6 @@
+import { API } from '.';
+import { IsEnumEqualToUnion, EnumUnionMismatch } from './utils/types';
+
 export type ValueWithLabel = {
   value: string;
   label: string;
@@ -260,7 +263,12 @@ export enum KYCStatuses {
   SOFT_REJECT = 'SOFT_REJECT',
   REJECT = 'REJECT',
   UNVERIFIED = 'UNVERIFIED',
+  WAITING_ON_UBOS = 'WAITING_ON_UBOS',
+  WAITING_ON_REVIEW = 'WAITING_ON_REVIEW',
 }
+
+export const KYCStatusCheck: IsEnumEqualToUnion<KYCStatuses, API.KYC.KYCStatus> = true;
+export type KYCStatusMismatch = EnumUnionMismatch<KYCStatuses, API.KYC.KYCStatus>;
 
 export enum OrderStatuses {
   NEW = 'NEW',
@@ -319,6 +327,7 @@ export enum CounterpartyType {
   INDIVIDUAL = 'INDIVIDUAL',
   BUSINESS = 'BUSINESS',
 }
+export const counterpartyTypeCheck: IsEnumEqualToUnion<CounterpartyType, API.Counterparties.CounterpartyType> = true;
 
 export enum CounterpartyDestinationType {
   DOMESTIC_WIRE = 'DOMESTIC_WIRE',
@@ -328,6 +337,11 @@ export enum CounterpartyDestinationType {
   CRYPTO_EXTERNAL = 'CRYPTO_EXTERNAL',
   CRYPTO_INTERNAL = 'CRYPTO_INTERNAL',
 }
+
+export const counterpartyDestinationTypeCheck: IsEnumEqualToUnion<
+  CounterpartyDestinationType,
+  API.Counterparties.Destination.CounterpartyDestinationType
+> = true;
 
 export enum CardTransactionStatus {
   APPROVED = 'APPROVED',
