@@ -2011,7 +2011,7 @@ export interface components {
             /** @enum {string} */
             type?: "INDIVIDUAL" | "BUSINESS";
             created_at?: string;
-            search: string;
+            search?: string;
         };
         CounterpartyAccountDto: {
             id: string;
