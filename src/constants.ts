@@ -65,6 +65,7 @@ export enum WalletTransactionStatus {
 export enum OrderTypePaymentMethod {
   ACH = 'ACH',
   SEPA = 'SEPA',
+  SEPA_CT = 'SEPA_CT', // DEPRECATED, use SEPA instead
   SWIFT = 'SWIFT',
   // DOMESTIC_WIRE = 'DOMESTIC_WIRE', // DEPRECATED, use FEDWIRE instead
   FEDWIRE = 'FEDWIRE',
@@ -394,7 +395,7 @@ export enum VirtualAccountsInstructionType {
   FEDWIRE = 'FEDWIRE',
   SWIFT = 'SWIFT',
   SEPA = 'SEPA',
-  // SEPA_CT = 'SEPA_CT', // DEPRECATED, use SEPA instead
+  SEPA_CT = 'SEPA_CT', // DEPRECATED, use SEPA instead
   CHAPS = 'CHAPS',
   FPS = 'FPS',
   CRYPTO_EXTERNAL = 'CRYPTO_EXTERNAL',

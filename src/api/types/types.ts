@@ -2381,7 +2381,8 @@ export namespace API {
           | 'FPS'
           | 'SEPA'
           | 'CRYPTO_EXTERNAL'
-          | 'CRYPTO_INTERNAL';
+          | 'CRYPTO_INTERNAL'
+          | 'SEPA_CT';
 
         export interface Address {
           city: string;
