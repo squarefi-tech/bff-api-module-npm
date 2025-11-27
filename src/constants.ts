@@ -66,7 +66,7 @@ export enum OrderPaymentMethod {
   ACH = 'ACH',
   SEPA = 'SEPA',
   SWIFT = 'SWIFT',
-  DOMESTIC_WIRE = 'DOMESTIC_WIRE', // DEPRECATED, use FEDWIRE instead
+  // DOMESTIC_WIRE = 'DOMESTIC_WIRE', // DEPRECATED, use FEDWIRE instead
   FEDWIRE = 'FEDWIRE',
   CRYPTO_EXTERNAL = 'CRYPTO_EXTERNAL',
   CRYPTO_INTERNAL = 'CRYPTO_INTERNAL',
@@ -394,10 +394,21 @@ export enum VirtualAccountsInstructionType {
   FEDWIRE = 'FEDWIRE',
   SWIFT = 'SWIFT',
   SEPA = 'SEPA',
-  SEPA_CT = 'SEPA_CT',
+  // SEPA_CT = 'SEPA_CT', // DEPRECATED, use SEPA instead
   CHAPS = 'CHAPS',
   FPS = 'FPS',
+  CRYPTO_EXTERNAL = 'CRYPTO_EXTERNAL',
+  CRYPTO_INTERNAL = 'CRYPTO_INTERNAL',
 }
+
+export const isOrderPaymentMethodEqualWithVirtualAccountsInstructionType: IsEnumEqualToUnion<
+  OrderPaymentMethod,
+  API.VirtualAccounts.VirtualAccount.DepositInstruction.InstructionType
+> = true;
+export type OrderPaymentMethodEqualWithVirtualAccountsInstructionTypeMismatch = EnumUnionMismatch<
+  OrderPaymentMethod,
+  API.VirtualAccounts.VirtualAccount.DepositInstruction.InstructionType
+>;
 
 export const virtualAccountsInstructionTypeCheck: IsEnumEqualToUnion<
   VirtualAccountsInstructionType,
