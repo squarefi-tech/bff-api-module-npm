@@ -340,6 +340,35 @@ export enum CounterpartyDestinationType {
   FPS = 'FPS',
 }
 
+export const counterpartyBankingDestinationTypes: Record<
+  API.Counterparties.Destination.BankingDestinationType,
+  CounterpartyDestinationType
+> = {
+  FEDWIRE: CounterpartyDestinationType.FEDWIRE,
+  ACH: CounterpartyDestinationType.ACH,
+  SWIFT: CounterpartyDestinationType.SWIFT,
+  SEPA: CounterpartyDestinationType.SEPA,
+  CHAPS: CounterpartyDestinationType.CHAPS,
+  FPS: CounterpartyDestinationType.FPS,
+};
+
+export const counterpartyCryptoDestinationTypes: Record<
+  API.Counterparties.Destination.CryptoDestinationType,
+  CounterpartyDestinationType
+> = {
+  CRYPTO_EXTERNAL: CounterpartyDestinationType.CRYPTO_EXTERNAL,
+  CRYPTO_INTERNAL: CounterpartyDestinationType.CRYPTO_INTERNAL,
+};
+
+export const counterpartyCryptoDestinationTypesValues: API.Counterparties.Destination.CryptoDestinationType[] =
+  Object.keys(counterpartyCryptoDestinationTypes).map(
+    (key) => key as API.Counterparties.Destination.CryptoDestinationType,
+  );
+export const counterpartyBankingDestinationTypesValues: API.Counterparties.Destination.BankingDestinationType[] =
+  Object.keys(counterpartyBankingDestinationTypes).map(
+    (key) => key as API.Counterparties.Destination.BankingDestinationType,
+  );
+
 export const counterpartyBankingAndCryptoDestinationTypeCheck: IsEnumEqualToUnion<
   API.Counterparties.Destination.CounterpartyDestinationType,
   API.Counterparties.Destination.DestinationType
