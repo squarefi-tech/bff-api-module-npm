@@ -16,7 +16,7 @@ import {
   WalletTransactionStatus,
   WalletTransactionType,
 } from '../../constants';
-import { OrderTypePaymentMethod, WalletType } from '../..';
+import { WalletType } from '../..';
 import { components, operations, paths } from './autogen/apiV2.types';
 
 export namespace API {
@@ -1523,7 +1523,7 @@ export namespace API {
         is_internal: boolean;
         // kyc_rails_id: string | null; // deprecated use order_types_kyc_rails instead
         order_types_kyc_rails: OrderTypeKycRail[];
-        payment_method: OrderTypePaymentMethod;
+        payment_method: API.Orders.V2.OrderTypes.PaymentMethod;
       }
 
       export namespace List {
@@ -1876,6 +1876,17 @@ export namespace API {
       }
 
       export namespace OrderTypes {
+        export type PaymentMethod =
+          | 'ACH'
+          | 'FEDWIRE'
+          | 'SWIFT'
+          | 'SEPA'
+          | 'SEPA_CT'
+          | 'CHAPS'
+          | 'FPS'
+          | 'CRYPTO_EXTERNAL'
+          | 'CRYPTO_INTERNAL';
+
         export type OrderTypeKycRail = {
           id: string;
           kyc_rail_id: string;
@@ -1887,7 +1898,7 @@ export namespace API {
           direction: string | null;
           is_internal: boolean;
           // kyc_rails_id: string | null; // deprecated use order_types_kyc_rails instead
-          payment_method: OrderTypePaymentMethod;
+          payment_method: PaymentMethod;
           is_trusted: boolean;
           order_types_kyc_rails: OrderTypeKycRail[];
         }

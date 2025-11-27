@@ -75,6 +75,15 @@ export enum OrderTypePaymentMethod {
   FPS = 'FPS',
 }
 
+export const orderTypePaymentMethodCheck: IsEnumEqualToUnion<
+  OrderTypePaymentMethod,
+  API.Orders.V2.OrderTypes.PaymentMethod
+> = true;
+export type OrderTypePaymentMethodMismatch = EnumUnionMismatch<
+  OrderTypePaymentMethod,
+  API.Orders.V2.OrderTypes.PaymentMethod
+>;
+
 export enum OrderType {
   // when extend do not forget to add new order type to the enum WalletTransactionRecordType
   DEPOSIT_ISSUING_SA_CRYPTO_EXT = 'DEPOSIT_ISSUING_SA_CRYPTO_EXT',
