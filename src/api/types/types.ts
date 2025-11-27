@@ -2374,7 +2374,7 @@ export namespace API {
       }
 
       export namespace DepositInstruction {
-        export type InstructionType = 'ACH' | 'FEDWIRE' | 'SWIFT' | 'SEPA_CT' | 'CHAPS' | 'FPS';
+        export type InstructionType = 'ACH' | 'FEDWIRE' | 'SWIFT' | 'SEPA_CT' | 'CHAPS' | 'FPS' | 'SEPA';
 
         export interface Address {
           city: string;
@@ -2416,8 +2416,17 @@ export namespace API {
           institution_address: Address;
           account_holder_address: Address;
         }
-        export interface SEPA extends Common {
+
+        export interface SEPA_CT extends Common {
           instruction_type: 'SEPA_CT';
+          iban: string;
+          swift_bic: string;
+          institution_address: Address;
+          account_holder_address: Address;
+        }
+
+        export interface SEPA extends Common {
+          instruction_type: 'SEPA';
           iban: string;
           swift_bic: string;
           institution_address: Address;
@@ -2440,7 +2449,7 @@ export namespace API {
           institution_address: Address;
         }
 
-        export type DepositInstruction = ACH | FEDWIRE | SWIFT | SEPA | CHAPS | FPS | Common;
+        export type DepositInstruction = ACH | FEDWIRE | SWIFT | SEPA | CHAPS | FPS | SEPA_CT | Common;
       }
 
       export interface OrderType {

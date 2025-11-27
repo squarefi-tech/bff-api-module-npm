@@ -388,6 +388,25 @@ export type CounterpartyDestinationTypeMismatch = EnumUnionMismatch<
   API.Counterparties.Destination.CounterpartyDestinationType
 >;
 
+export enum VirtualAccountsInstructionType {
+  ACH = 'ACH',
+  FEDWIRE = 'FEDWIRE',
+  SWIFT = 'SWIFT',
+  SEPA = 'SEPA',
+  SEPA_CT = 'SEPA_CT',
+  CHAPS = 'CHAPS',
+  FPS = 'FPS',
+}
+
+export const virtualAccountsInstructionTypeCheck: IsEnumEqualToUnion<
+  VirtualAccountsInstructionType,
+  API.VirtualAccounts.VirtualAccount.DepositInstruction.InstructionType
+> = true;
+export type VirtualAccountsInstructionTypeMismatch = EnumUnionMismatch<
+  VirtualAccountsInstructionType,
+  API.VirtualAccounts.VirtualAccount.DepositInstruction.InstructionType
+>;
+
 export enum CardTransactionStatus {
   APPROVED = 'APPROVED',
   CLEARED = 'CLEARED',
