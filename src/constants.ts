@@ -62,7 +62,7 @@ export enum WalletTransactionStatus {
   NEW = 'new',
 }
 
-export enum OrderPaymentMethod {
+export enum OrderTypePaymentMethod {
   ACH = 'ACH',
   SEPA = 'SEPA',
   SWIFT = 'SWIFT',
@@ -402,11 +402,11 @@ export enum VirtualAccountsInstructionType {
 }
 
 export const isOrderPaymentMethodEqualWithVirtualAccountsInstructionType: IsEnumEqualToUnion<
-  OrderPaymentMethod,
+  OrderTypePaymentMethod,
   API.VirtualAccounts.VirtualAccount.DepositInstruction.InstructionType
 > = true;
 export type OrderPaymentMethodEqualWithVirtualAccountsInstructionTypeMismatch = EnumUnionMismatch<
-  OrderPaymentMethod,
+  OrderTypePaymentMethod,
   API.VirtualAccounts.VirtualAccount.DepositInstruction.InstructionType
 >;
 

@@ -7,7 +7,6 @@ import {
   CounterpartyDestinationType,
   CurrencyType,
   IssuingProgramStatus,
-  OrderPaymentMethod,
   OrderStatuses,
   OrderType,
   SortingDirection,
@@ -17,7 +16,7 @@ import {
   WalletTransactionStatus,
   WalletTransactionType,
 } from '../../constants';
-import { WalletType } from '../..';
+import { OrderTypePaymentMethod, WalletType } from '../..';
 import { components, operations, paths } from './autogen/apiV2.types';
 
 export namespace API {
@@ -1524,7 +1523,7 @@ export namespace API {
         is_internal: boolean;
         // kyc_rails_id: string | null; // deprecated use order_types_kyc_rails instead
         order_types_kyc_rails: OrderTypeKycRail[];
-        payment_method: OrderType | string;
+        payment_method: OrderTypePaymentMethod;
       }
 
       export namespace List {
@@ -1888,7 +1887,7 @@ export namespace API {
           direction: string | null;
           is_internal: boolean;
           // kyc_rails_id: string | null; // deprecated use order_types_kyc_rails instead
-          payment_method: OrderPaymentMethod | string;
+          payment_method: OrderTypePaymentMethod;
           is_trusted: boolean;
           order_types_kyc_rails: OrderTypeKycRail[];
         }
