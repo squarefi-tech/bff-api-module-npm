@@ -1814,7 +1814,14 @@ export interface components {
             primary_business?: "ACCOUNTANCY" | "ADULT_ENTERTAINMENT" | "ADULT_PRODUCTS" | "ADVERTISING_MARKETING_PR" | "ADVISOR" | "AEROSPACE" | "AGRICULTURE" | "ALCOHOL" | "ARCHITECTURE" | "ARTS_ANTIQUES" | "ASSET_WEALTH_MANAGEMENT" | "ATM" | "AUTOMOBILE_CAR_PARTS" | "AUTOMOBILE_LUXURY" | "BANK_FOREIGN" | "BANK_US" | "BARS_RESTAURANTS" | "BIO_SCIENCE" | "BOOKS_MAGAZINES_NEWSPAPERS" | "BROADCASTERS_RADIO_TV" | "BROKER" | "BUILDING_MATERIALS" | "CALL_CENTER" | "CASINO_GAMBLING" | "CHARITY" | "CHEMICAL_MANUFACTURING" | "CLOTHING_TEXTILES" | "COMMODITIES" | "COMPANY_FORMATION" | "CONSTRUCTION_TRADES" | "CRYPTO_MSB_FOREIGN" | "CRYPTO_MSB_US" | "CYBER_SECURITY" | "DATA_STORAGE_PROCESSING" | "DEFI_EXCHANGE" | "ECOMMERCE" | "ELECTRONICS_MOBILE_PHONES" | "ENGINEERING" | "EVENT_PLANNING" | "FITNESS_EQUIPMENT" | "FOOD_BEVERAGE" | "FOUNDATION" | "FREIGHT_LOGISTICS_SHIPPING" | "GOVERNMENT_FOREIGN" | "GOVERNMENT_US" | "HEALTH_SUPPLEMENTS" | "HEAVY_EQUIPMENT" | "HISTORICAL_CULTURAL_ARTIFACTS" | "HNWI" | "HOSPITALITY" | "HOSPITALS_CARE_FACILITIES" | "IMPORT_EXPORT" | "INDUSTRIAL_EQUIPMENT" | "INFLUENCER_SOCIAL_MEDIA" | "INSURANCE" | "INSURANCE_INSURANCE_COMPANIES" | "INVESTMENT_FIRMS" | "IT_MANAGED_SERVICES" | "LEGAL_SERVICES" | "LOAN" | "LOGGING_TIMBER_PAPER_MILLS" | "LUXURY_GOODS" | "LUXURY_GOODS_BROKER" | "MINER" | "MINING_EXTRACTION" | "MULTILEVEL_MARKETING" | "MUSIC_PRODUCTION" | "NFT" | "NON_BANK_CUSTODIAN" | "NON_CRYPTO_MSB_FOREIGN" | "NON_CRYPTO_MSB_US" | "OIL_GAS" | "PAWN_BROKERS" | "PAYMENT_PROCESSOR" | "PAYROLL" | "PENSION" | "POLITICAL_PARTY_GROUP" | "POOLED_INVESTMENT" | "PRECIOUS_METALS" | "PRIVATE_EQUITY" | "PRIVATE_JET_CHARTER" | "PROP_TRADING" | "PUBLIC" | "REAL_ESTATE_INVESTMENT" | "RETAILER_DURABLE" | "RETAILER_NON_DURABLE" | "SCHOOL_UNIVERSITY" | "SECURITY" | "SOFTWARE" | "SOFTWARE_BLOCKCHAIN_CRYPTO" | "SPORTING_PROFESSIONAL_CLUB" | "SPV" | "STATE_FOREIGN" | "STATE_US" | "SUPRANATIONAL_BODY" | "TAX_ADVISORS" | "TAXI_PRIVATE_TRANSPORT" | "TELECOMMUNICATIONS" | "TOBACCO" | "TOKEN_PROJECT" | "TRAVEL" | "TRUST_CORP" | "TRUST_PERSONAL" | "UTILITIES_WATER_GAS_ELECTRIC" | "VENTURE_CAPITAL" | "VIDEO_GAMES" | "WASTE_MANAGEMENT_RECYCLING" | "WEAPONS_MANUFACTURER" | "WEAPONS_MILITARY_SERVICES" | "WHV" | "WHOLESALER_DURABLE" | "WHOLESALER_NON_DURABLE" | null;
             business_jurisdictions?: string[] | null;
             funds_send_receive_jurisdictions?: string[] | null;
+            engage_in_activities?: ("NONE" | "ADULT_ENTERTAINMENT" | "DRUGS" | "FIREARMS" | "GAMBLING" | "MARIJUANA" | "TUMBLING")[] | null;
+            monthly_deposits?: string | null;
+            /** @enum {string|null} */
+            regulated_status?: "REGULATED" | "REGISTERED" | "LICENSED" | "NONE" | "NOT_REQUIRED" | null;
+            total_assets?: string | null;
+            vendors_and_counterparties?: ("SELF" | "MERCHANTS_SUPPLIERS" | "CUSTOMERS" | "EMPLOYEES" | "CONTRACTORS" | "FRIENDS" | "FAMILY")[] | null;
             address?: components["schemas"]["KycAddressDto"] | null;
+            physical_address?: components["schemas"]["KycAddressDto"] | null;
             beneficial_owners?: components["schemas"]["KycBeneficialOwnerDto"][] | null;
         };
         CreateOrUpdateKycEntityDto: {
@@ -1918,7 +1925,14 @@ export interface components {
             primary_business?: "ACCOUNTANCY" | "ADULT_ENTERTAINMENT" | "ADULT_PRODUCTS" | "ADVERTISING_MARKETING_PR" | "ADVISOR" | "AEROSPACE" | "AGRICULTURE" | "ALCOHOL" | "ARCHITECTURE" | "ARTS_ANTIQUES" | "ASSET_WEALTH_MANAGEMENT" | "ATM" | "AUTOMOBILE_CAR_PARTS" | "AUTOMOBILE_LUXURY" | "BANK_FOREIGN" | "BANK_US" | "BARS_RESTAURANTS" | "BIO_SCIENCE" | "BOOKS_MAGAZINES_NEWSPAPERS" | "BROADCASTERS_RADIO_TV" | "BROKER" | "BUILDING_MATERIALS" | "CALL_CENTER" | "CASINO_GAMBLING" | "CHARITY" | "CHEMICAL_MANUFACTURING" | "CLOTHING_TEXTILES" | "COMMODITIES" | "COMPANY_FORMATION" | "CONSTRUCTION_TRADES" | "CRYPTO_MSB_FOREIGN" | "CRYPTO_MSB_US" | "CYBER_SECURITY" | "DATA_STORAGE_PROCESSING" | "DEFI_EXCHANGE" | "ECOMMERCE" | "ELECTRONICS_MOBILE_PHONES" | "ENGINEERING" | "EVENT_PLANNING" | "FITNESS_EQUIPMENT" | "FOOD_BEVERAGE" | "FOUNDATION" | "FREIGHT_LOGISTICS_SHIPPING" | "GOVERNMENT_FOREIGN" | "GOVERNMENT_US" | "HEALTH_SUPPLEMENTS" | "HEAVY_EQUIPMENT" | "HISTORICAL_CULTURAL_ARTIFACTS" | "HNWI" | "HOSPITALITY" | "HOSPITALS_CARE_FACILITIES" | "IMPORT_EXPORT" | "INDUSTRIAL_EQUIPMENT" | "INFLUENCER_SOCIAL_MEDIA" | "INSURANCE" | "INSURANCE_INSURANCE_COMPANIES" | "INVESTMENT_FIRMS" | "IT_MANAGED_SERVICES" | "LEGAL_SERVICES" | "LOAN" | "LOGGING_TIMBER_PAPER_MILLS" | "LUXURY_GOODS" | "LUXURY_GOODS_BROKER" | "MINER" | "MINING_EXTRACTION" | "MULTILEVEL_MARKETING" | "MUSIC_PRODUCTION" | "NFT" | "NON_BANK_CUSTODIAN" | "NON_CRYPTO_MSB_FOREIGN" | "NON_CRYPTO_MSB_US" | "OIL_GAS" | "PAWN_BROKERS" | "PAYMENT_PROCESSOR" | "PAYROLL" | "PENSION" | "POLITICAL_PARTY_GROUP" | "POOLED_INVESTMENT" | "PRECIOUS_METALS" | "PRIVATE_EQUITY" | "PRIVATE_JET_CHARTER" | "PROP_TRADING" | "PUBLIC" | "REAL_ESTATE_INVESTMENT" | "RETAILER_DURABLE" | "RETAILER_NON_DURABLE" | "SCHOOL_UNIVERSITY" | "SECURITY" | "SOFTWARE" | "SOFTWARE_BLOCKCHAIN_CRYPTO" | "SPORTING_PROFESSIONAL_CLUB" | "SPV" | "STATE_FOREIGN" | "STATE_US" | "SUPRANATIONAL_BODY" | "TAX_ADVISORS" | "TAXI_PRIVATE_TRANSPORT" | "TELECOMMUNICATIONS" | "TOBACCO" | "TOKEN_PROJECT" | "TRAVEL" | "TRUST_CORP" | "TRUST_PERSONAL" | "UTILITIES_WATER_GAS_ELECTRIC" | "VENTURE_CAPITAL" | "VIDEO_GAMES" | "WASTE_MANAGEMENT_RECYCLING" | "WEAPONS_MANUFACTURER" | "WEAPONS_MILITARY_SERVICES" | "WHV" | "WHOLESALER_DURABLE" | "WHOLESALER_NON_DURABLE" | null;
             business_jurisdictions?: string[] | null;
             funds_send_receive_jurisdictions?: string[] | null;
+            engage_in_activities?: ("NONE" | "ADULT_ENTERTAINMENT" | "DRUGS" | "FIREARMS" | "GAMBLING" | "MARIJUANA" | "TUMBLING")[] | null;
+            monthly_deposits?: string | null;
+            /** @enum {string|null} */
+            regulated_status?: "REGULATED" | "REGISTERED" | "LICENSED" | "NONE" | "NOT_REQUIRED" | null;
+            total_assets?: string | null;
+            vendors_and_counterparties?: ("SELF" | "MERCHANTS_SUPPLIERS" | "CUSTOMERS" | "EMPLOYEES" | "CONTRACTORS" | "FRIENDS" | "FAMILY")[] | null;
             address?: components["schemas"]["KycAddressDto"] | null;
+            physical_address?: components["schemas"]["KycAddressDto"] | null;
             beneficial_owners?: components["schemas"]["KycBeneficialOwnerDto"][] | null;
         };
         WalletKycRailExtraActionDto: {
@@ -2049,7 +2063,7 @@ export interface components {
         CounterpartyDestinationsFilter: {
             nickname?: string | null;
             /** @enum {string} */
-            type?: "DOMESTIC_WIRE" | "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL";
+            type?: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE";
             created_at?: string;
         };
         StateEntity: {
@@ -2117,7 +2131,7 @@ export interface components {
             id: string;
             nickname: string | null;
             /** @enum {string} */
-            type: "DOMESTIC_WIRE" | "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL";
+            type: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE";
             created_at: string;
             external_banking_data?: components["schemas"]["CounterpartyExternalBankingDataDto"];
             external_crypto_data?: components["schemas"]["CounterpartyExternalCryptoDataDto"];
@@ -2156,7 +2170,7 @@ export interface components {
         CreateCounterpartyDestinationDto: {
             nickname: string | null;
             /** @enum {string} */
-            type: "DOMESTIC_WIRE" | "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL";
+            type: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE";
             external_banking_data: components["schemas"]["CreateCounterpartyExternalBankingDataDto"];
             external_crypto_data: components["schemas"]["CreateCounterpartyExternalCryptoDataDto"];
         };

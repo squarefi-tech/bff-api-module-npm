@@ -330,18 +330,34 @@ export enum CounterpartyType {
 export const counterpartyTypeCheck: IsEnumEqualToUnion<CounterpartyType, API.Counterparties.CounterpartyType> = true;
 
 export enum CounterpartyDestinationType {
-  DOMESTIC_WIRE = 'DOMESTIC_WIRE',
+  FEDWIRE = 'FEDWIRE',
   ACH = 'ACH',
   SWIFT = 'SWIFT',
   SEPA = 'SEPA',
   CRYPTO_EXTERNAL = 'CRYPTO_EXTERNAL',
   CRYPTO_INTERNAL = 'CRYPTO_INTERNAL',
+  CHAPS = 'CHAPS',
+  FPS = 'FPS',
 }
+
+export const counterpartyBankingAndCryptoDestinationTypeCheck: IsEnumEqualToUnion<
+  API.Counterparties.Destination.CounterpartyDestinationType,
+  API.Counterparties.Destination.DestinationType
+> = true;
+export type CounterpartyBankingAndCryptoDestinationTypeMismatch = EnumUnionMismatch<
+  API.Counterparties.Destination.CounterpartyDestinationType,
+  API.Counterparties.Destination.DestinationType
+>;
 
 export const counterpartyDestinationTypeCheck: IsEnumEqualToUnion<
   CounterpartyDestinationType,
   API.Counterparties.Destination.CounterpartyDestinationType
 > = true;
+
+export type CounterpartyDestinationTypeMismatch = EnumUnionMismatch<
+  CounterpartyDestinationType,
+  API.Counterparties.Destination.CounterpartyDestinationType
+>;
 
 export enum CardTransactionStatus {
   APPROVED = 'APPROVED',

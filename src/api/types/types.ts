@@ -434,17 +434,22 @@ export namespace API {
 
   export namespace Counterparties {
     export type CounterpartyType = components['schemas']['CounterpartyAccountDto']['type'];
-    export interface Counterparty {
-      id: string;
-      email: string;
-      phone: string;
-      name: string;
-      nickname?: string | null;
-      type: CounterpartyType;
-      created_at: string;
-    }
+    export type Counterparty = components['schemas']['CounterpartyAccountDto'];
     export namespace Destination {
       export type CounterpartyDestinationType = components['schemas']['CounterpartyDestinationDto']['type'];
+      // Используем Extract для явного извлечения значений из CounterpartyDestinationType
+      // Это гарантирует, что мы используем только существующие значения и TypeScript сможет проверить полноту покрытия
+      export type BankingDestinationType =
+        | Extract<CounterpartyDestinationType, 'FEDWIRE'>
+        | Extract<CounterpartyDestinationType, 'ACH'>
+        | Extract<CounterpartyDestinationType, 'SWIFT'>
+        | Extract<CounterpartyDestinationType, 'SEPA'>
+        | Extract<CounterpartyDestinationType, 'CHAPS'>
+        | Extract<CounterpartyDestinationType, 'FPS'>;
+      export type CryptoDestinationType =
+        | Extract<CounterpartyDestinationType, 'CRYPTO_EXTERNAL'>
+        | Extract<CounterpartyDestinationType, 'CRYPTO_INTERNAL'>;
+      export type DestinationType = BankingDestinationType | CryptoDestinationType;
       export namespace List {
         export interface DestinationListItemCommonFields {
           id: string;
@@ -476,17 +481,13 @@ export namespace API {
         }
 
         export interface DestinationListItemWithExternalBankingData extends DestinationListItemCommonFields {
-          type:
-            | CounterpartyDestinationType.DOMESTIC_WIRE
-            | CounterpartyDestinationType.ACH
-            | CounterpartyDestinationType.SWIFT
-            | CounterpartyDestinationType.SEPA;
+          type: BankingDestinationType;
           external_banking_data: DestinationListItemExternalBankingData;
           external_crypto_data?: never;
         }
 
         export interface DestinationListItemWithExternalCryptoData extends DestinationListItemCommonFields {
-          type: CounterpartyDestinationType.CRYPTO_EXTERNAL | CounterpartyDestinationType.CRYPTO_INTERNAL;
+          type: CryptoDestinationType;
           external_banking_data?: never;
           external_crypto_data: DestinationListItemExternalCryptoData;
         }
@@ -495,21 +496,8 @@ export namespace API {
           | DestinationListItemWithExternalBankingData
           | DestinationListItemWithExternalCryptoData;
 
-        export interface Request {
-          wallet_id: string;
-          counterparty_account_id: string;
-          limit?: number;
-          offset?: number;
-          search?: string;
-          type?: CounterpartyDestinationType | string;
-          sort_by?: 'created_at' | 'nickname' | 'type';
-          sort_order?: SortingDirection;
-          filter?: {
-            type?: CounterpartyDestinationType;
-            nickname?: string;
-            created_at?: string;
-          };
-        }
+        export type Request = operations['CounterpartyDestinationsController_findAll']['parameters']['query'] &
+          operations['CounterpartyDestinationsController_findAll']['parameters']['path'];
 
         export type Response = {
           total: number;
@@ -535,17 +523,13 @@ export namespace API {
         }
 
         export interface DestinationDetailItemWithExternalBankingData extends DestinationDetailItemCommonFields {
-          type:
-            | CounterpartyDestinationType.DOMESTIC_WIRE
-            | CounterpartyDestinationType.ACH
-            | CounterpartyDestinationType.SWIFT
-            | CounterpartyDestinationType.SEPA;
+          type: BankingDestinationType;
           external_banking_data: DestinationDetailItemExternalBankingData;
           external_crypto_data?: never;
         }
 
         export interface DestinationDetailItemWithExternalCryptoData extends DestinationDetailItemCommonFields {
-          type: CounterpartyDestinationType.CRYPTO_EXTERNAL | CounterpartyDestinationType.CRYPTO_INTERNAL;
+          type: CryptoDestinationType;
           external_banking_data?: never;
           external_crypto_data: DestinationDetailItemExternalCryptoData;
         }
@@ -553,11 +537,9 @@ export namespace API {
         export type DestinationDetailItem =
           | DestinationDetailItemWithExternalBankingData
           | DestinationDetailItemWithExternalCryptoData;
-        export interface Request {
+        export type Request = operations['CounterpartyDestinationsController_findOne']['parameters']['path'] & {
           wallet_id: string;
-          counterparty_account_id: string;
-          counterparty_destination_id: string;
-        }
+        };
 
         export type Response = DestinationDetailItem;
       }
@@ -587,22 +569,15 @@ export namespace API {
       }
 
       export namespace Delete {
-        export interface Request {
-          wallet_id: string;
-          counterparty_account_id: string;
-          counterparty_destination_id: string;
-        }
+        export type Request = operations['CounterpartyDestinationsController_delete']['parameters']['path'];
       }
 
       export namespace Update {
-        export interface Request {
-          wallet_id: string;
-          counterparty_account_id: string;
-          counterparty_destination_id: string;
-          nickname: string;
-        }
+        export type Request =
+          operations['CounterpartyDestinationsController_update']['requestBody']['content']['application/json'] &
+            operations['CounterpartyDestinationsController_update']['parameters']['path'];
 
-        export type Response = API.Counterparties.Destination.Detail.DestinationDetailItemCommonFields;
+        export type Response = components['schemas']['CounterpartyDestinationDto'];
       }
     }
 
@@ -612,23 +587,12 @@ export namespace API {
         counterparty_account_id: string;
       }
 
-      export type Response = Counterparty;
+      export type Response = components['schemas']['CounterpartyAccountDto'];
     }
 
     export namespace List {
-      export interface Request {
-        wallet_id: string;
-        offset?: number;
-        limit?: number;
-        sort_by?: 'created_at' | 'nickname' | 'type' | 'email' | 'phone';
-        sort_order?: SortingDirection;
-        filter?: {
-          type?: CounterpartyDestinationType;
-          nickname?: string;
-          created_at?: string;
-          search?: string;
-        };
-      }
+      export type Request = operations['CounterpartyAccountsController_findAll']['parameters']['query'] &
+        operations['CounterpartyAccountsController_findAll']['parameters']['path'];
 
       export type Response = {
         total: number;
@@ -637,27 +601,23 @@ export namespace API {
     }
 
     export namespace Create {
-      export type Request = Omit<Counterparty, 'id' | 'created_at'> & {
-        wallet_id: string;
-      };
+      export type Request =
+        operations['CounterpartyAccountsController_create']['requestBody']['content']['application/json'] &
+          operations['CounterpartyAccountsController_create']['parameters']['path'];
 
       export type Response = Counterparty;
     }
 
     export namespace Update {
-      export type Request = Partial<Omit<Counterparty, 'id' | 'created_at'>> & {
-        wallet_id: string;
-        counterparty_account_id: string;
-      };
+      export type Request =
+        operations['CounterpartyAccountsController_update']['requestBody']['content']['application/json'] &
+          operations['CounterpartyAccountsController_update']['parameters']['path'];
 
       export type Response = Counterparty;
     }
 
     export namespace Delete {
-      export interface Request {
-        wallet_id: string;
-        counterparty_account_id: string;
-      }
+      export type Request = operations['CounterpartyAccountsController_delete']['parameters']['path'];
 
       export type Response = Counterparty;
     }
