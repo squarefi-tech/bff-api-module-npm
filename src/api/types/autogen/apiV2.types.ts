@@ -2233,10 +2233,6 @@ export interface components {
             data: components["schemas"]["ExchangeRateDto"][];
         };
         InitInquiryResponseDto: {
-            /** @example 6633328a-1713-4a4d-97e6-088f96cdf12e */
-            referenceId: string;
-            /** @example itmpl_rmUunz2XZk5xm4KQyJawGQSpappS */
-            templateId: string;
             /** @example inq_E6U4KitBucNKpfrDMb997AaTkQTt */
             inquiryId: string | null;
         };
