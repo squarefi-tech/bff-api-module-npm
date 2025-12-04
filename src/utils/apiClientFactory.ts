@@ -2,19 +2,22 @@
 import { isTMA } from '@telegram-apps/sdk-react';
 import axios, { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
-import { telegramSignUpPath, telegramSignInPath, refreshTokenPath } from '../api/auth';
-
 import { AppEnviroment, ResponseStatus } from '../constants';
+
+import {
+  API_V1_BASE_URL,
+  API_V2_BASE_URL,
+  API_TOTP_BASE_URL,
+  TENANT_ID,
+  LOGOUT_URL,
+  REFRESH_TOKEN_PATH,
+  TELEGRAM_SIGN_IN_PATH,
+  TELEGRAM_SIGN_UP_PATH,
+} from './apiConstants';
 
 import { deleteTokens, getTokens, refreshTokens } from './tokensFactory';
 
 // eslint-disable-next-line no-constant-condition
-
-const apiV1BaseURL = process.env.API_URL ?? 'ENV variable API_URL is not defined';
-const apiV2BaseURL = process.env.API_V2_URL ?? 'ENV variable API_V2_URL is not defined';
-const apiTOTPBaseURL = process.env.API_TOTP_URL ?? 'ENV variable API_TOTP_URL is not defined';
-const envTenantId = process.env.TENANT_ID ?? 'ENV variable TENANT_ID is not defined';
-const envLogoutURL = process.env.LOGOUT_URL ?? '/auth/logout';
 
 type AxiosError = {
   response: AxiosResponse;
@@ -79,9 +82,9 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
         const { refresh_token } = getTokens();
         const isRetryRequest = failedRequestConfig.context?.isRetryRequest;
 
-        const isRefreshTokenRequest = failedRequestConfig.url?.includes(refreshTokenPath);
-        const isTelegramSignInRequest = failedRequestConfig.url?.includes(telegramSignInPath);
-        const isTelegramSignUpRequest = failedRequestConfig.url?.includes(telegramSignUpPath);
+        const isRefreshTokenRequest = failedRequestConfig.url?.includes(REFRESH_TOKEN_PATH);
+        const isTelegramSignInRequest = failedRequestConfig.url?.includes(TELEGRAM_SIGN_IN_PATH);
+        const isTelegramSignUpRequest = failedRequestConfig.url?.includes(TELEGRAM_SIGN_UP_PATH);
         const isRefreshNotRequired = !refresh_token && !isTMA();
         const isLogoutNeccesary =
           isRefreshNotRequired ||
@@ -94,7 +97,7 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
 
         if (isLogoutNeccesary) {
           if (typeof window !== 'undefined') {
-            window.location.href = envLogoutURL;
+            window.location.href = LOGOUT_URL;
             deleteTokens();
           }
           requestQueue = [];
@@ -111,7 +114,7 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
             })
             .catch((tokenRefreshError) => {
               if (typeof window !== 'undefined') {
-                window.location.href = envLogoutURL;
+                window.location.href = LOGOUT_URL;
                 deleteTokens();
               }
               requestQueue = [];
@@ -177,18 +180,18 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
 };
 
 export const apiClientV1 = createApiClient({
-  baseURL: apiV1BaseURL,
-  tenantId: envTenantId,
+  baseURL: API_V1_BASE_URL,
+  tenantId: TENANT_ID,
 });
 
 export const apiClientV2 = createApiClient({
-  baseURL: apiV2BaseURL,
+  baseURL: API_V2_BASE_URL,
   isBearerToken: true,
-  tenantId: envTenantId,
+  tenantId: TENANT_ID,
 });
 
 export const apiClientTOTP = createApiClient({
-  baseURL: apiTOTPBaseURL,
+  baseURL: API_TOTP_BASE_URL,
   isBearerToken: true,
-  tenantId: envTenantId,
+  tenantId: TENANT_ID,
 });
