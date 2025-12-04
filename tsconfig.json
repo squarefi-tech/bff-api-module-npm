@@ -8,8 +8,9 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "types": ["vitest/globals", "node"]
   },
-  "include": ["src", "types.d.ts"],
-  "exclude": ["node_modules", "dist", "**/__tests__/*"]
+  "include": ["src", "types.d.ts", "**/*.test.ts", "**/*.spec.ts"],
+  "exclude": ["node_modules", "dist"]
 }
