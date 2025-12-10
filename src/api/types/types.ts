@@ -2319,7 +2319,7 @@ export namespace API {
         va_programs_id: string;
       }
 
-      export type Response = API.VirtualAccounts.VirtualAccount.VirtualAccountListItem;
+      export type Response = API.VirtualAccounts.VirtualAccount.VirtualAccountDetailItem;
     }
 
     export namespace GetByUuid {
@@ -2506,7 +2506,7 @@ export namespace API {
         created_at: string;
         destination_address: string;
         destination_currency: string;
-        //  : API.Currencies.Currency;
+        // destination_currency_details: API.Currencies.Currency;
         deposit_instructions?: API.VirtualAccounts.VirtualAccount.DepositInstruction.DepositInstruction[];
         id: string;
         integration_vendor_id: string;
