@@ -2056,8 +2056,6 @@ export interface components {
             name?: string;
             nickname?: string | null;
             /** @default false */
-            is_pinned: boolean;
-            /** @default false */
             is_self: boolean;
         };
         CounterpartyDestinationsFilter: {
@@ -2234,7 +2232,7 @@ export interface components {
         };
         InitInquiryResponseDto: {
             /** @example inq_E6U4KitBucNKpfrDMb997AaTkQTt */
-            inquiryId: string | null;
+            inquiryId: string;
         };
         ResumeInquiryResponseDto: {
             inquiryId: string;

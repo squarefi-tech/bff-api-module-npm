@@ -55,6 +55,7 @@ export namespace API {
     export namespace SignIn {
       export namespace ByType {
         export type Request = operations['AuthController_signIn']['requestBody']['content']['application/json'];
+        export type Response = API.Auth.Tokens;
       }
 
       export namespace Omni {
@@ -2318,7 +2319,7 @@ export namespace API {
         va_programs_id: string;
       }
 
-      export type Response = API.VirtualAccounts.VirtualAccount.VirtualAccountDetailItem;
+      export type Response = API.VirtualAccounts.VirtualAccount.VirtualAccountListItem;
     }
 
     export namespace GetByUuid {
@@ -2494,7 +2495,7 @@ export namespace API {
       }
       export interface VirtualAccountDetailItem {
         account_currency: string;
-        account_currency_details: API.Currencies.Currency;
+        // account_currency_details: API.Currencies.Currency;
         account_details: API.VirtualAccounts.VirtualAccount.AccountDetails;
         balance: number;
         crypto_deposit_details: {
@@ -2505,7 +2506,7 @@ export namespace API {
         created_at: string;
         destination_address: string;
         destination_currency: string;
-        destination_currency_details: API.Currencies.Currency;
+        //  : API.Currencies.Currency;
         deposit_instructions?: API.VirtualAccounts.VirtualAccount.DepositInstruction.DepositInstruction[];
         id: string;
         integration_vendor_id: string;

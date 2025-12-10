@@ -41,7 +41,7 @@ export const auth = {
           context: { bypassUnauthorizedHandler: true },
         }),
     },
-    byType: (data: API.Auth.SignIn.ByType.Request): Promise<API.Auth.Tokens> =>
+    byType: (data: API.Auth.SignIn.ByType.Request): Promise<API.Auth.SignIn.ByType.Response> =>
       apiClientV2.postRequest('/auth/sign-in', {
         data,
         context: { bypassUnauthorizedHandler: true },
