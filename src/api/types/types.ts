@@ -2319,7 +2319,9 @@ export namespace API {
         va_programs_id: string;
       }
 
-      export type Response = API.VirtualAccounts.VirtualAccount.VirtualAccountDetailItem;
+      export type Response = {
+        id: string;
+      };
     }
 
     export namespace GetByUuid {
