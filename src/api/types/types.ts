@@ -2642,7 +2642,7 @@ export namespace API {
       tenant_id: string;
     }
 
-    export interface WallletBalanceCryptoDetails {
+    export interface WallletBalanceDetails {
       uuid: string;
       amount: number;
       fiat_amount: number;
@@ -2656,7 +2656,7 @@ export namespace API {
       decimal?: number | null;
       amount: number;
       fiat_amount: number;
-      details: WallletBalanceCryptoDetails[];
+      details: WallletBalanceDetails[];
     }
 
     export type WalletBalance = WalletBalanceItem[];
@@ -2680,7 +2680,15 @@ export namespace API {
       }
     }
     export namespace Wallet {
-      export type Wallet = components['schemas']['WalletExtendedDto'];
+      export interface Wallet {
+        uuid: string;
+        type: components['schemas']['WalletDto']['type'];
+        created_at: string;
+        fiat_total: number;
+        crypto_total: number;
+        total_amount: number;
+        balance: WalletBalance;
+      }
 
       export namespace Create {
         export type Request = operations['WalletsController_create']['requestBody']['content']['application/json'];
