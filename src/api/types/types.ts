@@ -2680,15 +2680,8 @@ export namespace API {
       }
     }
     export namespace Wallet {
-      export interface Wallet {
-        uuid: string;
-        type: WalletType | string;
-        created_at: string;
-        fiat_total: number;
-        crypto_total: number;
-        total_amount: number;
-        balance: WalletBalance;
-      }
+      export type Wallet = components['schemas']['WalletExtendedDto'];
+
       export namespace Create {
         export interface Request {
           type: WalletType;
