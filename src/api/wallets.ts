@@ -5,11 +5,12 @@ import { apiClientV2 } from '../utils/apiClientFactory';
 import { defaultPaginationParams, WalletTypeValues } from '../constants';
 
 export const wallets = {
-  create: (type: WalletTypeValues): Promise<void> => apiClientV2.postRequest('/wallets', { data: { type } }),
+  create: (data: API.Wallets.Wallet.Create.Request): Promise<API.Wallets.Wallet.Create.Response> =>
+    apiClientV2.postRequest('/wallets', { data }),
   getAll: (params?: API.Wallets.WalletsList.Request): Promise<API.Wallets.WalletsList.Response> =>
     apiClientV2.getRequest<API.Wallets.WalletsList.Response>('/wallets', { params }),
-  getByUuid: (uuid: string): Promise<API.Wallets.Wallet> =>
-    apiClientV2.getRequest<API.Wallets.Wallet>(`/wallets/${uuid}`),
+  getByUuid: ({ wallet_id }: API.Wallets.Wallet.GetByUuid.Request): Promise<API.Wallets.Wallet.GetByUuid.Response> =>
+    apiClientV2.getRequest<API.Wallets.Wallet.GetByUuid.Response>(`/wallets/${wallet_id}`),
   addresses: {
     create: (data: API.Wallets.WalletChain.Create.Request): Promise<API.Wallets.WalletChain.Create.Response> => {
       const { wallet_uuid, chain, label } = data;

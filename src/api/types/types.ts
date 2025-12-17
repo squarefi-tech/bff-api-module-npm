@@ -2679,15 +2679,28 @@ export namespace API {
         export type Response = WalletChain;
       }
     }
+    export namespace Wallet {
+      export interface Wallet {
+        uuid: string;
+        type: WalletType | string;
+        created_at: string;
+        fiat_total: number;
+        crypto_total: number;
+        total_amount: number;
+        balance: WalletBalance;
+      }
+      export namespace Create {
+        export interface Request {
+          type: WalletType;
+        }
+        export type Response =
+          operations['WalletsController_create']['responses']['200']['content']['application/json'];
+      }
 
-    export interface Wallet {
-      uuid: string;
-      type: WalletType | string;
-      created_at: string;
-      fiat_total: number;
-      crypto_total: number;
-      total_amount: number;
-      balance: WalletBalance;
+      export namespace GetByUuid {
+        export type Request = operations['WalletsController_view']['parameters']['path'];
+        export type Response = operations['WalletsController_view']['responses']['200']['content']['application/json'];
+      }
     }
 
     export namespace WalletsList {
