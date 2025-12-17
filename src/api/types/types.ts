@@ -2698,7 +2698,7 @@ export namespace API {
 
       export namespace GetByUuid {
         export type Request = operations['WalletsController_view']['parameters']['path'];
-        export type Response = operations['WalletsController_view']['responses']['200']['content']['application/json'];
+        export type Response = API.Wallets.Wallet.Wallet;
       }
     }
 
