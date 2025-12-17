@@ -2683,9 +2683,7 @@ export namespace API {
       export type Wallet = components['schemas']['WalletExtendedDto'];
 
       export namespace Create {
-        export interface Request {
-          type: WalletType;
-        }
+        export type Request = operations['WalletsController_create']['requestBody']['content']['application/json'];
         export type Response =
           operations['WalletsController_create']['responses']['200']['content']['application/json'];
       }
