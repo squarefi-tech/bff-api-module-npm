@@ -1222,20 +1222,27 @@ export interface components {
             /** @description Has more data flag */
             readonly has_more: boolean;
         };
-        WalletDto: {
-            uuid: string;
-            /** @enum {string|null} */
-            type: "personal" | "business" | "trading" | "merchant" | "staking" | "saving" | "escrow" | "exchange" | "vault" | null;
-            created_at: string;
-        };
-        WalletsFilter: Record<string, never>;
-        CreateWalletDto: {
+        WalletKycInfoDto: {
+            /** @enum {string} */
+            type: "individual" | "business" | "universal";
             /**
-             * @default personal
+             * @default UNVERIFIED
              * @enum {string}
              */
-            type: "personal" | "business" | "trading" | "merchant" | "staking" | "saving" | "escrow" | "exchange" | "vault";
+            status: "APPROVED" | "DECLINED" | "PENDING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
+            readonly business_name?: string;
+            readonly first_name?: string;
+            readonly last_name?: string;
         };
+        WalletDto: {
+            uuid: string;
+            created_at: string;
+            /** @enum {string} */
+            role: "owner" | "admin" | "moderator" | "user";
+            readonly kyc_info?: components["schemas"]["WalletKycInfoDto"];
+        };
+        WalletsFilter: Record<string, never>;
+        CreateWalletDto: Record<string, never>;
         AggregatedBalanceDetailsDto: {
             uuid: string;
             amount: number;
@@ -1254,9 +1261,10 @@ export interface components {
         };
         WalletExtendedDto: {
             uuid: string;
-            /** @enum {string|null} */
-            type: "personal" | "business" | "trading" | "merchant" | "staking" | "saving" | "escrow" | "exchange" | "vault" | null;
             created_at: string;
+            /** @enum {string} */
+            role: "owner" | "admin" | "moderator" | "user";
+            readonly kyc_info?: components["schemas"]["WalletKycInfoDto"];
             fiat_total: number;
             crypto_total: number;
             total_amount: number;
@@ -2948,6 +2956,7 @@ export interface operations {
                 sort_order?: "ASC" | "DESC";
                 sort_by?: "created_at" | null;
                 filter?: components["schemas"]["WalletsFilter"];
+                include_shared?: boolean;
             };
             header?: never;
             path?: never;

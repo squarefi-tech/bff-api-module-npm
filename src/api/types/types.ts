@@ -2682,7 +2682,7 @@ export namespace API {
     export namespace Wallet {
       export interface Wallet {
         uuid: string;
-        type: components['schemas']['WalletDto']['type'];
+        // type: components['schemas']['WalletDto']['type'];
         created_at: string;
         fiat_total: number;
         crypto_total: number;
@@ -2704,9 +2704,11 @@ export namespace API {
 
     export namespace WalletsList {
       export interface WalletsListItem {
-        type: NonNullable<components['schemas']['WalletDto']['type']> | string;
+        // type: NonNullable<components['schemas']['WalletDto']['type']> | string;
         uuid: string;
         created_at: string;
+        role: components['schemas']['WalletDto']['role'];
+        kyc_info: components['schemas']['WalletKycInfoDto'];
       }
 
       export type Request = operations['WalletsController_all']['parameters']['query'];
