@@ -16,7 +16,7 @@ import {
   WalletTransactionStatus,
   WalletTransactionType,
 } from '../../constants';
-import { WalletType } from '../..';
+
 import { components, operations, paths } from './autogen/apiV2.types';
 
 export namespace API {
@@ -2704,7 +2704,7 @@ export namespace API {
 
     export namespace WalletsList {
       export interface WalletsListItem {
-        type: WalletType | string;
+        type: NonNullable<components['schemas']['WalletDto']['type']> | string;
         uuid: string;
         created_at: string;
       }

@@ -6,7 +6,7 @@ export type ValueWithLabel = {
   label: string;
 };
 
-export type WalletType = {
+export type WalletTypeData = {
   [key: string]: ValueWithLabel;
 };
 
@@ -244,7 +244,7 @@ export enum WalletTypeValues {
   VAULT = 'vault',
 }
 
-export const walletType: WalletType = {
+export const walletTypeData: WalletTypeData = {
   personal: { value: WalletTypeValues.PERSONAL, label: 'Personal' },
   p2p: { value: 'p2p', label: 'P2P' },
   escrow: { value: WalletTypeValues.ESCROW, label: 'Escrow' },
