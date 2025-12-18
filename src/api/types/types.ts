@@ -2680,6 +2680,8 @@ export namespace API {
       }
     }
     export namespace Wallet {
+      export type WalletKYCInfo = components['schemas']['WalletKycInfoDto'];
+      export type WalletRole = components['schemas']['WalletDto']['role'];
       export interface Wallet {
         uuid: string;
         // type: components['schemas']['WalletDto']['type'];
@@ -2688,6 +2690,8 @@ export namespace API {
         crypto_total: number;
         total_amount: number;
         balance: WalletBalance;
+        kyc_info: WalletKYCInfo;
+        role: WalletRole;
       }
 
       export namespace Create {
@@ -2707,8 +2711,8 @@ export namespace API {
         // type: NonNullable<components['schemas']['WalletDto']['type']> | string;
         uuid: string;
         created_at: string;
-        role: components['schemas']['WalletDto']['role'];
-        kyc_info: components['schemas']['WalletKycInfoDto'];
+        role: API.Wallets.Wallet.WalletRole;
+        kyc_info: API.Wallets.Wallet.WalletKYCInfo;
       }
 
       export type Request = operations['WalletsController_all']['parameters']['query'];
