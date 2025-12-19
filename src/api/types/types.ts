@@ -2684,6 +2684,7 @@ export namespace API {
       export type WalletRole = components['schemas']['WalletDto']['role'];
       export interface Wallet {
         uuid: string;
+        logo_url: string | null;
         // type: components['schemas']['WalletDto']['type'];
         created_at: string;
         fiat_total: number;
@@ -2709,6 +2710,7 @@ export namespace API {
     export namespace WalletsList {
       export interface WalletsListItem {
         // type: NonNullable<components['schemas']['WalletDto']['type']> | string;
+        logo_url: string | null;
         uuid: string;
         created_at: string;
         role: API.Wallets.Wallet.WalletRole;
@@ -2719,6 +2721,7 @@ export namespace API {
       export type Response = {
         total: number;
         data: WalletsListItem[];
+        has_more: boolean;
       };
     }
 
@@ -2835,7 +2838,7 @@ export namespace API {
           fileId: string;
         }
         export type Response =
-          operations['StorageController_getKycFile']['responses']['200']['content']['application/octet-stream'];
+          operations['StorageController_getFile']['responses']['200']['content']['application/octet-stream'];
       }
     }
   }

@@ -294,6 +294,23 @@ export interface paths {
         patch: operations["UserController_updateMyUserData"];
         trace?: never;
     };
+    "/user/user-data/logo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload Logo for user data */
+        post: operations["UserController_uploadLogoFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/user/email": {
         parameters: {
             query?: never;
@@ -330,6 +347,57 @@ export interface paths {
         patch: operations["AuthenticatedUserController_changePhone"];
         trace?: never;
     };
+    "/storage/kyc": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload KYC file */
+        post: operations["StorageController_uploadKycFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/storage/{type}/{folder_id}/{file_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get typed file by ID */
+        get: operations["StorageController_getFile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/storage/{type}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get typed file */
+        get: operations["StorageController_getFileUrl"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/wallets": {
         parameters: {
             query?: never;
@@ -359,6 +427,23 @@ export interface paths {
         get: operations["WalletsController_view"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/wallets/{wallet_id}/logo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload Logo for wallet */
+        post: operations["WalletsController_uploadLogoFile"];
         delete?: never;
         options?: never;
         head?: never;
@@ -734,41 +819,6 @@ export interface paths {
          * @deprecated
          */
         get: operations["CountriesController_findAll"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/storage/kyc": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get KYC file */
-        get: operations["StorageController_getFileUrl"];
-        put?: never;
-        /** Upload KYC file */
-        post: operations["StorageController_uploadKycFile"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/storage/kyc/{folderId}/{fileId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get KYC file by ID */
-        get: operations["StorageController_getKycFile"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1166,6 +1216,7 @@ export interface components {
             last_name?: string | null;
             /** @description User birth date in ISO 8601 format */
             birth_date?: string | null;
+            logo_url?: string | null;
         };
         SignInByEmailWithPasswordDto: {
             password: string;
@@ -1188,6 +1239,9 @@ export interface components {
             last_name?: string | null;
             /** @description User birth date in ISO 8601 format */
             birth_date?: string | null;
+        };
+        UserDataUploadLogoResponseDto: {
+            fullPath: string;
         };
         ChangeEmailDto: {
             access_token: string;
@@ -1214,6 +1268,9 @@ export interface components {
             /** @description Verification code */
             token: string;
         };
+        StorageUploadFileResponseDto: {
+            fullPath: string;
+        };
         PaginationResponseDto: {
             /** @example 20 */
             total: number;
@@ -1236,13 +1293,17 @@ export interface components {
         };
         WalletDto: {
             uuid: string;
+            logo_url: string | null;
+            name: string | null;
             created_at: string;
             /** @enum {string} */
-            role: "owner" | "admin" | "moderator" | "user";
+            role: "owner" | "user";
             readonly kyc_info?: components["schemas"]["WalletKycInfoDto"];
         };
         WalletsFilter: Record<string, never>;
-        CreateWalletDto: Record<string, never>;
+        CreateWalletDto: {
+            name: string | null;
+        };
         AggregatedBalanceDetailsDto: {
             uuid: string;
             amount: number;
@@ -1261,14 +1322,19 @@ export interface components {
         };
         WalletExtendedDto: {
             uuid: string;
+            logo_url: string | null;
+            name: string | null;
             created_at: string;
             /** @enum {string} */
-            role: "owner" | "admin" | "moderator" | "user";
+            role: "owner" | "user";
             readonly kyc_info?: components["schemas"]["WalletKycInfoDto"];
             fiat_total: number;
             crypto_total: number;
             total_amount: number;
             balance: components["schemas"]["AggregatedBalanceDto"][];
+        };
+        WalletUploadLogoResponseDto: {
+            fullPath: string;
         };
         WalletAddressDto: {
             address: string | null;
@@ -2006,9 +2072,6 @@ export interface components {
             tld: string | null;
             translations: components["schemas"]["CountryTranslations"][] | null;
             wikiDataId: string | null;
-        };
-        StorageUploadFileResponseDto: {
-            fullPath: string;
         };
         CounterpartiesFilter: {
             email?: string;
@@ -2826,6 +2889,32 @@ export interface operations {
             };
         };
     };
+    UserController_uploadLogoFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserDataUploadLogoResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AuthenticatedUserController_changeEmailConfirm: {
         parameters: {
             query?: never;
@@ -2946,6 +3035,78 @@ export interface operations {
             };
         };
     };
+    StorageController_uploadKycFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageUploadFileResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    StorageController_getFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                type: "kyc" | "logo";
+                folder_id: string;
+                file_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+        };
+    };
+    StorageController_getFileUrl: {
+        parameters: {
+            query: {
+                path: string;
+            };
+            header?: never;
+            path: {
+                type: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": string;
+                };
+            };
+        };
+    };
     WalletsController_all: {
         parameters: {
             query?: {
@@ -3033,6 +3194,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WalletExtendedDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description You don`t have access to current wallet */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WalletsController_uploadLogoFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wallet_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletUploadLogoResponseDto"];
                 };
             };
             /** @description Unauthorized */
@@ -3991,75 +4187,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    StorageController_getFileUrl: {
-        parameters: {
-            query: {
-                path: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/octet-stream": string;
-                };
-            };
-        };
-    };
-    StorageController_uploadKycFile: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StorageUploadFileResponseDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    StorageController_getKycFile: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                folderId: string;
-                fileId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/octet-stream": string;
-                };
             };
         };
     };
