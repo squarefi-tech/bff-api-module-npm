@@ -250,11 +250,17 @@ export const orders = {
       csv: {
         getByWalletUuid: ({
           wallet_uuid,
-          ...params
-        }: API.Orders.V2.List.Csv.Request): Promise<API.Orders.V2.List.Csv.Response> =>
-          apiClientV1.getRequest<API.Orders.V2.List.Csv.Response>(`/v2/orders/list/${wallet_uuid}/csv`, {
+          filters,
+          ...props
+        }: API.Orders.V2.List.Csv.Request): Promise<API.Orders.V2.List.Csv.Response> => {
+          const params = {
+            ...props,
+            filters: Array.isArray(filters) ? JSON.stringify(filters) : filters,
+          };
+          return apiClientV1.getRequest<API.Orders.V2.List.Csv.Response>(`/v2/orders/list/${wallet_uuid}/csv`, {
             params,
-          }),
+          });
+        },
       },
     },
 
