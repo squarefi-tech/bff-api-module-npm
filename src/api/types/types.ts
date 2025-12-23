@@ -2834,6 +2834,16 @@ export namespace API {
           export type Response = string;
         }
       }
+
+      export namespace StatementPdf {
+        export type Request = {
+          wallet_uuid: string;
+          from_date?: string; // ISO 8601 format
+          to_date?: string; // ISO 8601 format
+          crypto_id?: string; // UUID
+        };
+        export type Response = string; // PDF file as string
+      }
     }
   }
 
