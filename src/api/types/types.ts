@@ -2023,7 +2023,11 @@ export namespace API {
             info?: string | null;
           }
 
-          export type Response = OrderItem[];
+          export type Response = {
+            data: OrderItem[];
+            count: number;
+            has_more: boolean;
+          };
         }
 
         export namespace Csv {
