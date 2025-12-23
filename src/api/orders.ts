@@ -247,6 +247,15 @@ export const orders = {
         apiClientV1.getRequest<API.Orders.V2.List.ByWallet.Response>(`/v2/orders/list/${wallet_uuid}`, {
           params,
         }),
+      csv: {
+        getByWalletUuid: ({
+          wallet_uuid,
+          ...params
+        }: API.Orders.V2.List.Csv.Request): Promise<API.Orders.V2.List.Csv.Response> =>
+          apiClientV1.getRequest<API.Orders.V2.List.Csv.Response>(`/v2/orders/list/${wallet_uuid}/csv`, {
+            params,
+          }),
+      },
     },
 
     getById: ({ order_uuid }: API.Orders.V2.GetById.Request): Promise<API.Orders.V2.GetById.Response> =>

@@ -1911,21 +1911,25 @@ export namespace API {
 
       export namespace List {
         export namespace ByWallet {
+          export type OrderListStatusFilter = Record<'status', OrderStatuses[] | OrderStatuses>;
+          export type OrderListOrderTypeFilter = Record<'order_type', OrderType[] | OrderType>;
+          export type OrderListFromUuidFilter = Record<'from_uuid', string[] | string>;
+          export type OrderListToCurrencyIdFilter = Record<'to_currency_id', string[] | string>;
+
+          export type OrderListFilter =
+            | OrderListStatusFilter
+            | OrderListOrderTypeFilter
+            | OrderListFromUuidFilter
+            | OrderListToCurrencyIdFilter;
           export interface Request {
             wallet_uuid: string;
             offset?: number;
             limit?: number;
             sort_by?: string;
             sort_order?: 'asc' | 'desc';
-            filter: {
-              // ITS MOCK, NOT REAL FILTERS
-              from_created_at?: string;
-              to_created_at?: string;
-              status?: OrderStatuses;
-              order_type?: OrderType;
-              from_currency_id?: string;
-              to_currency_id?: string;
-            };
+            filters?: OrderListFilter[];
+            date_from?: string;
+            date_to?: string;
           }
 
           export interface PaymentOriginatorAddress {
@@ -2020,6 +2024,16 @@ export namespace API {
           }
 
           export type Response = OrderItem[];
+        }
+
+        export namespace Csv {
+          export interface Request {
+            wallet_uuid: string;
+            filters?: API.Orders.V2.List.ByWallet.OrderListFilter[];
+            date_from?: string;
+            date_to?: string;
+          }
+          export type Response = string;
         }
       }
 
