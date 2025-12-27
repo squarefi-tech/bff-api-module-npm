@@ -176,7 +176,125 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
   return { patchRequest, postRequest, deleteRequest, getRequest };
 };
 
+type FetchRequestConfig = {
+  params?: Record<string, string | number | boolean>;
+  data?: Record<string, unknown> | unknown;
+  headers?: Record<string, string>;
+  responseType?: 'json' | 'blob' | 'text' | 'arrayBuffer';
+};
+
+/**
+ * Native fetch-based API client.
+ * Used for endpoints that require native fetch behavior (e.g., blob responses for PDFs).
+ * Unlike axios-based client, this uses browser's native fetch API.
+ */
+export const createFetchApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiClientOptions) => {
+  const buildUrl = (url: string, params?: Record<string, string | number | boolean>): string => {
+    const fullUrl = `${baseURL}${url}`;
+    if (!params || Object.keys(params).length === 0) {
+      return fullUrl;
+    }
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      searchParams.append(key, String(value));
+    });
+    return `${fullUrl}?${searchParams.toString()}`;
+  };
+
+  const getHeaders = (additionalHeaders?: Record<string, string>): HeadersInit => {
+    const { access_token } = getTokens();
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'x-tenant-id': tenantId,
+      ...additionalHeaders,
+    };
+
+    if (access_token) {
+      const authHeader = isBearerToken ? `Bearer ${access_token}` : access_token;
+      headers.Authorization = authHeader;
+    }
+
+    return headers;
+  };
+
+  const handleResponse = async <T>(response: Response, responseType?: string): Promise<T> => {
+    if (!response.ok) {
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch {
+        // If response is not JSON, use default error message
+      }
+      throw new Error(errorMessage);
+    }
+
+    // Handle different response types
+    switch (responseType) {
+      case 'blob':
+        return response.blob() as unknown as T;
+      case 'text':
+        return response.text() as unknown as T;
+      case 'arrayBuffer':
+        return response.arrayBuffer() as unknown as T;
+      case 'json':
+      default:
+        return response.json();
+    }
+  };
+
+  const getRequest = async <T>(url: string, config?: FetchRequestConfig): Promise<T> => {
+    const fullUrl = buildUrl(url, config?.params);
+    const response = await fetch(fullUrl, {
+      method: 'GET',
+      headers: getHeaders(config?.headers),
+    });
+
+    return handleResponse<T>(response, config?.responseType);
+  };
+
+  const postRequest = async <T>(url: string, config?: FetchRequestConfig): Promise<T> => {
+    const fullUrl = buildUrl(url);
+    const response = await fetch(fullUrl, {
+      method: 'POST',
+      headers: getHeaders(config?.headers),
+      body: config?.data ? JSON.stringify(config.data) : undefined,
+    });
+
+    return handleResponse<T>(response, config?.responseType);
+  };
+
+  const patchRequest = async <T>(url: string, config?: FetchRequestConfig): Promise<T> => {
+    const fullUrl = buildUrl(url);
+    const response = await fetch(fullUrl, {
+      method: 'PATCH',
+      headers: getHeaders(config?.headers),
+      body: config?.data ? JSON.stringify(config.data) : undefined,
+    });
+
+    return handleResponse<T>(response, config?.responseType);
+  };
+
+  const deleteRequest = async <T>(url: string, config?: FetchRequestConfig): Promise<T> => {
+    const fullUrl = buildUrl(url);
+    const response = await fetch(fullUrl, {
+      method: 'DELETE',
+      headers: getHeaders(config?.headers),
+      body: config?.data ? JSON.stringify(config.data) : undefined,
+    });
+
+    return handleResponse<T>(response, config?.responseType);
+  };
+
+  return { getRequest, postRequest, patchRequest, deleteRequest };
+};
+
 export const apiClientV1 = createApiClient({
+  baseURL: apiV1BaseURL,
+  tenantId: envTenantId,
+});
+
+export const apiClientV1Native = createFetchApiClient({
   baseURL: apiV1BaseURL,
   tenantId: envTenantId,
 });
