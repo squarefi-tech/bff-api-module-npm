@@ -1,6 +1,6 @@
 import { API } from './types/types';
 
-import { apiClientV2 } from '../utils/apiClientFactory';
+import { apiClientV1, apiClientV2 } from '../utils/apiClientFactory';
 
 import { defaultPaginationParams, WalletTypeValues } from '../constants';
 
@@ -62,25 +62,13 @@ export const wallets = {
           { params },
         ),
     },
-    statement: {
-      pdf: {
-        getByWalletUuid: ({
-          wallet_uuid,
-          ...params
-        }: API.Wallets.WalletTransactions.StatementPdf.Request): Promise<API.Wallets.WalletTransactions.StatementPdf.Response> =>
-          apiClientV2.getRequest<API.Wallets.WalletTransactions.StatementPdf.Response>(
-            `/wallets/${wallet_uuid}/transactions/statement/pdf`,
-            { params },
-          ),
-      },
-    },
   },
   statementPdf: {
     getByWalletUuid: ({
       wallet_uuid,
       ...params
     }: API.Wallets.WalletTransactions.StatementPdf.Request): Promise<API.Wallets.WalletTransactions.StatementPdf.Response> =>
-      apiClientV2.getRequest<API.Wallets.WalletTransactions.StatementPdf.Response>(
+      apiClientV1.getRequest<API.Wallets.WalletTransactions.StatementPdf.Response>(
         `/wallets/transactions/${wallet_uuid}/statement-pdf`,
         { params },
       ),

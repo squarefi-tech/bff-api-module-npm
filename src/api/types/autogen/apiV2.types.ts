@@ -1216,6 +1216,8 @@ export interface components {
             last_name?: string | null;
             /** @description User birth date in ISO 8601 format */
             birth_date?: string | null;
+            /** @description ISO 3166-1 alpha-2 country code */
+            nationality?: string | null;
             logo_url?: string | null;
         };
         SignInByEmailWithPasswordDto: {
@@ -1239,6 +1241,8 @@ export interface components {
             last_name?: string | null;
             /** @description User birth date in ISO 8601 format */
             birth_date?: string | null;
+            /** @description ISO 3166-1 alpha-2 country code */
+            nationality?: string | null;
         };
         UserDataUploadLogoResponseDto: {
             fullPath: string;
