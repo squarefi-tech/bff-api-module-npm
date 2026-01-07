@@ -2003,6 +2003,8 @@ export namespace API {
             card_id?: string;
             vendor_id?: string;
             fiat_account_id?: string;
+            from_wallet_uuid?: string;
+            to_wallet_uuid?: string;
           }
 
           export interface OrderItem {

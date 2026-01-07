@@ -1068,6 +1068,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/wallets/{wallet_id}/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get wallet users list */
+        get: operations["WalletsUsersController_all"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/wallets/{wallet_id}/users/{user_data_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** View wallet user */
+        get: operations["WalletsUsersController_view"];
+        put?: never;
+        post?: never;
+        /** Delete wallet user */
+        delete: operations["WalletsUsersController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/wallets/{wallet_id}/users/{user_data_id}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Change role of wallet user */
+        patch: operations["WalletsUsersController_updateRole"];
+        trace?: never;
+    };
+    "/wallets/{wallet_id}/users/{user_data_id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Activate wallet user */
+        post: operations["WalletsUsersController_activate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/wallets/{wallet_id}/users/{user_data_id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Deactivate wallet user */
+        post: operations["WalletsUsersController_deactivate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/bank-data": {
         parameters: {
             query?: never;
@@ -1216,9 +1302,11 @@ export interface components {
             last_name?: string | null;
             /** @description User birth date in ISO 8601 format */
             birth_date?: string | null;
+            logo_url?: string | null;
             /** @description ISO 3166-1 alpha-2 country code */
             nationality?: string | null;
-            logo_url?: string | null;
+            readonly email: string | null;
+            readonly phone: string | null;
         };
         SignInByEmailWithPasswordDto: {
             password: string;
@@ -1286,6 +1374,8 @@ export interface components {
         WalletKycInfoDto: {
             /** @enum {string} */
             type: "individual" | "business" | "universal";
+            email?: string | null;
+            phone?: string | null;
             /**
              * @default UNVERIFIED
              * @enum {string}
@@ -1301,7 +1391,7 @@ export interface components {
             name: string | null;
             created_at: string;
             /** @enum {string} */
-            role: "owner" | "user";
+            role: "owner" | "admin" | "user";
             readonly kyc_info?: components["schemas"]["WalletKycInfoDto"];
         };
         WalletsFilter: Record<string, never>;
@@ -1330,7 +1420,7 @@ export interface components {
             name: string | null;
             created_at: string;
             /** @enum {string} */
-            role: "owner" | "user";
+            role: "owner" | "admin" | "user";
             readonly kyc_info?: components["schemas"]["WalletKycInfoDto"];
             fiat_total: number;
             crypto_total: number;
@@ -2321,6 +2411,29 @@ export interface components {
             data: components["schemas"]["IntegrationPersonaTemplateEntityDto"][];
             /** @description Has more data flag */
             readonly has_more: boolean;
+        };
+        WalletUserInfoDto: {
+            id: number;
+            first_name?: string | null;
+            last_name?: string | null;
+            logo_url?: string | null;
+            readonly email: string | null;
+        };
+        WalletUserDto: {
+            /** @enum {string} */
+            readonly role: "owner" | "admin" | "user";
+            is_active: boolean;
+            user_info?: components["schemas"]["WalletUserInfoDto"][];
+        };
+        WalletUsersFilterDto: {
+            is_active?: boolean;
+            /** @enum {string} */
+            role?: "owner" | "admin" | "user";
+            search?: string;
+        };
+        UpdateWalletUserRoleDto: {
+            /** @enum {string} */
+            role: "user";
         };
         BankDataAddressDto: {
             city?: string | null;
@@ -4937,6 +5050,234 @@ export interface operations {
         responses: {
             /** @description Invalid tenant */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WalletsUsersController_all: {
+        parameters: {
+            query?: {
+                /** @description Number of records to skip */
+                offset?: number;
+                /** @description Number of records to return */
+                limit?: number;
+                sort_order?: "ASC" | "DESC";
+                sort_by?: null;
+                filter?: components["schemas"]["WalletUsersFilterDto"];
+            };
+            header?: never;
+            path: {
+                wallet_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginationResponseDto"] & {
+                        data?: unknown;
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description You don`t have access to current wallet */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WalletsUsersController_view: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wallet_id: string;
+                user_data_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletUserDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description You don`t have access to current wallet */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WalletsUsersController_remove: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wallet_id: string;
+                user_data_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description User removed from wallet user */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description You don`t have access to current wallet */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WalletsUsersController_updateRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wallet_id: string;
+                user_data_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateWalletUserRoleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletUserDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description You don`t have access to current wallet */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WalletsUsersController_activate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wallet_id: string;
+                user_data_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletUserDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description You don`t have access to current wallet */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WalletsUsersController_deactivate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wallet_id: string;
+                user_data_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletUserDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description You don`t have access to current wallet */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
