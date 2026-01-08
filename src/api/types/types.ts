@@ -1914,13 +1914,13 @@ export namespace API {
           export type OrderListStatusFilter = Record<'status', OrderStatuses[] | OrderStatuses>;
           export type OrderListOrderTypeFilter = Record<'order_type', OrderType[] | OrderType>;
           export type OrderListFromUuidFilter = Record<'from_uuid', string[] | string>;
-          export type OrderListToCurrencyIdFilter = Record<'to_currency_id', string[] | string>;
+          export type OrderListToUuidFilter = Record<'to_uuid', string[] | string>;
 
           export type OrderListFilter =
             | OrderListStatusFilter
             | OrderListOrderTypeFilter
             | OrderListFromUuidFilter
-            | OrderListToCurrencyIdFilter;
+            | OrderListToUuidFilter;
           export interface Request {
             wallet_uuid: string;
             offset?: number;
