@@ -1510,15 +1510,7 @@ export namespace API {
       }
     }
 
-    export type OrderStatus =
-      | 'NEW'
-      | 'PENDING'
-      | 'PROCESSING'
-      | 'CANCELED'
-      | 'COMPLETE'
-      | 'RETURNED'
-      | 'ERROR'
-      | 'FAILED';
+    export type OrderStatus = 'NEW' | 'PENDING' | 'PROCESSING' | 'CANCELED' | 'COMPLETE' | 'ERROR' | 'FAILED';
 
     export namespace OrderTypes {
       export type OrderTypeKycRail = {
