@@ -1154,6 +1154,75 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/wallets/{wallet_id}/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get wallet invites list */
+        get: operations["WalletsInvitesController_all"];
+        put?: never;
+        /** Create wallet invite */
+        post: operations["WalletsInvitesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/wallets/{wallet_id}/invites/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** View wallet invite */
+        get: operations["WalletsInvitesController_view"];
+        put?: never;
+        post?: never;
+        /** Cancel wallet invite */
+        delete: operations["WalletsInvitesController_cancel"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/wallets/accept-invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept wallet invite by code */
+        post: operations["WalletsInvitesAcceptController_accept"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/webhooks/mailer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MailerController_handleQStashWebhook"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/bank-data": {
         parameters: {
             query?: never;
@@ -2435,6 +2504,37 @@ export interface components {
             /** @enum {string} */
             role: "user";
         };
+        CreateWalletInviteRequestDto: {
+            email: string;
+            /**
+             * @example user
+             * @enum {string}
+             */
+            role: "user";
+        };
+        WalletInviteDto: {
+            id: string;
+            email: string;
+            role: string;
+            code: string;
+            expires_at: string;
+            used_at: string | null;
+            created_at: string;
+        };
+        WalletInvitesFilterDto: {
+            /** @enum {string} */
+            role?: "owner" | "admin" | "user";
+            /** @description Search by email */
+            search?: string;
+        };
+        AcceptWalletInviteRequestDto: {
+            /** @example ABC123XYZ */
+            code: string;
+        };
+        AcceptWalletInviteResponseDto: {
+            wallet_id: string;
+        };
+        QStashWebhookDto: Record<string, never>;
         BankDataAddressDto: {
             city?: string | null;
             country_id?: number | null;
@@ -3320,7 +3420,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner, admin, user */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3355,7 +3455,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3391,7 +3491,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner, admin, user */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3431,7 +3531,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner, admin */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3476,7 +3576,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner, admin, user */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3512,7 +3612,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner, admin, user */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3541,7 +3641,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner, admin, user */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3694,7 +3794,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner, admin, user */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3734,7 +3834,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3772,7 +3872,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner, admin, user */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3812,7 +3912,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4045,7 +4145,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner, admin, user */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4090,7 +4190,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4131,7 +4231,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner, admin, user */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4173,7 +4273,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner, admin, user */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4223,7 +4323,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner, admin */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4266,7 +4366,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner, admin */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4341,7 +4441,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner, admin, user */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4386,7 +4486,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner, admin */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4953,7 +5053,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -4989,7 +5089,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5093,7 +5193,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner, admin */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5129,7 +5229,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner, admin */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5164,7 +5264,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner, admin */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5204,7 +5304,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner, admin */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5240,7 +5340,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner, admin */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -5276,8 +5376,217 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description You don`t have access to current wallet */
+            /** @description You don't have access to current wallet. Allowed roles: owner, admin */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WalletsInvitesController_all: {
+        parameters: {
+            query?: {
+                /** @description Number of records to skip */
+                offset?: number;
+                /** @description Number of records to return */
+                limit?: number;
+                sort_order?: "ASC" | "DESC";
+                sort_by?: "created_at" | null;
+                filter?: components["schemas"]["WalletInvitesFilterDto"];
+            };
+            header?: never;
+            path: {
+                wallet_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginationResponseDto"] & {
+                        data?: unknown;
+                    };
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description You don't have access to current wallet. Allowed roles: owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WalletsInvitesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wallet_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateWalletInviteRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletInviteDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description You don't have access to current wallet. Allowed roles: owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WalletsInvitesController_view: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wallet_id: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WalletInviteDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description You don't have access to current wallet. Allowed roles: owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WalletsInvitesController_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wallet_id: string;
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Invite cancelled */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description You don't have access to current wallet. Allowed roles: owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WalletsInvitesAcceptController_accept: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcceptWalletInviteRequestDto"];
+            };
+        };
+        responses: {
+            /** @description Invite accepted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcceptWalletInviteResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    MailerController_handleQStashWebhook: {
+        parameters: {
+            query?: never;
+            header: {
+                "upstash-signature": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QStashWebhookDto"];
+            };
+        };
+        responses: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };

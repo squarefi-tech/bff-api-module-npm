@@ -290,6 +290,7 @@ export enum OrderStatuses {
   PROCESSING = 'PROCESSING',
   CANCELED = 'CANCELED',
   COMPLETE = 'COMPLETE',
+  RETURNED = 'RETURNED',
   ERROR = 'ERROR',
   FAILED = 'FAILED',
 }
