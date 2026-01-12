@@ -295,6 +295,9 @@ export enum OrderStatuses {
   FAILED = 'FAILED',
 }
 
+export const OrderStatusCheck: IsEnumEqualToUnion<OrderStatuses, API.Orders.V2.GetById.Response['status']> = true;
+export type OrderStatusMismatch = EnumUnionMismatch<OrderStatuses, API.Orders.V2.GetById.Response['status']>;
+
 export enum CardStatus {
   ACTIVE = 'ACTIVE',
   FROZEN = 'FROZEN',

@@ -7,7 +7,6 @@ import {
   CounterpartyDestinationType,
   CurrencyType,
   IssuingProgramStatus,
-  OrderStatuses,
   OrderType,
   SortingDirection,
   SubAccountType,
@@ -1247,7 +1246,7 @@ export namespace API {
             to_uuid: string;
             amount_from: number;
             order_type: 'EXCHANGE_CRYPTO_INTERNAL';
-            status: OrderStatuses;
+            status: OrderStatus;
             amount_to: number;
             info: string;
             meta: {
@@ -1281,7 +1280,7 @@ export namespace API {
             to_uuid: string;
             amount_from: number;
             order_type: 'TRANSFER_CARD_PREPAID';
-            status: OrderStatuses;
+            status: OrderStatus;
             amount_to: number;
             info: string;
             meta: {
@@ -1319,7 +1318,7 @@ export namespace API {
             to_uuid: string;
             amount_from: number;
             order_type: 'OMNIBUS_CRYPTO_WITHDRAWAL';
-            status: OrderStatuses;
+            status: OrderStatus;
             amount_to: number;
             info: string;
             meta: {
@@ -1412,7 +1411,7 @@ export namespace API {
             to_uuid: string;
             amount_from: number;
             order_type: 'EXCHANGE_OMNI';
-            status: OrderStatuses;
+            status: OrderStatus;
             amount_to: number;
             info: string;
             meta: {
@@ -1511,6 +1510,16 @@ export namespace API {
       }
     }
 
+    export type OrderStatus =
+      | 'NEW'
+      | 'PENDING'
+      | 'PROCESSING'
+      | 'CANCELED'
+      | 'COMPLETE'
+      | 'RETURNED'
+      | 'ERROR'
+      | 'FAILED';
+
     export namespace OrderTypes {
       export type OrderTypeKycRail = {
         id: string;
@@ -1565,7 +1574,7 @@ export namespace API {
         order_uuid: string;
         wallet_uuid: string;
         crypto_uuid: string;
-        status: OrderStatuses | string;
+        status: OrderStatus;
         amount: number;
         comission: number;
         net_amount: number;
@@ -1720,7 +1729,7 @@ export namespace API {
               to_uuid: string;
               amount_from: number;
               amount_to: number;
-              status: OrderStatuses;
+              status: OrderStatus;
               created_at: string;
               info: string;
               id: string;
@@ -1911,7 +1920,7 @@ export namespace API {
 
       export namespace List {
         export namespace ByWallet {
-          export type OrderListStatusFilter = Record<'status', OrderStatuses[] | OrderStatuses>;
+          export type OrderListStatusFilter = Record<'status', OrderStatus[] | OrderStatus>;
           export type OrderListOrderTypeFilter = Record<'order_type', OrderType[] | OrderType>;
           export type OrderListFromUuidFilter = Record<'from_uuid', string[] | string>;
           export type OrderListToUuidFilter = Record<'to_uuid', string[] | string>;
@@ -2017,7 +2026,7 @@ export namespace API {
             amount_from: number;
             amount_to: number;
             order_type: string;
-            status: 'PENDING' | 'PROCESSING' | 'COMPLETE' | 'FAILED' | 'CANCELED';
+            status: OrderStatus;
             created_at: string;
             updated_at?: string | null;
             sub_account_id?: string | null;
