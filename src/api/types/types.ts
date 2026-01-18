@@ -1364,10 +1364,12 @@ export namespace API {
           export type Request = {
             amount: number;
             is_subsctract: boolean;
+            is_reverse: boolean;
             wallet_uuid: string;
             crypto_uuid: string;
             to_address: string;
             memo?: string;
+            note?: string;
           };
 
           export type Response = {
