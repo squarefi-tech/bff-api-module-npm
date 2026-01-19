@@ -574,7 +574,7 @@ export namespace API {
       export namespace Update {
         export type Request =
           operations['CounterpartyDestinationsController_update']['requestBody']['content']['application/json'] &
-            operations['CounterpartyDestinationsController_update']['parameters']['path'];
+          operations['CounterpartyDestinationsController_update']['parameters']['path'];
 
         export type Response = components['schemas']['CounterpartyDestinationDto'];
       }
@@ -602,7 +602,7 @@ export namespace API {
     export namespace Create {
       export type Request =
         operations['CounterpartyAccountsController_create']['requestBody']['content']['application/json'] &
-          operations['CounterpartyAccountsController_create']['parameters']['path'];
+        operations['CounterpartyAccountsController_create']['parameters']['path'];
 
       export type Response = Counterparty;
     }
@@ -610,7 +610,7 @@ export namespace API {
     export namespace Update {
       export type Request =
         operations['CounterpartyAccountsController_update']['requestBody']['content']['application/json'] &
-          operations['CounterpartyAccountsController_update']['parameters']['path'];
+        operations['CounterpartyAccountsController_update']['parameters']['path'];
 
       export type Response = Counterparty;
     }
@@ -1481,10 +1481,10 @@ export namespace API {
 
       export interface WithdrawCryptoRequest extends CommonRequestParams {
         order_type:
-          | OrderType.WITHDRAWAL_CRYPTO
-          | OrderType.TRANSFER_INTERNAL
-          | OrderType.OMNIBUS_CRYPTO_TRANSFER
-          | OrderType.SEGREGATED_CRYPTO_TRANSFER;
+        | OrderType.WITHDRAWAL_CRYPTO
+        | OrderType.TRANSFER_INTERNAL
+        | OrderType.OMNIBUS_CRYPTO_TRANSFER
+        | OrderType.SEGREGATED_CRYPTO_TRANSFER;
         to_address?: string;
       }
 
@@ -1651,10 +1651,10 @@ export namespace API {
 
         export interface WithdrawCryptoRequest extends CommonRequestParams {
           order_type:
-            | OrderType.WITHDRAWAL_CRYPTO
-            | OrderType.TRANSFER_INTERNAL
-            | OrderType.OMNIBUS_CRYPTO_TRANSFER
-            | OrderType.SEGREGATED_CRYPTO_TRANSFER;
+          | OrderType.WITHDRAWAL_CRYPTO
+          | OrderType.TRANSFER_INTERNAL
+          | OrderType.OMNIBUS_CRYPTO_TRANSFER
+          | OrderType.SEGREGATED_CRYPTO_TRANSFER;
           to_address?: string;
         }
 
@@ -2195,15 +2195,20 @@ export namespace API {
           amount: number;
           order_type: string;
           wallet_id: string;
-          meta?: {
-            currency?: string;
-            description?: string;
-            counterparty_account_id?: string;
-            from_currency_id?: string;
-            to_currency_id?: string;
+          meta: {
+            currency: string;
+            from_currency_id: string;
+            from_currency: string;
+            to_currency_id: string;
+            to_currency: string;
+            from_amount: number;
+            to_amount: number;
+            counterparty_destination_id: string;
+            type: 'ORDER';
+            sub_type: OrderType;
             note?: string;
             refference?: string;
-          };
+          }
         };
 
         export type Response = {
