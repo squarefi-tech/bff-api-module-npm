@@ -2580,7 +2580,10 @@ export interface operations {
     AuthController_verifyEmail: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Captcha token */
+                captcha?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -2610,7 +2613,10 @@ export interface operations {
     AuthController_verifyPhone: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Captcha token */
+                captcha?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -2663,7 +2669,10 @@ export interface operations {
     AuthController_signIn: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Captcha token */
+                captcha?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -2685,7 +2694,10 @@ export interface operations {
     AuthController_signUp: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Captcha token */
+                captcha?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -2803,7 +2815,10 @@ export interface operations {
     AuthPasswordController_signUpByEmail: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Captcha token */
+                captcha?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -2839,7 +2854,10 @@ export interface operations {
     AuthPasswordController_resendSignUpByEmail: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Captcha token */
+                captcha?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -2917,7 +2935,10 @@ export interface operations {
     AuthPasswordController_signInByEmail: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Captcha token */
+                captcha?: string;
+            };
             path?: never;
             cookie?: never;
         };
@@ -2953,7 +2974,10 @@ export interface operations {
     AuthOmniController_signInOmniByEmail: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Captcha token */
+                captcha?: string;
+            };
             path: {
                 type: "otp" | "magic";
             };
@@ -2991,7 +3015,10 @@ export interface operations {
     AuthOmniController_signInOmniByPhone: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /** @description Captcha token */
+                captcha?: string;
+            };
             path?: never;
             cookie?: never;
         };
