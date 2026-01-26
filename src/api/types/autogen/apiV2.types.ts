@@ -2025,6 +2025,7 @@ export interface components {
             ubo_declaration_url?: string | null;
             website?: string | null;
             selfie_url?: string | null;
+            regulatory_license_url?: string | null;
             annual_salary?: string | null;
             expected_monthly_volume?: string | null;
             monthly_crypto_deposits?: string | null;
@@ -2141,6 +2142,7 @@ export interface components {
             ubo_declaration_url?: string | null;
             website?: string | null;
             selfie_url?: string | null;
+            regulatory_license_url?: string | null;
             annual_salary?: string | null;
             expected_monthly_volume?: string | null;
             monthly_crypto_deposits?: string | null;

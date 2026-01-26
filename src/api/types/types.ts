@@ -2203,6 +2203,7 @@ export namespace API {
             to_currency: string;
             from_amount: number;
             to_amount: number;
+            counterparty_account_id: string;
             counterparty_destination_id: string;
             type: 'ORDER';
             sub_type: OrderType;
