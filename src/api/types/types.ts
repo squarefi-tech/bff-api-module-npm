@@ -109,13 +109,13 @@ export namespace API {
       };
     }
   }
-  export namespace BankData {
-    export namespace GetBankDataByAccountNumber {
-      export type Request = operations['BankDataController_getBankDataByCode']['parameters']['query'];
-      export type Response =
-        operations['BankDataController_getBankDataByCode']['responses']['200']['content']['application/json'];
-    }
-  }
+  // export namespace BankData { // TBD on backend
+  //   export namespace GetBankDataByAccountNumber {
+  //     export type Request = operations['BankDataController_getBankDataByAccountNumber']['parameters']['query'];
+  //     export type Response =
+  //       operations['BankDataController_getBankDataByCode']['responses']['200']['content']['application/json'];
+  //   }
+  // }
 
   export namespace Cards {
     export namespace Config {
@@ -2880,6 +2880,25 @@ export namespace API {
         }
         export type Response =
           operations['StorageController_getFile']['responses']['200']['content']['application/octet-stream'];
+      }
+    }
+  }
+
+  export namespace Referrals {
+    export namespace Levels {
+      export type Response =
+        operations['ReferralsController_getLevels']['responses']['200']['content']['application/json'];
+    }
+
+    export namespace Income {
+      export namespace Progress {
+        export type Response =
+          operations['ReferralsController_getProgress']['responses']['200']['content']['application/json'];
+      }
+
+      export namespace Summary {
+        export type Response =
+          operations['ReferralsController_getSummary']['responses']['200']['content']['application/json'];
       }
     }
   }

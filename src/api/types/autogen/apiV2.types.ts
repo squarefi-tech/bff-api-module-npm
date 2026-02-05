@@ -398,6 +398,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/referrals/levels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get referral levels */
+        get: operations["ReferralsController_getLevels"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/referrals/income/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get referral progress for current user main wallet */
+        get: operations["ReferralsController_getProgress"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/referrals/income/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get referral income summary for current user main wallet */
+        get: operations["ReferralsController_getSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/wallets": {
         parameters: {
             query?: never;
@@ -1223,23 +1274,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/bank-data": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Returns bank data by code */
-        get: operations["BankDataController_getBankDataByCode"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1432,6 +1466,51 @@ export interface components {
         StorageUploadFileResponseDto: {
             fullPath: string;
         };
+        ReferralLevelRewardDto: {
+            /**
+             * @example cashback_percent
+             * @enum {string}
+             */
+            type: "cashback_percent" | "free_card";
+            /**
+             * @description Percent for cashback or quantity for free card.
+             * @example 3
+             */
+            value: number;
+        };
+        ReferralLevelDto: {
+            /** @example 0 */
+            from: number;
+            /** @example 100 */
+            to?: Record<string, never> | null;
+            /** @example Level 1 */
+            title: string;
+            /** @example Starter range */
+            description?: Record<string, never> | null;
+            reward: components["schemas"]["ReferralLevelRewardDto"];
+        };
+        ReferralLevelsResponseDto: {
+            levels: components["schemas"]["ReferralLevelDto"][];
+        };
+        ReferralProgressResponseDto: {
+            currentLevel: components["schemas"]["ReferralLevelDto"];
+            /**
+             * @description Amount missing to complete the current level.
+             * @example 25
+             */
+            missingAmount: number;
+            /**
+             * @description Completed percent of the current level.
+             * @example 75
+             */
+            completedPercent: number;
+        };
+        ReferralIncomeSumResponseDto: {
+            /** @example 1250.5 */
+            total_amount: number;
+            /** @example 1250.5 */
+            incoming_amount: number;
+        };
         PaginationResponseDto: {
             /** @example 20 */
             total: number;
@@ -1547,7 +1626,7 @@ export interface components {
             method: "p2p" | "crypto" | "bank_transfer" | "exchange" | "sbp" | "internal_fiat" | null;
             meta: components["schemas"]["TransactionMetaEntity"] | null;
             /** @enum {string|null} */
-            record_type: "CARD_PROVIDER_DEPOSIT" | "CARD_PROVIDER_REFUND" | "DEPOSIT_CRYPTO_EXTERNAL" | "DEPOSIT_CRYPTO_INTERNAL" | "EXCHANGE_CRYPTO_INTERNAL" | "EXT_EXCHANGE" | "FEE" | "NETWORK_FEE" | "REFUND" | "WITHDRAWAL_CRYPTO_EXTERNAL" | "WITHDRAWAL_CRYPTO_INTERNAL" | "WHOLESALE_CARD_DEPOSIT" | null;
+            record_type: "WITHDRAWAL" | "DEPOSIT" | "REFERRAL_INCOME" | null;
             currency: components["schemas"]["CryptoCurrencyDto"] | components["schemas"]["FiatCurrencyDto"];
         };
         TransactionsFilter: {
@@ -1557,7 +1636,7 @@ export interface components {
             /** @enum {string|null} */
             method?: "p2p" | "crypto" | "bank_transfer" | "exchange" | "sbp" | "internal_fiat" | null;
             /** @enum {string|null} */
-            record_type?: "CARD_PROVIDER_DEPOSIT" | "CARD_PROVIDER_REFUND" | "DEPOSIT_CRYPTO_EXTERNAL" | "DEPOSIT_CRYPTO_INTERNAL" | "EXCHANGE_CRYPTO_INTERNAL" | "EXT_EXCHANGE" | "FEE" | "NETWORK_FEE" | "REFUND" | "WITHDRAWAL_CRYPTO_EXTERNAL" | "WITHDRAWAL_CRYPTO_INTERNAL" | "WHOLESALE_CARD_DEPOSIT" | null;
+            record_type?: "WITHDRAWAL" | "DEPOSIT" | "REFERRAL_INCOME" | null;
             "currency.uuid"?: string;
             "meta.billing_amount_currency"?: string;
             "meta.transaction_amount_currency"?: string;
@@ -2537,21 +2616,6 @@ export interface components {
             wallet_id: string;
         };
         QStashWebhookDto: Record<string, never>;
-        BankDataAddressDto: {
-            city?: string | null;
-            country_id?: number | null;
-            postcode?: string | null;
-            street1?: string | null;
-            street2?: string | null;
-            state_id?: number | null;
-        };
-        GetBankDataByCodeResponseDto: {
-            bank_name: string;
-            address: components["schemas"]["BankDataAddressDto"];
-            routing_number?: string;
-            iban?: string;
-            swift_bic?: string;
-        };
     };
     responses: never;
     parameters: never;
@@ -3350,6 +3414,84 @@ export interface operations {
                 content: {
                     "application/octet-stream": string;
                 };
+            };
+        };
+    };
+    ReferralsController_getLevels: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReferralLevelsResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ReferralsController_getProgress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReferralProgressResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ReferralsController_getSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReferralIncomeSumResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
@@ -5237,7 +5379,7 @@ export interface operations {
             header?: never;
             path: {
                 wallet_id: string;
-                user_data_id: number;
+                user_data_id: string;
             };
             cookie?: never;
         };
@@ -5273,7 +5415,7 @@ export interface operations {
             header?: never;
             path: {
                 wallet_id: string;
-                user_data_id: number;
+                user_data_id: string;
             };
             cookie?: never;
         };
@@ -5308,7 +5450,7 @@ export interface operations {
             header?: never;
             path: {
                 wallet_id: string;
-                user_data_id: number;
+                user_data_id: string;
             };
             cookie?: never;
         };
@@ -5348,7 +5490,7 @@ export interface operations {
             header?: never;
             path: {
                 wallet_id: string;
-                user_data_id: number;
+                user_data_id: string;
             };
             cookie?: never;
         };
@@ -5384,7 +5526,7 @@ export interface operations {
             header?: never;
             path: {
                 wallet_id: string;
-                user_data_id: number;
+                user_data_id: string;
             };
             cookie?: never;
         };
@@ -5616,42 +5758,6 @@ export interface operations {
         };
         responses: {
             201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    BankDataController_getBankDataByCode: {
-        parameters: {
-            query: {
-                /** @description Bank code string must be a valid IBAN, RTN or SWIFT */
-                code: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["GetBankDataByCodeResponseDto"];
-                };
-            };
-            /** @description No data by code */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
                 headers: {
                     [name: string]: unknown;
                 };
