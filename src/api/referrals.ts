@@ -7,6 +7,10 @@ export const referrals = {
       apiClientV2.getRequest<API.Referrals.Levels.Response>('/referrals/levels'),
   },
   income: {
+    getList: (
+      params?: API.Referrals.Income.List.Request,
+    ): Promise<API.Referrals.Income.List.Response> =>
+      apiClientV2.getRequest<API.Referrals.Income.List.Response>('/referrals/income', { params }),
     progress: {
       get: (): Promise<API.Referrals.Income.Progress.Response> =>
         apiClientV2.getRequest<API.Referrals.Income.Progress.Response>('/referrals/income/progress'),

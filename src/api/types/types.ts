@@ -2891,6 +2891,13 @@ export namespace API {
     }
 
     export namespace Income {
+      export namespace List {
+        export type Request =
+          operations['ReferralsController_getIncomeList']['parameters']['query'];
+        export type Response =
+          operations['ReferralsController_getIncomeList']['responses']['200']['content']['application/json'];
+      }
+
       export namespace Progress {
         export type Response =
           operations['ReferralsController_getProgress']['responses']['200']['content']['application/json'];

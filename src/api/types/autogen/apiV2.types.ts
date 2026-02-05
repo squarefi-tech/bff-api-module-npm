@@ -415,6 +415,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/referrals/income": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get referral income transactions for current user main wallet */
+        get: operations["ReferralsController_getIncomeList"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/referrals/income/progress": {
         parameters: {
             query?: never;
@@ -1492,6 +1509,70 @@ export interface components {
         ReferralLevelsResponseDto: {
             levels: components["schemas"]["ReferralLevelDto"][];
         };
+        PaginationResponseDto: {
+            /** @example 20 */
+            total: number;
+            /** @description Data */
+            data: Record<string, never>[];
+            /** @description Has more data flag */
+            readonly has_more: boolean;
+        };
+        TransactionMetaEntity: {
+            billing_amount: number;
+            billing_amount_currency: string;
+            exchange_rate: number;
+            fee: number;
+            fee_currency: string;
+            transaction_amount: number;
+            transaction_amount_currency: string;
+            network_fee?: number;
+            network_fee_currency?: string;
+            order_id?: string;
+            fiat_account_id?: string;
+            txid?: string;
+            chain_id?: number;
+            from_address?: string;
+            to_address?: string;
+            from_user_data?: number;
+            to_user_data?: number;
+            to_card_id?: string;
+            to_card_last4?: string;
+            to_fiat_account_id?: string;
+            to_vendor_id?: string;
+        };
+        WalletTransactionDto: {
+            id: number;
+            amount: number;
+            created_at: string;
+            info: string | null;
+            /** @enum {string} */
+            status: "complete" | "pending" | "canceled" | "failed" | "processing" | "new";
+            txid: string | null;
+            /** @enum {string} */
+            type: "deposit_crypto" | "withdrawal_crypto" | "deposit_fiat" | "withdrawal_fiat" | "deposit_vcard" | "withdrawal_vcard" | "deposit" | "withdrawal";
+            wallet_id: string | null;
+            /** @enum {string|null} */
+            method: "p2p" | "crypto" | "bank_transfer" | "exchange" | "sbp" | "internal_fiat" | null;
+            meta: components["schemas"]["TransactionMetaEntity"] | null;
+            /** @enum {string|null} */
+            record_type: "WITHDRAWAL" | "DEPOSIT" | "REFERRAL_INCOME" | null;
+            currency: components["schemas"]["CryptoCurrencyDto"] | components["schemas"]["FiatCurrencyDto"];
+        };
+        ReferralIncomeFilter: {
+            created_at?: string;
+            /** @enum {string|null} */
+            method?: "p2p" | "crypto" | "bank_transfer" | "exchange" | "sbp" | "internal_fiat" | null;
+            "currency.uuid"?: string;
+            "meta.billing_amount_currency"?: string;
+            "meta.transaction_amount_currency"?: string;
+            /** Format: date-time */
+            from_created_at?: string;
+            /** Format: date-time */
+            to_created_at?: string;
+            /** @default false */
+            show_low_balance: boolean;
+            status?: ("complete" | "pending" | "canceled" | "failed" | "processing" | "new")[];
+        };
         ReferralProgressResponseDto: {
             currentLevel: components["schemas"]["ReferralLevelDto"];
             /**
@@ -1510,14 +1591,6 @@ export interface components {
             total_amount: number;
             /** @example 1250.5 */
             incoming_amount: number;
-        };
-        PaginationResponseDto: {
-            /** @example 20 */
-            total: number;
-            /** @description Data */
-            data: Record<string, never>[];
-            /** @description Has more data flag */
-            readonly has_more: boolean;
         };
         WalletKycInfoDto: {
             /** @enum {string} */
@@ -1587,47 +1660,6 @@ export interface components {
         };
         CreateWalletAddressDto: {
             label: string;
-        };
-        TransactionMetaEntity: {
-            billing_amount: number;
-            billing_amount_currency: string;
-            exchange_rate: number;
-            fee: number;
-            fee_currency: string;
-            transaction_amount: number;
-            transaction_amount_currency: string;
-            network_fee?: number;
-            network_fee_currency?: string;
-            order_id?: string;
-            fiat_account_id?: string;
-            txid?: string;
-            chain_id?: number;
-            from_address?: string;
-            to_address?: string;
-            from_user_data?: number;
-            to_user_data?: number;
-            to_card_id?: string;
-            to_card_last4?: string;
-            to_fiat_account_id?: string;
-            to_vendor_id?: string;
-        };
-        WalletTransactionDto: {
-            id: number;
-            amount: number;
-            created_at: string;
-            info: string | null;
-            /** @enum {string} */
-            status: "complete" | "pending" | "canceled" | "failed" | "processing" | "new";
-            txid: string | null;
-            /** @enum {string} */
-            type: "deposit_crypto" | "withdrawal_crypto" | "deposit_fiat" | "withdrawal_fiat" | "deposit_vcard" | "withdrawal_vcard" | "deposit" | "withdrawal";
-            wallet_id: string | null;
-            /** @enum {string|null} */
-            method: "p2p" | "crypto" | "bank_transfer" | "exchange" | "sbp" | "internal_fiat" | null;
-            meta: components["schemas"]["TransactionMetaEntity"] | null;
-            /** @enum {string|null} */
-            record_type: "WITHDRAWAL" | "DEPOSIT" | "REFERRAL_INCOME" | null;
-            currency: components["schemas"]["CryptoCurrencyDto"] | components["schemas"]["FiatCurrencyDto"];
         };
         TransactionsFilter: {
             created_at?: string;
@@ -3432,6 +3464,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReferralLevelsResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ReferralsController_getIncomeList: {
+        parameters: {
+            query?: {
+                /** @description Number of records to skip */
+                offset?: number;
+                /** @description Number of records to return */
+                limit?: number;
+                sort_order?: "ASC" | "DESC";
+                sort_by?: "created_at" | "type" | "status" | "amount" | "method" | null;
+                filter?: components["schemas"]["ReferralIncomeFilter"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PaginationResponseDto"] & {
+                        data?: unknown;
+                    };
                 };
             };
             /** @description Unauthorized */
