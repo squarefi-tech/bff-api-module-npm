@@ -631,23 +631,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/issuing/programs": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get issuing Programs */
-        get: operations["ProgramsController_getPrograms"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/exchange/rates": {
         parameters: {
             query?: never;
@@ -660,58 +643,6 @@ export interface paths {
          * @deprecated
          */
         get: operations["ExchangeRatesController_findAll"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/fiat-accounts/{wallet_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List of fiat accounts by wallet id */
-        get: operations["FiatAccountsController_findAllByWallet"];
-        put?: never;
-        /** Create a new fiat account */
-        post: operations["FiatAccountsController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/fiat-accounts/{wallet_id}/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get a specific fiat account by ID */
-        get: operations["FiatAccountsController_findOne"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/fiat-accounts/{wallet_id}/{id}/transactions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get transactions for a specific Fiat Account by ID */
-        get: operations["TransactionsController_findAll"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1704,7 +1635,7 @@ export interface components {
         };
         CryptoCurrencyDto: {
             uuid: string;
-            decimal: number | null;
+            decimal: number;
             render_decimal: number;
             is_stablecoin: boolean;
             is_memo: boolean;
@@ -1726,7 +1657,7 @@ export interface components {
         };
         FiatCurrencyDto: {
             uuid: string;
-            decimal: number | null;
+            decimal: number;
             render_decimal: number;
             is_stablecoin: boolean;
             is_memo: boolean;
@@ -1741,33 +1672,6 @@ export interface components {
             total: number;
             data: (components["schemas"]["CryptoCurrencyDto"] | components["schemas"]["FiatCurrencyDto"])[];
         };
-        KycRailTermsAndConditionsEntity: {
-            id: string;
-            description: string | null;
-            kyc_rail_id: string;
-            link: string;
-            title: string;
-        };
-        KycRailEntity: {
-            id: string;
-            code: string | null;
-            name: string;
-            /** @enum {string|null} */
-            type: "individual" | "business" | "universal" | null;
-            /** @description Current terms and conditions data */
-            terms_and_conditions?: components["schemas"]["KycRailTermsAndConditionsEntity"][];
-        };
-        IssuingProgramDto: {
-            id: string;
-            /** @enum {string|null} */
-            form_factor: "PHYSICAL" | "VIRTUAL" | null;
-            /** @enum {string|null} */
-            brand: "VISA" | "MASTERCARD" | "AMEX" | "UNIONPAY" | null;
-            tokenizable: boolean;
-            /** @enum {string|null} */
-            type: "CREDIT" | "DEBIT" | null;
-            kyc_rail: components["schemas"]["KycRailEntity"] | null;
-        };
         ExchangeRateDto: {
             from: string;
             from_uuid: string | null;
@@ -1777,142 +1681,6 @@ export interface components {
             rate_source: "cryptomus" | "coingecko" | null;
             to: string;
             to_uuid: string | null;
-        };
-        IssuingProgram: {
-            id: string;
-            /** @enum {string|null} */
-            form_factor: "PHYSICAL" | "VIRTUAL" | null;
-            /** @enum {string|null} */
-            brand: "VISA" | "MASTERCARD" | "AMEX" | "UNIONPAY" | null;
-            tokenizable: boolean;
-            /** @enum {string|null} */
-            type: "CREDIT" | "DEBIT" | null;
-            kyc_rail: components["schemas"]["KycRailEntity"] | null;
-        };
-        FiatAccountIssuingCardDto: {
-            card_id: string;
-            program_id: string;
-            wallet_id: string;
-            nick_name: string;
-            name_on_card?: string;
-            /** @enum {string} */
-            card_status: "ACTIVE" | "CANCELED" | "FROZEN" | "INACTIVE" | "CLOSED" | "BLOCKED";
-            /** @enum {string} */
-            brand?: "VISA" | "MASTERCARD" | "AMEX" | "UNIONPAY";
-            /** @enum {string} */
-            type?: "CREDIT" | "DEBIT";
-            /** @enum {string} */
-            form_factor: "PHYSICAL" | "VIRTUAL";
-            tokenizable: boolean;
-            request_id: string;
-            created_at: string;
-            last4?: string;
-        };
-        FiatAccountDto: {
-            id: string;
-            balance: number | null;
-            nick_name: string | null;
-            wallet_id: string;
-            created_at: string;
-            /** @enum {string} */
-            status: "ACTIVE" | "CANCELED" | "FROZEN" | "INACTIVE" | "CLOSED" | "BLOCKED";
-            issuing_program: components["schemas"]["IssuingProgram"] | null;
-            currency: components["schemas"]["FiatCurrencyDto"];
-            total_balance: number;
-            realtimeauth_balance: number;
-            fiat_balance: number;
-            cards_count: number;
-            cards?: components["schemas"]["FiatAccountIssuingCardDto"][];
-        };
-        CreateFiatAccountDto: {
-            program_id: string;
-        };
-        FiatAccountEntity: {
-            id: string;
-            balance: number | null;
-            nick_name: string | null;
-            wallet_id: string;
-            created_at: string;
-            account_currency: string;
-            /** @enum {string} */
-            type: "balance" | "prepaid";
-            program_id: string | null;
-            /** @enum {string} */
-            status: "ACTIVE" | "CANCELED" | "FROZEN" | "INACTIVE" | "CLOSED" | "BLOCKED";
-            issuing_program: components["schemas"]["IssuingProgram"] | null;
-        };
-        FiatAccountDetailsDto: {
-            iban: string;
-            bank_name: string;
-            swift_code: string;
-            bank_address: string;
-            receiver_name: string;
-            payment_details: string;
-            reference_number: string;
-            registration_number: string;
-        };
-        FiatAccountRealtimeauthEntity: {
-            id: string;
-            crypto_token: Record<string, never> | null;
-            priority: Record<string, never> | null;
-            fiat_account: Record<string, never> | null;
-        };
-        FiatAccountOrderTypeEntity: {
-            /** @enum {string|null} */
-            order_type: "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_PREPAID" | "WITHDRAWAL_CRYPTO" | "DEPOSIT_CRYPTO" | "DEPOSIT_FIAT_SEPA" | "DEPOSIT_FIAT_SWIFT" | "EXCHANGE_CRYPTO_INTERNAL" | "WITHDRAWAL_FIAT_SEPA" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_WHOLESALE" | "CARD_ISSUING_FEE" | null;
-        };
-        FiatAccountExtendedDto: {
-            id: string;
-            balance: number | null;
-            nick_name: string | null;
-            wallet_id: string;
-            created_at: string;
-            /** @enum {string} */
-            status: "ACTIVE" | "CANCELED" | "FROZEN" | "INACTIVE" | "CLOSED" | "BLOCKED";
-            issuing_program: components["schemas"]["IssuingProgram"] | null;
-            currency: components["schemas"]["FiatCurrencyDto"];
-            total_balance: number;
-            realtimeauth_balance: number;
-            fiat_balance: number;
-            cards_count: number;
-            cards?: components["schemas"]["FiatAccountIssuingCardDto"][];
-            account_details: components["schemas"]["FiatAccountDetailsDto"];
-            realtime_auth: components["schemas"]["FiatAccountRealtimeauthEntity"][];
-            payment_types: components["schemas"]["FiatAccountOrderTypeEntity"][];
-        };
-        MerchantDto: {
-            name: string;
-            category_code: string;
-            city: string;
-            country: string;
-        };
-        FiatAccountTransactionDto: {
-            vendor_transaction_id: string;
-            created_at: string;
-            cleared_at: string;
-            merchant: components["schemas"]["MerchantDto"];
-            last4: string;
-            title: string;
-            billing_amount: number;
-            billing_currency: string;
-            transaction_amount: number;
-            transaction_currency: string;
-            vendor_sub_account_id: string;
-            failure_reason: string;
-            status: string;
-            /** @enum {string} */
-            transaction_type: "AUTHORIZATION" | "CLEARING" | "REFUND" | "REVERSAL" | "ORIGINAL_CREDIT" | "FEE" | "DEPOSIT" | "WITHDRAWAL";
-            is_credit: boolean;
-            has_receipt: boolean;
-            adjustment_type: string;
-            review_status: string;
-            group: string;
-            total_amount: number;
-        };
-        FindAllFiatAccountTransactionsDto: {
-            has_more: boolean;
-            count: number;
-            data: components["schemas"]["FiatAccountTransactionDto"][];
         };
         CreateDeveloperAccessDto: {
             name: string;
@@ -2456,7 +2224,7 @@ export interface components {
             uuid: string;
             chain: string | null;
             symbol: string;
-            decimal: number | null;
+            decimal: number;
             contract: string | null;
             render_decimal: number;
             meta: components["schemas"]["CryptoEntity"];
@@ -2535,6 +2303,7 @@ export interface components {
             enable_exchange: boolean;
             enable_auto_exchange: boolean;
             enable_crypto_withdrawal: boolean;
+            enable_referral_program: boolean;
             readonly metrics_data?: components["schemas"]["MetricsDataEntity"] | null;
             base_currency: string;
         };
@@ -3938,34 +3707,6 @@ export interface operations {
             };
         };
     };
-    ProgramsController_getPrograms: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginationResponseDto"] & {
-                        data?: unknown;
-                    };
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     ExchangeRatesController_findAll: {
         parameters: {
             query: {
@@ -3989,170 +3730,6 @@ export interface operations {
             };
             /** @description Unauthorized */
             401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    FiatAccountsController_findAllByWallet: {
-        parameters: {
-            query?: {
-                /** @description Number of records to skip */
-                offset?: number;
-                /** @description Number of records to return */
-                limit?: number;
-                /** @description Show cards */
-                show_cards?: boolean;
-            };
-            header?: never;
-            path: {
-                /** @description UUID of the wallet */
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description List of Fiat Accounts */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginationResponseDto"] & {
-                        data?: unknown;
-                    };
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don't have access to current wallet. Allowed roles: owner, admin, user */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    FiatAccountsController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description UUID of the wallet */
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateFiatAccountDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FiatAccountEntity"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don't have access to current wallet. Allowed roles: owner */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    FiatAccountsController_findOne: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description UUID of the wallet */
-                wallet_id: string;
-                /** @description Fiat Account ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FiatAccountExtendedDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don't have access to current wallet. Allowed roles: owner, admin, user */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    TransactionsController_findAll: {
-        parameters: {
-            query?: {
-                offset?: number;
-                limit?: number;
-            };
-            header?: never;
-            path: {
-                wallet_id: string;
-                /** @description Fiat Account ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FindAllFiatAccountTransactionsDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don't have access to current wallet. Allowed roles: owner */
-            403: {
                 headers: {
                     [name: string]: unknown;
                 };
