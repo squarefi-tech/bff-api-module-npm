@@ -1274,12 +1274,8 @@ export interface components {
         };
         TelegramSignUpByPhoneDto: {
             phone: string;
-            tg_id: string;
-            first_name: string;
-            last_name: string;
             hash: string;
             init_data_raw: string;
-            username: string;
             invite_code?: string;
             referrer?: string;
         };
@@ -1293,7 +1289,6 @@ export interface components {
             refresh_token?: string | null;
         };
         TelegramSignInByTgIdDto: {
-            tg_id: string;
             hash: string;
             init_data_raw: string;
         };
@@ -1336,6 +1331,7 @@ export interface components {
         UserDataEntity: {
             can_invite: boolean;
             created_at: string;
+            /** @deprecated */
             id: number;
             kyc_date: string | null;
             /**
@@ -1356,6 +1352,7 @@ export interface components {
             logo_url?: string | null;
             /** @description ISO 3166-1 alpha-2 country code */
             nationality?: string | null;
+            readonly uuid: string;
             readonly email: string | null;
             readonly phone: string | null;
         };
@@ -2364,6 +2361,7 @@ export interface components {
             readonly has_more: boolean;
         };
         WalletUserInfoDto: {
+            /** @deprecated */
             id: number;
             first_name?: string | null;
             last_name?: string | null;

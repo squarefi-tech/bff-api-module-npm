@@ -31,15 +31,13 @@ export async function refreshTokens(): Promise<ITokens> {
 
   if (isTMA()) {
     initData.restore();
-    const tg_id = initData.user()?.id;
     const hash = initData.hash();
     const init_data_raw = initData.raw();
-    if (!tg_id || !hash || !init_data_raw) {
+    if (!hash || !init_data_raw) {
       return Promise.reject(new Error('No TG ID, hash or init data raw found in tokensFactory'));
     }
 
     const telegramSignInResponse = await auth.signin.telegram({
-      tg_id: tg_id.toString(),
       hash,
       init_data_raw,
     });
