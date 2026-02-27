@@ -140,6 +140,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/telegram/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Link Telegram account to existing user via OTP-verified phone */
+        post: operations["AuthTelegramController_linkTelegramAccount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/sign-in/telegram": {
         parameters: {
             query?: never;
@@ -1287,6 +1304,10 @@ export interface components {
             expires_at?: number;
             token_type: string;
             refresh_token?: string | null;
+        };
+        TelegramLinkDto: {
+            init_data_raw: string;
+            hash: string;
         };
         TelegramSignInByTgIdDto: {
             hash: string;
@@ -2640,6 +2661,28 @@ export interface operations {
             };
             /** @description Invite code is required */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AuthTelegramController_linkTelegramAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TelegramLinkDto"];
+            };
+        };
+        responses: {
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };

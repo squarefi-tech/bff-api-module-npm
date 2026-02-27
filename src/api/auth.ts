@@ -7,6 +7,7 @@ export const telegramSignInPath = '/auth/sign-in/telegram'; // V2 path
 // export const telegramSignInPath = '/auth/signin/telegram'; // V1 path
 
 export const telegramSignUpPath = '/auth/sign-up/telegram';
+export const telegramLinkPath = '/auth/telegram/link';
 export const refreshTokenPath = '/auth/refresh/refresh-token';
 
 export const auth = {
@@ -75,6 +76,10 @@ export const auth = {
       }),
     telegram: (data: API.Auth.Telegram.Signup.Request): Promise<API.Auth.Telegram.Signup.Response> =>
       apiClientV2.postRequest<API.Auth.Telegram.Signup.Response>(telegramSignUpPath, { data }),
+  },
+  telegram: {
+    link: (data: API.Auth.Telegram.Link.Request): Promise<void> =>
+      apiClientV2.postRequest<void>(telegramLinkPath, { data }),
   },
   refresh: {
     refresh_token: (data: API.Auth.RefreshToken.Request): Promise<API.Auth.RefreshToken.Response> =>
