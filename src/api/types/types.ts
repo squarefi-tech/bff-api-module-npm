@@ -467,6 +467,7 @@ export namespace API {
           bank_name: string;
           note: string;
           swift_bic?: string;
+          iban?: string;
           address: {
             city: string;
             country_id: number;
