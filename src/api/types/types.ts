@@ -36,10 +36,6 @@ export namespace API {
         export type Response =
           operations['AuthTelegramController_signUp']['responses']['200']['content']['application/json'];
       }
-      export namespace Link {
-        export type Request =
-          operations['AuthTelegramController_linkTelegramAccount']['requestBody']['content']['application/json'];
-      }
     }
 
     export interface Tokens {

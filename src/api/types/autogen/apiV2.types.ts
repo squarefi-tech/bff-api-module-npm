@@ -140,23 +140,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/auth/telegram/link": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Link Telegram account to existing user via OTP-verified phone */
-        post: operations["AuthTelegramController_linkTelegramAccount"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/auth/sign-in/telegram": {
         parameters: {
             query?: never;
@@ -1289,10 +1272,16 @@ export interface components {
              */
             readonly scope: "global" | "local" | "others";
         };
+        TelegramContactDto: {
+            user_id: number;
+            phone_number: string;
+            first_name: string;
+            last_name?: string;
+        };
         TelegramSignUpByPhoneDto: {
-            phone: string;
+            contact: components["schemas"]["TelegramContactDto"];
+            auth_date: string;
             hash: string;
-            init_data_raw: string;
             invite_code?: string;
             referrer?: string;
         };
@@ -1304,10 +1293,6 @@ export interface components {
             expires_at?: number;
             token_type: string;
             refresh_token?: string | null;
-        };
-        TelegramLinkDto: {
-            init_data_raw: string;
-            hash: string;
         };
         TelegramSignInByTgIdDto: {
             hash: string;
@@ -1908,7 +1893,8 @@ export interface components {
             registration_number?: string | null;
             share_structure_url?: string | null;
             sof_eu_questionnaire?: components["schemas"]["KycEntitySofEuQuestionnaireEntity"] | null;
-            source_of_funds?: string | null;
+            /** @enum {string|null} */
+            source_of_funds?: "employment" | "savings" | "winnings" | "marital" | "real_estate" | "trust" | "investment" | "other" | "sales_of_goods_and_services" | "owners_capital" | "business_loans" | "private_capital" | "grant" | null;
             supplementary_info?: string | null;
             supplementary_url?: string | null;
             tax_identification_number?: string | null;
@@ -2025,7 +2011,8 @@ export interface components {
             registration_number?: string | null;
             share_structure_url?: string | null;
             sof_eu_questionnaire?: components["schemas"]["KycEntitySofEuQuestionnaireEntity"] | null;
-            source_of_funds?: string | null;
+            /** @enum {string|null} */
+            source_of_funds?: "employment" | "savings" | "winnings" | "marital" | "real_estate" | "trust" | "investment" | "other" | "sales_of_goods_and_services" | "owners_capital" | "business_loans" | "private_capital" | "grant" | null;
             supplementary_info?: string | null;
             supplementary_url?: string | null;
             tax_identification_number?: string | null;
@@ -2661,28 +2648,6 @@ export interface operations {
             };
             /** @description Invite code is required */
             403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthTelegramController_linkTelegramAccount: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TelegramLinkDto"];
-            };
-        };
-        responses: {
-            /** @description Unauthorized */
-            401: {
                 headers: {
                     [name: string]: unknown;
                 };

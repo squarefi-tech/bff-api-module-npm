@@ -77,10 +77,6 @@ export const auth = {
     telegram: (data: API.Auth.Telegram.Signup.Request): Promise<API.Auth.Telegram.Signup.Response> =>
       apiClientV2.postRequest<API.Auth.Telegram.Signup.Response>(telegramSignUpPath, { data }),
   },
-  telegram: {
-    link: (data: API.Auth.Telegram.Link.Request): Promise<void> =>
-      apiClientV2.postRequest<void>(telegramLinkPath, { data }),
-  },
   refresh: {
     refresh_token: (data: API.Auth.RefreshToken.Request): Promise<API.Auth.RefreshToken.Response> =>
       apiClientV2.postRequest<API.Auth.RefreshToken.Response>(refreshTokenPath, { data }),
