@@ -1647,7 +1647,7 @@ export interface components {
             meta: components["schemas"]["CryptoCurrencyMetaDto"];
             is_enabled: boolean;
             /** @example true */
-            is_crypto: boolean;
+            is_crypto: Record<string, never>;
         };
         FiatCurrencyMetaDto: {
             icon: string;
@@ -1669,7 +1669,7 @@ export interface components {
             meta: components["schemas"]["FiatCurrencyMetaDto"];
             is_enabled: boolean;
             /** @example false */
-            is_crypto: boolean;
+            is_crypto: Record<string, never>;
         };
         AllCurrenciesResponseDto: {
             total: number;

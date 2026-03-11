@@ -2853,6 +2853,7 @@ export namespace API {
           from_date?: string; // ISO 8601 format
           to_date?: string; // ISO 8601 format
           crypto_id?: string; // UUID
+          logo?: string;
         };
         export type Response = string; // PDF file as string
       }
