@@ -3,7 +3,7 @@ import { API } from './types/types';
 import { apiClientV2 } from '../utils/apiClientFactory';
 
 export const user = {
-  get: (): Promise<API.User.Get.Response> => apiClientV2.getRequest<API.User.Get.Response>('/user'),
+
   userData: {
     get: (): Promise<API.User.UserData.Get.Response> =>
       apiClientV2.getRequest<API.User.UserData.Get.Response>('/user/user-data'),

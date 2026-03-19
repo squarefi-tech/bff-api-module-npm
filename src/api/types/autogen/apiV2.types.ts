@@ -21,6 +21,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Register user_data for authenticated user */
+        post: operations["AuthController_register"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/verify/email/otp": {
         parameters: {
             query?: never;
@@ -151,74 +168,6 @@ export interface paths {
         put?: never;
         /** Sign in user with telegram data */
         post: operations["AuthTelegramController_signIn"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/sign-up/password/email": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Sign up user by email+password with OTP */
-        post: operations["AuthPasswordController_signUpByEmail"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/sign-up/password/email/resend": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Resend OTP by email */
-        post: operations["AuthPasswordController_resendSignUpByEmail"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/sign-up/password/email/finalize": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Final step to sign up user by email with verified session */
-        post: operations["AuthPasswordController_signUpByEmailFinalize"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/auth/sign-in/password/email": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Sign in user by email+password */
-        post: operations["AuthPasswordController_signInByEmail"];
         delete?: never;
         options?: never;
         head?: never;
@@ -643,75 +592,6 @@ export interface paths {
          * @deprecated
          */
         get: operations["ExchangeRatesController_findAll"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer/accesses": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List of external access */
-        get: operations["DeveloperAccessesController_findAll"];
-        put?: never;
-        /** Create external access */
-        post: operations["DeveloperAccessesController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/developer/accesses/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Update external access */
-        patch: operations["DeveloperAccessesController_update"];
-        trace?: never;
-    };
-    "/developer/accesses/{id}/rotate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Rotate external access */
-        patch: operations["DeveloperAccessesController_rotate"];
-        trace?: never;
-    };
-    "/developer/vendors": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List of vendors */
-        get: operations["DeveloperVendorsController_findAll"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1226,6 +1106,38 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        InviteDto: {
+            invite_code?: string;
+            referrer?: string;
+        };
+        UserDataEntity: {
+            can_invite: boolean;
+            created_at: string;
+            /** @deprecated */
+            id: number;
+            kyc_date: string | null;
+            /**
+             * @default UNVERIFIED
+             * @enum {string|null}
+             */
+            kyc_status: "APPROVED" | "DECLINED" | "PENDING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW" | null;
+            referral_name: string | null;
+            tenant_id: string;
+            user_id: string;
+            default_currency: string;
+            user_groups_id: string | null;
+            is_developer: boolean;
+            first_name?: string | null;
+            last_name?: string | null;
+            /** @description User birth date in ISO 8601 format */
+            birth_date?: string | null;
+            logo_url?: string | null;
+            /** @description ISO 3166-1 alpha-2 country code */
+            nationality?: string | null;
+            readonly uuid: string;
+            readonly email: string | null;
+            readonly phone: string | null;
+        };
         VerifyEmailDto: {
             email: string;
             token: string;
@@ -1297,74 +1209,6 @@ export interface components {
         TelegramSignInByTgIdDto: {
             hash: string;
             init_data_raw: string;
-        };
-        SignUpByEmailWithPasswordDto: {
-            password: string;
-            email: string;
-        };
-        UserEntity: {
-            id: string;
-            app_metadata: Record<string, never>;
-            user_metadata: Record<string, never>;
-            aud: string;
-            confirmation_sent_at?: string;
-            recovery_sent_at?: string;
-            email_change_sent_at?: string;
-            new_email?: string;
-            new_phone?: string;
-            invited_at?: string;
-            action_link?: string;
-            email?: string;
-            phone?: string;
-            created_at: string;
-            confirmed_at?: string;
-            email_confirmed_at?: string;
-            phone_confirmed_at?: string;
-            last_sign_in_at?: string;
-            role?: string;
-            updated_at?: string;
-            identities?: string[];
-            is_anonymous?: boolean;
-            factors?: string[];
-        };
-        ResendSignUpOtpByEmailDto: {
-            email: string;
-        };
-        SignUpWithPasswordFinalizeDto: {
-            invite_code?: string;
-            referrer?: string;
-        };
-        UserDataEntity: {
-            can_invite: boolean;
-            created_at: string;
-            /** @deprecated */
-            id: number;
-            kyc_date: string | null;
-            /**
-             * @default UNVERIFIED
-             * @enum {string|null}
-             */
-            kyc_status: "APPROVED" | "DECLINED" | "PENDING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW" | null;
-            referral_name: string | null;
-            tenant_id: string;
-            user_id: string;
-            default_currency: string;
-            user_groups_id: string | null;
-            is_developer: boolean;
-            first_name?: string | null;
-            last_name?: string | null;
-            /** @description User birth date in ISO 8601 format */
-            birth_date?: string | null;
-            logo_url?: string | null;
-            /** @description ISO 3166-1 alpha-2 country code */
-            nationality?: string | null;
-            readonly uuid: string;
-            readonly email: string | null;
-            readonly phone: string | null;
-        };
-        SignInByEmailWithPasswordDto: {
-            password: string;
-            email: string;
         };
         SignInByEmailDto: {
             invite_code?: string;
@@ -1684,15 +1528,6 @@ export interface components {
             rate_source: "cryptomus" | "coingecko" | null;
             to: string;
             to_uuid: string | null;
-        };
-        CreateDeveloperAccessDto: {
-            name: string;
-            /** @enum {string} */
-            role: "READ_ONLY" | "DEVELOPER" | "OWNER";
-        };
-        UpdateDeveloperAccessDto: {
-            /** @enum {string} */
-            role: "READ_ONLY" | "DEVELOPER" | "OWNER";
         };
         KycFormFieldOptionDto: {
             label: string;
@@ -2170,13 +2005,9 @@ export interface components {
             is_self: boolean;
         };
         UpdateCounterpartyAccountDto: {
-            email?: string;
-            /** @description Phone number */
-            phone?: string;
-            name?: string;
             nickname?: string | null;
             /** @default false */
-            is_self: boolean;
+            is_pinned: boolean;
         };
         CounterpartyDestinationsFilter: {
             nickname?: string | null;
@@ -2299,6 +2130,10 @@ export interface components {
             readonly yandex_metric_id?: string;
             readonly google_analytics_id?: string;
         };
+        SupportedLocalesEntity: {
+            default: string;
+            supported: string[];
+        };
         SystemConfigDto: {
             /** @enum {string} */
             default_theme_mode: "dark" | "light";
@@ -2310,6 +2145,7 @@ export interface components {
             enable_crypto_withdrawal: boolean;
             enable_referral_program: boolean;
             readonly metrics_data?: components["schemas"]["MetricsDataEntity"] | null;
+            readonly supported_locales?: components["schemas"]["SupportedLocalesEntity"] | null;
             base_currency: string;
         };
         SystemChainsResponseDto: {
@@ -2450,6 +2286,43 @@ export interface operations {
             };
         };
     };
+    AuthController_register: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InviteDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserDataEntity"];
+                };
+            };
+            /** @description Invite code is required */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description User already registered */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     AuthController_verifyEmail: {
         parameters: {
             query?: never;
@@ -2476,6 +2349,13 @@ export interface operations {
             };
             /** @description Invalid tenant */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description SB tenants only */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2514,6 +2394,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description SB tenants only */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     AuthController_refreshToken: {
@@ -2537,6 +2424,13 @@ export interface operations {
                     "application/json": components["schemas"]["SessionDto"];
                 };
             };
+            /** @description Invalid tenant */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     AuthController_signIn: {
@@ -2557,6 +2451,13 @@ export interface operations {
         responses: {
             /** @description Invalid tenant */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description SB tenants only */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2594,6 +2495,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description SB tenants only */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     AuthController_signOut: {
@@ -2611,6 +2519,13 @@ export interface operations {
         responses: {
             /** @description Invalid tenant */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description SB tenants only */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2683,160 +2598,8 @@ export interface operations {
                 };
                 content?: never;
             };
-        };
-    };
-    AuthPasswordController_signUpByEmail: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Captcha token */
-                captcha?: string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SignUpByEmailWithPasswordDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserEntity"];
-                };
-            };
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthPasswordController_resendSignUpByEmail: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Captcha token */
-                captcha?: string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ResendSignUpOtpByEmailDto"];
-            };
-        };
-        responses: {
-            /** @description Verification data sent */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthPasswordController_signUpByEmailFinalize: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SignUpWithPasswordFinalizeDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserDataEntity"];
-                };
-            };
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Invite code is required */
+            /** @description SB tenants only */
             403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            429: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    AuthPasswordController_signInByEmail: {
-        parameters: {
-            query?: never;
-            header?: {
-                /** @description Captcha token */
-                captcha?: string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SignInByEmailWithPasswordDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SessionDto"];
-                };
-            };
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            429: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2876,7 +2639,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Invite code is required */
+            /** @description SB tenants only */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2915,7 +2678,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Invite code is required */
+            /** @description SB tenants only */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -2933,14 +2696,6 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["UserEntity"];
-                };
-            };
             /** @description Unauthorized */
             401: {
                 headers: {
@@ -3059,6 +2814,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description SB tenants only */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     AuthenticatedUserController_changeEmail: {
@@ -3079,12 +2841,17 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["UserEntity"];
-                };
+                content?: never;
             };
             /** @description Unauthorized */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description SB tenants only */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3119,6 +2886,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description SB tenants only */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     AuthenticatedUserController_changePhone: {
@@ -3139,12 +2913,17 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["UserEntity"];
-                };
+                content?: never;
             };
             /** @description Unauthorized */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description SB tenants only */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3736,183 +3515,6 @@ export interface operations {
             };
             /** @description Unauthorized */
             401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DeveloperAccessesController_findAll: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>[];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DeveloperAccessesController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateDeveloperAccessDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DeveloperAccessesController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateDeveloperAccessDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DeveloperAccessesController_rotate: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Forbidden */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    DeveloperVendorsController_findAll: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>[];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Forbidden */
-            403: {
                 headers: {
                     [name: string]: unknown;
                 };

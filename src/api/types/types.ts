@@ -2613,12 +2613,7 @@ export namespace API {
   }
 
   export namespace User {
-    export type User = components['schemas']['UserEntity'];
 
-    export namespace Get {
-      export type Request = operations['UserController_getMe']['parameters']['query'];
-      export type Response = operations['UserController_getMe']['responses']['200']['content']['application/json'];
-    }
 
     export namespace UpdateUser {
       export namespace Phone {
