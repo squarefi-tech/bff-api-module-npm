@@ -1110,6 +1110,9 @@ export interface components {
             invite_code?: string;
             referrer?: string;
         };
+        UserDataRefEntity: {
+            uuid: string;
+        };
         UserDataEntity: {
             can_invite: boolean;
             created_at: string;
@@ -1120,7 +1123,7 @@ export interface components {
              * @default UNVERIFIED
              * @enum {string|null}
              */
-            kyc_status: "APPROVED" | "DECLINED" | "PENDING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW" | null;
+            kyc_status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW" | null;
             referral_name: string | null;
             tenant_id: string;
             user_id: string;
@@ -1137,6 +1140,8 @@ export interface components {
             readonly uuid: string;
             readonly email: string | null;
             readonly phone: string | null;
+            referred_by?: components["schemas"]["UserDataRefEntity"] | null;
+            invited_by?: components["schemas"]["UserDataRefEntity"] | null;
         };
         VerifyEmailDto: {
             email: string;
@@ -1379,7 +1384,7 @@ export interface components {
              * @default UNVERIFIED
              * @enum {string}
              */
-            status: "APPROVED" | "DECLINED" | "PENDING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
+            status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
             readonly business_name?: string;
             readonly first_name?: string;
             readonly last_name?: string;
@@ -1761,7 +1766,7 @@ export interface components {
              * @default UNVERIFIED
              * @enum {string}
              */
-            status: "APPROVED" | "DECLINED" | "PENDING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
+            status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
             /** @enum {string|null} */
             employment_status?: "EMPLOYEE" | "SELF_EMPLOYED" | "RETIRED" | "UNEMPLOYED" | "OTHER" | null;
             employment_description?: string | null;
@@ -1908,7 +1913,7 @@ export interface components {
         WalletKycRailDto: {
             message: string | null;
             /** @enum {string} */
-            readonly status: "APPROVED" | "DECLINED" | "PENDING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
+            readonly status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
             /** @default false */
             terms_confirmed: boolean;
             extra_actions?: components["schemas"]["WalletKycRailExtraActionDto"][];
