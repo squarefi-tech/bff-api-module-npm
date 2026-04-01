@@ -567,14 +567,29 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * List of currencies
-         * @deprecated
-         */
+        /** List of currencies */
         get: operations["CurrenciesController_all"];
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/currencies/{currency_id}/pin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Pin a currency */
+        post: operations["CurrenciesController_pin"];
+        /** Unpin a currency */
+        delete: operations["CurrenciesController_unpin"];
         options?: never;
         head?: never;
         patch?: never;
@@ -594,6 +609,38 @@ export interface paths {
         get: operations["ExchangeRatesController_findAll"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/kyc/init/{wallet_id}/{type}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["KycController_initDataCollection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/kyc/resume/{wallet_id}/{verification_ref}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["KycController_resumeDataCollection"];
         delete?: never;
         options?: never;
         head?: never;
@@ -698,6 +745,55 @@ export interface paths {
          * @deprecated
          */
         get: operations["CountriesController_findAll"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/persona/inquiries/init/{wallet_id}/{type}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PersonaController_initInquiry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/persona/inquiries/{wallet_id}/{inquiry_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PersonaController_resumeInquiry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/kyc/integration-persona-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get KYC integration Persona templates */
+        get: operations["IntegrationPersonaTemplateController_findAll"];
         put?: never;
         post?: never;
         delete?: never;
@@ -874,55 +970,6 @@ export interface paths {
         };
         /** List of exchange rates from currency to crypto */
         get: operations["SystemController_findAll"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/persona/inquiries/init/{wallet_id}/{type}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["PersonaController_initInquiry"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/persona/inquiries/{wallet_id}/{inquiry_id}/resume": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["PersonaController_resumeInquiry"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/kyc/integration-persona-templates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get KYC integration Persona templates */
-        get: operations["IntegrationPersonaTemplateController_findAll"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1268,20 +1315,20 @@ export interface components {
         };
         ReferralLevelRewardDto: {
             /**
-             * @example cashback_percent
+             * @example rev_share_percent
              * @enum {string}
              */
-            type: "cashback_percent" | "free_card";
+            type: "rev_share_percent";
             /**
-             * @description Percent for cashback or quantity for free card.
-             * @example 3
+             * @description Rev share percent of platform fee that goes to the referrer.
+             * @example 15
              */
             value: number;
         };
         ReferralLevelDto: {
             /** @example 0 */
             from: number;
-            /** @example 100 */
+            /** @example 10000 */
             to?: Record<string, never> | null;
             /** @example Level 1 */
             title: string;
@@ -1495,6 +1542,8 @@ export interface components {
             type: "token" | "native" | null;
             meta: components["schemas"]["CryptoCurrencyMetaDto"];
             is_enabled: boolean;
+            /** @description Present only when user is authenticated */
+            is_pinned?: boolean;
             /** @example true */
             is_crypto: Record<string, never>;
         };
@@ -1517,6 +1566,8 @@ export interface components {
             type: "token" | "native" | null;
             meta: components["schemas"]["FiatCurrencyMetaDto"];
             is_enabled: boolean;
+            /** @description Present only when user is authenticated */
+            is_pinned?: boolean;
             /** @example false */
             is_crypto: Record<string, never>;
         };
@@ -1533,6 +1584,15 @@ export interface components {
             rate_source: "cryptomus" | "coingecko" | null;
             to: string;
             to_uuid: string | null;
+        };
+        InitKycDataCollectionResponseDto: {
+            providerType: string;
+            verificationId: string;
+        };
+        ResumeKycDataCollectionResponseDto: {
+            providerType: string;
+            verificationId: string;
+            verificationToken?: string;
         };
         KycFormFieldOptionDto: {
             label: string;
@@ -1962,6 +2022,23 @@ export interface components {
             translations: components["schemas"]["CountryTranslations"][] | null;
             wikiDataId: string | null;
         };
+        InitInquiryResponseDto: {
+            /** @example inq_E6U4KitBucNKpfrDMb997AaTkQTt */
+            inquiryId: string;
+        };
+        ResumeInquiryResponseDto: {
+            inquiryId: string;
+            sessionId: string;
+        };
+        IntegrationPersonaTemplateEntityDto: Record<string, never>;
+        FindAllIntegrationPersonaTemplatesResponseDto: {
+            /** @example 20 */
+            total: number;
+            /** @description Data */
+            data: components["schemas"]["IntegrationPersonaTemplateEntityDto"][];
+            /** @description Has more data flag */
+            readonly has_more: boolean;
+        };
         CounterpartiesFilter: {
             email?: string;
             /** @description Phone number */
@@ -2191,23 +2268,6 @@ export interface components {
         SystemExchangeRatesResponseDto: {
             total: number;
             data: components["schemas"]["ExchangeRateDto"][];
-        };
-        InitInquiryResponseDto: {
-            /** @example inq_E6U4KitBucNKpfrDMb997AaTkQTt */
-            inquiryId: string;
-        };
-        ResumeInquiryResponseDto: {
-            inquiryId: string;
-            sessionId: string;
-        };
-        IntegrationPersonaTemplateEntityDto: Record<string, never>;
-        FindAllIntegrationPersonaTemplatesResponseDto: {
-            /** @example 20 */
-            total: number;
-            /** @description Data */
-            data: components["schemas"]["IntegrationPersonaTemplateEntityDto"][];
-            /** @description Has more data flag */
-            readonly has_more: boolean;
         };
         WalletUserInfoDto: {
             /** @deprecated */
@@ -3497,6 +3557,58 @@ export interface operations {
             };
         };
     };
+    CurrenciesController_pin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                currency_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    CurrenciesController_unpin: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                currency_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ExchangeRatesController_findAll: {
         parameters: {
             query: {
@@ -3520,6 +3632,85 @@ export interface operations {
             };
             /** @description Unauthorized */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    KycController_initDataCollection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wallet_id: string;
+                type: "individual" | "business" | "universal";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InitKycDataCollectionResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description You don't have access to current wallet. Allowed roles: owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    KycController_resumeDataCollection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wallet_id: string;
+                verification_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResumeKycDataCollectionResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description You don't have access to current wallet. Allowed roles: owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Provider verification not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3829,6 +4020,117 @@ export interface operations {
             };
             /** @description Unauthorized */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PersonaController_initInquiry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wallet_id: string;
+                type: "individual" | "business" | "universal";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InitInquiryResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description You don't have access to current wallet. Allowed roles: owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PersonaController_resumeInquiry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wallet_id: string;
+                inquiry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResumeInquiryResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description You don't have access to current wallet. Allowed roles: owner */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Persona reference or Inquiry not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    IntegrationPersonaTemplateController_findAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FindAllIntegrationPersonaTemplatesResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4448,117 +4750,6 @@ export interface operations {
             };
             /** @description Invalid tenant */
             401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PersonaController_initInquiry: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-                type: "individual" | "business" | "universal";
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InitInquiryResponseDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don't have access to current wallet. Allowed roles: owner */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PersonaController_resumeInquiry: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-                inquiry_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ResumeInquiryResponseDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don't have access to current wallet. Allowed roles: owner */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Persona reference or Inquiry not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    IntegrationPersonaTemplateController_findAll: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FindAllIntegrationPersonaTemplatesResponseDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: {
                 headers: {
                     [name: string]: unknown;
                 };
