@@ -463,6 +463,7 @@ export namespace API {
           bank_name: string;
           note: string;
           swift_bic?: string;
+          sort_code?: string;
           iban?: string;
           address: {
             city: string;

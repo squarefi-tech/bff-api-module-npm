@@ -347,6 +347,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/referrals/code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get referral code of the current user */
+        get: operations["ReferralsController_getCode"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/referrals/levels": {
         parameters: {
             query?: never;
@@ -1313,7 +1330,14 @@ export interface components {
         StorageUploadFileResponseDto: {
             fullPath: string;
         };
-        ReferralLevelRewardDto: {
+        ReferralCodeResponseDto: {
+            /**
+             * @description Personal referral code of the current user
+             * @example gule1rn25d
+             */
+            code: string;
+        };
+        ReferralLevelRewardEntity: {
             /**
              * @example rev_share_percent
              * @enum {string}
@@ -1334,7 +1358,7 @@ export interface components {
             title: string;
             /** @example Starter range */
             description?: Record<string, never> | null;
-            reward: components["schemas"]["ReferralLevelRewardDto"];
+            reward: components["schemas"]["ReferralLevelRewardEntity"];
         };
         ReferralLevelsResponseDto: {
             levels: components["schemas"]["ReferralLevelDto"][];
@@ -1404,7 +1428,7 @@ export interface components {
             status?: ("complete" | "pending" | "canceled" | "failed" | "processing" | "new")[];
         };
         ReferralProgressResponseDto: {
-            currentLevel: components["schemas"]["ReferralLevelDto"];
+            currentLevel: components["schemas"]["ReferralLevelDto"] | null;
             /**
              * @description Amount missing to complete the current level.
              * @example 25
@@ -2134,6 +2158,7 @@ export interface components {
             note: string | null;
             swift_bic?: string | null;
             iban?: string | null;
+            sort_code?: string | null;
             address?: components["schemas"]["AddressEntity"];
         };
         CryptoEntity: {
@@ -2191,6 +2216,7 @@ export interface components {
             note: string | null;
             swift_bic?: string | null;
             iban?: string | null;
+            sort_code?: string | null;
             address?: components["schemas"]["CreateCounterpartyExternalBankingDataAddressDto"];
         };
         CreateCounterpartyExternalCryptoDataDto: {
@@ -3068,6 +3094,39 @@ export interface operations {
             };
         };
     };
+    ReferralsController_getCode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReferralCodeResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Referral program is not available */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ReferralsController_getLevels: {
         parameters: {
             query?: never;
@@ -3087,6 +3146,13 @@ export interface operations {
             };
             /** @description Unauthorized */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Referral program is not available */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3128,6 +3194,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Referral program is not available */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     ReferralsController_getProgress: {
@@ -3154,6 +3227,13 @@ export interface operations {
                 };
                 content?: never;
             };
+            /** @description Referral program is not available */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     ReferralsController_getSummary: {
@@ -3175,6 +3255,13 @@ export interface operations {
             };
             /** @description Unauthorized */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Referral program is not available */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
