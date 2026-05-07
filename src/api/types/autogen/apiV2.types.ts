@@ -750,6 +750,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/kyc/wallet-kyc-rails-workflow": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WalletKycRailsWorkflowController_handle_get"];
+        put: operations["WalletKycRailsWorkflowController_handle_put"];
+        post: operations["WalletKycRailsWorkflowController_handle_post"];
+        delete: operations["WalletKycRailsWorkflowController_handle_delete"];
+        options: operations["WalletKycRailsWorkflowController_handle_options"];
+        head: operations["WalletKycRailsWorkflowController_handle_head"];
+        patch: operations["WalletKycRailsWorkflowController_handle_patch"];
+        trace?: never;
+    };
     "/countries": {
         parameters: {
             query?: never;
@@ -1005,6 +1021,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["PersonaAdminController_syncKycEntityWithPersona"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/persona-admin/{wallet_id}/init": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PersonaAdminController_initInquiry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/persona-admin/{wallet_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PersonaAdminController_resumeInquiry"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1499,6 +1547,8 @@ export interface components {
             readonly kyc_info?: components["schemas"]["WalletKycInfoDto"];
             fiat_total: number;
             crypto_total: number;
+            /** @description Sum of orders.amount_from for non-terminal orders (NEW/PENDING/PROCESSING/FAILED/ERROR), converted to user default_currency — same currency as total_amount. */
+            pending_balance: number;
             total_amount: number;
             balance: components["schemas"]["AggregatedBalanceDto"][];
         };
@@ -1656,7 +1706,6 @@ export interface components {
             fields: components["schemas"]["KycFormFieldContainerDto"][];
             label: string;
         };
-        KycEntityAmlQuestionnaireEntity: Record<string, never>;
         GeneralInfo: Record<string, never>;
         ContactPersonInfo: Record<string, never>;
         LegalRepresentativeInfo: Record<string, never>;
@@ -1669,7 +1718,6 @@ export interface components {
             directors_info: components["schemas"]["DirectorsInfo"][];
             ownership_structure: components["schemas"]["OwnershipStructure"][];
         };
-        KycEntitySofEuQuestionnaireEntity: Record<string, never>;
         CountryTimezone: Record<string, never>;
         CountryTranslations: Record<string, never>;
         CountryEntity: {
@@ -1759,7 +1807,6 @@ export interface components {
             id_type?: "PASSPORT" | "ID_CARD" | "DRIVERS" | "NIN" | null;
             additional_id_number?: string | null;
             additional_id_type?: string | null;
-            aml_questionnaire?: components["schemas"]["KycEntityAmlQuestionnaireEntity"] | null;
             articles_of_association_url?: string | null;
             business_description?: string | null;
             business_industry?: string | null;
@@ -1816,7 +1863,6 @@ export interface components {
             purpose_other?: string | null;
             registration_number?: string | null;
             share_structure_url?: string | null;
-            sof_eu_questionnaire?: components["schemas"]["KycEntitySofEuQuestionnaireEntity"] | null;
             /** @enum {string|null} */
             source_of_funds?: "employment" | "savings" | "winnings" | "marital" | "real_estate" | "trust" | "investment" | "other" | "sales_of_goods_and_services" | "owners_capital" | "business_loans" | "private_capital" | "grant" | null;
             supplementary_info?: string | null;
@@ -1877,7 +1923,6 @@ export interface components {
             id_type?: "PASSPORT" | "ID_CARD" | "DRIVERS" | "NIN" | null;
             additional_id_number?: string | null;
             additional_id_type?: string | null;
-            aml_questionnaire?: components["schemas"]["KycEntityAmlQuestionnaireEntity"] | null;
             articles_of_association_url?: string | null;
             business_description?: string | null;
             business_industry?: string | null;
@@ -1934,7 +1979,6 @@ export interface components {
             purpose_other?: string | null;
             registration_number?: string | null;
             share_structure_url?: string | null;
-            sof_eu_questionnaire?: components["schemas"]["KycEntitySofEuQuestionnaireEntity"] | null;
             /** @enum {string|null} */
             source_of_funds?: "employment" | "savings" | "winnings" | "marital" | "real_estate" | "trust" | "investment" | "other" | "sales_of_goods_and_services" | "owners_capital" | "business_loans" | "private_capital" | "grant" | null;
             supplementary_info?: string | null;
@@ -2294,6 +2338,16 @@ export interface components {
         SystemExchangeRatesResponseDto: {
             total: number;
             data: components["schemas"]["ExchangeRateDto"][];
+        };
+        PersonaAdminInitInquiryRequestDto: {
+            /**
+             * @example individual
+             * @enum {string}
+             */
+            type: "individual" | "business" | "universal";
+        };
+        PersonaAdminResumeInquiryRequestDto: {
+            inquiry_id: string;
         };
         WalletUserInfoDto: {
             /** @deprecated */
@@ -4088,6 +4142,125 @@ export interface operations {
             };
         };
     };
+    WalletKycRailsWorkflowController_handle_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WalletKycRailsWorkflowController_handle_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WalletKycRailsWorkflowController_handle_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WalletKycRailsWorkflowController_handle_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WalletKycRailsWorkflowController_handle_options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WalletKycRailsWorkflowController_handle_head: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    WalletKycRailsWorkflowController_handle_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     CountriesController_findAll: {
         parameters: {
             query?: never;
@@ -4855,6 +5028,70 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Invalid tenant */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PersonaAdminController_initInquiry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wallet_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonaAdminInitInquiryRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InitInquiryResponseDto"];
+                };
+            };
+            /** @description Invalid tenant */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    PersonaAdminController_resumeInquiry: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                wallet_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PersonaAdminResumeInquiryRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResumeInquiryResponseDto"];
+                };
+            };
             /** @description Invalid tenant */
             401: {
                 headers: {
