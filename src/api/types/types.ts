@@ -2717,6 +2717,7 @@ export namespace API {
         fiat_total: number;
         crypto_total: number;
         total_amount: number;
+        pending_balance: number;
         balance: WalletBalance;
         kyc_info: WalletKYCInfo;
         role: WalletRole;
