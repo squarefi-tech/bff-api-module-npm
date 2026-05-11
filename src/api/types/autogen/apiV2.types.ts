@@ -2108,9 +2108,9 @@ export interface components {
             readonly has_more: boolean;
         };
         CounterpartiesFilter: {
-            email?: string;
+            email?: string | null;
             /** @description Phone number */
-            phone?: string;
+            phone?: string | null;
             name?: string;
             nickname?: string | null;
             /** @enum {string} */
@@ -2120,9 +2120,9 @@ export interface components {
         };
         CounterpartyAccountDto: {
             id: string;
-            email: string;
+            email?: string | null;
             /** @description Phone number */
-            phone: string;
+            phone?: string | null;
             name: string;
             nickname?: string | null;
             /** @enum {string} */
@@ -2142,9 +2142,9 @@ export interface components {
             readonly has_more: boolean;
         };
         CreateCounterpartyAccountDto: {
-            email: string;
+            email?: string | null;
             /** @description Phone number */
-            phone: string;
+            phone?: string | null;
             name: string;
             nickname?: string | null;
             /** @enum {string} */
@@ -2286,6 +2286,13 @@ export interface components {
             default: string;
             supported: string[];
         };
+        StatementBrandingEntity: {
+            readonly company_name?: string | null;
+            readonly logo_url?: string | null;
+            readonly address?: string | null;
+            readonly website?: string | null;
+            readonly support_text?: string | null;
+        };
         SystemConfigDto: {
             /** @enum {string} */
             default_theme_mode: "dark" | "light";
@@ -2298,6 +2305,7 @@ export interface components {
             enable_referral_program: boolean;
             readonly metrics_data?: components["schemas"]["MetricsDataEntity"] | null;
             readonly supported_locales?: components["schemas"]["SupportedLocalesEntity"] | null;
+            readonly statement_branding?: components["schemas"]["StatementBrandingEntity"] | null;
             base_currency: string;
         };
         SystemChainsResponseDto: {
