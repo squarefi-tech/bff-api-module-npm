@@ -2292,6 +2292,7 @@ export interface components {
             readonly address?: string | null;
             readonly website?: string | null;
             readonly support_text?: string | null;
+            readonly support_phone?: string | null;
         };
         SystemConfigDto: {
             /** @enum {string} */
