@@ -210,10 +210,9 @@ const publicUrl = getPublicUrl(path);
 | **developer**       | Vendor & API key management                                         |
 | **exchange**        | Exchange rates per order type / currency                            |
 | **issuing**         | Virtual & physical cards, limits, controls, transactions            |
-| **kyc**             | Sumsub flows, rails & form submission                               |
+| **kyc**             | Data collection init/resume, Sumsub flows, rails & form submission  |
 | **list**            | Static system lists – currencies, chains, countries                 |
 | **orders**          | Create / calculate orders (including internal transfer)             |
-| **persona**         | Persona in-app KYC inquiries                                        |
 | **tenants**         | Tenant configuration                                                |
 | **totp**            | TOTP generation / verification / revoke helpers                     |
 | **user**            | User profile, contacts, OTP verification                            |

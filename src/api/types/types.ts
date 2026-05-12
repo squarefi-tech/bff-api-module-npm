@@ -1063,6 +1063,23 @@ export namespace API {
 
   export namespace KYC {
     export type KYCStatus = components['schemas']['KycEntityDto']['status'];
+    type InitDataCollectionEndpoint = paths['/kyc/init/{wallet_id}/{type}']['post'];
+    type ResumeDataCollectionEndpoint = paths['/kyc/resume/{wallet_id}/{verification_ref}']['post'];
+
+    export namespace DataCollection {
+      export type Type = InitDataCollectionEndpoint['parameters']['path']['type'];
+
+      export namespace Init {
+        export type Request = InitDataCollectionEndpoint['parameters']['path'];
+        export type Response = InitDataCollectionEndpoint['responses']['200']['content']['application/json'];
+      }
+
+      export namespace Resume {
+        export type Request = ResumeDataCollectionEndpoint['parameters']['path'];
+        export type Response = ResumeDataCollectionEndpoint['responses']['200']['content']['application/json'];
+      }
+    }
+
     export namespace Sumsub {
       export namespace GenerateToken {
         export interface Request {
@@ -2151,22 +2168,6 @@ export namespace API {
         };
 
         export type Response = OrderDetails;
-      }
-    }
-  }
-
-  export namespace Persona {
-    export namespace Inquiries {
-      export type InquiryType = operations['PersonaController_initInquiry']['parameters']['path']['type'];
-      export namespace Init {
-        export type Request = operations['PersonaController_initInquiry']['parameters']['path'];
-        export type Response =
-          operations['PersonaController_initInquiry']['responses']['200']['content']['application/json'];
-      }
-      export namespace Resume {
-        export type Request = operations['PersonaController_resumeInquiry']['parameters']['path'];
-        export type Response =
-          operations['PersonaController_resumeInquiry']['responses']['200']['content']['application/json'];
       }
     }
   }
