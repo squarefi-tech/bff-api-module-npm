@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Added provider-agnostic `kyc.dataCollection.init` and `kyc.dataCollection.resume` client methods
+- Routed deprecated `persona.inquiries.init` and `persona.inquiries.resume` through abstract KYC endpoints with the new verification response fields
+
 ## [1.31] - 2025-11-19
 
 ### Changed

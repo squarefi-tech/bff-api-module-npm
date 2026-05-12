@@ -3,6 +3,20 @@ import { API } from './types/types';
 import { apiClientV1, apiClientV2 } from '../utils/apiClientFactory';
 
 export const kyc = {
+  dataCollection: {
+    init: ({
+      wallet_id,
+      type,
+    }: API.KYC.DataCollection.Init.Request): Promise<API.KYC.DataCollection.Init.Response> =>
+      apiClientV2.postRequest<API.KYC.DataCollection.Init.Response>(`/kyc/init/${wallet_id}/${type}`),
+    resume: ({
+      wallet_id,
+      verification_ref,
+    }: API.KYC.DataCollection.Resume.Request): Promise<API.KYC.DataCollection.Resume.Response> =>
+      apiClientV2.postRequest<API.KYC.DataCollection.Resume.Response>(
+        `/kyc/resume/${wallet_id}/${verification_ref}`,
+      ),
+  },
   sumsub: {
     generate_token: (data: API.KYC.Sumsub.GenerateToken.Request): Promise<API.KYC.Sumsub.GenerateToken.Response> =>
       apiClientV1.postRequest<API.KYC.Sumsub.GenerateToken.Response>('/kyc/sumsub/generate_token', { data }),
