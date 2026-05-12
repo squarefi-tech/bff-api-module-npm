@@ -1,5 +1,5 @@
 import { API } from '.';
-import { IsEnumEqualToUnion, EnumUnionMismatch } from './utils/types';
+import { EnumValues, IsEnumEqualToUnion, EnumUnionMismatch, IsUnionSubset, UnionSubsetMismatch } from './utils/types';
 
 export type ValueWithLabel = {
   value: string;
@@ -142,15 +142,26 @@ export enum OrderType {
   WITHDRAW_CARD_PREPAID = 'WITHDRAW_CARD_PREPAID',
   WITHDRAW_CARD_SUBACCOUNT = 'WITHDRAW_CARD_SUBACCOUNT',
   AUTO_CONVERT_CRYPTO = 'AUTO_CONVERT_CRYPTO',
+  L2F_FPS_OFFRAMP = 'L2F_FPS_OFFRAMP',
+  L2F_FPS_ONRAMP = 'L2F_FPS_ONRAMP',
+  L2F_CHAPS_OFFRAMP = 'L2F_CHAPS_OFFRAMP',
+  L2F_CHAPS_ONRAMP = 'L2F_CHAPS_ONRAMP',
+  // when extend do not forget to add new order type to the enum WalletTransactionRecordType
 }
 
 export enum WalletTransactionRecordType {
   CARD_PROVIDER_DEPOSIT = 'CARD_PROVIDER_DEPOSIT',
   CARD_PROVIDER_REFUND = 'CARD_PROVIDER_REFUND',
   CARD_PROVIDER_WITHDRAWAL = 'CARD_PROVIDER_WITHDRAWAL',
+  CARD_ISSUING_FEE = 'CARD_ISSUING_FEE',
   DEPOSIT = 'DEPOSIT',
+  DEPOSIT_CRYPTO = 'DEPOSIT_CRYPTO',
   DEPOSIT_CRYPTO_EXTERNAL = 'DEPOSIT_CRYPTO_EXTERNAL',
   DEPOSIT_CRYPTO_INTERNAL = 'DEPOSIT_CRYPTO_INTERNAL',
+  DEPOSIT_FIAT_SEPA = 'DEPOSIT_FIAT_SEPA',
+  DEPOSIT_FIAT_SWIFT = 'DEPOSIT_FIAT_SWIFT',
+  DEPOSIT_ISSUING_SA_CRYPTO_EXT = 'DEPOSIT_ISSUING_SA_CRYPTO_EXT',
+  DEPOSIT_ISSUING_SA_SEPA_EXT = 'DEPOSIT_ISSUING_SA_SEPA_EXT',
   DEPOSIT_INTERNAL = 'DEPOSIT_INTERNAL',
   DEPOSIT_MANUAL = 'DEPOSIT_MANUAL',
   EXCHANGE_CRYPTO_INTERNAL = 'EXCHANGE_CRYPTO_INTERNAL',
@@ -196,6 +207,7 @@ export enum WalletTransactionRecordType {
   L2F_SEPA_WITHDRAWAL = 'L2F_SEPA_WITHDRAWAL',
   L2F_CRYPTO_WITHDRAWAL = 'L2F_CRYPTO_WITHDRAWAL',
   L2F_CRYPTO_DEPOSIT = 'L2F_CRYPTO_DEPOSIT',
+  OMNIBUS_CRYPTO_WITHDRAWAL = 'OMNIBUS_CRYPTO_WITHDRAWAL',
   HIFI_WIRE_ONRAMP = 'HIFI_WIRE_ONRAMP',
   HIFI_WIRE_OFFRAMP = 'HIFI_WIRE_OFFRAMP',
   HIFI_WIRE_DEPOSIT = 'HIFI_WIRE_DEPOSIT',
@@ -211,8 +223,28 @@ export enum WalletTransactionRecordType {
   HIFI_CRYPTO_TRANSFER = 'HIFI_CRYPTO_TRANSFER',
   HIFI_CRYPTO_WITHDRAWAL = 'HIFI_CRYPTO_WITHDRAWAL',
   HIFI_CRYPTO_DEPOSIT = 'HIFI_CRYPTO_DEPOSIT',
+  TBD_SWIFT_WITHDRAWAL = 'TBD_SWIFT_WITHDRAWAL',
   AUTO_CONVERT_CRYPTO = 'AUTO_CONVERT_CRYPTO',
+  WITHDRAWAL_CRYPTO = 'WITHDRAWAL_CRYPTO',
+  WITHDRAWAL_FIAT_SEPA = 'WITHDRAWAL_FIAT_SEPA',
+  L2F_FPS_OFFRAMP = 'L2F_FPS_OFFRAMP',
+  L2F_FPS_ONRAMP = 'L2F_FPS_ONRAMP',
+  L2F_CHAPS_OFFRAMP = 'L2F_CHAPS_OFFRAMP',
+  L2F_CHAPS_ONRAMP = 'L2F_CHAPS_ONRAMP',
 }
+
+export type OrderTypeMissingInWalletTransactionRecordType = Exclude<
+  EnumValues<OrderType>,
+  EnumValues<WalletTransactionRecordType>
+>;
+export const orderTypeIncludedInWalletTransactionRecordTypeCheck: IsUnionSubset<
+  EnumValues<OrderType>,
+  EnumValues<WalletTransactionRecordType>
+> = true;
+export type OrderTypeIncludedInWalletTransactionRecordTypeMismatch = UnionSubsetMismatch<
+  EnumValues<OrderType>,
+  EnumValues<WalletTransactionRecordType>
+>;
 
 export enum RequestStatus {
   NONE = 'none',

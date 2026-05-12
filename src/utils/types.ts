@@ -20,3 +20,12 @@ export type IsEnumEqualToUnion<E, U> = [EnumValues<E>] extends [U]
     ? true
     : false
   : false;
+
+// Checks whether all values from one union are present in another union.
+export type IsUnionSubset<SubsetUnion, SupersetUnion> = Exclude<SubsetUnion, SupersetUnion> extends never ? true : false;
+
+// Diagnostic type for subset checks.
+export type UnionSubsetMismatch<SubsetUnion, SupersetUnion> = {
+  subsetMissingInSuperset: Exclude<SubsetUnion, SupersetUnion>;
+  hasMismatch: Exclude<SubsetUnion, SupersetUnion> extends never ? false : true;
+};

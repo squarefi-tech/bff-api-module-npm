@@ -1798,7 +1798,13 @@ export namespace API {
             }
 
             export interface L2FResponse extends BaseOrderResponse {
-              order_type: 'L2F_SEPA_OFFRAMP' | 'L2F_SWIFT_OFFRAMP' | 'L2F_ACH_OFFRAMP' | 'L2F_WIRE_OFFRAMP';
+              order_type:
+                | 'L2F_SEPA_OFFRAMP'
+                | 'L2F_SWIFT_OFFRAMP'
+                | 'L2F_ACH_OFFRAMP'
+                | 'L2F_WIRE_OFFRAMP'
+                | 'L2F_CHAPS_OFFRAMP'
+                | 'L2F_FPS_OFFRAMP';
               meta: {
                 request_id: string;
                 virtual_account_id: string;
@@ -1894,6 +1900,18 @@ export namespace API {
             export type Request = Common.Request.OrderWithVirtualAccountParams &
               Common.Request.OrderWithCounterpartyParams;
             export type Response = Common.Response.L2FResponse & { order_type: 'L2F_WIRE_OFFRAMP' };
+          }
+
+          export namespace L2F_CHAPS_OFFRAMP {
+            export type Request = Common.Request.OrderWithVirtualAccountParams &
+              Common.Request.OrderWithCounterpartyParams;
+            export type Response = Common.Response.L2FResponse & { order_type: 'L2F_CHAPS_OFFRAMP' };
+          }
+
+          export namespace L2F_FPS_OFFRAMP {
+            export type Request = Common.Request.OrderWithVirtualAccountParams &
+              Common.Request.OrderWithCounterpartyParams;
+            export type Response = Common.Response.L2FResponse & { order_type: 'L2F_FPS_OFFRAMP' };
           }
         }
       }

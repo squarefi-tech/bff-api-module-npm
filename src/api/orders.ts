@@ -236,6 +236,22 @@ export const orders = {
             '/v2/orders/L2F_WIRE_OFFRAMP',
             { data },
           ),
+
+        [OrderType.L2F_CHAPS_OFFRAMP]: (
+          data: API.Orders.V2.Create.ByOrderType.L2F_CHAPS_OFFRAMP.Request,
+        ): Promise<API.Orders.V2.Create.ByOrderType.L2F_CHAPS_OFFRAMP.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.L2F_CHAPS_OFFRAMP.Response>(
+            '/v2/orders/L2F_CHAPS_OFFRAMP',
+            { data },
+          ),
+
+        [OrderType.L2F_FPS_OFFRAMP]: (
+          data: API.Orders.V2.Create.ByOrderType.L2F_FPS_OFFRAMP.Request,
+        ): Promise<API.Orders.V2.Create.ByOrderType.L2F_FPS_OFFRAMP.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.L2F_FPS_OFFRAMP.Response>(
+            '/v2/orders/L2F_FPS_OFFRAMP',
+            { data },
+          ),
       },
     },
 
