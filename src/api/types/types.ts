@@ -2174,13 +2174,13 @@ export namespace API {
       export type InquiryType = operations['PersonaController_initInquiry']['parameters']['path']['type'];
       export namespace Init {
         export type Request = operations['PersonaController_initInquiry']['parameters']['path'];
-        export type Response =
-          operations['PersonaController_initInquiry']['responses']['200']['content']['application/json'];
+        /** @deprecated Use API.KYC.DataCollection.Init.Response instead. */
+        export type Response = API.KYC.DataCollection.Init.Response;
       }
       export namespace Resume {
         export type Request = operations['PersonaController_resumeInquiry']['parameters']['path'];
-        export type Response =
-          operations['PersonaController_resumeInquiry']['responses']['200']['content']['application/json'];
+        /** @deprecated Use API.KYC.DataCollection.Resume.Response instead. */
+        export type Response = API.KYC.DataCollection.Resume.Response;
       }
     }
   }
