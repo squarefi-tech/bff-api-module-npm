@@ -9,7 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Added provider-agnostic `kyc.dataCollection.init` and `kyc.dataCollection.resume` client methods
 - Routed deprecated `persona.inquiries.init` and `persona.inquiries.resume` through abstract KYC endpoints with the new verification response fields
 
 ## [1.31] - 2025-11-19

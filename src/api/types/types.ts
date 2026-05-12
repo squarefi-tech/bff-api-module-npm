@@ -1063,20 +1063,6 @@ export namespace API {
 
   export namespace KYC {
     export type KYCStatus = components['schemas']['KycEntityDto']['status'];
-    export namespace DataCollection {
-      export namespace Init {
-        export type Request = operations['KycController_initDataCollection']['parameters']['path'];
-        export type Response =
-          operations['KycController_initDataCollection']['responses']['200']['content']['application/json'];
-      }
-
-      export namespace Resume {
-        export type Request = operations['KycController_resumeDataCollection']['parameters']['path'];
-        export type Response =
-          operations['KycController_resumeDataCollection']['responses']['200']['content']['application/json'];
-      }
-    }
-
     export namespace Sumsub {
       export namespace GenerateToken {
         export interface Request {
@@ -2174,13 +2160,13 @@ export namespace API {
       export type InquiryType = operations['PersonaController_initInquiry']['parameters']['path']['type'];
       export namespace Init {
         export type Request = operations['PersonaController_initInquiry']['parameters']['path'];
-        /** @deprecated Use API.KYC.DataCollection.Init.Response instead. */
+        /** @deprecated Use KycController_initDataCollection response type instead. */
         export type Response =
           operations['KycController_initDataCollection']['responses']['200']['content']['application/json'];
       }
       export namespace Resume {
         export type Request = operations['PersonaController_resumeInquiry']['parameters']['path'];
-        /** @deprecated Use API.KYC.DataCollection.Resume.Response instead. */
+        /** @deprecated Use KycController_resumeDataCollection response type instead. */
         export type Response =
           operations['KycController_resumeDataCollection']['responses']['200']['content']['application/json'];
       }
