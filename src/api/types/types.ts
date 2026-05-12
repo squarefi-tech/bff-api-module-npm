@@ -2175,12 +2175,14 @@ export namespace API {
       export namespace Init {
         export type Request = operations['PersonaController_initInquiry']['parameters']['path'];
         /** @deprecated Use API.KYC.DataCollection.Init.Response instead. */
-        export type Response = API.KYC.DataCollection.Init.Response;
+        export type Response =
+          operations['KycController_initDataCollection']['responses']['200']['content']['application/json'];
       }
       export namespace Resume {
         export type Request = operations['PersonaController_resumeInquiry']['parameters']['path'];
         /** @deprecated Use API.KYC.DataCollection.Resume.Response instead. */
-        export type Response = API.KYC.DataCollection.Resume.Response;
+        export type Response =
+          operations['KycController_resumeDataCollection']['responses']['200']['content']['application/json'];
       }
     }
   }
