@@ -1063,17 +1063,20 @@ export namespace API {
 
   export namespace KYC {
     export type KYCStatus = components['schemas']['KycEntityDto']['status'];
+    type InitDataCollectionEndpoint = paths['/kyc/init/{wallet_id}/{type}']['post'];
+    type ResumeDataCollectionEndpoint = paths['/kyc/resume/{wallet_id}/{verification_ref}']['post'];
+
     export namespace DataCollection {
+      export type Type = InitDataCollectionEndpoint['parameters']['path']['type'];
+
       export namespace Init {
-        export type Request = operations['KycController_initDataCollection']['parameters']['path'];
-        export type Response =
-          operations['KycController_initDataCollection']['responses']['200']['content']['application/json'];
+        export type Request = InitDataCollectionEndpoint['parameters']['path'];
+        export type Response = InitDataCollectionEndpoint['responses']['200']['content']['application/json'];
       }
 
       export namespace Resume {
-        export type Request = operations['KycController_resumeDataCollection']['parameters']['path'];
-        export type Response =
-          operations['KycController_resumeDataCollection']['responses']['200']['content']['application/json'];
+        export type Request = ResumeDataCollectionEndpoint['parameters']['path'];
+        export type Response = ResumeDataCollectionEndpoint['responses']['200']['content']['application/json'];
       }
     }
 

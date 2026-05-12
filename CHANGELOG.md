@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Added provider-agnostic KYC data collection init/resume client methods
-- Removed the deprecated provider-specific inquiry client surface from the public API
+- Removed the deprecated provider-specific data collection client surface from the public API
 
 ## [1.31] - 2025-11-19
 
