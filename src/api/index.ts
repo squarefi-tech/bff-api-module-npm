@@ -8,7 +8,6 @@ import { issuing } from './issuing';
 import { kyc } from './kyc';
 import { list } from './list';
 import { orders } from './orders';
-import { persona } from './persona';
 import { referrals } from './referrals';
 import { storage } from './storage';
 import { tenants } from './tenants';
@@ -28,7 +27,6 @@ type Api = {
   kyc: typeof kyc;
   list: typeof list;
   orders: typeof orders;
-  persona: typeof persona;
   referrals: typeof referrals;
   storage: typeof storage;
   tenants: typeof tenants;
@@ -49,7 +47,6 @@ export const squarefi_bff_api_client: Api = {
   kyc,
   list,
   orders,
-  persona,
   referrals,
   storage,
   tenants,
