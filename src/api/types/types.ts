@@ -1810,6 +1810,14 @@ export namespace API {
                 virtual_account_id: string;
               };
             }
+
+            export interface BraleResponse extends BaseOrderResponse {
+              order_type: 'BRL_WIRE_OFFRAMP' | 'BRL_ACH_OFFRAMP';
+              meta: {
+                request_id: string;
+                virtual_account_id: string;
+              };
+            }
           }
         }
 
@@ -1912,6 +1920,16 @@ export namespace API {
             export type Request = Common.Request.OrderWithVirtualAccountParams &
               Common.Request.OrderWithCounterpartyParams;
             export type Response = Common.Response.L2FResponse & { order_type: 'L2F_FPS_OFFRAMP' };
+          }
+
+          export namespace BRL_WIRE_OFFRAMP {
+            export type Request = Common.Request.OrderWithCounterpartyParams & { virtual_account_id?: string };
+            export type Response = Common.Response.BraleResponse & { order_type: 'BRL_WIRE_OFFRAMP' };
+          }
+
+          export namespace BRL_ACH_OFFRAMP {
+            export type Request = Common.Request.OrderWithCounterpartyParams & { virtual_account_id?: string };
+            export type Response = Common.Response.BraleResponse & { order_type: 'BRL_ACH_OFFRAMP' };
           }
         }
       }

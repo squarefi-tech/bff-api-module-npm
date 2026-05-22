@@ -2036,6 +2036,8 @@ export interface components {
             id: string;
             code: string | null;
             name: string;
+            /** @description When false, submitting to this rail is disabled. The rail is still returned in lists; only the submit action is blocked. */
+            is_submit_available: boolean;
             wallet_rail: components["schemas"]["WalletKycRailDto"] | null;
             terms_and_conditions: components["schemas"]["WalletKycRailTermsAndConditionsDto"][];
         };

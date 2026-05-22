@@ -146,6 +146,10 @@ export enum OrderType {
   L2F_FPS_ONRAMP = 'L2F_FPS_ONRAMP',
   L2F_CHAPS_OFFRAMP = 'L2F_CHAPS_OFFRAMP',
   L2F_CHAPS_ONRAMP = 'L2F_CHAPS_ONRAMP',
+  BRL_ACH_OFFRAMP = 'BRL_ACH_OFFRAMP',
+  BRL_ACH_ONRAMP = 'BRL_ACH_ONRAMP',
+  BRL_WIRE_OFFRAMP = 'BRL_WIRE_OFFRAMP',
+  BRL_WIRE_ONRAMP = 'BRL_WIRE_ONRAMP',
   // when extend do not forget to add new order type to the enum WalletTransactionRecordType
 }
 
@@ -231,6 +235,10 @@ export enum WalletTransactionRecordType {
   L2F_FPS_ONRAMP = 'L2F_FPS_ONRAMP',
   L2F_CHAPS_OFFRAMP = 'L2F_CHAPS_OFFRAMP',
   L2F_CHAPS_ONRAMP = 'L2F_CHAPS_ONRAMP',
+  BRL_ACH_OFFRAMP = 'BRL_ACH_OFFRAMP',
+  BRL_ACH_ONRAMP = 'BRL_ACH_ONRAMP',
+  BRL_WIRE_OFFRAMP = 'BRL_WIRE_OFFRAMP',
+  BRL_WIRE_ONRAMP = 'BRL_WIRE_ONRAMP',
 }
 
 export type OrderTypeMissingInWalletTransactionRecordType = Exclude<

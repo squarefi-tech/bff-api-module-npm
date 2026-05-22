@@ -252,6 +252,22 @@ export const orders = {
             '/v2/orders/L2F_FPS_OFFRAMP',
             { data },
           ),
+
+        [OrderType.BRL_WIRE_OFFRAMP]: (
+          data: API.Orders.V2.Create.ByOrderType.BRL_WIRE_OFFRAMP.Request,
+        ): Promise<API.Orders.V2.Create.ByOrderType.BRL_WIRE_OFFRAMP.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.BRL_WIRE_OFFRAMP.Response>(
+            '/v2/orders/BRL_WIRE_OFFRAMP',
+            { data },
+          ),
+
+        [OrderType.BRL_ACH_OFFRAMP]: (
+          data: API.Orders.V2.Create.ByOrderType.BRL_ACH_OFFRAMP.Request,
+        ): Promise<API.Orders.V2.Create.ByOrderType.BRL_ACH_OFFRAMP.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.BRL_ACH_OFFRAMP.Response>(
+            '/v2/orders/BRL_ACH_OFFRAMP',
+            { data },
+          ),
       },
     },
 
