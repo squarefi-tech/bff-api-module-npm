@@ -7143,6 +7143,10 @@ export interface paths {
                     role?: "owner" | "admin" | "manager" | "user";
                     /** @description Include shared wallets (via wallets_users table) */
                     include_shared?: boolean;
+                    /** @description Field to sort the merged owned + shared wallet list by */
+                    sort_by?: "created_at" | "updated_at" | "name";
+                    /** @description Sort direction (case-insensitive) */
+                    sort_order?: "ASC" | "DESC";
                 };
                 header?: never;
                 path?: never;
@@ -7158,30 +7162,56 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @example true */
-                            success?: boolean;
-                            data?: {
+                            success: boolean;
+                            data: {
                                 /** Format: uuid */
-                                uuid?: string;
+                                uuid: string;
                                 /** @description Deprecated field */
                                 type?: string;
+                                /** @description Wallet display name (mirrors POST/PATCH responses) */
+                                name: string | null;
+                                /** @description Avatar URL for the wallet */
+                                logo_url: string | null;
                                 /** Format: uuid */
-                                tenant_id?: string;
+                                tenant_id: string;
                                 /** Format: date-time */
-                                created_at?: string;
+                                created_at: string;
                                 /** Format: date-time */
-                                updated_at?: string;
+                                updated_at: string;
+                                /**
+                                 * @description Legacy alias of `access_role`. Kept for backward compatibility —
+                                 *     always equals `access_role`. Prefer `access_role` in new code.
+                                 *
+                                 * @enum {string}
+                                 */
+                                role: "owner" | "admin" | "manager" | "user";
                                 /**
                                  * @description User's access role for this wallet
                                  * @enum {string}
                                  */
-                                access_role?: "owner" | "admin" | "manager" | "user";
+                                access_role: "owner" | "admin" | "manager" | "user";
                                 /** @description True if user is the wallet owner */
-                                is_owner?: boolean;
+                                is_owner: boolean;
+                                /** @description KYC entity attached to the wallet (joined from `kyc_entity`).
+                                 *     `null` when the wallet has no KYC entity yet.
+                                 *      */
+                                kyc_info: {
+                                    /** @description KYC entity type (e.g. INDIVIDUAL, BUSINESS) */
+                                    type: string;
+                                    /** @description KYC verification status (e.g. UNVERIFIED, PENDING, APPROVED, REJECTED) */
+                                    status: string;
+                                    business_name: string | null;
+                                    first_name: string | null;
+                                    last_name: string | null;
+                                    email: string | null;
+                                    phone: string | null;
+                                } | null;
                             }[];
-                            pagination?: {
-                                offset?: number;
-                                limit?: number;
-                                total?: number;
+                            pagination: {
+                                offset: number;
+                                limit: number;
+                                total: number;
+                                has_more: boolean;
                             };
                         };
                     };
@@ -7239,21 +7269,36 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @example true */
-                            success?: boolean;
-                            data?: {
+                            success: boolean;
+                            data: {
                                 /** Format: uuid */
-                                uuid?: string;
+                                uuid: string;
                                 /** @description Deprecated field */
                                 type?: string;
                                 /** @example Golden Vault 42 */
-                                name?: string;
+                                name: string | null;
+                                logo_url: string | null;
                                 /** Format: uuid */
-                                tenant_id?: string;
+                                tenant_id: string;
                                 /** Format: date-time */
-                                created_at?: string;
+                                created_at: string;
+                                /** Format: date-time */
+                                updated_at: string;
+                                /** @description Mirrors the GET-wallet shape. Always `null` on create
+                                 *     (no `kyc_entity` row exists yet).
+                                 *      */
+                                kyc_info: {
+                                    type: string;
+                                    status: string;
+                                    business_name: string | null;
+                                    first_name: string | null;
+                                    last_name: string | null;
+                                    email: string | null;
+                                    phone: string | null;
+                                } | null;
                             };
                             /** @example Wallet created successfully */
-                            message?: string;
+                            message: string;
                         };
                     };
                 };
@@ -7494,33 +7539,61 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @example true */
-                            success?: boolean;
-                            data?: {
+                            success: boolean;
+                            data: {
+                                /** Format: uuid */
+                                uuid: string;
                                 /** @description Deprecated field */
                                 type?: string;
+                                name: string | null;
+                                logo_url: string | null;
                                 /** Format: uuid */
-                                tenant_id?: string;
+                                tenant_id: string;
                                 /** Format: date-time */
-                                created_at?: string;
+                                created_at: string;
                                 /** Format: date-time */
-                                updated_at?: string;
+                                updated_at: string;
+                                kyc_info: {
+                                    type: string;
+                                    status: string;
+                                    business_name: string | null;
+                                    first_name: string | null;
+                                    last_name: string | null;
+                                    email: string | null;
+                                    phone: string | null;
+                                } | null;
                                 /** @description Aggregated crypto balances */
-                                balance?: {
-                                    symbol?: string;
-                                    icon?: string;
-                                    name?: string;
-                                    amount?: number;
-                                    fiat_amount?: number;
-                                    decimal?: number;
+                                balance: {
+                                    symbol: string;
+                                    icon?: string | null;
+                                    name: string;
+                                    is_crypto: boolean;
+                                    decimal: number;
+                                    amount: number;
+                                    fiat_amount: number;
+                                    details: Record<string, never>[];
                                 }[];
+                                fiat_accounts: Record<string, never>[];
                                 /** @description User's base currency */
-                                base_currency?: string;
-                                /** @description Total fiat balance */
-                                fiat_total?: number;
-                                /** @description Total crypto balance in base currency */
-                                crypto_total?: number;
-                                /** @description Combined total balance */
-                                total_amount?: number;
+                                base_currency: string | null;
+                                fiat_total: number;
+                                crypto_total: number;
+                                pending_balance: number;
+                                total_amount: number;
+                                /**
+                                 * @description Legacy alias of `access_role`. Always equals `access_role` when
+                                 *     present. Kept for backward compatibility — prefer `access_role`.
+                                 *     Only present when called via member access.
+                                 *
+                                 * @enum {string}
+                                 */
+                                role?: "owner" | "admin" | "manager" | "user";
+                                /**
+                                 * @description User's role for this wallet (only present when called via member access)
+                                 * @enum {string}
+                                 */
+                                access_role?: "owner" | "admin" | "manager" | "user";
+                                is_owner?: boolean;
                             };
                         };
                     };
@@ -7592,21 +7665,34 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @example true */
-                            success?: boolean;
-                            data?: {
+                            success: boolean;
+                            data: {
                                 /** Format: uuid */
-                                uuid?: string;
+                                uuid: string;
                                 /** @example My Updated Wallet */
-                                name?: string;
+                                name: string | null;
+                                logo_url: string | null;
                                 /** Format: uuid */
-                                tenant_id?: string;
+                                tenant_id: string;
                                 /** Format: date-time */
-                                created_at?: string;
+                                created_at: string;
                                 /** Format: date-time */
-                                updated_at?: string;
+                                updated_at: string;
+                                /** @description KYC entity attached to the wallet (joined from `kyc_entity`).
+                                 *     `null` when the wallet has no KYC entity yet.
+                                 *      */
+                                kyc_info: {
+                                    type: string;
+                                    status: string;
+                                    business_name: string | null;
+                                    first_name: string | null;
+                                    last_name: string | null;
+                                    email: string | null;
+                                    phone: string | null;
+                                } | null;
                             };
                             /** @example Wallet updated successfully */
-                            message?: string;
+                            message: string;
                         };
                     };
                 };
@@ -7689,23 +7775,23 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @example true */
-                            success?: boolean;
-                            data?: {
+                            success: boolean;
+                            data: {
                                 /** Format: uuid */
-                                uuid?: string;
+                                uuid: string;
                                 /** @description Deprecated field */
                                 type?: string;
                                 /** Format: uuid */
-                                tenant_id?: string;
+                                tenant_id: string;
                                 /** Format: date-time */
-                                created_at?: string;
+                                created_at: string;
                                 /** Format: date-time */
-                                updated_at?: string;
+                                updated_at: string;
                                 /** @description Array of balance records */
-                                balance?: {
+                                balance: {
                                     /** Format: uuid */
-                                    crypto_id?: string;
-                                    amount?: number;
+                                    crypto_id: string;
+                                    amount: number;
                                     crypto?: {
                                         /** @description Metadata about the crypto asset */
                                         meta?: {
@@ -7811,27 +7897,28 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @example true */
-                            success?: boolean;
-                            data?: {
+                            success: boolean;
+                            data: {
                                 /** Format: uuid */
-                                uuid?: string;
+                                uuid: string;
                                 /** @description The blockchain address */
-                                address?: string;
-                                /** @description Chain ID */
-                                chain?: string;
+                                address: string;
+                                /** @description Numeric chain ID */
+                                chain: number;
                                 /** Format: uuid */
-                                wallet_uuid?: string;
-                                is_active?: boolean;
-                                label?: string;
+                                wallet_uuid: string;
+                                is_active: boolean;
+                                label: string | null;
                                 /** @enum {string} */
-                                type?: "utila" | "processing";
+                                type: "utila" | "processing";
                                 /** Format: date-time */
-                                created_at?: string;
+                                created_at: string;
                             }[];
-                            pagination?: {
-                                offset?: number;
-                                limit?: number;
-                                total?: number;
+                            pagination: {
+                                offset: number;
+                                limit: number;
+                                total: number;
+                                has_more: boolean;
                             };
                         };
                     };
@@ -7867,7 +7954,80 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * Get crypto address by chain
+         * @description Returns the single crypto address for the given wallet and chain.
+         *     Useful when the caller already knows which chain they need and wants
+         *     to avoid paginated list traversal.
+         *
+         *     **Authentication**: Bearer token with x-tenant-id header required
+         *
+         *     **Access Control**: Any user with access to the wallet
+         *
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The ID of the wallet */
+                    wallet_id: string;
+                    /** @description Numeric chain ID */
+                    chain: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Crypto address retrieved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                /** Format: uuid */
+                                uuid: string;
+                                address: string;
+                                chain: number;
+                                /** Format: uuid */
+                                wallet_uuid: string;
+                                is_active: boolean;
+                                label: string | null;
+                                /** @enum {string} */
+                                type: "utila" | "processing";
+                                /** Format: date-time */
+                                created_at: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Access denied to this wallet */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Address for this chain not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         put?: never;
         /**
          * Create crypto address
@@ -7912,24 +8072,24 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @example true */
-                            success?: boolean;
-                            data?: {
+                            success: boolean;
+                            data: {
                                 /** Format: uuid */
-                                uuid?: string;
+                                uuid: string;
                                 /** @description The blockchain address */
-                                address?: string;
-                                chain?: string;
+                                address: string;
+                                chain: number;
                                 /** Format: uuid */
-                                wallet_uuid?: string;
-                                is_active?: boolean;
-                                label?: string;
+                                wallet_uuid: string;
+                                is_active: boolean;
+                                label: string | null;
                                 /** @enum {string} */
-                                type?: "utila" | "processing";
+                                type: "utila" | "processing";
                                 /** Format: date-time */
-                                created_at?: string;
+                                created_at: string;
                             };
                             /** @example Crypto address created successfully */
-                            message?: string;
+                            message: string;
                         };
                     };
                 };

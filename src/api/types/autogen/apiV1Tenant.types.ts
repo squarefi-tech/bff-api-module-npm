@@ -7605,9 +7605,9 @@ export interface components {
             virtual_account_id: string;
             /**
              * Format: uuid
-             * @description Bank counterparty destination UUID
+             * @description Bank counterparty destination UUID created via POST /api/counterparty/destinations. The destination type must match the rail (WIRE/ACH/SEPA/SWIFT/CHAPS/FPS).
              */
-            counterparty_destination_id?: string;
+            counterparty_destination_id: string;
             /** @description Idempotency key (UUID v4 recommended) */
             request_id: string;
             /** @description Free-form reference visible in order/transaction listings */
