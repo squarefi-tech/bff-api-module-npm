@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.35.2] - 2026-05-28
+
+### Added
+
+- Exposed `wallets.addresses.getByChain` for the `GET /frontend/wallets/{wallet_id}/addresses/{chain}` endpoint so consumers can fetch a single crypto address without paginating the addresses list
+
+## [1.35.1] - 2026-05-28
+
+### Added
+
+- Regenerated frontend wallet types to include `name`, `logo_url`, `kyc_info`, and the legacy `role` alias on wallet list items, plus `sort_by` (`created_at` | `updated_at` | `name`) and `sort_order` query parameters
+- Tightened OpenAPI required fields across wallet responses so `success`, `data`, `pagination`, and primary keys are no longer optional
+
 ## [1.35.0] - 2026-05-28
 
 ### Added

@@ -55,6 +55,14 @@ export const wallets = {
         { params },
       ),
 
+    getByChain: ({
+      wallet_id,
+      chain,
+    }: API.Wallets.WalletChain.GetByChain.Request): Promise<API.Wallets.WalletChain.GetByChain.Response> =>
+      apiClientV1Frontend.getRequest<API.Wallets.WalletChain.GetByChain.Response>(
+        `/frontend/wallets/${wallet_id}/addresses/${chain}`,
+      ),
+
     create: ({
       wallet_id,
       chain,

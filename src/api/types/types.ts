@@ -2770,6 +2770,11 @@ export namespace API {
           NonNullable<WalletAddressesRoot['get']['parameters']['query']>;
         export type Response = WalletAddressesRoot['get']['responses']['200']['content']['application/json'];
       }
+      export namespace GetByChain {
+        export type Request = WalletAddressByChainRoot['get']['parameters']['path'];
+        export type Response =
+          WalletAddressByChainRoot['get']['responses']['200']['content']['application/json'];
+      }
       export namespace Create {
         export type Request = WalletAddressByChainRoot['post']['parameters']['path'] &
           NonNullable<NonNullable<WalletAddressByChainRoot['post']['requestBody']>['content']['application/json']>;
