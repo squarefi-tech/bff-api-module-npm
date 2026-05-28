@@ -10,13 +10,13 @@ import {
   OrderType,
   SortingDirection,
   SubAccountType,
-  WalletTransactionMethod,
-  WalletTransactionRecordType,
-  WalletTransactionStatus,
-  WalletTransactionType,
 } from '../../constants';
 
 import { components, operations, paths } from './autogen/apiV2.types';
+import {
+  components as componentsV1Frontend,
+  paths as pathsV1Frontend,
+} from './autogen/apiV1Frontend.types';
 
 export namespace API {
   export namespace Auth {
@@ -2698,199 +2698,200 @@ export namespace API {
   }
 
   export namespace Wallets {
-    // Упрощенная версия кошелька (используется в некоторых эндпоинтах)
     export interface SimplifiedWallet {
       uuid: string;
       user_id: string;
       tenant_id: string;
     }
 
-    export interface WallletBalanceDetails {
-      uuid: string;
-      amount: number;
-      fiat_amount: number;
-      currency: API.Currencies.Currency;
-    }
-    export interface WalletBalanceItem {
-      symbol: string;
-      icon: string;
-      name: string;
-      is_crypto: boolean;
-      decimal?: number | null;
-      amount: number;
-      fiat_amount: number;
-      details: WallletBalanceDetails[];
+    type WalletsRoot = pathsV1Frontend['/frontend/wallets'];
+    type WalletByIdRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}'];
+    type WalletBalanceRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/balance'];
+    type WalletDashboardRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/dashboard'];
+    type WalletAddressesRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/addresses'];
+    type WalletAddressByChainRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/addresses/{chain}'];
+    type WalletTransactionsRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/transactions'];
+    type WalletTransactionByIdRoot =
+      pathsV1Frontend['/frontend/wallets/{wallet_id}/transactions/{transaction_id}'];
+    type WalletTransactionsCsvRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/transactions/csv'];
+    type WalletInvitesRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/invites'];
+    type WalletInviteByIdRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/invites/{invite_id}'];
+    type AcceptInviteRoot = pathsV1Frontend['/frontend/wallets/accept-invite'];
+    type DeclineInviteRoot = pathsV1Frontend['/frontend/wallets/decline-invite'];
+    type InviteInfoRoot = pathsV1Frontend['/frontend/wallets/invite-info'];
+    type UsersLookupRoot = pathsV1Frontend['/frontend/wallets/users/lookup'];
+    type WalletUsersRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/users'];
+    type WalletUserByIdRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/users/{user_data_uuid}'];
+    type WalletUserActivateRoot =
+      pathsV1Frontend['/frontend/wallets/{wallet_id}/users/{user_data_uuid}/activate'];
+    type WalletUserDeactivateRoot =
+      pathsV1Frontend['/frontend/wallets/{wallet_id}/users/{user_data_uuid}/deactivate'];
+
+    export namespace WalletsList {
+      export type Request = NonNullable<WalletsRoot['get']['parameters']['query']>;
+      export type Response = WalletsRoot['get']['responses']['200']['content']['application/json'];
+      export type WalletsListItem = NonNullable<Response['data']>[number];
     }
 
-    export type WalletBalance = WalletBalanceItem[];
-
-    export namespace WalletChain {
-      export interface WalletChain {
-        uuid: string;
-        created_ad: string;
-        address: string;
-        wallet_uuid: string;
-        chain: number;
-      }
-
-      export namespace Create {
-        export interface Request {
-          wallet_uuid: string;
-          chain: number;
-          label: string;
-        }
-        export type Response = WalletChain;
-      }
-    }
     export namespace Wallet {
-      export type WalletKYCInfo = components['schemas']['WalletKycInfoDto'];
-      export type WalletRole = components['schemas']['WalletDto']['role'];
-      export interface Wallet {
-        uuid: string;
-        logo_url: string | null;
-        name: string | null;
-        // type: components['schemas']['WalletDto']['type'];
-        created_at: string;
-        fiat_total: number;
-        crypto_total: number;
-        total_amount: number;
-        pending_balance: number;
-        balance: WalletBalance;
-        kyc_info: WalletKYCInfo;
-        role: WalletRole;
-      }
-
       export namespace Create {
-        export type Request = operations['WalletsController_create']['requestBody']['content']['application/json'];
-        export type Response =
-          operations['WalletsController_create']['responses']['200']['content']['application/json'];
+        export type Request = NonNullable<WalletsRoot['post']['requestBody']>['content']['application/json'];
+        export type Response = WalletsRoot['post']['responses']['201']['content']['application/json'];
       }
 
       export namespace GetByUuid {
-        export type Request = operations['WalletsController_view']['parameters']['path'];
-        export type Response = API.Wallets.Wallet.Wallet;
+        export type Request = WalletByIdRoot['get']['parameters']['path'] &
+          NonNullable<WalletByIdRoot['get']['parameters']['query']>;
+        export type Response = WalletByIdRoot['get']['responses']['200']['content']['application/json'];
+      }
+
+      export namespace Update {
+        export type Request = WalletByIdRoot['patch']['parameters']['path'] &
+          WalletByIdRoot['patch']['requestBody']['content']['application/json'];
+        export type Response = WalletByIdRoot['patch']['responses']['200']['content']['application/json'];
       }
     }
 
-    export namespace WalletsList {
-      export interface WalletsListItem {
-        // type: NonNullable<components['schemas']['WalletDto']['type']> | string;
-        logo_url: string | null;
-        uuid: string;
-        name: string | null;
-        created_at: string;
-        role: API.Wallets.Wallet.WalletRole;
-        kyc_info: API.Wallets.Wallet.WalletKYCInfo;
-      }
+    export namespace Balance {
+      export type Request = WalletBalanceRoot['get']['parameters']['path'] &
+        NonNullable<WalletBalanceRoot['get']['parameters']['query']>;
+      export type Response = WalletBalanceRoot['get']['responses']['200']['content']['application/json'];
+    }
 
-      export type Request = operations['WalletsController_all']['parameters']['query'];
-      export type Response = {
-        total: number;
-        data: WalletsListItem[];
-        has_more: boolean;
-      };
+    export namespace Dashboard {
+      export type Request = WalletDashboardRoot['get']['parameters']['path'] &
+        NonNullable<WalletDashboardRoot['get']['parameters']['query']>;
+      export type Response = WalletDashboardRoot['get']['responses']['200']['content']['application/json'];
+    }
+
+    export namespace WalletChain {
+      export namespace GetAll {
+        export type Request = WalletAddressesRoot['get']['parameters']['path'] &
+          NonNullable<WalletAddressesRoot['get']['parameters']['query']>;
+        export type Response = WalletAddressesRoot['get']['responses']['200']['content']['application/json'];
+      }
+      export namespace Create {
+        export type Request = WalletAddressByChainRoot['post']['parameters']['path'] &
+          NonNullable<NonNullable<WalletAddressByChainRoot['post']['requestBody']>['content']['application/json']>;
+        export type Response =
+          WalletAddressByChainRoot['post']['responses']['201']['content']['application/json'];
+      }
     }
 
     export namespace WalletTransactions {
-      export interface WalletTransactionMeta {
-        transaction_hash?: string;
-        fee?: number;
-        order_id?: string;
-        from_address?: string; // not added on backend
-        to_address?: string;
-        network_fee?: number;
-        network_fee_currency?: string;
-        fee_currency?: string;
-        billing_amount?: number;
-        utila_transaction?: string;
-        transcation_amount?: number;
-        transaction_amount?: number;
-        billing_amount_currency?: string;
-        transcation_amount_currency?: string;
-        transaction_amount_currency?: string;
-        exchange_rate?: number;
-        fiat_account_id?: string;
-        txid?: string;
-        chain_id?: number;
-        from_user_data?: number;
-        to_user_data?: number;
-        to_card_id?: string;
-        to_card_last4?: string;
-        to_fiat_account_id?: string;
-        to_vendor_id?: string;
-      }
-      export interface Transaction {
-        id: number;
-        created_at: string;
-        type: WalletTransactionType | string;
-        method: WalletTransactionMethod | string;
-        status: WalletTransactionStatus | string;
-        amount: number;
-        from: string | null; // deprecated?
-        to: string | null; // deprecated?
-        wallet_id: string;
-        txid: string; // deprecated?
-        info: string;
-        currency: API.Currencies.Currency;
-        record_type: WalletTransactionRecordType | string;
-        meta?: WalletTransactionMeta;
-      }
-
-      export interface DetailedTransaction {
-        id: number;
-        amount: number;
-        created_at: string;
-        from: string;
-        info: string;
-        status: WalletTransactionStatus | string;
-        to: string;
-        txid: string;
-        type: WalletTransactionType | string;
-        wallet_id: string;
-        method: WalletTransactionMethod | string;
-        meta: WalletTransactionMeta;
-        record_type: WalletTransactionRecordType | string;
-        currency: API.Currencies.Currency;
-      }
-
-      export namespace GetByUuid {
-        export type Request = {
-          wallet_uuid: string;
-          uuid: string;
-        };
-      }
-
       export namespace TransactionList {
-        export type Request = {
-          wallet_uuid: string;
-          limit: number;
-          offset: number;
-          filter?: Partial<components['schemas']['TransactionsFilter']>;
-        };
-        export type Response = {
-          total: number;
-          data: Transaction[];
-        };
+        export type Request = WalletTransactionsRoot['get']['parameters']['path'] &
+          NonNullable<WalletTransactionsRoot['get']['parameters']['query']>;
+        export type Response = WalletTransactionsRoot['get']['responses']['200']['content']['application/json'];
 
         export namespace ExportCsv {
-          export type Request = {
-            wallet_uuid: string;
-            filter?: Partial<components['schemas']['TransactionsFilter']>;
-          };
-          export type Response = string;
+          export type Request = WalletTransactionsCsvRoot['get']['parameters']['path'] &
+            NonNullable<WalletTransactionsCsvRoot['get']['parameters']['query']>;
+          export type Response = WalletTransactionsCsvRoot['get']['responses']['200']['content']['text/csv'];
         }
       }
 
-      export namespace StatementPdf {
-        export type Request = {
-          wallet_uuid: string;
-          from_date?: string; // ISO 8601 format
-          to_date?: string; // ISO 8601 format
-          crypto_id?: string; // UUID
-          logo?: string;
-        };
-        export type Response = string; // PDF file as string
+      export namespace GetById {
+        export type Request = WalletTransactionByIdRoot['get']['parameters']['path'];
+        export type Response =
+          WalletTransactionByIdRoot['get']['responses']['200']['content']['application/json'];
       }
+    }
+
+    export namespace Users {
+      export namespace Lookup {
+        export type Request = UsersLookupRoot['get']['parameters']['query'];
+        export type Response = UsersLookupRoot['get']['responses']['200']['content']['application/json'];
+      }
+
+      export namespace GetAll {
+        export type Request = WalletUsersRoot['get']['parameters']['path'] &
+          NonNullable<WalletUsersRoot['get']['parameters']['query']>;
+        export type Response = WalletUsersRoot['get']['responses']['200']['content']['application/json'];
+      }
+
+      export namespace Add {
+        export type Request = WalletUsersRoot['post']['parameters']['path'] &
+          WalletUsersRoot['post']['requestBody']['content']['application/json'];
+        export type Response = WalletUsersRoot['post']['responses']['201']['content']['application/json'];
+      }
+
+      export namespace UpdateRole {
+        export type Request = WalletUserByIdRoot['patch']['parameters']['path'] &
+          WalletUserByIdRoot['patch']['requestBody']['content']['application/json'];
+        export type Response = WalletUserByIdRoot['patch']['responses']['200']['content']['application/json'];
+      }
+
+      export namespace Remove {
+        export type Request = WalletUserByIdRoot['delete']['parameters']['path'];
+        export type Response = WalletUserByIdRoot['delete']['responses']['200']['content']['application/json'];
+      }
+
+      export namespace Activate {
+        export type Request = WalletUserActivateRoot['post']['parameters']['path'];
+        export type Response =
+          WalletUserActivateRoot['post']['responses']['200']['content']['application/json'];
+      }
+
+      export namespace Deactivate {
+        export type Request = WalletUserDeactivateRoot['post']['parameters']['path'];
+        export type Response =
+          WalletUserDeactivateRoot['post']['responses']['200']['content']['application/json'];
+      }
+    }
+
+    export namespace Invites {
+      export type WalletInvite = componentsV1Frontend['schemas']['WalletInvite'];
+
+      export namespace Info {
+        export type Request = InviteInfoRoot['get']['parameters']['query'];
+        export type Response = InviteInfoRoot['get']['responses']['200']['content']['application/json'];
+      }
+
+      export namespace Accept {
+        export type Request = AcceptInviteRoot['post']['requestBody']['content']['application/json'];
+        export type Response = AcceptInviteRoot['post']['responses']['200']['content']['application/json'];
+      }
+
+      export namespace Decline {
+        export type Request = DeclineInviteRoot['post']['requestBody']['content']['application/json'];
+        export type Response = DeclineInviteRoot['post']['responses']['200']['content']['application/json'];
+      }
+
+      export namespace GetAll {
+        export type Request = WalletInvitesRoot['get']['parameters']['path'] &
+          NonNullable<WalletInvitesRoot['get']['parameters']['query']>;
+        export type Response = WalletInvitesRoot['get']['responses']['200']['content']['application/json'];
+      }
+
+      export namespace Create {
+        export type Request = WalletInvitesRoot['post']['parameters']['path'] &
+          WalletInvitesRoot['post']['requestBody']['content']['application/json'];
+        export type Response = WalletInvitesRoot['post']['responses']['201']['content']['application/json'];
+      }
+
+      export namespace GetById {
+        export type Request = WalletInviteByIdRoot['get']['parameters']['path'];
+        export type Response = WalletInviteByIdRoot['get']['responses']['200']['content']['application/json'];
+      }
+
+      export namespace Delete {
+        export type Request = WalletInviteByIdRoot['delete']['parameters']['path'];
+        export type Response = WalletInviteByIdRoot['delete']['responses']['200']['content']['application/json'];
+      }
+    }
+  }
+
+  export namespace Statements {
+    export namespace Pdf {
+      export type Request = {
+        wallet_uuid: string;
+        from_date?: string; // ISO 8601
+        to_date?: string; // ISO 8601
+        crypto_id?: string; // UUID
+        logo?: string;
+      };
+      export type Response = Blob;
     }
   }
 

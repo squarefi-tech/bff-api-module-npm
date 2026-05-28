@@ -305,6 +305,12 @@ export const apiClientV2 = createApiClient({
   tenantId: envTenantId,
 });
 
+export const apiClientV1Frontend = createApiClient({
+  baseURL: apiV1BaseURL,
+  isBearerToken: true,
+  tenantId: envTenantId,
+});
+
 export const apiClientTOTP = createApiClient({
   baseURL: apiTOTPBaseURL,
   isBearerToken: true,
