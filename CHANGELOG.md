@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.35.3] - 2026-05-28
+
+### Added
+
+- Introduced `Currency`, `Transaction`, `TransactionMeta`, and `AggregatedBalanceDetails` schemas so wallet transaction and balance responses are fully typed instead of opaque `Record<string, never>` placeholders
+- Typed wallet transactions list/detail endpoints with the new `Transaction` schema and shared `PaginationResponse`, and typed aggregated wallet balance `details` entries
+
+### Changed
+
+- Tightened `PaginationResponse` fields (`offset`, `limit`, `total`, `has_more`) to be required, matching server guarantees
+
+### Removed
+
+- Dropped the deprecated `type` field from frontend wallet list/detail/balance responses
+- Removed the unsupported `updated_at` option from the wallets list `sort_by` query parameter
+
 ## [1.35.2] - 2026-05-28
 
 ### Added

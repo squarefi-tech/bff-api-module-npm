@@ -7144,7 +7144,7 @@ export interface paths {
                     /** @description Include shared wallets (via wallets_users table) */
                     include_shared?: boolean;
                     /** @description Field to sort the merged owned + shared wallet list by */
-                    sort_by?: "created_at" | "updated_at" | "name";
+                    sort_by?: "created_at" | "name";
                     /** @description Sort direction (case-insensitive) */
                     sort_order?: "ASC" | "DESC";
                 };
@@ -7166,8 +7166,6 @@ export interface paths {
                             data: {
                                 /** Format: uuid */
                                 uuid: string;
-                                /** @description Deprecated field */
-                                type?: string;
                                 /** @description Wallet display name (mirrors POST/PATCH responses) */
                                 name: string | null;
                                 /** @description Avatar URL for the wallet */
@@ -7273,8 +7271,6 @@ export interface paths {
                             data: {
                                 /** Format: uuid */
                                 uuid: string;
-                                /** @description Deprecated field */
-                                type?: string;
                                 /** @example Golden Vault 42 */
                                 name: string | null;
                                 logo_url: string | null;
@@ -7543,8 +7539,6 @@ export interface paths {
                             data: {
                                 /** Format: uuid */
                                 uuid: string;
-                                /** @description Deprecated field */
-                                type?: string;
                                 name: string | null;
                                 logo_url: string | null;
                                 /** Format: uuid */
@@ -7571,7 +7565,7 @@ export interface paths {
                                     decimal: number;
                                     amount: number;
                                     fiat_amount: number;
-                                    details: Record<string, never>[];
+                                    details: components["schemas"]["AggregatedBalanceDetails"][];
                                 }[];
                                 fiat_accounts: Record<string, never>[];
                                 /** @description User's base currency */
@@ -7779,8 +7773,6 @@ export interface paths {
                             data: {
                                 /** Format: uuid */
                                 uuid: string;
-                                /** @description Deprecated field */
-                                type?: string;
                                 /** Format: uuid */
                                 tenant_id: string;
                                 /** Format: date-time */
@@ -8206,29 +8198,9 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @example true */
-                            success?: boolean;
-                            data?: {
-                                id?: number;
-                                /** Format: date-time */
-                                created_at?: string;
-                                type?: string;
-                                status?: string;
-                                amount?: number;
-                                method?: string;
-                                record_type?: string;
-                                /** Format: uuid */
-                                wallet_id?: string;
-                                /** @description Currency information */
-                                currency?: Record<string, never>;
-                                /** @description Transaction metadata */
-                                meta?: Record<string, never>;
-                            }[];
-                            pagination?: {
-                                offset?: number;
-                                limit?: number;
-                                total?: number;
-                                has_more?: boolean;
-                            };
+                            success: boolean;
+                            data: components["schemas"]["Transaction"][];
+                            pagination: components["schemas"]["PaginationResponse"];
                         };
                     };
                 };
@@ -8386,23 +8358,8 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @example true */
-                            success?: boolean;
-                            data?: {
-                                id?: number;
-                                /** Format: date-time */
-                                created_at?: string;
-                                type?: string;
-                                status?: string;
-                                amount?: number;
-                                method?: string;
-                                record_type?: string;
-                                /** Format: uuid */
-                                wallet_id?: string;
-                                /** @description Currency information */
-                                currency?: Record<string, never>;
-                                /** @description Transaction metadata */
-                                meta?: Record<string, never>;
-                            };
+                            success: boolean;
+                            data: components["schemas"]["Transaction"];
                         };
                     };
                 };
@@ -9262,10 +9219,10 @@ export interface components {
          */
         OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE";
         PaginationResponse: {
-            offset?: number;
-            limit?: number;
-            total?: number;
-            has_more?: boolean;
+            offset: number;
+            limit: number;
+            total: number;
+            has_more: boolean;
         };
         ErrorResponse: {
             /** @example false */
@@ -9551,6 +9508,79 @@ export interface components {
             creator_user_data_id: string;
             /** Format: date-time */
             created_at: string;
+        };
+        /** @description Unified currency record. `is_crypto: true` identifies a blockchain asset, `false` a fiat one. The joined `meta` JSONB blob carries currency-specific details (e.g. `chain_id`/contract for crypto, ISO code/country for fiat). */
+        Currency: {
+            id?: number;
+            /** Format: uuid */
+            uuid: string;
+            icon?: string | null;
+            name: string;
+            symbol: string;
+            is_crypto: boolean;
+            decimal: number;
+            /** @description Currency-specific metadata blob */
+            meta: {
+                [key: string]: unknown;
+            };
+        };
+        /** @description Transaction metadata. All fields are optional — presence depends on the transaction type/method (crypto transfer, card spend, fiat off-ramp, internal exchange, etc.). Unknown keys may also appear and should be ignored by clients. */
+        TransactionMeta: {
+            billing_amount?: number;
+            billing_amount_currency?: string;
+            transaction_amount?: number;
+            transaction_amount_currency?: string;
+            fee?: number;
+            fee_currency?: string;
+            network_fee?: number;
+            network_fee_currency?: string;
+            exchange_rate?: number;
+            from_address?: string;
+            to_address?: string;
+            /** Format: uuid */
+            from_user_data?: string;
+            /** Format: uuid */
+            to_user_data?: string;
+            to_card_id?: string;
+            to_card_last4?: string;
+            to_fiat_account_id?: string;
+            to_vendor_id?: string;
+            txid?: string;
+            /** Format: uuid */
+            order_id?: string;
+        } & {
+            [key: string]: unknown;
+        };
+        /** @description Wallet transaction record with embedded currency and metadata */
+        Transaction: {
+            id: number;
+            /** Format: date-time */
+            created_at: string;
+            type: string;
+            status: string;
+            amount: number;
+            method: string;
+            record_type: string;
+            /** Format: uuid */
+            wallet_id: string;
+            currency: components["schemas"]["Currency"];
+            meta: components["schemas"]["TransactionMeta"];
+        };
+        /** @description A single underlying balance row contributing to an aggregated `balance[]` entry. The aggregated entry merges all rows that share the same symbol; each `details[]` item exposes the per-row breakdown so clients can show per-chain / per-account amounts. */
+        AggregatedBalanceDetails: {
+            /** Format: uuid */
+            uuid: string;
+            amount: number;
+            fiat_amount: number;
+            currency: components["schemas"]["Currency"];
+            /** @description Snapshot of the underlying crypto record from this balance row */
+            crypto?: {
+                [key: string]: unknown;
+            };
+            /** Format: uuid */
+            crypto_id?: string | null;
+            /** Format: uuid */
+            wallet_id?: string;
         };
     };
     responses: {
