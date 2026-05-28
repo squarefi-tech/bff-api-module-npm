@@ -576,7 +576,7 @@ export namespace API {
       export namespace Update {
         export type Request =
           operations['CounterpartyDestinationsController_update']['requestBody']['content']['application/json'] &
-          operations['CounterpartyDestinationsController_update']['parameters']['path'];
+            operations['CounterpartyDestinationsController_update']['parameters']['path'];
 
         export type Response = components['schemas']['CounterpartyDestinationDto'];
       }
@@ -604,7 +604,7 @@ export namespace API {
     export namespace Create {
       export type Request =
         operations['CounterpartyAccountsController_create']['requestBody']['content']['application/json'] &
-        operations['CounterpartyAccountsController_create']['parameters']['path'];
+          operations['CounterpartyAccountsController_create']['parameters']['path'];
 
       export type Response = Counterparty;
     }
@@ -612,7 +612,7 @@ export namespace API {
     export namespace Update {
       export type Request =
         operations['CounterpartyAccountsController_update']['requestBody']['content']['application/json'] &
-        operations['CounterpartyAccountsController_update']['parameters']['path'];
+          operations['CounterpartyAccountsController_update']['parameters']['path'];
 
       export type Response = Counterparty;
     }
@@ -817,6 +817,547 @@ export namespace API {
               revoked_at: string;
             };
           };
+        }
+      }
+    }
+
+    export namespace Wallets {
+      // Access role a user holds for a wallet.
+      export type AccessRole = 'owner' | 'admin' | 'manager' | 'user';
+      // Role of a wallet member as returned by the users endpoints.
+      export type MemberRole = 'owner' | 'admin' | 'user';
+      // Role that can be assigned when adding a member or creating an invite.
+      export type AssignableRole = 'user' | 'admin';
+
+      export interface Pagination {
+        offset: number;
+        limit: number;
+        total: number;
+        has_more?: boolean;
+      }
+
+      // Generic envelope for mutations that only confirm success.
+      export interface MutationResult {
+        success: boolean;
+        message: string;
+      }
+
+      export interface WalletListItem {
+        uuid: string;
+        type: string; // deprecated
+        tenant_id: string;
+        created_at: string;
+        updated_at: string;
+        access_role: AccessRole;
+        is_owner: boolean;
+      }
+
+      export interface CreatedWallet {
+        uuid: string;
+        type: string; // deprecated
+        name: string;
+        tenant_id: string;
+        created_at: string;
+      }
+
+      export interface UpdatedWallet {
+        uuid: string;
+        name: string;
+        tenant_id: string;
+        created_at: string;
+        updated_at: string;
+      }
+
+      export interface WalletDetailsBalanceItem {
+        symbol: string;
+        icon: string;
+        name: string;
+        amount: number;
+        fiat_amount: number;
+        decimal?: number;
+      }
+
+      export interface WalletDetails {
+        type: string; // deprecated
+        tenant_id: string;
+        created_at: string;
+        updated_at: string;
+        balance: WalletDetailsBalanceItem[];
+        base_currency: string;
+        fiat_total: number;
+        crypto_total: number;
+        total_amount: number;
+      }
+
+      export interface CryptoMeta {
+        name: string;
+        symbol: string;
+        type: string;
+        chain_id: number;
+        chain_name: string;
+        contract: string;
+        description: string;
+        icon: string;
+      }
+
+      export interface WalletBalanceRecord {
+        crypto_id: string;
+        amount: number;
+        crypto: {
+          meta: CryptoMeta;
+        };
+      }
+
+      export interface WalletBalance {
+        uuid: string;
+        type: string; // deprecated
+        tenant_id: string;
+        created_at: string;
+        updated_at: string;
+        balance: WalletBalanceRecord[];
+      }
+
+      export interface CryptoAddress {
+        uuid: string;
+        address: string;
+        chain: string;
+        wallet_uuid: string;
+        is_active: boolean;
+        label: string;
+        type: 'utila' | 'processing';
+        created_at: string;
+      }
+
+      export interface Transaction {
+        id: number;
+        created_at: string;
+        type: WalletTransactionType | string;
+        status: WalletTransactionStatus | string;
+        amount: number;
+        method: WalletTransactionMethod | string;
+        record_type: WalletTransactionRecordType | string;
+        wallet_id: string;
+        currency?: API.Currencies.Currency;
+        meta?: API.Wallets.WalletTransactions.WalletTransactionMeta;
+      }
+
+      export interface MemberUserData {
+        uuid: string;
+        email: string;
+        phone: string;
+        first_name: string;
+        last_name: string;
+        logo_url: string;
+      }
+
+      export interface Member {
+        user_data_uuid: string;
+        role: MemberRole;
+        is_active: boolean;
+        created_at: string;
+        updated_at: string;
+        user_data: MemberUserData;
+      }
+
+      export interface Dashboard {
+        wallet_id: string;
+        generated_at: string;
+        month: string;
+        days_in_month: number;
+        balances: {
+          assets: Array<{
+            crypto_id: string;
+            symbol: string;
+            name: string;
+            icon: string;
+            chain_name: string;
+            amount: number;
+            usd_value: number;
+          }>;
+          total_usd: number;
+          assets_count: number;
+        };
+        transactions: {
+          volume_by_day: number[];
+          count_by_day: number[];
+          total_count_mtd: number;
+          total_volume_mtd: number;
+          last_transaction_at: string | null;
+        };
+        orders: { active: number; completed_mtd: number; failed_mtd: number };
+        cards: { total: number; active: number };
+        sub_accounts: { total: number };
+        virtual_accounts: { total: number; active: number };
+        crypto_wallets: { wallets_count: number; addresses_count: number; chains_covered: number };
+        team: { members: number };
+        api_keys: { count: number };
+        card_transactions: {
+          days: Array<{
+            day: string;
+            approved_count: number;
+            approved_amount: string;
+            declined_count: number;
+            declined_amount: string;
+            pending_count: number;
+            pending_amount: string;
+            total_count: number;
+            total_amount: string;
+          }>;
+          totals: {
+            approved_count: number;
+            approved_amount: number;
+            declined_count: number;
+            declined_amount: number;
+            pending_count: number;
+            pending_amount: number;
+            total_count: number;
+            total_amount: number;
+          };
+        } | null;
+      }
+
+      export namespace List {
+        export interface Request {
+          offset?: number;
+          limit?: number;
+          role?: AccessRole;
+          include_shared?: boolean;
+        }
+        export interface Response {
+          success: boolean;
+          data: WalletListItem[];
+          pagination: Pagination;
+        }
+      }
+
+      export namespace Create {
+        export interface Request {
+          name?: string;
+        }
+        export interface Response {
+          success: boolean;
+          data: CreatedWallet;
+          message: string;
+        }
+      }
+
+      export namespace GetById {
+        export interface Request {
+          wallet_id: string;
+          show_low_balance?: boolean;
+        }
+        export interface Response {
+          success: boolean;
+          data: WalletDetails;
+        }
+      }
+
+      export namespace Update {
+        export interface Request {
+          wallet_id: string;
+          name: string;
+        }
+        export interface Response {
+          success: boolean;
+          data: UpdatedWallet;
+          message: string;
+        }
+      }
+
+      export namespace GetDashboard {
+        export interface Request {
+          wallet_id: string;
+          show_low_balance?: boolean;
+        }
+        export interface Response {
+          success: boolean;
+          data: API.Frontend.Wallets.Dashboard;
+        }
+      }
+
+      export namespace Balance {
+        export interface Request {
+          wallet_id: string;
+          show_low_balance?: boolean;
+        }
+        export interface Response {
+          success: boolean;
+          data: WalletBalance;
+        }
+      }
+
+      export namespace UsersLookup {
+        export interface Request {
+          identifier: string;
+          type: 'uuid' | 'id' | 'email' | 'phone' | 'telegram';
+        }
+        export interface Response {
+          success: boolean;
+          data: {
+            uuid: string;
+            id: number;
+            email: string;
+            phone: string;
+            first_name: string;
+            last_name: string;
+            logo_url: string;
+            kyc_status: string;
+            created_at: string;
+          };
+        }
+      }
+
+      export namespace Addresses {
+        export namespace List {
+          export interface Request {
+            wallet_id: string;
+            chain?: string;
+            is_active?: boolean;
+            offset?: number;
+            limit?: number;
+          }
+          export interface Response {
+            success: boolean;
+            data: CryptoAddress[];
+            pagination: Pagination;
+          }
+        }
+
+        export namespace Create {
+          export interface Request {
+            wallet_id: string;
+            chain: string;
+            label?: string;
+          }
+          export interface Response {
+            success: boolean;
+            data: CryptoAddress;
+            message: string;
+          }
+        }
+      }
+
+      export namespace Transactions {
+        export namespace List {
+          export interface Request {
+            wallet_id: string;
+            offset?: number;
+            limit?: number;
+            sort_by?: string;
+            sort_order?: SortingDirection;
+            status?: string;
+            type?: string;
+            method?: string;
+            record_type?: string;
+            address?: string;
+            from_date?: string;
+            to_date?: string;
+            from_created_at?: string; // deprecated, use from_date
+            to_created_at?: string; // deprecated, use to_date
+            currency_uuid?: string;
+            meta_billing_currency?: string;
+            meta_transaction_currency?: string;
+            show_low_balance?: boolean;
+          }
+          export interface Response {
+            success: boolean;
+            data: Transaction[];
+            pagination: Pagination;
+          }
+        }
+
+        export namespace ExportCsv {
+          export interface Request {
+            wallet_id: string;
+            status?: string;
+            type?: string;
+            method?: string;
+            record_type?: string;
+            address?: string;
+            from_date?: string;
+            to_date?: string;
+            currency_uuid?: string;
+            meta_billing_currency?: string;
+            meta_transaction_currency?: string;
+            show_low_balance?: boolean;
+          }
+          export type Response = string;
+        }
+
+        export namespace GetById {
+          export interface Request {
+            wallet_id: string;
+            transaction_id: number;
+          }
+          export interface Response {
+            success: boolean;
+            data: Transaction;
+          }
+        }
+      }
+
+      export namespace Users {
+        export interface MemberRef {
+          wallet_id: string;
+          user_data_uuid: string;
+        }
+
+        export namespace List {
+          export interface Request {
+            wallet_id: string;
+            offset?: number;
+            limit?: number;
+            search?: string;
+            role?: MemberRole;
+            is_active?: boolean;
+          }
+          export interface Response {
+            success: boolean;
+            data: Member[];
+            pagination: Pagination;
+          }
+        }
+
+        export namespace Add {
+          export interface Request {
+            wallet_id: string;
+            user_data_uuid: string;
+            role: AssignableRole;
+          }
+          export interface Response {
+            success: boolean;
+            data: {
+              wallet_id: string;
+              user_data_uuid: string;
+              role: AssignableRole;
+              is_active: boolean;
+              created_at: string;
+            };
+            message: string;
+          }
+        }
+
+        export namespace UpdateRole {
+          export interface Request extends MemberRef {
+            role: AssignableRole;
+          }
+          export type Response = MutationResult;
+        }
+
+        export namespace Remove {
+          export type Request = MemberRef;
+          export type Response = MutationResult;
+        }
+
+        export namespace Activate {
+          export type Request = MemberRef;
+          export type Response = MutationResult;
+        }
+
+        export namespace Deactivate {
+          export type Request = MemberRef;
+          export type Response = MutationResult;
+        }
+      }
+
+      export namespace Invites {
+        export interface Invite {
+          id: string;
+          wallet_id: string;
+          email: string;
+          role: AssignableRole;
+          code: string;
+          expires_at: string;
+          used_at: string | null;
+          user_data_id?: string | null;
+          creator_user_data_id: string;
+          created_at: string;
+        }
+
+        export namespace Accept {
+          export interface Request {
+            code: string;
+          }
+          export interface Response {
+            success: boolean;
+            data: {
+              wallet_id: string;
+              role: AssignableRole;
+            };
+          }
+        }
+
+        export namespace Decline {
+          export interface Request {
+            code: string;
+          }
+          export interface Response {
+            success: boolean;
+            data: {
+              wallet_id: string;
+            };
+          }
+        }
+
+        export namespace Info {
+          export interface Request {
+            code: string;
+          }
+          export interface Response {
+            success: boolean;
+            data: {
+              wallet_name: string | null;
+              role: AssignableRole;
+            };
+          }
+        }
+
+        export namespace List {
+          export interface Request {
+            wallet_id: string;
+            offset?: number;
+            limit?: number;
+            is_completed?: boolean;
+            role?: AssignableRole;
+            search?: string;
+          }
+          export interface Response {
+            success: boolean;
+            data: Invite[];
+            pagination: Pagination;
+          }
+        }
+
+        export namespace Create {
+          export interface Request {
+            wallet_id: string;
+            email: string;
+            role: AssignableRole;
+          }
+          export interface Response {
+            success: boolean;
+            data: Invite;
+            message: string;
+          }
+        }
+
+        export namespace GetById {
+          export interface Request {
+            wallet_id: string;
+            invite_id: string;
+          }
+          export interface Response {
+            success: boolean;
+            data: Invite;
+          }
+        }
+
+        export namespace Cancel {
+          export interface Request {
+            wallet_id: string;
+            invite_id: string;
+          }
+          export type Response = MutationResult;
         }
       }
     }
@@ -1500,10 +2041,10 @@ export namespace API {
 
       export interface WithdrawCryptoRequest extends CommonRequestParams {
         order_type:
-        | OrderType.WITHDRAWAL_CRYPTO
-        | OrderType.TRANSFER_INTERNAL
-        | OrderType.OMNIBUS_CRYPTO_TRANSFER
-        | OrderType.SEGREGATED_CRYPTO_TRANSFER;
+          | OrderType.WITHDRAWAL_CRYPTO
+          | OrderType.TRANSFER_INTERNAL
+          | OrderType.OMNIBUS_CRYPTO_TRANSFER
+          | OrderType.SEGREGATED_CRYPTO_TRANSFER;
         to_address?: string;
       }
 
@@ -1670,10 +2211,10 @@ export namespace API {
 
         export interface WithdrawCryptoRequest extends CommonRequestParams {
           order_type:
-          | OrderType.WITHDRAWAL_CRYPTO
-          | OrderType.TRANSFER_INTERNAL
-          | OrderType.OMNIBUS_CRYPTO_TRANSFER
-          | OrderType.SEGREGATED_CRYPTO_TRANSFER;
+            | OrderType.WITHDRAWAL_CRYPTO
+            | OrderType.TRANSFER_INTERNAL
+            | OrderType.OMNIBUS_CRYPTO_TRANSFER
+            | OrderType.SEGREGATED_CRYPTO_TRANSFER;
           to_address?: string;
         }
 
@@ -2248,7 +2789,7 @@ export namespace API {
             sub_type: OrderType;
             note?: string;
             refference?: string;
-          }
+          };
         };
 
         export type Response = {
@@ -2651,8 +3192,6 @@ export namespace API {
   }
 
   export namespace User {
-
-
     export namespace UpdateUser {
       export namespace Phone {
         export namespace RequestOTP {
@@ -2928,8 +3467,7 @@ export namespace API {
 
     export namespace Income {
       export namespace List {
-        export type Request =
-          operations['ReferralsController_getIncomeList']['parameters']['query'];
+        export type Request = operations['ReferralsController_getIncomeList']['parameters']['query'];
         export type Response =
           operations['ReferralsController_getIncomeList']['responses']['200']['content']['application/json'];
       }
