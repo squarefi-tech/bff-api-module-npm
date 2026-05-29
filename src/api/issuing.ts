@@ -43,21 +43,29 @@ export const issuing = {
       },
     },
     byWalletUuid: {
-      getAll: (params: API.Cards.CardsList.Request.ByWalletUuid): Promise<API.Cards.CardsList.Response> =>
+      getAll: ({
+        limit = defaultPaginationParams.limit,
+        offset = defaultPaginationParams.offset,
+        ...rest
+      }: API.Cards.CardsList.Request.ByWalletUuid): Promise<API.Cards.CardsList.Response> =>
         apiClientV1.getRequest<API.Cards.CardsList.Response>('/issuing/cards', {
-          params,
+          params: { ...rest, limit, offset },
         }),
-      getBySubaccountType: (
-        params: API.Cards.CardsList.Request.BySubaccountAndWalletUuid,
-      ): Promise<API.Cards.CardsList.Response> =>
+      getBySubaccountType: ({
+        limit = defaultPaginationParams.limit,
+        offset = defaultPaginationParams.offset,
+        ...rest
+      }: API.Cards.CardsList.Request.BySubaccountAndWalletUuid): Promise<API.Cards.CardsList.Response> =>
         apiClientV1.getRequest<API.Cards.CardsList.Response>('/issuing/cards', {
-          params,
+          params: { ...rest, limit, offset },
         }),
-      getBySubAccount: (
-        params: API.Cards.CardsList.Request.BySubAccountAndWalletId,
-      ): Promise<API.Cards.CardsList.Response> =>
+      getBySubAccount: ({
+        limit = defaultPaginationParams.limit,
+        offset = defaultPaginationParams.offset,
+        ...rest
+      }: API.Cards.CardsList.Request.BySubAccountAndWalletId): Promise<API.Cards.CardsList.Response> =>
         apiClientV1.getRequest<API.Cards.CardsList.Response>('/issuing/cards', {
-          params,
+          params: { ...rest, limit, offset },
         }),
     },
     // getById: (card_id: string) => apiClientV1.getRequest<API.Cards.IssuingCardDetailItem>(`/issuing/cards/${card_id}`),
@@ -114,21 +122,29 @@ export const issuing = {
       }),
   },
   transactions: {
-    getByCardId: (
-      card_id: string,
+    getByCardId: ({
+      card_id,
       limit = defaultPaginationParams.limit,
       offset = defaultPaginationParams.offset,
-    ): Promise<API.Cards.TransactionsList> =>
+      transaction_type,
+      status,
+      from,
+      to,
+    }: API.Cards.Transactions.List.ByCardIdRequest): Promise<API.Cards.TransactionsList> =>
       apiClientV1.getRequest<API.Cards.TransactionsList>(`/issuing/transactions/`, {
-        params: { limit, offset, card_id, new_scheme: true },
+        params: { limit, offset, card_id, new_scheme: true, transaction_type, status, from, to },
       }),
-    getBySubAccountId: (
-      fiat_account_id: string,
+    getBySubAccountId: ({
+      fiat_account_id,
       limit = defaultPaginationParams.limit,
       offset = defaultPaginationParams.offset,
-    ): Promise<API.Cards.TransactionsList> =>
+      transaction_type,
+      status,
+      from,
+      to,
+    }: API.Cards.Transactions.List.BySubAccountIdRequest): Promise<API.Cards.TransactionsList> =>
       apiClientV1.getRequest<API.Cards.TransactionsList>(`/issuing/transactions/`, {
-        params: { limit, offset, fiat_account_id, new_scheme: true },
+        params: { limit, offset, fiat_account_id, new_scheme: true, transaction_type, status, from, to },
       }),
     csv: {
       getByCardId: (card_id: string): Promise<string> =>

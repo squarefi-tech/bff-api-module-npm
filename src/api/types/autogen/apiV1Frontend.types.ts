@@ -1737,6 +1737,8 @@ export interface paths {
                     sub_account_type?: "prepaid" | "balance";
                     /** @description Filter cards by status */
                     status?: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "CANCELED";
+                    /** @description Filter cards by exact last 4 digits of the card number */
+                    last4?: string;
                     /** @description Number of items to skip */
                     offset?: number;
                     /** @description Number of items to return */
@@ -3009,7 +3011,76 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Update sub-account
+         * @description Updates editable fields of a sub-account. Currently only the `nick_name` can be changed.
+         *
+         *     **Authentication**: Bearer token with x-tenant-id header required
+         *
+         *     **Access Control**: User must have ADMIN role on the sub-account's wallet
+         *
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The ID of the sub-account to update */
+                    sub_account_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description New nickname for the sub-account
+                         * @example Travel budget
+                         */
+                        nick_name: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Sub-account updated successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            /** @description Updated sub-account details */
+                            data?: Record<string, never>;
+                            /** @example Sub-account updated successfully */
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description Bad Request - nick_name is required */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Access denied to this sub-account */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Sub-account not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         trace?: never;
     };
     "/frontend/issuing/sub-accounts/{sub_account_id}/transactions": {

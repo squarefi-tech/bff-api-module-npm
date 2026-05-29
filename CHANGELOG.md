@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.0] - 2026-05-29
+
+### Added
+
+- Exposed new `/issuing/transactions` filters (`status`, `from`, `to`, `transaction_type`) on `issuing.transactions.getByCardId` and `issuing.transactions.getBySubAccountId`, with `status` typed as the autogen literal union (`'PENDING' | 'APPROVED' | 'DECLINED' | 'CANCELED'`) and re-exported as `API.Cards.Transactions.List.StatusFilter`
+- Exposed the new `filter[last4]` query param on the cards list — the existing JSON-encoded `filter` object still works
+
+### Changed
+
+- BREAKING: `issuing.transactions.getByCardId` and `issuing.transactions.getBySubAccountId` now accept a single options object (`{ card_id | fiat_account_id, limit?, offset?, status?, from?, to?, transaction_type?, new_scheme? }`) instead of positional `(id, limit?, offset?)` arguments — required to plumb the new status/date filters through without further breaking changes
+- `API.Cards.CardsList.Request.*` and `API.Cards.Transactions.List.*` request types are now derived from the legacy OpenAPI spec via `pathsV1Legacy` instead of hand-written shapes, so future backend filter/sort changes flow in through `npm run update:types`
+- `issuing.cards.byWalletUuid.getAll` / `getBySubaccountType` / `getBySubAccount` now default `limit` and `offset` to `defaultPaginationParams` internally, matching the behavior of the transactions endpoints — callers may omit pagination without sending an unbounded request
+
+### Removed
+
+- BREAKING: dropped the previously-exported `API.Cards.CardsList.Request.CardsListSortingFields`, `CardsListFilteringFields`, and `CardsListRequestCommonParams` aliases — they are superseded by the autogen-derived `ByWalletUuid` type
+
 ## [1.35.3] - 2026-05-28
 
 ### Added

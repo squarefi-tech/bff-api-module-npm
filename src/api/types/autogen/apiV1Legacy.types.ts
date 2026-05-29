@@ -1261,13 +1261,18 @@ export interface paths {
                     sort_by?: "card_id" | "nick_name" | "name_on_card" | "last4" | "card_status" | "created_at";
                     /** @description Sort direction */
                     sort_order?: "ASC" | "DESC";
+                    /**
+                     * @description Filter cards by exact last 4 digits of the card number (equality match against `issuing_cards.last4`).
+                     * @example 1234
+                     */
+                    "filter[last4]"?: string;
                     /** @description Filter by specific card properties. Can be provided in three ways:
                      *     1. As JSON object: `filter={"last4":"1234"}`
                      *     2. As query params: `filter[last4]=1234`
                      *     3. For nested filtering: `filter[fiat_account][type]=prepaid`
                      *
                      *     Common filter fields:
-                     *     - `last4`: Filter by last 4 digits of card
+                     *     - `last4`: Filter by last 4 digits of card (exact match)
                      *     - `card_status`: Filter by status (ACTIVE, INACTIVE, CANCELED)
                      *     - `fiat_account.type`: Filter by account type (prepaid, balance)
                      *     - `from_created_at`: Filter cards created on or after this date (ISO 8601 format)
@@ -2285,10 +2290,12 @@ export interface paths {
                     new_scheme?: boolean;
                     /** @description Filter by transaction type */
                     transaction_type?: string;
-                    /** @description Filter by start date */
+                    /** @description Filter by start date (ISO 8601). Sent to external provider as `from_timestamp` and post-filtered against `cleared_at`/`created_at`. */
                     from?: string;
-                    /** @description Filter by end date */
+                    /** @description Filter by end date (ISO 8601). Sent to external provider as `to_timestamp` and post-filtered against `cleared_at`/`created_at`. */
                     to?: string;
+                    /** @description Filter by transaction status. Forwarded to external provider and applied as a post-filter on the combined result. */
+                    status?: "PENDING" | "APPROVED" | "DECLINED" | "CANCELED";
                 };
                 header?: never;
                 path?: never;

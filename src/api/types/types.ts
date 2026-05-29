@@ -17,6 +17,7 @@ import {
   components as componentsV1Frontend,
   paths as pathsV1Frontend,
 } from './autogen/apiV1Frontend.types';
+import { paths as pathsV1Legacy } from './autogen/apiV1Legacy.types';
 
 export namespace API {
   export namespace Auth {
@@ -268,24 +269,13 @@ export namespace API {
 
     export namespace CardsList {
       export namespace Request {
-        export type CardsListSortingFields = Partial<
-          Pick<IssuingCardListItem, 'created_at' | 'card_status' | 'last4' | 'nick_name' | 'name_on_card' | 'card_id'>
-        >;
-        export type CardsListFilteringFields = Partial<IssuingCardListItem>;
+        export type ByWalletUuid = NonNullable<pathsV1Legacy['/issuing/cards']['get']['parameters']['query']>;
 
-        export type CardsListRequestCommonParams = API.Common.Pagination.Request &
-          API.Common.Sorting.Request<CardsListSortingFields> &
-          API.Common.Filtering.Request<CardsListFilteringFields>;
-
-        export interface ByWalletUuid extends CardsListRequestCommonParams {
-          wallet_uuid: string;
-        }
-
-        export interface BySubaccountAndWalletUuid extends ByWalletUuid {
+        export type BySubaccountAndWalletUuid = ByWalletUuid & {
           filter?: Record<'fiat_account', Record<'type', SubAccountType>>;
-        }
+        };
 
-        export type BySubAccountAndWalletId = ByWalletUuid & {
+        export type BySubAccountAndWalletId = Omit<ByWalletUuid, 'fiat_account_id'> & {
           fiat_account_id: string;
         };
       }
@@ -328,6 +318,18 @@ export namespace API {
       data: TransactionItem[];
       has_more: boolean;
       count: number;
+    }
+
+    export namespace Transactions {
+      export namespace List {
+        type Query = NonNullable<pathsV1Legacy['/issuing/transactions']['get']['parameters']['query']>;
+
+        export type StatusFilter = NonNullable<Query['status']>;
+
+        export type ByCardIdRequest = Omit<Query, 'card_id'> & { card_id: string };
+
+        export type BySubAccountIdRequest = Omit<Query, 'fiat_account_id'> & { fiat_account_id: string };
+      }
     }
 
     export interface SensitiveData {
