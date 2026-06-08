@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.1] - 2026-06-08
+
+### Added
+
+- Exposed the new `min_amount`, `max_amount`, and `first_party_only` product-guardrail fields on order type responses (`orders.orderTypes.list` and `orders.v2.orderTypes.list`), typed on `API.Orders.OrderTypes.OrderInfo` and `API.Orders.V2.OrderTypes.OrderInfo`
+
+### Changed
+
+- Regenerated autogen types: order type endpoints now share a single `OrderType` schema that also adds `name`, `tenant_rates`, and `DOMESTIC_WIRE` to `payment_method`
+
 ## [1.36.0] - 2026-05-29
 
 ### Added

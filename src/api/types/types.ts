@@ -1549,6 +1549,12 @@ export namespace API {
         // kyc_rails_id: string | null; // deprecated use order_types_kyc_rails instead
         order_types_kyc_rails: OrderTypeKycRail[];
         payment_method: API.Orders.V2.OrderTypes.PaymentMethod;
+        /** Optional minimum amount the product should allow for this order type */
+        min_amount: number | null;
+        /** Optional maximum amount the product should allow for this order type */
+        max_amount: number | null;
+        /** Whether payouts for this order type are limited to the wallet owner's own account */
+        first_party_only: boolean;
       }
 
       export namespace List {
@@ -1961,6 +1967,12 @@ export namespace API {
           // kyc_rails_id: string | null; // deprecated use order_types_kyc_rails instead
           payment_method: PaymentMethod;
           is_trusted: boolean;
+          /** Optional minimum amount the product should allow for this order type */
+          min_amount: number | null;
+          /** Optional maximum amount the product should allow for this order type */
+          max_amount: number | null;
+          /** Whether payouts for this order type are limited to the wallet owner's own account */
+          first_party_only: boolean;
           order_types_kyc_rails: OrderTypeKycRail[];
         }
 

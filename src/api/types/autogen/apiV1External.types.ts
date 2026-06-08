@@ -2012,7 +2012,7 @@ export interface paths {
                     sub_account_type?: "prepaid" | "balance";
                     /** @description Filter cards by status */
                     status?: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "CANCELED";
-                    /** @description Filter cards by exact last 4 digits of the card number */
+                    /** @description Filter cards by last 4 digits of the card number (partial, case-insensitive match) */
                     last4?: string;
                     /** @description Number of items to skip */
                     offset?: number;
@@ -5495,7 +5495,8 @@ export interface paths {
          *     from the API key — presence of a rate row is treated as the enable flag.
          *
          *     Each returned item includes a `tenant_rates` object (`markup_percent`,
-         *     `markup_fixed`, `mon_min_usd`).
+         *     `markup_fixed`, `mon_min_usd`) and may expose product-facing guardrails
+         *     such as `min_amount`, `max_amount`, and `first_party_only`.
          *
          *     **Authentication**: x-api-key header required
          *
@@ -7523,8 +7524,11 @@ export interface components {
              * @description External vendor account ID
              */
             vendor_account_id?: string | null;
-            /** @description Bank account details for deposits */
+            /** @description When false, deposit_instructions and account_details are returned as null (deposits disabled for this account) */
+            is_deposit_enabled?: boolean;
+            /** @description Bank account details for deposits. Returned null when is_deposit_enabled is false. */
             account_details?: components["schemas"]["BankAccountDetails"];
+            /** @description Deposit requisites. Returned null when is_deposit_enabled is false. */
             deposit_instructions?: Record<string, never> | null;
             current_balance?: number | null;
             available_balance?: number | null;
@@ -7617,6 +7621,18 @@ export interface components {
             is_internal?: boolean;
             payment_method?: string | null;
             is_trusted?: boolean;
+            /**
+             * @description Optional minimum amount the product should allow for this order type
+             * @example 100
+             */
+            min_amount?: number | null;
+            /**
+             * @description Optional maximum amount the product should allow for this order type
+             * @example 50000
+             */
+            max_amount?: number | null;
+            /** @description Whether payouts for this order type are limited to the wallet owner's own account */
+            first_party_only?: boolean;
             /** @description Tenant-specific billing rates (present when tenant context is available) */
             tenant_rates?: {
                 /**

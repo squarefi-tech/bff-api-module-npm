@@ -1262,7 +1262,7 @@ export interface paths {
                     /** @description Sort direction */
                     sort_order?: "ASC" | "DESC";
                     /**
-                     * @description Filter cards by exact last 4 digits of the card number (equality match against `issuing_cards.last4`).
+                     * @description Filter cards by last 4 digits of the card number (partial, case-insensitive match against `issuing_cards.last4`).
                      * @example 1234
                      */
                     "filter[last4]"?: string;
@@ -1272,7 +1272,7 @@ export interface paths {
                      *     3. For nested filtering: `filter[fiat_account][type]=prepaid`
                      *
                      *     Common filter fields:
-                     *     - `last4`: Filter by last 4 digits of card (exact match)
+                     *     - `last4`: Filter by last 4 digits of card (partial, case-insensitive match)
                      *     - `card_status`: Filter by status (ACTIVE, INACTIVE, CANCELED)
                      *     - `fiat_account.type`: Filter by account type (prepaid, balance)
                      *     - `from_created_at`: Filter cards created on or after this date (ISO 8601 format)
@@ -3184,25 +3184,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            id?: string;
-                            name?: string;
-                            description?: string;
-                            is_active?: boolean;
-                            /** @description Associated KYC rails for this order type */
-                            order_types_kyc_rails?: {
-                                /**
-                                 * Format: uuid
-                                 * @description Unique identifier of the association
-                                 */
-                                id?: string;
-                                /**
-                                 * Format: uuid
-                                 * @description ID of the associated KYC rail
-                                 */
-                                kyc_rail_id?: string;
-                            }[];
-                        }[];
+                        "application/json": components["schemas"]["OrderType"][];
                     };
                 };
                 /** @description Server error */
@@ -3255,28 +3237,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            id?: string;
-                            name?: string;
-                            description?: string;
-                            is_active?: boolean;
-                            direction?: string;
-                            is_internal?: boolean;
-                            payment_method?: string;
-                            /** @description Associated KYC rails for this order type */
-                            order_types_kyc_rails?: {
-                                /**
-                                 * Format: uuid
-                                 * @description Unique identifier of the association
-                                 */
-                                id?: string;
-                                /**
-                                 * Format: uuid
-                                 * @description ID of the associated KYC rail
-                                 */
-                                kyc_rail_id?: string;
-                            }[];
-                        };
+                        "application/json": components["schemas"]["OrderType"];
                     };
                 };
                 /** @description Order type not found */
@@ -4784,39 +4745,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            /** @description Order type identifier (e.g., EXCHANGE, WITHDRAWAL_CRYPTO) */
-                            id?: string;
-                            /** @description Human-readable description of the order type */
-                            description?: string;
-                            /** @description Direction of the order type (in/out) */
-                            direction?: string;
-                            /** @description Whether this is an internal order type */
-                            is_internal?: boolean;
-                            /**
-                             * Format: uuid
-                             * @description Associated KYC rail configuration ID
-                             */
-                            kyc_rails_id?: string | null;
-                            /**
-                             * @description Payment method associated with this order type
-                             * @enum {string|null}
-                             */
-                            payment_method?: "FEDWIRE" | "ACH" | "SWIFT" | "SEPA" | "CHAPS" | "FPS" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | null;
-                            /** @description Associated KYC rails for this order type */
-                            order_types_kyc_rails?: {
-                                /**
-                                 * Format: uuid
-                                 * @description Unique identifier of the association
-                                 */
-                                id?: string;
-                                /**
-                                 * Format: uuid
-                                 * @description ID of the associated KYC rail
-                                 */
-                                kyc_rail_id?: string;
-                            }[];
-                        }[];
+                        "application/json": components["schemas"]["OrderType"][];
                     };
                 };
                 /** @description Server error */
@@ -4869,39 +4798,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            /** @description Order type identifier (e.g., EXCHANGE, WITHDRAWAL_CRYPTO) */
-                            id?: string;
-                            /** @description Human-readable description of the order type */
-                            description?: string;
-                            /** @description Direction of the order type (in/out) */
-                            direction?: string;
-                            /** @description Whether this is an internal order type */
-                            is_internal?: boolean;
-                            /**
-                             * Format: uuid
-                             * @description Associated KYC rail configuration ID
-                             */
-                            kyc_rails_id?: string | null;
-                            /**
-                             * @description Payment method associated with this order type
-                             * @enum {string|null}
-                             */
-                            payment_method?: "FEDWIRE" | "ACH" | "SWIFT" | "SEPA" | "CHAPS" | "FPS" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | null;
-                            /** @description Associated KYC rails for this order type */
-                            order_types_kyc_rails?: {
-                                /**
-                                 * Format: uuid
-                                 * @description Unique identifier of the association
-                                 */
-                                id?: string;
-                                /**
-                                 * Format: uuid
-                                 * @description ID of the associated KYC rail
-                                 */
-                                kyc_rail_id?: string;
-                            }[];
-                        };
+                        "application/json": components["schemas"]["OrderType"];
                     };
                 };
                 /** @description Order type not found */
@@ -8391,6 +8288,74 @@ export interface components {
          * @enum {string}
          */
         OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE";
+        /** @description Order type reference with optional product guardrails, associated KYC rails and tenant billing rates */
+        OrderType: {
+            /** @description Order type identifier (e.g. EXCHANGE, WITHDRAWAL_CRYPTO) */
+            id?: string;
+            /** @description Human-readable name of the order type */
+            name?: string | null;
+            /** @description Human-readable description of the order type */
+            description?: string;
+            /** @description Direction of the order type (in/out) */
+            direction?: string | null;
+            /** @description Whether this is an internal order type */
+            is_internal?: boolean;
+            /** @description Whether this order type is trusted */
+            is_trusted?: boolean;
+            /**
+             * @description Payment method associated with this order type
+             * @enum {string|null}
+             */
+            payment_method?: "DOMESTIC_WIRE" | "FEDWIRE" | "ACH" | "SWIFT" | "SEPA" | "CHAPS" | "FPS" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | null;
+            /**
+             * Format: uuid
+             * @description Associated KYC rail configuration ID
+             */
+            kyc_rails_id?: string | null;
+            /**
+             * @description Optional minimum amount the product should allow for this order type
+             * @example 100
+             */
+            min_amount?: number | null;
+            /**
+             * @description Optional maximum amount the product should allow for this order type
+             * @example 50000
+             */
+            max_amount?: number | null;
+            /** @description Whether payouts for this order type are limited to the wallet owner's own account */
+            first_party_only?: boolean;
+            /** @description Associated KYC rails for this order type */
+            order_types_kyc_rails?: {
+                /**
+                 * Format: uuid
+                 * @description Unique identifier of the association
+                 */
+                id?: string;
+                /**
+                 * Format: uuid
+                 * @description ID of the associated KYC rail
+                 */
+                kyc_rail_id?: string;
+            }[];
+            /** @description Tenant-specific billing rates (present when tenant context is available) */
+            tenant_rates?: {
+                /**
+                 * @description Percentage markup on order volume
+                 * @example 1.8
+                 */
+                markup_percent?: number;
+                /**
+                 * @description Fixed fee per order (USD)
+                 * @example 0
+                 */
+                markup_fixed?: number;
+                /**
+                 * @description Minimum monthly payment (USD)
+                 * @example 0
+                 */
+                mon_min_usd?: number;
+            } | null;
+        };
         SubAccount: {
             /**
              * @description Unique identifier for the sub-account

@@ -1737,7 +1737,7 @@ export interface paths {
                     sub_account_type?: "prepaid" | "balance";
                     /** @description Filter cards by status */
                     status?: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "CANCELED";
-                    /** @description Filter cards by exact last 4 digits of the card number */
+                    /** @description Filter cards by last 4 digits of the card number (partial, case-insensitive match) */
                     last4?: string;
                     /** @description Number of items to skip */
                     offset?: number;
@@ -5223,6 +5223,129 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/frontend/orders/{order_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve an order
+         * @description Moves a PENDING order to PROCESSING, triggering its workflow. Validates the order's request_id via OTP.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    order_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        wallet_id: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Order moved to PROCESSING */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["Order"];
+                        };
+                    };
+                };
+                /** @description Order is not in an approvable state */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/orders/{order_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel an order
+         * @description Cancels a PENDING/FAILED order, cancels its workflow run, and refunds the blocked funds.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    order_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        wallet_id: string;
+                        reason?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Order canceled and funds refunded */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["Order"];
+                        };
+                    };
+                };
+                /** @description Order is not in a cancelable state */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/frontend/orders/types": {
         parameters: {
             query?: never;
@@ -6163,7 +6286,8 @@ export interface paths {
          *     the enable flag.
          *
          *     Each returned item includes a `tenant_rates` object (`markup_percent`,
-         *     `markup_fixed`, `mon_min_usd`).
+         *     `markup_fixed`, `mon_min_usd`) and may expose product-facing guardrails
+         *     such as `min_amount`, `max_amount`, and `first_party_only`.
          *
          *     **Authentication**: Bearer token + x-tenant-id header
          *
@@ -7148,8 +7272,15 @@ export interface paths {
                         "application/json": {
                             success?: boolean;
                             data?: {
-                                /** @description Wallet name, or null if the wallet has no name set */
-                                wallet_name?: string | null;
+                                /**
+                                 * @description Display label for the wallet. The wallet's own name when set,
+                                 *     otherwise derived from its KYC entity: `business_name` for
+                                 *     businesses, `first_name last_name` for individuals, falling back
+                                 *     to "Business account" / "Individual account" / "New account".
+                                 *
+                                 * @example Acme LLC
+                                 */
+                                wallet_name?: string;
                                 /** @enum {string} */
                                 role?: "user" | "admin";
                             };
@@ -7237,8 +7368,13 @@ export interface paths {
                             data: {
                                 /** Format: uuid */
                                 uuid: string;
-                                /** @description Wallet display name (mirrors POST/PATCH responses) */
+                                /** @description Raw wallet name (may be null) */
                                 name: string | null;
+                                /**
+                                 * @description Computed label — wallet name, else KYC-derived (business_name / first+last), else "New account". Always present.
+                                 * @example Acme LLC
+                                 */
+                                display_name?: string;
                                 /** @description Avatar URL for the wallet */
                                 logo_url: string | null;
                                 /** Format: uuid */
@@ -7306,7 +7442,11 @@ export interface paths {
          * Create wallet
          * @description Creates a new wallet for the authenticated user.
          *
-         *     - **name** is auto-generated if not provided (e.g., "Golden Vault 42")
+         *     - **name** — if provided (non-empty) it is used as-is.
+         *     - When **name** is omitted/blank, **empty_name** decides the fallback:
+         *       - `empty_name: false` or omitted (default) → a random placeholder name
+         *         is generated (e.g., "Golden Vault 42").
+         *       - `empty_name: true` → the wallet is created with `name: null`.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -7322,10 +7462,18 @@ export interface paths {
                 content: {
                     "application/json": {
                         /**
-                         * @description Wallet name (auto-generated if not provided)
+                         * @description Wallet name. Used as-is when non-empty.
                          * @example My Main Wallet
                          */
                         name?: string;
+                        /**
+                         * @description Only relevant when `name` is omitted/blank.
+                         *     `true` → store `name: null`; `false`/omitted → generate a random name.
+                         *
+                         * @default false
+                         * @example true
+                         */
+                        empty_name?: boolean;
                     };
                 };
             };
@@ -7344,6 +7492,11 @@ export interface paths {
                                 uuid: string;
                                 /** @example Golden Vault 42 */
                                 name: string | null;
+                                /**
+                                 * @description Computed label — wallet name, else KYC-derived (business_name / first+last), else "New account". Always present.
+                                 * @example Golden Vault 42
+                                 */
+                                display_name?: string;
                                 logo_url: string | null;
                                 /** Format: uuid */
                                 tenant_id: string;
@@ -7611,6 +7764,11 @@ export interface paths {
                                 /** Format: uuid */
                                 uuid: string;
                                 name: string | null;
+                                /**
+                                 * @description Computed label — wallet name, else KYC-derived (business_name / first+last), else "New account". Always present.
+                                 * @example Acme LLC
+                                 */
+                                display_name?: string;
                                 logo_url: string | null;
                                 /** Format: uuid */
                                 tenant_id: string;
@@ -7736,6 +7894,11 @@ export interface paths {
                                 uuid: string;
                                 /** @example My Updated Wallet */
                                 name: string | null;
+                                /**
+                                 * @description Computed label — wallet name, else KYC-derived (business_name / first+last), else "New account". Always present.
+                                 * @example My Updated Wallet
+                                 */
+                                display_name?: string;
                                 logo_url: string | null;
                                 /** Format: uuid */
                                 tenant_id: string;
@@ -9427,8 +9590,11 @@ export interface components {
             /** Format: uuid */
             destination_currency?: string;
             vendor_account_id?: string | null;
-            /** @description Bank account details for deposits */
+            /** @description When false, deposit_instructions and account_details are returned as null (deposits disabled for this account) */
+            is_deposit_enabled?: boolean;
+            /** @description Bank account details for deposits. Returned null when is_deposit_enabled is false. */
             account_details?: Record<string, never> | null;
+            /** @description Deposit requisites. Returned null when is_deposit_enabled is false. */
             deposit_instructions?: Record<string, never> | null;
             current_balance?: number | null;
             available_balance?: number | null;

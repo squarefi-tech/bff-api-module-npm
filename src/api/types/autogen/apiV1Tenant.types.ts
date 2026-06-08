@@ -3762,7 +3762,9 @@ export interface paths {
          *     - When the request is scoped to a tenant (via `x-tenant-id` header or session),
          *       the list is **filtered** to order types enabled for that tenant —
          *       i.e. those having a row in `tenant_order_type_rates`. Each returned item is
-         *       enriched with `tenant_rates` (`markup_percent`, `markup_fixed`, `mon_min_usd`).
+         *       enriched with `tenant_rates` (`markup_percent`, `markup_fixed`, `mon_min_usd`)
+         *       and may expose product-facing guardrails such as `min_amount`,
+         *       `max_amount`, and `first_party_only`.
          *     - Without a tenant scope (admin global view), the full catalogue is returned
          *       and `tenant_rates` is omitted.
          *
@@ -7610,6 +7612,18 @@ export interface components {
             is_internal?: boolean;
             payment_method?: string | null;
             is_trusted?: boolean;
+            /**
+             * @description Optional minimum amount the product should allow for this order type
+             * @example 100
+             */
+            min_amount?: number | null;
+            /**
+             * @description Optional maximum amount the product should allow for this order type
+             * @example 50000
+             */
+            max_amount?: number | null;
+            /** @description Whether payouts for this order type are limited to the wallet owner's own account */
+            first_party_only?: boolean;
             kyc_rails?: {
                 /** Format: uuid */
                 id?: string;
@@ -7723,6 +7737,8 @@ export interface components {
             account_currency?: string;
             /** Format: uuid */
             destination_currency?: string;
+            /** @description Whether deposits are enabled for this account. When false, public (Frontend/Developer) responses suppress deposit_instructions/account_details; admin responses still expose them. */
+            is_deposit_enabled?: boolean;
             /** @description Bank deposit instructions grouped by instruction type (ACH, FEDWIRE, SWIFT) */
             deposit_instructions?: {
                 /**
