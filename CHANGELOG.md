@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.2] - 2026-06-09
+
+### Added
+
+- Exposed the optional `assigned_user_data_uuid` field on frontend card creation, which scopes a `user`-role wallet member's access to a single card (SFI-1382)
+
+### Changed
+
+- BREAKING: regenerated autogen types so wallet/invite `role` and `access_role` enums are now `owner | admin | user | auditor` — the `manager` value was removed and `auditor` added
+- BREAKING: `is_deposit_enabled` is no longer a top-level field on the external/frontend virtual-account schemas; it now lives under the `kyc_rails` object (external/tenant), reflecting that the flag is resolved from the account's KYC rail
+
 ## [1.36.1] - 2026-06-08
 
 ### Added

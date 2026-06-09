@@ -7629,6 +7629,8 @@ export interface components {
                 id?: string;
                 type?: string;
                 name?: string;
+                /** @description When false, deposits are not accepted for accounts on this rail and their requisites are suppressed in public responses */
+                is_deposit_enabled?: boolean;
             } | null;
             /** @description Tenant-specific billing rates */
             tenant_rates?: {
@@ -7737,7 +7739,7 @@ export interface components {
             account_currency?: string;
             /** Format: uuid */
             destination_currency?: string;
-            /** @description Whether deposits are enabled for this account. When false, public (Frontend/Developer) responses suppress deposit_instructions/account_details; admin responses still expose them. */
+            /** @description Whether deposits are enabled for this account, resolved from the account's KYC rail (virtual_accounts_programs.kyc_rails.is_deposit_enabled). When false, public (Frontend/Developer) responses suppress deposit_instructions/account_details; admin responses still expose them. */
             is_deposit_enabled?: boolean;
             /** @description Bank deposit instructions grouped by instruction type (ACH, FEDWIRE, SWIFT) */
             deposit_instructions?: {

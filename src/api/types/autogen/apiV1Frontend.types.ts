@@ -1847,6 +1847,16 @@ export interface paths {
                          */
                         card_name: string;
                         /**
+                         * Format: uuid
+                         * @description Optional. Binds the card to a wallet member so a scoped `user` role can
+                         *     access ONLY this card (view, sensitive data, transactions, freeze/unfreeze),
+                         *     and nothing else in the wallet (SFI-1382). Must be the `user_data.uuid` of an
+                         *     active member of the target wallet; resolved server-side to the card's owner.
+                         *
+                         * @example a1b2c3d4-e5f6-7890-abcd-ef1234567890
+                         */
+                        assigned_user_data_uuid?: string;
+                        /**
                          * Format: email
                          * @deprecated
                          * @description **Deprecated.** Use `cardholder_id` instead.
@@ -7114,7 +7124,7 @@ export interface paths {
                                 /** Format: uuid */
                                 wallet_id?: string;
                                 /** @enum {string} */
-                                role?: "user" | "admin";
+                                role?: "auditor" | "user" | "admin";
                             };
                         };
                     };
@@ -7282,7 +7292,7 @@ export interface paths {
                                  */
                                 wallet_name?: string;
                                 /** @enum {string} */
-                                role?: "user" | "admin";
+                                role?: "auditor" | "user" | "admin";
                             };
                         };
                     };
@@ -7329,7 +7339,7 @@ export interface paths {
          * List wallets
          * @description Retrieves a list of wallets for the authenticated user (owned + shared via wallets_users).
          *
-         *     Each wallet includes `access_role` (owner/admin/manager/user) and `is_owner` boolean.
+         *     Each wallet includes `access_role` (owner/admin/user/auditor) and `is_owner` boolean.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -7342,7 +7352,7 @@ export interface paths {
                     /** @description Number of items to return */
                     limit?: number;
                     /** @description Filter wallets by user's access role */
-                    role?: "owner" | "admin" | "manager" | "user";
+                    role?: "owner" | "admin" | "user" | "auditor";
                     /** @description Include shared wallets (via wallets_users table) */
                     include_shared?: boolean;
                     /** @description Field to sort the merged owned + shared wallet list by */
@@ -7389,12 +7399,12 @@ export interface paths {
                                  *
                                  * @enum {string}
                                  */
-                                role: "owner" | "admin" | "manager" | "user";
+                                role: "owner" | "admin" | "user" | "auditor";
                                 /**
                                  * @description User's access role for this wallet
                                  * @enum {string}
                                  */
-                                access_role: "owner" | "admin" | "manager" | "user";
+                                access_role: "owner" | "admin" | "user" | "auditor";
                                 /** @description True if user is the wallet owner */
                                 is_owner: boolean;
                                 /** @description KYC entity attached to the wallet (joined from `kyc_entity`).
@@ -7810,12 +7820,12 @@ export interface paths {
                                  *
                                  * @enum {string}
                                  */
-                                role?: "owner" | "admin" | "manager" | "user";
+                                role?: "owner" | "admin" | "user" | "auditor";
                                 /**
                                  * @description User's role for this wallet (only present when called via member access)
                                  * @enum {string}
                                  */
-                                access_role?: "owner" | "admin" | "manager" | "user";
+                                access_role?: "owner" | "admin" | "user" | "auditor";
                                 is_owner?: boolean;
                             };
                         };
@@ -8660,7 +8670,7 @@ export interface paths {
                     /** @description Search by first_name, last_name, email, or phone */
                     search?: string;
                     /** @description Filter by role */
-                    role?: "owner" | "admin" | "user";
+                    role?: "owner" | "admin" | "user" | "auditor";
                     /** @description Filter by active status (default true) */
                     is_active?: boolean;
                 };
@@ -8686,7 +8696,7 @@ export interface paths {
                                 /** Format: uuid */
                                 user_data_uuid?: string;
                                 /** @enum {string} */
-                                role?: "owner" | "admin" | "user";
+                                role?: "owner" | "admin" | "user" | "auditor";
                                 is_active?: boolean;
                                 /** Format: date-time */
                                 created_at?: string;
@@ -8767,7 +8777,7 @@ export interface paths {
                          * @description Role to assign to the user
                          * @enum {string}
                          */
-                        role: "user" | "admin";
+                        role: "auditor" | "user" | "admin";
                     };
                 };
             };
@@ -8787,7 +8797,7 @@ export interface paths {
                                 /** Format: uuid */
                                 user_data_uuid?: string;
                                 /** @enum {string} */
-                                role?: "user" | "admin";
+                                role?: "auditor" | "user" | "admin";
                                 is_active?: boolean;
                                 /** Format: date-time */
                                 created_at?: string;
@@ -8948,7 +8958,7 @@ export interface paths {
                          * @description New role for the user
                          * @enum {string}
                          */
-                        role: "user" | "admin";
+                        role: "auditor" | "user" | "admin";
                     };
                 };
             };
@@ -9196,7 +9206,7 @@ export interface paths {
                     limit?: number;
                     /** @description When true — only used invites; when false — only pending; omit for all. */
                     is_completed?: boolean;
-                    role?: "user" | "admin";
+                    role?: "auditor" | "user" | "admin";
                     /** @description Case-insensitive search by email */
                     search?: string;
                 };
@@ -9245,7 +9255,7 @@ export interface paths {
          *
          *     **Rules:**
          *     - Only the wallet **owner** can create invites
-         *     - `role` must be one of: `user`, `admin` (owner cannot be assigned via invite)
+         *     - `role` must be one of: `auditor`, `user`, `admin` (owner cannot be assigned via invite)
          *     - If an active (not used, not expired) invite for the same email already exists,
          *       it is superseded (expired) and replaced with a new one
          *     - Cannot invite yourself
@@ -9277,7 +9287,7 @@ export interface paths {
                          * @description Role to assign on acceptance
                          * @enum {string}
                          */
-                        role: "user" | "admin";
+                        role: "auditor" | "user" | "admin";
                     };
                 };
             };
@@ -9590,11 +9600,9 @@ export interface components {
             /** Format: uuid */
             destination_currency?: string;
             vendor_account_id?: string | null;
-            /** @description When false, deposit_instructions and account_details are returned as null (deposits disabled for this account) */
-            is_deposit_enabled?: boolean;
-            /** @description Bank account details for deposits. Returned null when is_deposit_enabled is false. */
+            /** @description Bank account details for deposits. Returned null when deposits are disabled for the account. */
             account_details?: Record<string, never> | null;
-            /** @description Deposit requisites. Returned null when is_deposit_enabled is false. */
+            /** @description Deposit requisites. Returned null when deposits are disabled for the account. */
             deposit_instructions?: Record<string, never> | null;
             current_balance?: number | null;
             available_balance?: number | null;
@@ -9723,7 +9731,7 @@ export interface components {
              * @description Role granted upon acceptance
              * @enum {string}
              */
-            role: "user" | "admin";
+            role: "auditor" | "user" | "admin";
             /** @description 16-char uppercase hex code delivered by email */
             code: string;
             /** Format: date-time */

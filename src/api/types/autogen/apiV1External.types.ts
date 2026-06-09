@@ -7524,11 +7524,9 @@ export interface components {
              * @description External vendor account ID
              */
             vendor_account_id?: string | null;
-            /** @description When false, deposit_instructions and account_details are returned as null (deposits disabled for this account) */
-            is_deposit_enabled?: boolean;
-            /** @description Bank account details for deposits. Returned null when is_deposit_enabled is false. */
+            /** @description Bank account details for deposits. Returned null when deposits are disabled for the account. */
             account_details?: components["schemas"]["BankAccountDetails"];
-            /** @description Deposit requisites. Returned null when is_deposit_enabled is false. */
+            /** @description Deposit requisites. Returned null when deposits are disabled for the account. */
             deposit_instructions?: Record<string, never> | null;
             current_balance?: number | null;
             available_balance?: number | null;
@@ -7605,7 +7603,10 @@ export interface components {
             /** @description Array of order_type IDs */
             order_types?: string[];
             /** @description KYC rail configuration */
-            kyc_rails?: Record<string, never> | null;
+            kyc_rails?: {
+                /** @description When false, deposits are not accepted for accounts on this rail and their requisites are suppressed in public responses */
+                is_deposit_enabled?: boolean;
+            } | null;
             /**
              * Format: uuid
              * @description Required KYC rail ID
