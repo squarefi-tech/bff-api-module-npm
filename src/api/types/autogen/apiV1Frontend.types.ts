@@ -1735,8 +1735,8 @@ export interface paths {
                     program_id?: string;
                     /** @description Filter cards by program sub-account type (prepaid or balance) */
                     sub_account_type?: "prepaid" | "balance";
-                    /** @description Filter cards by status */
-                    status?: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "CANCELED";
+                    /** @description Filter cards by status (matches issuing_cards.card_status) */
+                    status?: "ACTIVE" | "INACTIVE" | "FROZEN" | "CANCELED" | "CLOSED" | "BLOCKED" | "FAILED" | "PENDING";
                     /** @description Filter cards by last 4 digits of the card number (partial, case-insensitive match) */
                     last4?: string;
                     /** @description Number of items to skip */
@@ -1759,7 +1759,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            data?: Record<string, never>[];
+                            data?: components["schemas"]["IssuingCard"][];
                             pagination?: {
                                 offset?: number;
                                 limit?: number;
@@ -1893,8 +1893,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            /** @description Created card details */
-                            data?: Record<string, never>;
+                            data?: components["schemas"]["IssuingCard"];
                             /** @example Card created successfully */
                             message?: string;
                         };
@@ -2008,8 +2007,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            /** @description Card details */
-                            data?: Record<string, never>;
+                            data?: components["schemas"]["IssuingCard"];
                         };
                     };
                 };
@@ -2129,8 +2127,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            /** @description Updated card details */
-                            data?: Record<string, never>;
+                            data?: components["schemas"]["IssuingCard"];
                         };
                     };
                 };
@@ -2410,7 +2407,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            data?: Record<string, never>[];
+                            data?: components["schemas"]["IssuingTransaction"][];
                             pagination?: {
                                 offset?: number;
                                 limit?: number;
@@ -2509,8 +2506,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            /** @description Updated limits */
-                            data?: Record<string, never>;
+                            data?: components["schemas"]["IssuingCardLimits"];
                         };
                     };
                 };
@@ -2797,7 +2793,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            data?: Record<string, never>[];
+                            data?: components["schemas"]["IssuingSubAccount"][];
                             pagination?: {
                                 offset?: number;
                                 limit?: number;
@@ -2885,8 +2881,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            /** @description Created sub-account details */
-                            data?: Record<string, never>;
+                            data?: components["schemas"]["IssuingSubAccountResource"];
                         };
                     };
                 };
@@ -2995,8 +2990,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            /** @description Sub-account details */
-                            data?: Record<string, never>;
+                            data?: components["schemas"]["IssuingSubAccountResource"];
                         };
                     };
                 };
@@ -3061,8 +3055,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            /** @description Updated sub-account details */
-                            data?: Record<string, never>;
+                            data?: components["schemas"]["IssuingSubAccountResource"];
                             /** @example Sub-account updated successfully */
                             message?: string;
                         };
@@ -3141,7 +3134,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            data?: Record<string, never>[];
+                            data?: components["schemas"]["IssuingTransaction"][];
                             pagination?: {
                                 offset?: number;
                                 limit?: number;
@@ -3735,7 +3728,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            data?: Record<string, never>[];
+                            data?: components["schemas"]["IssuingCardholder"][];
                             pagination?: {
                                 offset?: number;
                                 limit?: number;
@@ -3865,8 +3858,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            /** @description Created cardholder with vendor fields */
-                            data?: Record<string, never>;
+                            data?: components["schemas"]["IssuingCardholder"];
                             /** @example Cardholder created successfully */
                             message?: string;
                         };
@@ -3955,8 +3947,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            /** @description Cardholder details */
-                            data?: Record<string, never>;
+                            data?: components["schemas"]["IssuingCardholder"];
                         };
                     };
                 };
@@ -4103,8 +4094,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            /** @description Updated cardholder details */
-                            data?: Record<string, never>;
+                            data?: components["schemas"]["IssuingCardholder"];
                             /** @example Cardholder updated successfully */
                             message?: string;
                         };
@@ -9196,7 +9186,7 @@ export interface paths {
          * List wallet invites
          * @description Returns a paginated list of invites for the wallet.
          *
-         *     **Access Control**: Owner only (invites expose the invite code and invitee email)
+         *     **Access Control**: Owner or admin (invites expose the invite code and invitee email)
          *
          */
         get: {
@@ -9206,6 +9196,8 @@ export interface paths {
                     limit?: number;
                     /** @description When true — only used invites; when false — only pending; omit for all. */
                     is_completed?: boolean;
+                    /** @description When true — only expired invites (expires_at in the past); when false — only non-expired; omit for all. */
+                    is_expired?: boolean;
                     role?: "auditor" | "user" | "admin";
                     /** @description Case-insensitive search by email */
                     search?: string;
@@ -9254,7 +9246,7 @@ export interface paths {
          * @description Creates a wallet invite that can be redeemed by a user matching the specified email.
          *
          *     **Rules:**
-         *     - Only the wallet **owner** can create invites
+         *     - The wallet **owner** or an **admin** can create invites
          *     - `role` must be one of: `auditor`, `user`, `admin` (owner cannot be assigned via invite)
          *     - If an active (not used, not expired) invite for the same email already exists,
          *       it is superseded (expired) and replaced with a new one
@@ -9314,7 +9306,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Access denied (not the owner) */
+                /** @description Access denied (insufficient wallet role) */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -9345,7 +9337,7 @@ export interface paths {
         };
         /**
          * Get wallet invite by id
-         * @description **Access Control**: Owner only (invites expose the invite code and invitee email)
+         * @description **Access Control**: Owner or admin (invites expose the invite code and invitee email)
          *
          */
         get: {
@@ -9395,7 +9387,7 @@ export interface paths {
          * Cancel wallet invite
          * @description Cancels (deletes) a pending invite. Already used invites cannot be cancelled.
          *
-         *     **Access Control**: Owner only
+         *     **Access Control**: Owner or admin
          *
          */
         delete: {
@@ -9431,7 +9423,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Access denied (not the owner) */
+                /** @description Access denied (insufficient wallet role) */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -9475,6 +9467,317 @@ export interface components {
                 code?: string;
                 message?: string;
             };
+        };
+        /** @description Bank / rail account coordinates for a sub-account. Rail-dependent — some rails return only a subset of these. */
+        BankAccountDetails: {
+            swift?: string;
+            bank_name?: string;
+            bank_address?: string;
+            account_number?: string;
+            reference_number?: string;
+        };
+        /** @description Account currency record (from the `crypto` table). */
+        CurrencyRef: {
+            /** Format: uuid */
+            uuid: string;
+            is_crypto: boolean;
+            enabled: boolean;
+            /** @description Number of minor-unit decimals */
+            decimal: number;
+            /** @description Currency metadata; shape depends on the currency. Fiat: { code, name, symbol, sign, icon, iso_code, description, type:"fiat" }. Crypto: { name, symbol, icon, type, chain_id, chain_name, contract, description }. */
+            meta?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /** @description Sub-account funding a card — the subset of `fiat_accounts` columns joined onto each card. */
+        IssuingCardSubAccount: {
+            /** Format: uuid */
+            id: string;
+            nick_name?: string | null;
+            balance?: number | null;
+            /** @enum {string} */
+            type: "balance" | "prepaid";
+            /**
+             * @description Sub-account (fiat_account) status — only these 4 of the card_status enum are used for fiat_accounts
+             * @enum {string}
+             */
+            status: "ACTIVE" | "CLOSED" | "BLOCKED" | "CANCELED";
+            /**
+             * Format: uuid
+             * @description crypto.uuid of the account currency
+             */
+            account_currency: string;
+            /** Format: uuid */
+            program_id?: string | null;
+            /** Format: uuid */
+            wallet_id: string;
+            vendor_sub_account_id?: string | null;
+            vendor_id?: string | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        /** @description Issuing program configuration (`issuing_programs` row). When joined it also carries nested `order_types`, `kyc_rails` and `integration_vendors` (hence additionalProperties). */
+        IssuingProgram: {
+            /** Format: uuid */
+            id: string;
+            name?: string | null;
+            /** @enum {string} */
+            status: "DRAFT" | "ACTIVE" | "ARCHIVED";
+            /** @enum {string} */
+            sub_account_type: "balance" | "prepaid";
+            /** @enum {string|null} */
+            type?: "CREDIT" | "DEBIT" | null;
+            /** @enum {string|null} */
+            brand?: "VISA" | "MASTERCARD" | "AMEX" | "UNIONPAY" | null;
+            /** @enum {string|null} */
+            form_factor?: "PHYSICAL" | "VIRTUAL" | null;
+            tokenizable: boolean;
+            /** Format: uuid */
+            account_currency: string;
+            card_limit: number;
+            vendor_id?: string | null;
+            realtime_auth?: boolean | null;
+            /** Format: uuid */
+            tenant_id?: string | null;
+            description?: string | null;
+            icon?: string | null;
+            code?: string | null;
+            card_issuing_fee?: number | null;
+            card_monthly_fee?: number | null;
+            initial_topup?: number | null;
+            card_design?: {
+                [key: string]: unknown;
+            } | null;
+            /** Format: uuid */
+            kyc_rails_id?: string | null;
+            /** Format: uuid */
+            integration_vendors_id?: string | null;
+            is_hidden?: boolean | null;
+            max_cards: number;
+        } & {
+            [key: string]: unknown;
+        };
+        /** @description Merchant of a card transaction. */
+        TransactionMerchant: {
+            name?: string;
+            category_code?: string;
+            city?: string;
+            country?: string;
+        };
+        /** @description Per-period card spend limits. Each period has `_enabled` (bool), `_cap` (number) and `_spent` (number). Vendor-provided; periods may be omitted when the card has no limits configured. */
+        IssuingCardLimits: {
+            all_time_enabled?: boolean;
+            all_time_cap?: number;
+            all_time_spent?: number;
+            daily_enabled?: boolean;
+            daily_cap?: number;
+            daily_spent?: number;
+            weekly_enabled?: boolean;
+            weekly_cap?: number;
+            weekly_spent?: number;
+            monthly_enabled?: boolean;
+            monthly_cap?: number;
+            monthly_spent?: number;
+            yearly_enabled?: boolean;
+            yearly_cap?: number;
+            yearly_spent?: number;
+            per_transaction_enabled?: boolean;
+            per_transaction_cap?: number;
+            per_transaction_spent?: number;
+        };
+        /** @description Issuing card. GET /cards (list) and GET /cards/{card_id} (single) share this shape. Most scalar fields pass through from the issuing vendor; only `sub_account`, `sub_account_id` and `user_data_id` are added/normalized by CORE. `required` documents the normal (vendor-enriched) contract. NOTE: if the vendor API is unavailable, the list endpoint degrades to a reduced local-only shape (omits `sub_account` and most vendor fields); this is an error-mode anomaly, not part of the contract. */
+        IssuingCard: {
+            /**
+             * Format: uuid
+             * @description Card id (also the vendor card id)
+             */
+            id: string;
+            /** @description Internal card title */
+            title?: string;
+            /** @description Cardholder name on the card */
+            card_name?: string;
+            /** @description Last 4 PAN digits */
+            last4?: string;
+            /**
+             * @description Card network
+             * @example VISA
+             */
+            brand?: string;
+            /** @description Funding model — true: prepaid (dedicated sub-account), false: balance (shared sub-account). Sourced from issuing_cards.is_prepaid (reliable); present for CORE-issued cards. Replaces the removed vendor `type` field. */
+            is_prepaid: boolean;
+            /** @enum {string} */
+            form_factor?: "VIRTUAL" | "PHYSICAL";
+            /**
+             * @description Vendor card status
+             * @enum {string}
+             */
+            status?: "ACTIVE" | "INACTIVE" | "FROZEN" | "CANCELED" | "CLOSED" | "BLOCKED" | "FAILED" | "PENDING";
+            /** @example USD */
+            currency?: string;
+            /** Format: date-time */
+            expiration_date?: string;
+            /**
+             * @description MM/YY
+             * @example 06/29
+             */
+            expiration_date_short?: string;
+            tokenizable?: boolean;
+            spend_cap?: number;
+            spent_amount?: number;
+            /** Format: uuid */
+            wallet_id?: string;
+            /** Format: uuid */
+            program_id?: string;
+            /**
+             * Format: uuid
+             * @description Sub-account funding this card (backfilled from issuing_cards.fiat_account for prepaid)
+             */
+            sub_account_id?: string;
+            vendor_sub_account_id?: string;
+            /** @description Card id in the external issuing vendor */
+            vendor_card_id?: string;
+            /** Format: uuid */
+            cardholder_id?: string | null;
+            /** @description Cardholder record, or null */
+            cardholder?: components["schemas"]["IssuingCardholder"] | null;
+            /** @description user_data.id the card is assigned to; omitted (absent) when the card is not assigned to a member */
+            user_data_id?: number;
+            /** @description Embedded sub-account summary, or null when no sub-account is linked. Present on the normal (vendor-enriched) response; omitted only in the degraded local-only error mode. */
+            sub_account: components["schemas"]["IssuingCardSubAccount"] | null;
+            limits?: components["schemas"]["IssuingCardLimits"] | null;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
+        };
+        /** @description Sub-account as returned by GET /sub-accounts (list): a `fiat_accounts` row enriched with computed balances, currency, program and (when available) external bank details. */
+        IssuingSubAccount: {
+            /** Format: uuid */
+            id: string;
+            nick_name?: string | null;
+            /** @enum {string} */
+            type: "balance" | "prepaid";
+            /**
+             * @description Sub-account (fiat_account) status — only these 4 of the card_status enum are used for fiat_accounts
+             * @enum {string}
+             */
+            status: "ACTIVE" | "CLOSED" | "BLOCKED" | "CANCELED";
+            /** @description Effective balance (external balance for `balance` type, else DB balance; defaults to 0) */
+            balance: number;
+            fiat_balance: number;
+            total_balance: number;
+            realtimeauth_balance: number;
+            /**
+             * Format: uuid
+             * @description crypto.uuid of the account currency
+             */
+            account_currency: string;
+            /** Format: uuid */
+            wallet_id: string;
+            /** Format: uuid */
+            program_id?: string | null;
+            vendor_sub_account_id?: string | null;
+            vendor_id?: string | null;
+            /** @description Number of issuing_cards linked to this sub-account */
+            cards_count: number;
+            currency: components["schemas"]["CurrencyRef"];
+            /** @description Program embed; null when program_id is null */
+            issuing_program?: components["schemas"]["IssuingProgram"] | null;
+            /** @description Bank details persisted on fiat_accounts; null when absent */
+            bank_account_details?: components["schemas"]["BankAccountDetails"] | null;
+            /** @description Bank details from the external API meta; empty string `""` when none are available. */
+            account_details: components["schemas"]["BankAccountDetails"] | "";
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at?: string | null;
+        };
+        /** @description Single sub-account (GET /sub-accounts/{sub_account_id}) — the raw vendor resource shape. Scalar fields below pass through from the issuing vendor. */
+        IssuingSubAccountResource: {
+            /** Format: uuid */
+            id: string;
+            title?: string;
+            /** @example ACTIVE */
+            status?: string;
+            /** @example active */
+            task_status?: string;
+            /** @example USD */
+            currency?: string;
+            total_allocated?: number;
+            total_available?: number;
+            /** Format: uuid */
+            wallet_id?: string;
+            /** Format: uuid */
+            program_id?: string;
+            vendor_sub_account_id?: string;
+            vendor_id?: string;
+            /** Format: uuid */
+            api_access_id?: string;
+            /** Format: uuid */
+            user_id?: string | null;
+            vendor_user_id?: string | null;
+            vendor_business_id?: string | null;
+            /** @description Vendor meta. */
+            meta?: ({
+                bank_account_details?: components["schemas"]["BankAccountDetails"];
+            } & {
+                [key: string]: unknown;
+            }) | null;
+            internal_meta?: {
+                [key: string]: unknown;
+            } | null;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
+        };
+        /** @description Card / sub-account transaction (GET /cards/{card_id}/transactions and GET /sub-accounts/{sub_account_id}/transactions). Fields pass through from the issuing vendor. */
+        IssuingTransaction: {
+            /** @description Transaction id in the issuing vendor */
+            vendor_transaction_id?: string;
+            title?: string;
+            last4?: string;
+            /** @example APPROVED */
+            status?: string;
+            /** @example PURCHASE */
+            transaction_type?: string;
+            /** @example Purchase */
+            group?: string;
+            is_credit?: boolean;
+            billing_amount?: number;
+            /** @example USD */
+            billing_currency?: string;
+            transaction_amount?: number;
+            /** @example USD */
+            transaction_currency?: string;
+            total_amount?: number;
+            conversion_rate?: number;
+            failure_reason?: string;
+            adjustment_type?: string | null;
+            review_status?: string | null;
+            has_receipt?: boolean;
+            merchant?: components["schemas"]["TransactionMerchant"];
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            cleared_at?: string | null;
+        };
+        /** @description Cardholder — the consumed subset (mirrors the frontend CardCardholder). The live vendor-proxied endpoint may return additional fields; only the supported subset is documented here. */
+        IssuingCardholder: {
+            /** Format: uuid */
+            id: string;
+            first_name: string;
+            last_name: string;
+            /** Format: email */
+            email?: string | null;
+            phone?: string | null;
+            /** @description Date of birth */
+            birth_date?: string | null;
+            /**
+             * @description ISO 3166 alpha-3
+             * @example ESP
+             */
+            nationality?: string | null;
         };
         /** @description Crypto wallet with nested addresses */
         CryptoWallet: {

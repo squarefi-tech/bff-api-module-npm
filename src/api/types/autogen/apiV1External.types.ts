@@ -4364,7 +4364,7 @@ export interface paths {
         put?: never;
         /**
          * Cancel order
-         * @description Cancels an order. Orders in PENDING or PROCESSING status can be canceled.
+         * @description Cancels an order. Orders in PENDING or FAILED status can be canceled.
          *     Optionally provide a cancellation reason.
          *
          */

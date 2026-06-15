@@ -1448,7 +1448,7 @@ export interface components {
             /** @description Is main wallet for user */
             is_main: boolean;
             /** @enum {string} */
-            role: "owner" | "admin" | "user";
+            role: "owner" | "admin" | "user" | "auditor";
             readonly kyc_info?: components["schemas"]["WalletKycInfoDto"];
         };
         WalletsFilter: Record<string, never>;
@@ -1479,7 +1479,7 @@ export interface components {
             /** @description Is main wallet for user */
             is_main: boolean;
             /** @enum {string} */
-            role: "owner" | "admin" | "user";
+            role: "owner" | "admin" | "user" | "auditor";
             readonly kyc_info?: components["schemas"]["WalletKycInfoDto"];
             fiat_total: number;
             crypto_total: number;
@@ -1598,6 +1598,7 @@ export interface components {
         InitKycDataCollectionResponseDto: {
             providerType: string;
             verificationId: string;
+            verificationToken?: string;
         };
         ResumeKycDataCollectionResponseDto: {
             providerType: string;
@@ -2299,6 +2300,8 @@ export interface components {
             enable_referral_program: boolean;
             readonly metrics_data?: components["schemas"]["MetricsDataEntity"] | null;
             readonly statement_branding?: components["schemas"]["StatementBrandingEntity"] | null;
+            /** @enum {string} */
+            kyc_data_provider: "persona" | "sumsub";
             base_currency: string;
         };
         SystemChainsResponseDto: {
@@ -2360,19 +2363,19 @@ export interface components {
         };
         WalletUserDto: {
             /** @enum {string} */
-            readonly role: "owner" | "admin" | "user";
+            readonly role: "owner" | "admin" | "user" | "auditor";
             is_active: boolean;
             user_info?: components["schemas"]["WalletUserInfoDto"][];
         };
         WalletUsersFilterDto: {
             is_active?: boolean;
             /** @enum {string} */
-            role?: "owner" | "admin" | "user";
+            role?: "owner" | "admin" | "user" | "auditor";
             search?: string;
         };
         UpdateWalletUserRoleDto: {
             /** @enum {string} */
-            role: "user";
+            role: "user" | "auditor";
         };
     };
     responses: never;
