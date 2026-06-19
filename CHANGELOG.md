@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Exposed the new v2 order-creation routes for the Delos Financial and Brale RTP rails: `orders.v2.create.byOrderType[OrderType.DLS_WIRE_OFFRAMP|DLS_ACH_OFFRAMP|DLS_SEPA_OFFRAMP|DLS_SWIFT_OFFRAMP]` (USD/EUR/GBP withdrawals via Delos, sourced from a Delos virtual account) and `orders.v2.create.byOrderType[OrderType.BRL_RTP_OFFRAMP]` (stablecoin → USD Real-Time Payments transfer via Brale). Each has typed `Request`/`Response` under `API.Orders.V2.Create.ByOrderType.*`, with a new `Common.Response.DlsResponse` for the Delos offramps and `BRL_RTP_OFFRAMP` added to the Brale response union
 - Added the `BRL_RTP_OFFRAMP` and `DLS_{WIRE,ACH,SEPA,SWIFT}_{ONRAMP,OFFRAMP}` values to the `OrderType` and `WalletTransactionRecordType` enums to match the regenerated autogen `OrderTypeId`
 
+## [1.36.5] - 2026-06-15
+
 ## [1.36.4] - 2026-06-15
 
 ## [1.36.3] - 2026-06-15
