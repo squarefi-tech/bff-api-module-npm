@@ -7033,6 +7033,369 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v2/orders/BRL_RTP_OFFRAMP": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Brale RTP offramp order (USD)
+         * @description Submit a stablecoin → USD RTP transfer via Brale. Behaves like
+         *     BRL_ACH_OFFRAMP except the destination rail is `rtp_credit`
+         *     (Real-Time Payments — settles in minutes, available 24/7
+         *     including weekends and holidays). The destination must reference
+         *     a counterparty of type `ACH` whose Brale external address has
+         *     had RTP eligibility confirmed by Brale's banking partner — that
+         *     confirmation is asynchronous and is reflected by `rtp_credit`
+         *     appearing in the address's `transfer_types`. The workflow
+         *     refuses to send if RTP is not yet enabled, in which case the
+         *     caller can retry shortly or fall back to BRL_ACH_OFFRAMP.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        request_id: string;
+                        counterparty_destination_id: string;
+                        amount: number;
+                        wallet_id: string;
+                        from_currency_id: string;
+                        to_currency_id?: string;
+                        virtual_account_id: string;
+                        reference?: string;
+                        note?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Order successfully created. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Validation error. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Server error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/orders/DLS_WIRE_OFFRAMP": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Delos FedWire offramp order (USD)
+         * @description Submit a USD domestic wire withdrawal via Delos Financial. Body shape
+         *     mirrors BRL_WIRE_OFFRAMP — `virtual_account_id` (Delos VA, source of
+         *     funds) is REQUIRED, and `counterparty_destination_id` must reference a
+         *     US bank destination of type `FEDWIRE`. Beneficiary registration with
+         *     Delos is performed lazily and cached; the workflow waits for
+         *     Delos-side beneficiary verification before submitting the payout.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        request_id: string;
+                        /** @description Delos virtual account (source of funds). */
+                        virtual_account_id: string;
+                        /** @description US bank destination (must be FEDWIRE type). */
+                        counterparty_destination_id: string;
+                        /** @description Amount to disburse in USD. */
+                        amount: number;
+                        wallet_id: string;
+                        from_currency_id: string;
+                        to_currency_id?: string;
+                        /** @description Free-form payment note (sent as Delos comment). */
+                        reference?: string;
+                        note?: string;
+                        documents?: components["schemas"]["OrderDocuments"];
+                    };
+                };
+            };
+            responses: {
+                /** @description Order successfully created. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Validation error. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Server error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/orders/DLS_ACH_OFFRAMP": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Delos ACH offramp order (USD)
+         * @description Submit a USD ACH withdrawal via Delos Financial. Identical to
+         *     DLS_WIRE_OFFRAMP except `counterparty_destination_id` must reference
+         *     a destination of type `ACH`.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        request_id: string;
+                        virtual_account_id: string;
+                        /** @description US bank destination (must be ACH type). */
+                        counterparty_destination_id: string;
+                        amount: number;
+                        wallet_id: string;
+                        from_currency_id: string;
+                        to_currency_id?: string;
+                        reference?: string;
+                        note?: string;
+                        documents?: components["schemas"]["OrderDocuments"];
+                    };
+                };
+            };
+            responses: {
+                /** @description Order successfully created. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Validation error. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Server error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/orders/DLS_SEPA_OFFRAMP": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Delos SEPA offramp order (EUR)
+         * @description Submit a EUR SEPA Credit Transfer withdrawal via Delos Financial.
+         *     `counterparty_destination_id` must reference a destination of type
+         *     `SEPA` (IBAN required).
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        request_id: string;
+                        virtual_account_id: string;
+                        /** @description SEPA destination (IBAN required). */
+                        counterparty_destination_id: string;
+                        amount: number;
+                        wallet_id: string;
+                        from_currency_id: string;
+                        to_currency_id?: string;
+                        reference?: string;
+                        note?: string;
+                        documents?: components["schemas"]["OrderDocuments"];
+                    };
+                };
+            };
+            responses: {
+                /** @description Order successfully created. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Validation error. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Server error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v2/orders/DLS_SWIFT_OFFRAMP": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Delos SWIFT offramp order (USD/EUR/GBP)
+         * @description Submit an international SWIFT withdrawal via Delos Financial.
+         *     `counterparty_destination_id` must reference a destination of type
+         *     `SWIFT` (SWIFT/BIC required; bank address with country required for
+         *     regional routing). GBP payouts use this route until Delos confirms a
+         *     local UK rail (FPS/CHAPS).
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        request_id: string;
+                        virtual_account_id: string;
+                        /** @description SWIFT destination (BIC + bank country required). */
+                        counterparty_destination_id: string;
+                        amount: number;
+                        wallet_id: string;
+                        from_currency_id: string;
+                        to_currency_id?: string;
+                        reference?: string;
+                        note?: string;
+                        documents?: components["schemas"]["OrderDocuments"];
+                    };
+                };
+            };
+            responses: {
+                /** @description Order successfully created. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Validation error. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Server error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v2/orders/L2F_SEPA_OFFRAMP": {
         parameters: {
             query?: never;
@@ -8287,7 +8650,7 @@ export interface components {
          * @example EXCHANGE_OMNI
          * @enum {string}
          */
-        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE";
+        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE";
         /** @description Order type reference with optional product guardrails, associated KYC rails and tenant billing rates */
         OrderType: {
             /** @description Order type identifier (e.g. EXCHANGE, WITHDRAWAL_CRYPTO) */
@@ -8306,7 +8669,7 @@ export interface components {
              * @description Payment method associated with this order type
              * @enum {string|null}
              */
-            payment_method?: "DOMESTIC_WIRE" | "FEDWIRE" | "ACH" | "SWIFT" | "SEPA" | "CHAPS" | "FPS" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | null;
+            payment_method?: "DOMESTIC_WIRE" | "FEDWIRE" | "ACH" | "RTP" | "SWIFT" | "SEPA" | "CHAPS" | "FPS" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | null;
             /**
              * Format: uuid
              * @description Associated KYC rail configuration ID

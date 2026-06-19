@@ -13,10 +13,7 @@ import {
 } from '../../constants';
 
 import { components, operations, paths } from './autogen/apiV2.types';
-import {
-  components as componentsV1Frontend,
-  paths as pathsV1Frontend,
-} from './autogen/apiV1Frontend.types';
+import { components as componentsV1Frontend, paths as pathsV1Frontend } from './autogen/apiV1Frontend.types';
 import { paths as pathsV1Legacy } from './autogen/apiV1Legacy.types';
 
 export namespace API {
@@ -1807,12 +1804,12 @@ export namespace API {
 
             export interface L2FResponse extends BaseOrderResponse {
               order_type:
-                | 'L2F_SEPA_OFFRAMP'
-                | 'L2F_SWIFT_OFFRAMP'
-                | 'L2F_ACH_OFFRAMP'
-                | 'L2F_WIRE_OFFRAMP'
-                | 'L2F_CHAPS_OFFRAMP'
-                | 'L2F_FPS_OFFRAMP';
+              | 'L2F_SEPA_OFFRAMP'
+              | 'L2F_SWIFT_OFFRAMP'
+              | 'L2F_ACH_OFFRAMP'
+              | 'L2F_WIRE_OFFRAMP'
+              | 'L2F_CHAPS_OFFRAMP'
+              | 'L2F_FPS_OFFRAMP';
               meta: {
                 request_id: string;
                 virtual_account_id: string;
@@ -1820,7 +1817,15 @@ export namespace API {
             }
 
             export interface BraleResponse extends BaseOrderResponse {
-              order_type: 'BRL_WIRE_OFFRAMP' | 'BRL_ACH_OFFRAMP';
+              order_type: 'BRL_WIRE_OFFRAMP' | 'BRL_ACH_OFFRAMP' | 'BRL_RTP_OFFRAMP';
+              meta: {
+                request_id: string;
+                virtual_account_id: string;
+              };
+            }
+
+            export interface DlsResponse extends BaseOrderResponse {
+              order_type: 'DLS_WIRE_OFFRAMP' | 'DLS_ACH_OFFRAMP' | 'DLS_SEPA_OFFRAMP' | 'DLS_SWIFT_OFFRAMP';
               meta: {
                 request_id: string;
                 virtual_account_id: string;
@@ -1938,6 +1943,36 @@ export namespace API {
           export namespace BRL_ACH_OFFRAMP {
             export type Request = Common.Request.OrderWithCounterpartyParams & { virtual_account_id?: string };
             export type Response = Common.Response.BraleResponse & { order_type: 'BRL_ACH_OFFRAMP' };
+          }
+
+          export namespace BRL_RTP_OFFRAMP {
+            export type Request = Common.Request.OrderWithCounterpartyParams &
+              Common.Request.OrderWithVirtualAccountParams;
+            export type Response = Common.Response.BraleResponse & { order_type: 'BRL_RTP_OFFRAMP' };
+          }
+
+          export namespace DLS_WIRE_OFFRAMP {
+            export type Request = Common.Request.OrderWithVirtualAccountParams &
+              Common.Request.OrderWithCounterpartyParams;
+            export type Response = Common.Response.DlsResponse & { order_type: 'DLS_WIRE_OFFRAMP' };
+          }
+
+          export namespace DLS_ACH_OFFRAMP {
+            export type Request = Common.Request.OrderWithVirtualAccountParams &
+              Common.Request.OrderWithCounterpartyParams;
+            export type Response = Common.Response.DlsResponse & { order_type: 'DLS_ACH_OFFRAMP' };
+          }
+
+          export namespace DLS_SEPA_OFFRAMP {
+            export type Request = Common.Request.OrderWithVirtualAccountParams &
+              Common.Request.OrderWithCounterpartyParams;
+            export type Response = Common.Response.DlsResponse & { order_type: 'DLS_SEPA_OFFRAMP' };
+          }
+
+          export namespace DLS_SWIFT_OFFRAMP {
+            export type Request = Common.Request.OrderWithVirtualAccountParams &
+              Common.Request.OrderWithCounterpartyParams;
+            export type Response = Common.Response.DlsResponse & { order_type: 'DLS_SWIFT_OFFRAMP' };
           }
         }
       }
@@ -2262,7 +2297,7 @@ export namespace API {
             sub_type: OrderType;
             note?: string;
             refference?: string;
-          }
+          };
         };
 
         export type Response = {
@@ -2665,8 +2700,6 @@ export namespace API {
   }
 
   export namespace User {
-
-
     export namespace UpdateUser {
       export namespace Phone {
         export namespace RequestOTP {
@@ -2725,8 +2758,7 @@ export namespace API {
     type WalletAddressesRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/addresses'];
     type WalletAddressByChainRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/addresses/{chain}'];
     type WalletTransactionsRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/transactions'];
-    type WalletTransactionByIdRoot =
-      pathsV1Frontend['/frontend/wallets/{wallet_id}/transactions/{transaction_id}'];
+    type WalletTransactionByIdRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/transactions/{transaction_id}'];
     type WalletTransactionsCsvRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/transactions/csv'];
     type WalletInvitesRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/invites'];
     type WalletInviteByIdRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/invites/{invite_id}'];
@@ -2736,10 +2768,8 @@ export namespace API {
     type UsersLookupRoot = pathsV1Frontend['/frontend/wallets/users/lookup'];
     type WalletUsersRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/users'];
     type WalletUserByIdRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/users/{user_data_uuid}'];
-    type WalletUserActivateRoot =
-      pathsV1Frontend['/frontend/wallets/{wallet_id}/users/{user_data_uuid}/activate'];
-    type WalletUserDeactivateRoot =
-      pathsV1Frontend['/frontend/wallets/{wallet_id}/users/{user_data_uuid}/deactivate'];
+    type WalletUserActivateRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/users/{user_data_uuid}/activate'];
+    type WalletUserDeactivateRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/users/{user_data_uuid}/deactivate'];
 
     export namespace WalletsList {
       export type Request = NonNullable<WalletsRoot['get']['parameters']['query']>;
@@ -2786,14 +2816,12 @@ export namespace API {
       }
       export namespace GetByChain {
         export type Request = WalletAddressByChainRoot['get']['parameters']['path'];
-        export type Response =
-          WalletAddressByChainRoot['get']['responses']['200']['content']['application/json'];
+        export type Response = WalletAddressByChainRoot['get']['responses']['200']['content']['application/json'];
       }
       export namespace Create {
         export type Request = WalletAddressByChainRoot['post']['parameters']['path'] &
           NonNullable<NonNullable<WalletAddressByChainRoot['post']['requestBody']>['content']['application/json']>;
-        export type Response =
-          WalletAddressByChainRoot['post']['responses']['201']['content']['application/json'];
+        export type Response = WalletAddressByChainRoot['post']['responses']['201']['content']['application/json'];
       }
     }
 
@@ -2812,8 +2840,7 @@ export namespace API {
 
       export namespace GetById {
         export type Request = WalletTransactionByIdRoot['get']['parameters']['path'];
-        export type Response =
-          WalletTransactionByIdRoot['get']['responses']['200']['content']['application/json'];
+        export type Response = WalletTransactionByIdRoot['get']['responses']['200']['content']['application/json'];
       }
     }
 
@@ -2848,14 +2875,12 @@ export namespace API {
 
       export namespace Activate {
         export type Request = WalletUserActivateRoot['post']['parameters']['path'];
-        export type Response =
-          WalletUserActivateRoot['post']['responses']['200']['content']['application/json'];
+        export type Response = WalletUserActivateRoot['post']['responses']['200']['content']['application/json'];
       }
 
       export namespace Deactivate {
         export type Request = WalletUserDeactivateRoot['post']['parameters']['path'];
-        export type Response =
-          WalletUserDeactivateRoot['post']['responses']['200']['content']['application/json'];
+        export type Response = WalletUserDeactivateRoot['post']['responses']['200']['content']['application/json'];
       }
     }
 
@@ -2948,8 +2973,7 @@ export namespace API {
 
     export namespace Income {
       export namespace List {
-        export type Request =
-          operations['ReferralsController_getIncomeList']['parameters']['query'];
+        export type Request = operations['ReferralsController_getIncomeList']['parameters']['query'];
         export type Response =
           operations['ReferralsController_getIncomeList']['responses']['200']['content']['application/json'];
       }
