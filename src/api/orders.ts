@@ -268,6 +268,46 @@ export const orders = {
             '/v2/orders/BRL_ACH_OFFRAMP',
             { data },
           ),
+
+        [OrderType.BRL_RTP_OFFRAMP]: (
+          data: API.Orders.V2.Create.ByOrderType.BRL_RTP_OFFRAMP.Request,
+        ): Promise<API.Orders.V2.Create.ByOrderType.BRL_RTP_OFFRAMP.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.BRL_RTP_OFFRAMP.Response>(
+            '/v2/orders/BRL_RTP_OFFRAMP',
+            { data },
+          ),
+
+        [OrderType.DLS_WIRE_OFFRAMP]: (
+          data: API.Orders.V2.Create.ByOrderType.DLS_WIRE_OFFRAMP.Request,
+        ): Promise<API.Orders.V2.Create.ByOrderType.DLS_WIRE_OFFRAMP.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.DLS_WIRE_OFFRAMP.Response>(
+            '/v2/orders/DLS_WIRE_OFFRAMP',
+            { data },
+          ),
+
+        [OrderType.DLS_ACH_OFFRAMP]: (
+          data: API.Orders.V2.Create.ByOrderType.DLS_ACH_OFFRAMP.Request,
+        ): Promise<API.Orders.V2.Create.ByOrderType.DLS_ACH_OFFRAMP.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.DLS_ACH_OFFRAMP.Response>(
+            '/v2/orders/DLS_ACH_OFFRAMP',
+            { data },
+          ),
+
+        [OrderType.DLS_SEPA_OFFRAMP]: (
+          data: API.Orders.V2.Create.ByOrderType.DLS_SEPA_OFFRAMP.Request,
+        ): Promise<API.Orders.V2.Create.ByOrderType.DLS_SEPA_OFFRAMP.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.DLS_SEPA_OFFRAMP.Response>(
+            '/v2/orders/DLS_SEPA_OFFRAMP',
+            { data },
+          ),
+
+        [OrderType.DLS_SWIFT_OFFRAMP]: (
+          data: API.Orders.V2.Create.ByOrderType.DLS_SWIFT_OFFRAMP.Request,
+        ): Promise<API.Orders.V2.Create.ByOrderType.DLS_SWIFT_OFFRAMP.Response> =>
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.DLS_SWIFT_OFFRAMP.Response>(
+            '/v2/orders/DLS_SWIFT_OFFRAMP',
+            { data },
+          ),
       },
     },
 
