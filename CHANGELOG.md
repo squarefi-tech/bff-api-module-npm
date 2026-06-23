@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.7] - 2026-06-23
+
 ### Changed
 
 - BREAKING: `counterparties.*` now talk to the frontend module (`/frontend/counterparty/*` via the v1-frontend client) instead of the v2 `/counterparties/*` routes. The public method shapes and the `external_banking_data` / `external_crypto_data` requisites contract are preserved by an SDK-side mapping layer, so existing consumers stay on the same destination shape. `getById` (account) now also returns the account's embedded `destinations`, and the `{ success, data, pagination }` envelope is unwrapped internally (list responses keep `{ total, data }`)
