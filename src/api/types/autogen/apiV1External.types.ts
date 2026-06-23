@@ -891,7 +891,7 @@ export interface paths {
                          * @description Payment rail type
                          * @enum {string}
                          */
-                        type: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE";
+                        type: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
                         /** @description User-friendly alias for this destination */
                         nickname?: string;
                         /** @description Required for banking types (ACH, SWIFT, SEPA, CHAPS, FPS, FEDWIRE) */
@@ -931,6 +931,16 @@ export interface paths {
                             currency_id?: string;
                             /** @description Memo/tag (for XRP, XLM, etc.) */
                             memo?: string;
+                        };
+                        /** @description Required for type INTERNAL — points at the receiver wallet on the same platform. */
+                        internal_data?: {
+                            /**
+                             * Format: uuid
+                             * @description Target (receiver) wallet uuid on the same platform.
+                             */
+                            wallet_id: string;
+                            /** @description Optional, reserved for future use. */
+                            description?: string;
                         };
                     };
                 };
@@ -2010,8 +2020,10 @@ export interface paths {
                     program_id?: string;
                     /** @description Filter cards by program sub-account type (prepaid or balance) */
                     sub_account_type?: "prepaid" | "balance";
-                    /** @description Filter cards by status */
-                    status?: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "CANCELED";
+                    /** @description Filter cards by status.
+                     *     Accepts a single value or a comma-separated list, e.g. `status=ACTIVE,CANCELED`.
+                     *      */
+                    status?: ("ACTIVE" | "INACTIVE" | "SUSPENDED" | "CANCELED")[];
                     /** @description Filter cards by last 4 digits of the card number (partial, case-insensitive match) */
                     last4?: string;
                     /** @description Number of items to skip */
@@ -2114,13 +2126,16 @@ export interface paths {
                         /**
                          * Format: uuid
                          * @description ID of the cardholder to associate with this card.
-                         *     **Required.** Must be a valid cardholder ID retrieved from `GET /api/issuing/cardholders`
-                         *     or created via `POST /api/issuing/cardholders`.
+                         *     **Optional.** When omitted, a cardholder is resolved
+                         *     automatically for the card owner (the user the card is issued
+                         *     for): an existing cardholder for that user is reused, otherwise
+                         *     one is created. Provide a value (from `GET /api/issuing/cardholders`
+                         *     or `POST /api/issuing/cardholders`) to bind a specific cardholder.
                          *     The cardholder will be automatically registered at the vendor if not already present.
                          *
                          * @example a1b2c3d4-e5f6-7890-abcd-ef1234567890
                          */
-                        cardholder_id: string;
+                        cardholder_id?: string;
                         /**
                          * @description Name for the card
                          * @example My Card
@@ -4462,10 +4477,10 @@ export interface paths {
                         from_currency_id: string;
                         /**
                          * Format: uuid
-                         * @description Target wallet UUID on the same platform tenant.
-                         * @example a1b2c3d4-e5f6-4789-9abc-def012345678
+                         * @description Counterparty destination of type INTERNAL (points at the receiver wallet on the same tenant).
+                         * @example b2f3d8c1-4a7e-4d22-9c5f-1e6a8d0b2a44
                          */
-                        to_wallet_id: string;
+                        counterparty_destination_id: string;
                         /** @example 50 */
                         amount: number;
                         /**
@@ -6978,6 +6993,16 @@ export interface components {
             memo?: string | null;
             currency?: components["schemas"]["CurrencyRef"];
         } | null;
+        /** @description Internal destination payload — the receiver wallet on the same platform. Populated when type is INTERNAL; null otherwise. */
+        CounterpartyInternalData: {
+            /**
+             * Format: uuid
+             * @description Target (receiver) wallet uuid
+             */
+            wallet_id?: string;
+            /** @description Optional, reserved for future use */
+            description?: string | null;
+        } | null;
         /** @description Payment destination linked to a counterparty account */
         CounterpartyDestination: {
             /**
@@ -6994,7 +7019,7 @@ export interface components {
              * @description Destination/payment rail type
              * @enum {string}
              */
-            type?: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE";
+            type?: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
             /** @description User-friendly alias */
             nickname?: string | null;
             /** Format: date-time */
@@ -7003,6 +7028,7 @@ export interface components {
             updated_at?: string;
             banking_data?: components["schemas"]["BankingData"];
             crypto_data?: components["schemas"]["CryptoData"];
+            internal_data?: components["schemas"]["CounterpartyInternalData"];
         };
         ApiSuccessResponse: {
             /** @example true */

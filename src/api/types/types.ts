@@ -430,11 +430,19 @@ export namespace API {
     }
   }
 
+  // Контрагенты обслуживаются фронт-модулем (/frontend/counterparty/*).
+  // Реквизиты бэкенд отдаёт под ключами banking_data / crypto_data / internal_data;
+  // на уровне SDK мы сохраняем исторический downstream-контракт external_banking_data /
+  // external_crypto_data (маппинг живёт в api/counterparties.ts), а INTERNAL добавлен
+  // аддитивной третьей веткой union — старые потребители banking/crypto его не замечают.
   export namespace Counterparties {
-    export type CounterpartyType = components['schemas']['CounterpartyAccountDto']['type'];
-    export type Counterparty = components['schemas']['CounterpartyAccountDto'];
+    export type CounterpartyType = componentsV1Frontend['schemas']['CounterpartyAccount']['type'];
+    export type Counterparty = componentsV1Frontend['schemas']['CounterpartyAccount'];
+    export type CounterpartyWithDestinations = Counterparty & {
+      destinations: Destination.List.CounterpartyDestinationListItem[];
+    };
     export namespace Destination {
-      export type CounterpartyDestinationType = components['schemas']['CounterpartyDestinationDto']['type'];
+      export type CounterpartyDestinationType = componentsV1Frontend['schemas']['CounterpartyDestination']['type'];
       // Используем Extract для явного извлечения значений из CounterpartyDestinationType
       // Это гарантирует, что мы используем только существующие значения и TypeScript сможет проверить полноту покрытия
       export type BankingDestinationType =
@@ -447,57 +455,59 @@ export namespace API {
       export type CryptoDestinationType =
         | Extract<CounterpartyDestinationType, 'CRYPTO_EXTERNAL'>
         | Extract<CounterpartyDestinationType, 'CRYPTO_INTERNAL'>;
-      export type DestinationType = BankingDestinationType | CryptoDestinationType;
+      export type InternalDestinationType = Extract<CounterpartyDestinationType, 'INTERNAL'>;
+      export type DestinationType = BankingDestinationType | CryptoDestinationType | InternalDestinationType;
       export namespace List {
         export interface DestinationListItemCommonFields {
           id: string;
-          nickname: string;
+          nickname: string | null;
           type: CounterpartyDestinationType;
           created_at: string;
         }
 
-        export interface DestinationListItemExternalBankingData {
-          account_number?: string;
-          routing_number?: string;
-          bank_name: string;
-          note: string;
-          swift_bic?: string;
-          sort_code?: string;
-          iban?: string;
-          address: {
-            city: string;
-            country_id: number;
-            state_id: number;
-            postcode: string;
-            street1: string;
-            street2?: string;
-          };
-        }
+        // Реквизиты переиспользуют схемы фронт-модуля как источник правды по nullability.
+        // Имена ключей (external_banking_data / external_crypto_data) сохранены ради downstream.
+        export type DestinationListItemExternalBankingData = NonNullable<
+          componentsV1Frontend['schemas']['CounterpartyBankingData']
+        >;
 
-        export interface DestinationListItemExternalCryptoData {
-          address: string;
-          currency_id: string;
-          memo?: string;
-        }
+        export type DestinationListItemExternalCryptoData = NonNullable<
+          componentsV1Frontend['schemas']['CounterpartyCryptoData']
+        >;
+
+        export type DestinationInternalData = NonNullable<componentsV1Frontend['schemas']['CounterpartyInternalData']>;
 
         export interface DestinationListItemWithExternalBankingData extends DestinationListItemCommonFields {
           type: BankingDestinationType;
           external_banking_data: DestinationListItemExternalBankingData;
           external_crypto_data?: never;
+          internal_data?: never;
         }
 
         export interface DestinationListItemWithExternalCryptoData extends DestinationListItemCommonFields {
           type: CryptoDestinationType;
           external_banking_data?: never;
           external_crypto_data: DestinationListItemExternalCryptoData;
+          internal_data?: never;
+        }
+
+        export interface DestinationListItemWithInternalData extends DestinationListItemCommonFields {
+          type: InternalDestinationType;
+          external_banking_data?: never;
+          external_crypto_data?: never;
+          internal_data: DestinationInternalData;
         }
 
         export type CounterpartyDestinationListItem =
           | DestinationListItemWithExternalBankingData
-          | DestinationListItemWithExternalCryptoData;
+          | DestinationListItemWithExternalCryptoData
+          | DestinationListItemWithInternalData;
 
-        export type Request = operations['CounterpartyDestinationsController_findAll']['parameters']['query'] &
-          operations['CounterpartyDestinationsController_findAll']['parameters']['path'];
+        export type Request =
+          pathsV1Frontend['/frontend/counterparty/destinations/wallet/{wallet_id}']['get']['parameters']['path'] &
+            NonNullable<
+              pathsV1Frontend['/frontend/counterparty/destinations/wallet/{wallet_id}']['get']['parameters']['query']
+            >;
 
         export type Response = {
           total: number;
@@ -505,41 +515,24 @@ export namespace API {
         };
       }
 
+      // Фронт-модуль отдаёт одну и ту же схему destination и в списке, и в детальном эндпоинте,
+      // поэтому Detail-типы — алиасы List ради обратной совместимости импортов downstream.
       export namespace Detail {
-        export type DestinationDetailItemCommonFields =
-          API.Counterparties.Destination.List.DestinationListItemCommonFields;
+        export type DestinationDetailItemCommonFields = List.DestinationListItemCommonFields;
+        export type DestinationDetailItemExternalBankingData = List.DestinationListItemExternalBankingData;
+        export type DestinationDetailItemExternalCryptoData = List.DestinationListItemExternalCryptoData;
+        export type DestinationDetailItemWithExternalBankingData = List.DestinationListItemWithExternalBankingData;
+        export type DestinationDetailItemWithExternalCryptoData = List.DestinationListItemWithExternalCryptoData;
+        export type DestinationDetailItemWithInternalData = List.DestinationListItemWithInternalData;
+        export type DestinationDetailItem = List.CounterpartyDestinationListItem;
 
-        export interface DestinationDetailItemExternalBankingData
-          extends API.Counterparties.Destination.List.DestinationListItemExternalBankingData {
-          address: API.Counterparties.Destination.List.DestinationListItemExternalBankingData['address'] & {
-            country?: API.Location.Countries.Country;
-            state?: API.Location.States.State;
-          };
+        export interface Request {
+          counterparty_destination_id: string;
+          // wallet_id / counterparty_account_id бэкенду не нужны (роут /destinations/{id}),
+          // оставлены опциональными ради существующих вызовов downstream.
+          wallet_id?: string;
+          counterparty_account_id?: string;
         }
-
-        export interface DestinationDetailItemExternalCryptoData
-          extends API.Counterparties.Destination.List.DestinationListItemExternalCryptoData {
-          currency: API.Currencies.Currency;
-        }
-
-        export interface DestinationDetailItemWithExternalBankingData extends DestinationDetailItemCommonFields {
-          type: BankingDestinationType;
-          external_banking_data: DestinationDetailItemExternalBankingData;
-          external_crypto_data?: never;
-        }
-
-        export interface DestinationDetailItemWithExternalCryptoData extends DestinationDetailItemCommonFields {
-          type: CryptoDestinationType;
-          external_banking_data?: never;
-          external_crypto_data: DestinationDetailItemExternalCryptoData;
-        }
-
-        export type DestinationDetailItem =
-          | DestinationDetailItemWithExternalBankingData
-          | DestinationDetailItemWithExternalCryptoData;
-        export type Request = operations['CounterpartyDestinationsController_findOne']['parameters']['path'] & {
-          wallet_id: string;
-        };
 
         export type Response = DestinationDetailItem;
       }
@@ -552,47 +545,66 @@ export namespace API {
           note: string;
           swift_bic: string;
         }
+        // Тело создания задаём вручную: в спеке banking_data / crypto_data — пустые
+        // плейсхолдеры (Record<string, never>), а наружу мы держим external_* контракт.
         export interface Request {
-          wallet_id: string;
+          wallet_id?: string;
           counterparty_account_id: string;
           type: CounterpartyDestinationType;
-          nickname: string;
-          external_banking_data?: API.Counterparties.Destination.Detail.DestinationDetailItemExternalBankingData;
+          nickname?: string;
+          external_banking_data?: List.DestinationListItemExternalBankingData;
 
-          external_crypto_data?: Pick<
-            API.Counterparties.Destination.Detail.DestinationDetailItemExternalCryptoData,
-            'currency_id' | 'address' | 'memo'
-          >;
+          external_crypto_data?: Pick<List.DestinationListItemExternalCryptoData, 'currency_id' | 'address' | 'memo'>;
+
+          internal_data?: List.DestinationInternalData;
         }
 
-        export type Response = API.Counterparties.Destination.Detail.DestinationDetailItem;
+        export type Response = Detail.DestinationDetailItem;
       }
 
       export namespace Delete {
-        export type Request = operations['CounterpartyDestinationsController_delete']['parameters']['path'];
+        // request_id (OTP-подтверждение) тянется из спеки; вручную — только переименование id.
+        export type Request = NonNullable<
+          pathsV1Frontend['/frontend/counterparty/destinations/{id}']['delete']['parameters']['query']
+        > & {
+          counterparty_destination_id: string;
+          wallet_id?: string;
+          counterparty_account_id?: string;
+        };
+
+        export type Response = void;
       }
 
       export namespace Update {
         export type Request =
-          operations['CounterpartyDestinationsController_update']['requestBody']['content']['application/json'] &
-          operations['CounterpartyDestinationsController_update']['parameters']['path'];
+          pathsV1Frontend['/frontend/counterparty/destinations/{id}']['patch']['requestBody']['content']['application/json'] & {
+            counterparty_destination_id: string;
+            wallet_id?: string;
+            counterparty_account_id?: string;
+          };
 
-        export type Response = components['schemas']['CounterpartyDestinationDto'];
+        export type Response = Detail.DestinationDetailItem;
       }
     }
 
+    // Single-resource роуты (/accounts/{id}, /destinations/{id}) в спеке зовут path-параметр
+    // просто id — переименовываем его вручную в counterparty_account_id / counterparty_destination_id,
+    // чтобы держать единую семантику имён по всему SDK. Остальное (query, body) берём из спеки.
     export namespace GetById {
       export interface Request {
-        wallet_id: string;
         counterparty_account_id: string;
+        wallet_id?: string;
       }
 
-      export type Response = components['schemas']['CounterpartyAccountDto'];
+      export type Response = CounterpartyWithDestinations;
     }
 
     export namespace List {
-      export type Request = operations['CounterpartyAccountsController_findAll']['parameters']['query'] &
-        operations['CounterpartyAccountsController_findAll']['parameters']['path'];
+      export type Request =
+        pathsV1Frontend['/frontend/counterparty/accounts/wallet/{wallet_id}']['get']['parameters']['path'] &
+          NonNullable<
+            pathsV1Frontend['/frontend/counterparty/accounts/wallet/{wallet_id}']['get']['parameters']['query']
+          >;
 
       export type Response = {
         total: number;
@@ -602,24 +614,30 @@ export namespace API {
 
     export namespace Create {
       export type Request =
-        operations['CounterpartyAccountsController_create']['requestBody']['content']['application/json'] &
-        operations['CounterpartyAccountsController_create']['parameters']['path'];
+        pathsV1Frontend['/frontend/counterparty/accounts/wallet/{wallet_id}']['post']['parameters']['path'] &
+          pathsV1Frontend['/frontend/counterparty/accounts/wallet/{wallet_id}']['post']['requestBody']['content']['application/json'];
 
       export type Response = Counterparty;
     }
 
     export namespace Update {
       export type Request =
-        operations['CounterpartyAccountsController_update']['requestBody']['content']['application/json'] &
-        operations['CounterpartyAccountsController_update']['parameters']['path'];
+        pathsV1Frontend['/frontend/counterparty/accounts/{id}']['patch']['requestBody']['content']['application/json'] & {
+          counterparty_account_id: string;
+          wallet_id?: string;
+        };
 
       export type Response = Counterparty;
     }
 
     export namespace Delete {
-      export type Request = operations['CounterpartyAccountsController_delete']['parameters']['path'];
+      export interface Request {
+        counterparty_account_id: string;
+        wallet_id?: string;
+      }
 
-      export type Response = Counterparty;
+      // Фронт-модуль на удаление аккаунта возвращает только сообщение, без объекта контрагента.
+      export type Response = { message: string };
     }
   }
 
@@ -1499,10 +1517,10 @@ export namespace API {
 
       export interface WithdrawCryptoRequest extends CommonRequestParams {
         order_type:
-        | OrderType.WITHDRAWAL_CRYPTO
-        | OrderType.TRANSFER_INTERNAL
-        | OrderType.OMNIBUS_CRYPTO_TRANSFER
-        | OrderType.SEGREGATED_CRYPTO_TRANSFER;
+          | OrderType.WITHDRAWAL_CRYPTO
+          | OrderType.TRANSFER_INTERNAL
+          | OrderType.OMNIBUS_CRYPTO_TRANSFER
+          | OrderType.SEGREGATED_CRYPTO_TRANSFER;
         to_address?: string;
       }
 
@@ -1675,10 +1693,10 @@ export namespace API {
 
         export interface WithdrawCryptoRequest extends CommonRequestParams {
           order_type:
-          | OrderType.WITHDRAWAL_CRYPTO
-          | OrderType.TRANSFER_INTERNAL
-          | OrderType.OMNIBUS_CRYPTO_TRANSFER
-          | OrderType.SEGREGATED_CRYPTO_TRANSFER;
+            | OrderType.WITHDRAWAL_CRYPTO
+            | OrderType.TRANSFER_INTERNAL
+            | OrderType.OMNIBUS_CRYPTO_TRANSFER
+            | OrderType.SEGREGATED_CRYPTO_TRANSFER;
           to_address?: string;
         }
 
@@ -1804,12 +1822,12 @@ export namespace API {
 
             export interface L2FResponse extends BaseOrderResponse {
               order_type:
-              | 'L2F_SEPA_OFFRAMP'
-              | 'L2F_SWIFT_OFFRAMP'
-              | 'L2F_ACH_OFFRAMP'
-              | 'L2F_WIRE_OFFRAMP'
-              | 'L2F_CHAPS_OFFRAMP'
-              | 'L2F_FPS_OFFRAMP';
+                | 'L2F_SEPA_OFFRAMP'
+                | 'L2F_SWIFT_OFFRAMP'
+                | 'L2F_ACH_OFFRAMP'
+                | 'L2F_WIRE_OFFRAMP'
+                | 'L2F_CHAPS_OFFRAMP'
+                | 'L2F_FPS_OFFRAMP';
               meta: {
                 request_id: string;
                 virtual_account_id: string;

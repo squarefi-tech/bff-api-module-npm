@@ -582,6 +582,9 @@ export interface paths {
          *     **Crypto types** (CRYPTO_EXTERNAL, CRYPTO_INTERNAL):
          *     crypto_data: { address, currency_id, memo }
          *
+         *     **Internal type** (INTERNAL):
+         *     internal_data: { wallet_id, description? } — receiver wallet on the same platform
+         *
          */
         post: {
             parameters: {
@@ -601,7 +604,7 @@ export interface paths {
                         /** Format: uuid */
                         counterparty_account_id: string;
                         /** @enum {string} */
-                        type: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE";
+                        type: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
                         nickname?: string;
                         banking_data?: {
                             account_number?: string;
@@ -626,6 +629,16 @@ export interface paths {
                             /** Format: uuid */
                             currency_id?: string;
                             memo?: string;
+                        };
+                        /** @description Required for type INTERNAL — points at the receiver wallet on the same platform. */
+                        internal_data?: {
+                            /**
+                             * Format: uuid
+                             * @description Target (receiver) wallet uuid on the same platform.
+                             */
+                            wallet_id: string;
+                            /** @description Optional, reserved for future use. */
+                            description?: string;
                         };
                     };
                 };
@@ -2355,8 +2368,11 @@ export interface paths {
                     "application/json": {
                         /** Format: uuid */
                         from_currency_id: string;
-                        /** Format: uuid */
-                        to_wallet_id: string;
+                        /**
+                         * Format: uuid
+                         * @description Counterparty destination of type INTERNAL (points at the receiver wallet).
+                         */
+                        counterparty_destination_id: string;
                         amount: number;
                         request_id: string;
                         documents?: Record<string, never>[];
@@ -5906,7 +5922,10 @@ export interface paths {
                 query: {
                     wallet_id: string;
                     program_id?: string;
-                    status?: "ACTIVE" | "INACTIVE" | "SUSPENDED" | "CANCELED";
+                    /** @description Filter cards by status.
+                     *     Accepts a single value or a comma-separated list, e.g. `status=ACTIVE,CANCELED`.
+                     *      */
+                    status?: ("ACTIVE" | "INACTIVE" | "SUSPENDED" | "CANCELED")[];
                     sub_account_type?: "balance" | "prepaid";
                     offset?: number;
                     limit?: number;
@@ -7550,13 +7569,23 @@ export interface components {
             memo?: string | null;
             currency?: components["schemas"]["CurrencyRef"];
         } | null;
+        /** @description Internal destination payload — the receiver wallet on the same platform. Populated when type is INTERNAL; null otherwise. */
+        CounterpartyInternalData: {
+            /**
+             * Format: uuid
+             * @description Target (receiver) wallet uuid
+             */
+            wallet_id?: string;
+            /** @description Optional, reserved for future use */
+            description?: string | null;
+        } | null;
         CounterpartyDestination: {
             /** Format: uuid */
             id?: string;
             /** Format: uuid */
             counterparty_account_id?: string;
             /** @enum {string} */
-            type?: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE";
+            type?: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
             nickname?: string | null;
             /** Format: date-time */
             created_at?: string;
@@ -7564,6 +7593,7 @@ export interface components {
             updated_at?: string;
             banking_data?: components["schemas"]["BankingData"];
             crypto_data?: components["schemas"]["CryptoData"];
+            internal_data?: components["schemas"]["CounterpartyInternalData"];
         };
         AdminApiKey: {
             /** Format: uuid */

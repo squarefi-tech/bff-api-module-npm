@@ -8669,7 +8669,7 @@ export interface components {
              * @description Payment method associated with this order type
              * @enum {string|null}
              */
-            payment_method?: "DOMESTIC_WIRE" | "FEDWIRE" | "ACH" | "RTP" | "SWIFT" | "SEPA" | "CHAPS" | "FPS" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | null;
+            payment_method?: "FEDWIRE" | "ACH" | "RTP" | "SWIFT" | "SEPA" | "CHAPS" | "FPS" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | null;
             /**
              * Format: uuid
              * @description Associated KYC rail configuration ID

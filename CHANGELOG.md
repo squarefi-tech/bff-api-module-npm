@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- BREAKING: `counterparties.*` now talk to the frontend module (`/frontend/counterparty/*` via the v1-frontend client) instead of the v2 `/counterparties/*` routes. The public method shapes and the `external_banking_data` / `external_crypto_data` requisites contract are preserved by an SDK-side mapping layer, so existing consumers stay on the same destination shape. `getById` (account) now also returns the account's embedded `destinations`, and the `{ success, data, pagination }` envelope is unwrapped internally (list responses keep `{ total, data }`)
+- BREAKING: `counterparties.destinations.delete` now requires an OTP verification id `request_id`. For single-account/destination reads, updates, and deletes the frontend routes address by id, so `wallet_id` (and `counterparty_account_id` on destination ops) are no longer used — they remain accepted as optional request fields for source compatibility with existing call sites
+- BREAKING: `counterparties.delete` (account) now resolves to `{ message: string }` instead of the deleted counterparty object, matching the frontend module response
+- Regenerated external/tenant autogen types for the same backend release: counterparty destination `type` unions and order-creation bodies gain `INTERNAL` / `internal_data`, the internal-transfer order field was renamed from `to_wallet_id` to `counterparty_destination_id`, the account/card `status` query filter is now an array, and `cardholder_id` became optional
+- BREAKING: regenerated legacy autogen dropped `DOMESTIC_WIRE` from the order `payment_method` enum
+
+### Added
+
+- Support for the new `INTERNAL` counterparty destination rail (transfer to another wallet on the same platform): `INTERNAL` is added to `CounterpartyDestinationType`, with an additive `internal_data` (`{ wallet_id, description? }`) branch on the destination union and as an optional field on destination creation. Existing banking/crypto consumers are unaffected
+
 ## [1.36.6] - 2026-06-19
 
 ### Added

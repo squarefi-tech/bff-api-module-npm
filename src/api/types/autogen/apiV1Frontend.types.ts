@@ -946,14 +946,23 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["CounterpartyAccount"][];
+                            pagination?: components["schemas"]["PaginationResponse"];
+                        };
+                    };
                 };
                 /** @description Access denied */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -990,14 +999,26 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                account: components["schemas"]["CounterpartyAccount"];
+                                /** @example Counterparty account created successfully */
+                                message: string;
+                            };
+                        };
+                    };
                 };
                 /** @description Access denied */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -1031,21 +1052,33 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                account: components["schemas"]["CounterpartyAccountWithDestinations"];
+                            };
+                        };
+                    };
                 };
                 /** @description Access denied */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description Not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -1068,21 +1101,34 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                /** @example Counterparty account deleted successfully */
+                                message: string;
+                            };
+                        };
+                    };
                 };
                 /** @description Access denied */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description Not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -1112,21 +1158,33 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                account: components["schemas"]["CounterpartyAccount"];
+                            };
+                        };
+                    };
                 };
                 /** @description Access denied */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description Not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -1164,14 +1222,23 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["CounterpartyDestination"][];
+                            pagination?: components["schemas"]["PaginationResponse"];
+                        };
+                    };
                 };
                 /** @description Access denied */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -1207,21 +1274,33 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                destination: components["schemas"]["CounterpartyDestination"];
+                            };
+                        };
+                    };
                 };
                 /** @description Access denied */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description Not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -1247,21 +1326,34 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                /** @example Destination deleted successfully */
+                                message: string;
+                            };
+                        };
+                    };
                 };
                 /** @description Access denied or verification failed */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description Not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -1290,21 +1382,33 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                destination: components["schemas"]["CounterpartyDestination"];
+                            };
+                        };
+                    };
                 };
                 /** @description Access denied */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description Not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -1325,6 +1429,7 @@ export interface paths {
          *
          *     **Banking types**: banking_data required
          *     **Crypto types**: crypto_data required
+         *     **Internal type**: internal_data required (target wallet on the same platform)
          *
          */
         post: {
@@ -1340,10 +1445,20 @@ export interface paths {
                         /** Format: uuid */
                         counterparty_account_id: string;
                         /** @enum {string} */
-                        type: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE";
+                        type: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
                         nickname?: string;
                         banking_data?: Record<string, never>;
                         crypto_data?: Record<string, never>;
+                        /** @description Required for type INTERNAL — points at the receiver wallet. */
+                        internal_data?: {
+                            /**
+                             * Format: uuid
+                             * @description Target (receiver) wallet uuid on the same platform.
+                             */
+                            wallet_id: string;
+                            /** @description Optional, reserved for future use. */
+                            description?: string;
+                        };
                     };
                 };
             };
@@ -1353,21 +1468,35 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                destination: components["schemas"]["CounterpartyDestination"];
+                                /** @example Destination created successfully */
+                                message: string;
+                            };
+                        };
+                    };
                 };
                 /** @description Access denied */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description Account not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -1735,8 +1864,10 @@ export interface paths {
                     program_id?: string;
                     /** @description Filter cards by program sub-account type (prepaid or balance) */
                     sub_account_type?: "prepaid" | "balance";
-                    /** @description Filter cards by status (matches issuing_cards.card_status) */
-                    status?: "ACTIVE" | "INACTIVE" | "FROZEN" | "CANCELED" | "CLOSED" | "BLOCKED" | "FAILED" | "PENDING";
+                    /** @description Filter cards by status (matches issuing_cards.card_status).
+                     *     Accepts a single value or a comma-separated list, e.g. `status=ACTIVE,FROZEN`.
+                     *      */
+                    status?: ("ACTIVE" | "INACTIVE" | "FROZEN" | "CANCELED" | "CLOSED" | "BLOCKED" | "FAILED" | "PENDING")[];
                     /** @description Filter cards by last 4 digits of the card number (partial, case-insensitive match) */
                     last4?: string;
                     /** @description Number of items to skip */
@@ -4125,6 +4256,258 @@ export interface paths {
         };
         trace?: never;
     };
+    "/frontend/kyc_persona/{wallet_id}/init": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Initialize Persona KYC session for a wallet
+         * @description Creates a Persona inquiry via the Auth API for the specified wallet and
+         *     returns the hosted Persona URL. The caller's Bearer token is forwarded to
+         *     the Auth API; access requires the caller to be a member of the wallet
+         *     (ownership/membership is enforced by the standard wallet-access check).
+         *
+         *     **Authentication**: Bearer token with x-tenant-id header required
+         *
+         *     **Access Control**: Any user with access to the wallet (scoped card-users excluded)
+         *
+         */
+        get: {
+            parameters: {
+                query: {
+                    type: "individual" | "business";
+                };
+                header?: never;
+                path: {
+                    /** @description Wallet UUID */
+                    wallet_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Persona link generated successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                /**
+                                 * Format: uuid
+                                 * @description Echo of the wallet from the path
+                                 * @example eaf37846-3669-4b4a-9555-b27f75e023c1
+                                 */
+                                wallet_id: string;
+                                /**
+                                 * @description Persona inquiry ID returned by the Auth API
+                                 * @example inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
+                                 */
+                                inquiry_id: string;
+                                /**
+                                 * @description Persona session token, when upstream returns one — otherwise null
+                                 * @example null
+                                 */
+                                session_id: string | null;
+                                /**
+                                 * Format: uri
+                                 * @description Hosted Persona URL with `inquiry-id` (and `session-token` if `session_id` is present).
+                                 *     Base host: `PERSONA_HOSTED_FLOW_URL` env, default `https://withpersona.com/verify`.
+                                 *
+                                 * @example https://withpersona.com/verify?inquiry-id=inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
+                                 */
+                                url: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Validation error (`type` missing or not in [individual, business]) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid Bearer token */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Caller has no access to this wallet */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Auth API responded 404 (wallet not found upstream) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Auth API unavailable, timed out, or returned malformed payload */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/kyc_persona/{wallet_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Resume Persona KYC session for a wallet
+         * @description Resumes an existing Persona inquiry via the Auth API for the specified
+         *     wallet and returns the hosted Persona URL. The caller's Bearer token is
+         *     forwarded to the Auth API; access requires the caller to be a member of
+         *     the wallet (ownership/membership is enforced by the standard wallet-access check).
+         *
+         *     **Authentication**: Bearer token with x-tenant-id header required
+         *
+         *     **Access Control**: Any user with access to the wallet (scoped card-users excluded)
+         *
+         */
+        get: {
+            parameters: {
+                query: {
+                    inquiry_id: string;
+                };
+                header?: never;
+                path: {
+                    /** @description Wallet UUID */
+                    wallet_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Persona link generated successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                /**
+                                 * Format: uuid
+                                 * @description Echo of the wallet from the path
+                                 * @example eaf37846-3669-4b4a-9555-b27f75e023c1
+                                 */
+                                wallet_id: string;
+                                /**
+                                 * @description Persona inquiry ID returned by the Auth API (same as the one being resumed)
+                                 * @example inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
+                                 */
+                                inquiry_id: string;
+                                /**
+                                 * @description Persona session token, when upstream returns one — otherwise null
+                                 * @example null
+                                 */
+                                session_id: string | null;
+                                /**
+                                 * Format: uri
+                                 * @description Hosted Persona URL with `inquiry-id` (and `session-token` if `session_id` is present).
+                                 *     Base host: `PERSONA_HOSTED_FLOW_URL` env, default `https://withpersona.com/verify`.
+                                 *
+                                 * @example https://withpersona.com/verify?inquiry-id=inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
+                                 */
+                                url: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Validation error (`inquiry_id` missing or empty) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid Bearer token */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Caller has no access to this wallet */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Auth API responded 404 (no such inquiry to resume) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Auth API unavailable, timed out, or returned malformed payload */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/frontend/orders/deposit/ach": {
         parameters: {
             query?: never;
@@ -4485,8 +4868,11 @@ export interface paths {
                         wallet_id: string;
                         /** Format: uuid */
                         from_currency_id: string;
-                        /** Format: uuid */
-                        to_wallet_id: string;
+                        /**
+                         * Format: uuid
+                         * @description Counterparty destination of type INTERNAL (points at the receiver wallet).
+                         */
+                        counterparty_destination_id: string;
                         amount: number;
                         /** @description Idempotency key (UUID) */
                         request_id: string;
@@ -9467,6 +9853,106 @@ export interface components {
                 code?: string;
                 message?: string;
             };
+        };
+        /** @description Counterparty account (beneficiary). Wallet-scoped. */
+        CounterpartyAccount: {
+            /** Format: uuid */
+            id: string;
+            /** @description Account holder name */
+            name: string;
+            /** @enum {string} */
+            type: "BUSINESS" | "INDIVIDUAL";
+            /** @description User-friendly alias */
+            nickname?: string | null;
+            /** @description Optional contact email */
+            email?: string | null;
+            /** @description Optional contact phone (E.164) */
+            phone?: string | null;
+            /** @description Pinned/favorite flag */
+            is_pinned: boolean;
+            /** @description Whether this is the wallet owner’s own (self) account */
+            is_self: boolean;
+            /** Format: date-time */
+            created_at: string;
+        };
+        /** @description A counterparty account with its embedded active destinations (returned by GET account by id). */
+        CounterpartyAccountWithDestinations: components["schemas"]["CounterpartyAccount"] & {
+            /** @description Active destinations belonging to this account. */
+            destinations: components["schemas"]["CounterpartyDestination"][];
+        };
+        /** @description Bank / beneficiary postal address. */
+        CounterpartyBankingAddress: {
+            city?: string | null;
+            postcode?: string | null;
+            street1?: string | null;
+            street2?: string | null;
+            /** @description Country id reference */
+            country_id?: number | null;
+            /** @description State id reference */
+            state_id?: number | null;
+            description?: string | null;
+        } | null;
+        /** @description Banking destination payload. Populated when `type` is ACH, SWIFT, SEPA, CHAPS, FPS or FEDWIRE; null otherwise. */
+        CounterpartyBankingData: {
+            account_number?: string | null;
+            /** @description ABA routing number (9 digits) */
+            routing_number?: string | null;
+            bank_name?: string | null;
+            /** @description SWIFT/BIC (ISO 9362) */
+            swift_bic?: string | null;
+            /** @description IBAN (ISO 13616) */
+            iban?: string | null;
+            /** @description Sort code (6 digits, UK banking) */
+            sort_code?: string | null;
+            note?: string | null;
+            address?: components["schemas"]["CounterpartyBankingAddress"] | null;
+        } | null;
+        /** @description Currency reference for a crypto destination (subset of the `crypto` table row). */
+        CounterpartyCurrencyRef: {
+            /** Format: uuid */
+            uuid?: string;
+            name?: string;
+            symbol?: string;
+            icon?: string | null;
+            /** @enum {string|null} */
+            type?: "token" | "native" | null;
+        };
+        /** @description Crypto destination payload. Populated when `type` is CRYPTO_EXTERNAL or CRYPTO_INTERNAL; null otherwise. */
+        CounterpartyCryptoData: {
+            /** @description Blockchain address */
+            address?: string;
+            /** @description Memo/tag (XRP, XLM, …) */
+            memo?: string | null;
+            /** Format: uuid */
+            currency_id?: string;
+            currency?: components["schemas"]["CounterpartyCurrencyRef"] | null;
+        } | null;
+        /** @description Internal destination payload — the receiver wallet on the same platform. Populated when `type` is INTERNAL; null otherwise. */
+        CounterpartyInternalData: {
+            /**
+             * Format: uuid
+             * @description Target (receiver) wallet uuid
+             */
+            wallet_id?: string;
+            /** @description Optional, reserved for future use */
+            description?: string | null;
+        } | null;
+        /** @description Counterparty payment destination. Exactly one of `banking_data` / `crypto_data` / `internal_data` is populated, matching `type`; the other two are null. */
+        CounterpartyDestination: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description Destination / payment rail type
+             * @enum {string}
+             */
+            type: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
+            /** @description User-friendly alias */
+            nickname?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            banking_data?: components["schemas"]["CounterpartyBankingData"] | null;
+            crypto_data?: components["schemas"]["CounterpartyCryptoData"] | null;
+            internal_data?: components["schemas"]["CounterpartyInternalData"] | null;
         };
         /** @description Bank / rail account coordinates for a sub-account. Rail-dependent — some rails return only a subset of these. */
         BankAccountDetails: {
