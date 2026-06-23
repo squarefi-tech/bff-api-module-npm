@@ -416,6 +416,8 @@ export enum CounterpartyDestinationType {
   CRYPTO_INTERNAL = 'CRYPTO_INTERNAL',
   CHAPS = 'CHAPS',
   FPS = 'FPS',
+  // Перевод на кошелёк внутри платформы (фронт-модуль контрагентов).
+  INTERNAL = 'INTERNAL',
 }
 
 export const counterpartyBankingDestinationTypes: Record<
