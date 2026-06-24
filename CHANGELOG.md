@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.8] - 2026-06-24
+
 ### Added
 
 - `counterparties.destinations.internalTransfer({ counterparty_destination_id })` — read-only check of whether a destination's recipient can receive an instant on-platform internal transfer. Resolves to `{ available, target_wallet_id }` (`target_wallet_id` is the wallet to create an `INTERNAL` destination against when `available` is `true`, otherwise `null`). Wraps `GET /frontend/counterparty/destinations/{id}/internal-transfer`
