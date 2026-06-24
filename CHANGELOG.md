@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `counterparties.destinations.internalTransfer({ counterparty_destination_id })` — read-only check of whether a destination's recipient can receive an instant on-platform internal transfer. Resolves to `{ available, target_wallet_id }` (`target_wallet_id` is the wallet to create an `INTERNAL` destination against when `available` is `true`, otherwise `null`). Wraps `GET /frontend/counterparty/destinations/{id}/internal-transfer`
+- Counterparty destination requisites now carry a `created_at` timestamp on each rail's data (`external_banking_data`, `external_crypto_data`, `internal_data`), surfaced from regenerated frontend/external/tenant autogen
+
+### Changed
+
+- Tightened counterparty destination requisite types from the regenerated spec: `external_banking_data.bank_name`, `external_crypto_data.address`, `external_crypto_data.currency`, and `internal_data.wallet_id` are now always present (previously optional)
+
 ## [1.36.7] - 2026-06-23
 
 ### Changed

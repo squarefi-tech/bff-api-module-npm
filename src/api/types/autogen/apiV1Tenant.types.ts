@@ -7543,7 +7543,7 @@ export interface components {
             id?: string;
             account_number?: string | null;
             routing_number?: string | null;
-            bank_name?: string | null;
+            bank_name: string | null;
             swift_bic?: string | null;
             iban?: string | null;
             /** @description Sort code (6 digits, UK banking) */
@@ -7559,15 +7559,19 @@ export interface components {
                 street2?: string | null;
                 state_id?: number | null;
             } | null;
+            /** Format: date-time */
+            created_at: string;
         } | null;
         CryptoData: {
             /** Format: uuid */
             id?: string;
-            address?: string;
+            address: string;
             /** Format: uuid */
             currency_id?: string;
             memo?: string | null;
-            currency?: components["schemas"]["CurrencyRef"];
+            currency: components["schemas"]["CurrencyRef"];
+            /** Format: date-time */
+            created_at: string;
         } | null;
         /** @description Internal destination payload — the receiver wallet on the same platform. Populated when type is INTERNAL; null otherwise. */
         CounterpartyInternalData: {
@@ -7575,9 +7579,11 @@ export interface components {
              * Format: uuid
              * @description Target (receiver) wallet uuid
              */
-            wallet_id?: string;
+            wallet_id: string;
             /** @description Optional, reserved for future use */
             description?: string | null;
+            /** Format: date-time */
+            created_at: string;
         } | null;
         CounterpartyDestination: {
             /** Format: uuid */

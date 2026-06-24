@@ -154,5 +154,14 @@ export const counterparties = {
         params: { request_id },
       });
     },
+    internalTransfer: async ({
+      counterparty_destination_id,
+    }: API.Counterparties.Destination.InternalTransfer.Request): Promise<API.Counterparties.Destination.InternalTransfer.Response> => {
+      const res = await apiClientV1Frontend.getRequest<
+        Envelope<API.Counterparties.Destination.InternalTransfer.Response>
+      >(`/frontend/counterparty/destinations/${counterparty_destination_id}/internal-transfer`);
+
+      return res.data;
+    },
   },
 };

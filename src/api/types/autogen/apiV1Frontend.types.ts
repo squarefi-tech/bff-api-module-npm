@@ -1414,6 +1414,80 @@ export interface paths {
         };
         trace?: never;
     };
+    "/frontend/counterparty/destinations/{id}/internal-transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check internal-transfer availability for a destination
+         * @description Read-only check (writes nothing). Resolves the destination's payment
+         *     details to an on-platform wallet within the tenant and reports whether an
+         *     instant internal transfer is available.
+         *
+         *     A `true` answer means the caller can create an INTERNAL destination to
+         *     `target_wallet_id` and transfer to it. Any recipient that cannot receive
+         *     an instant internal transfer is uniformly reported as `available:false`
+         *     with `target_wallet_id:null` — the check does not disclose the reason.
+         *
+         *     Detects crypto (address), INTERNAL (stored target wallet) and banking
+         *     (bank details matched against internal virtual accounts) destinations.
+         *
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Internal-transfer availability for the destination */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["InternalTransferAvailability"];
+                        };
+                    };
+                };
+                /** @description Access denied */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/frontend/counterparty/destinations": {
         parameters: {
             query?: never;
@@ -9897,7 +9971,7 @@ export interface components {
             account_number?: string | null;
             /** @description ABA routing number (9 digits) */
             routing_number?: string | null;
-            bank_name?: string | null;
+            bank_name: string | null;
             /** @description SWIFT/BIC (ISO 9362) */
             swift_bic?: string | null;
             /** @description IBAN (ISO 13616) */
@@ -9906,6 +9980,8 @@ export interface components {
             sort_code?: string | null;
             note?: string | null;
             address?: components["schemas"]["CounterpartyBankingAddress"] | null;
+            /** Format: date-time */
+            created_at: string;
         } | null;
         /** @description Currency reference for a crypto destination (subset of the `crypto` table row). */
         CounterpartyCurrencyRef: {
@@ -9920,12 +9996,14 @@ export interface components {
         /** @description Crypto destination payload. Populated when `type` is CRYPTO_EXTERNAL or CRYPTO_INTERNAL; null otherwise. */
         CounterpartyCryptoData: {
             /** @description Blockchain address */
-            address?: string;
+            address: string;
             /** @description Memo/tag (XRP, XLM, …) */
             memo?: string | null;
             /** Format: uuid */
             currency_id?: string;
-            currency?: components["schemas"]["CounterpartyCurrencyRef"] | null;
+            currency: components["schemas"]["CounterpartyCurrencyRef"];
+            /** Format: date-time */
+            created_at: string;
         } | null;
         /** @description Internal destination payload — the receiver wallet on the same platform. Populated when `type` is INTERNAL; null otherwise. */
         CounterpartyInternalData: {
@@ -9933,9 +10011,11 @@ export interface components {
              * Format: uuid
              * @description Target (receiver) wallet uuid
              */
-            wallet_id?: string;
+            wallet_id: string;
             /** @description Optional, reserved for future use */
             description?: string | null;
+            /** Format: date-time */
+            created_at: string;
         } | null;
         /** @description Counterparty payment destination. Exactly one of `banking_data` / `crypto_data` / `internal_data` is populated, matching `type`; the other two are null. */
         CounterpartyDestination: {
@@ -9953,6 +10033,16 @@ export interface components {
             banking_data?: components["schemas"]["CounterpartyBankingData"] | null;
             crypto_data?: components["schemas"]["CounterpartyCryptoData"] | null;
             internal_data?: components["schemas"]["CounterpartyInternalData"] | null;
+        };
+        /** @description Whether an instant internal transfer is available for a counterparty destination. Two states: available (available=true, target_wallet_id set) and not available (available=false, target_wallet_id=null). Any recipient that cannot receive an instant internal transfer is uniformly reported as not available — the check does not disclose the reason. */
+        InternalTransferAvailability: {
+            /** @description True when the recipient is an on-platform wallet that can currently receive an instant internal transfer. */
+            available: boolean;
+            /**
+             * Format: uuid
+             * @description Wallet the transfer would go to — use it to create an INTERNAL destination. Present only when available=true; null otherwise.
+             */
+            target_wallet_id: string | null;
         };
         /** @description Bank / rail account coordinates for a sub-account. Rail-dependent — some rails return only a subset of these. */
         BankAccountDetails: {

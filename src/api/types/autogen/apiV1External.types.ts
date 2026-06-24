@@ -6955,7 +6955,7 @@ export interface components {
             /** @description Routing/sort code */
             routing_number?: string | null;
             /** @description Bank name */
-            bank_name?: string | null;
+            bank_name: string | null;
             /** @description SWIFT/BIC code */
             swift_bic?: string | null;
             /** @description IBAN */
@@ -6965,6 +6965,8 @@ export interface components {
             /** @description Additional notes/reference */
             note?: string | null;
             address?: components["schemas"]["BankingAddress"];
+            /** Format: date-time */
+            created_at: string;
         } | null;
         /** @description Currency reference (short) */
         CurrencyRef: {
@@ -6983,7 +6985,7 @@ export interface components {
             /** Format: uuid */
             id?: string;
             /** @description Blockchain address */
-            address?: string;
+            address: string;
             /**
              * Format: uuid
              * @description Currency UUID
@@ -6991,7 +6993,9 @@ export interface components {
             currency_id?: string;
             /** @description Memo/tag (for XRP, XLM, etc.) */
             memo?: string | null;
-            currency?: components["schemas"]["CurrencyRef"];
+            currency: components["schemas"]["CurrencyRef"];
+            /** Format: date-time */
+            created_at: string;
         } | null;
         /** @description Internal destination payload — the receiver wallet on the same platform. Populated when type is INTERNAL; null otherwise. */
         CounterpartyInternalData: {
@@ -6999,9 +7003,11 @@ export interface components {
              * Format: uuid
              * @description Target (receiver) wallet uuid
              */
-            wallet_id?: string;
+            wallet_id: string;
             /** @description Optional, reserved for future use */
             description?: string | null;
+            /** Format: date-time */
+            created_at: string;
         } | null;
         /** @description Payment destination linked to a counterparty account */
         CounterpartyDestination: {

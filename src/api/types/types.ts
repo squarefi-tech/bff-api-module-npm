@@ -585,6 +585,17 @@ export namespace API {
 
         export type Response = Detail.DestinationDetailItem;
       }
+
+      // GET /frontend/counterparty/destinations/{id}/internal-transfer — read-only проверка,
+      // может ли получатель дестинации принять мгновенный internal-перевод. В спеке path-параметр
+      // зовётся id — переименовываем его вручную в counterparty_destination_id ради единой семантики.
+      export namespace InternalTransfer {
+        export interface Request {
+          counterparty_destination_id: string;
+        }
+
+        export type Response = componentsV1Frontend['schemas']['InternalTransferAvailability'];
+      }
     }
 
     // Single-resource роуты (/accounts/{id}, /destinations/{id}) в спеке зовут path-параметр
