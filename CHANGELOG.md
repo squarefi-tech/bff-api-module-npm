@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.10] - 2026-06-26
+
 ### Fixed
 
 - `orders.v2.create.byOrderType[OrderType.TRANSFER_INTERNAL]` posted to the wrong endpoint `/v2/orders/TRA` (truncated path), so internal transfer creation always hit a non-existent route. It now posts to `/v2/orders/TRANSFER_INTERNAL` as defined in the spec
