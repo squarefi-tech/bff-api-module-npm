@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.9] - 2026-06-26
+
 ### Fixed
 
 - `counterparties.destinations.create` request type no longer requires the server-generated `created_at` field on the `internal_data` and `external_banking_data` requisites. These reuse the destination listing schema, which started carrying `created_at` in 1.36.8, so supplying either requisite on creation wrongly demanded a `created_at` that the backend assigns. The create body now omits it from both, aligning them with `external_crypto_data`, which already exposed only the input subset (`currency_id` / `address` / `memo`)
