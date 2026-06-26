@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `orders.v2.create.byOrderType[OrderType.TRANSFER_INTERNAL]` posted to the wrong endpoint `/v2/orders/TRA` (truncated path), so internal transfer creation always hit a non-existent route. It now posts to `/v2/orders/TRANSFER_INTERNAL` as defined in the spec
+- `API.Orders.V2.Create.ByOrderType.INTERNAL_TRANSFER` request/response types were hand-written and out of sync with the backend (e.g. stale `from_crypto_uuid` / `to_wallet_uuid` fields and a `null` response). They are now derived from the generated `/v2/orders/TRANSFER_INTERNAL` schema, so the request expects `counterparty_destination_id` / `from_currency_id` and the response carries the created order object
+
 ## [1.36.9] - 2026-06-26
 
 ### Fixed

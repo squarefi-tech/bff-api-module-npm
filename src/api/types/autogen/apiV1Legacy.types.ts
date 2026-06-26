@@ -5944,6 +5944,9 @@ export interface paths {
          *     Two transactions are created atomically: `WITHDRAWAL_CRYPTO_INTERNAL` (sender) and `DEPOSIT_CRYPTO_INTERNAL` (receiver).
          *     Fee and network_fee are always 0.
          *
+         *     The receiver is addressed by `counterparty_destination_id` — a counterparty
+         *     destination of type `INTERNAL` that points at the target wallet.
+         *
          */
         post: {
             parameters: {
@@ -5967,9 +5970,11 @@ export interface paths {
                         from_currency_id: string;
                         /**
                          * Format: uuid
-                         * @description Destination wallet ID
+                         * @description Receiver, addressed by a counterparty destination of type `INTERNAL`
+                         *     (points at the target wallet).
+                         *
                          */
-                        to_wallet_id: string;
+                        counterparty_destination_id: string;
                         /** @description Amount to transfer */
                         amount: number;
                         /**

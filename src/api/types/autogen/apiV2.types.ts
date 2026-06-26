@@ -1862,6 +1862,10 @@ export interface components {
             stablecoin_primary_purpose?: string[] | null;
             stablecoin_primary_purpose_other?: string | null;
             pep_declaration?: boolean | null;
+            pep_full_name?: string | null;
+            pep_relationship?: string | null;
+            pep_country?: string | null;
+            terms_and_conditions?: boolean | null;
             expected_monthly_transactions_count?: number | null;
             outgoing_payment_purposes?: string[] | null;
             incoming_payment_purposes?: string[] | null;
@@ -1993,6 +1997,10 @@ export interface components {
             stablecoin_primary_purpose?: string[] | null;
             stablecoin_primary_purpose_other?: string | null;
             pep_declaration?: boolean | null;
+            pep_full_name?: string | null;
+            pep_relationship?: string | null;
+            pep_country?: string | null;
+            terms_and_conditions?: boolean | null;
             expected_monthly_transactions_count?: number | null;
             outgoing_payment_purposes?: string[] | null;
             incoming_payment_purposes?: string[] | null;

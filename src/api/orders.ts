@@ -111,9 +111,12 @@ export const orders = {
         [OrderType.TRANSFER_INTERNAL]: (
           data: API.Orders.V2.Create.ByOrderType.INTERNAL_TRANSFER.Request,
         ): Promise<API.Orders.V2.Create.ByOrderType.INTERNAL_TRANSFER.Response> =>
-          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.INTERNAL_TRANSFER.Response>('/v2/orders/TRA', {
-            data,
-          }),
+          apiClientV1.postRequest<API.Orders.V2.Create.ByOrderType.INTERNAL_TRANSFER.Response>(
+            '/v2/orders/TRANSFER_INTERNAL',
+            {
+              data,
+            },
+          ),
 
         [OrderType.HIFI_WIRE_ONRAMP]: (
           data: API.Orders.V2.Create.ByOrderType.HIFI_WIRE_ONRAMP.Request,

@@ -572,6 +572,10 @@ export interface paths {
                     page?: number;
                     type?: "BUSINESS" | "INDIVIDUAL";
                     search?: string;
+                    /** @description Field to sort by. When omitted, defaults to pinned accounts first, then newest. */
+                    sort_by?: "created_at" | "type" | "name" | "nickname" | "email" | "phone";
+                    /** @description Sort direction (defaults to ASC). Ignored without `sort_by`. */
+                    sort_order?: "ASC" | "DESC";
                 };
                 header?: never;
                 path?: never;
@@ -6898,17 +6902,17 @@ export interface components {
              * Format: uuid
              * @description Unique account identifier
              */
-            id?: string;
+            id: string;
             /**
              * @description Account holder name
              * @example Acme Corp
              */
-            name?: string;
+            name: string;
             /**
              * @description Account type
              * @enum {string}
              */
-            type?: "BUSINESS" | "INDIVIDUAL";
+            type: "BUSINESS" | "INDIVIDUAL";
             /**
              * Format: uuid
              * @description Associated wallet ID
@@ -6921,17 +6925,19 @@ export interface components {
             /** @description Contact phone */
             phone?: string | null;
             /** @description Whether account is pinned/favorite */
-            is_pinned?: boolean;
+            is_pinned: boolean;
             /** @description Whether this is a self-owned account */
-            is_self?: boolean;
+            is_self: boolean;
+            /**
+             * @description Whether the account has at least one active INTERNAL destination (on-platform receiver). Always present; computed on list and get-by-id, false on create/update.
+             * @default false
+             */
+            has_internal_destination: boolean;
             /** Format: date-time */
-            created_at?: string;
+            created_at: string;
             /** Format: date-time */
             updated_at?: string;
-            is_deleted?: boolean | null;
-            /** Format: date-time */
-            deleted_at?: string | null;
-            /** @description Number of active destinations */
+            /** @description Number of destinations */
             destinations_count?: number;
         };
         /** @description Bank/beneficiary postal address */

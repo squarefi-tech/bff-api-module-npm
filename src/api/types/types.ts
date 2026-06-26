@@ -1870,18 +1870,10 @@ export namespace API {
 
         export namespace ByOrderType {
           export namespace INTERNAL_TRANSFER {
-            export interface Request {
-              wallet_id: string;
-              from_crypto_uuid: string;
-              to_wallet_id: string;
-              to_wallet_uuid: string;
-              amount: number;
-              request_id: string;
-              is_subtract: boolean;
-              is_reverse: boolean;
-            }
-
-            export type Response = null;
+            export type Request =
+              pathsV1Legacy['/v2/orders/TRANSFER_INTERNAL']['post']['requestBody']['content']['application/json'];
+            export type Response =
+              pathsV1Legacy['/v2/orders/TRANSFER_INTERNAL']['post']['responses']['200']['content']['application/json'];
           }
 
           export namespace HIFI_WIRE_ONRAMP {

@@ -7517,25 +7517,27 @@ export interface components {
         };
         CounterpartyAccount: {
             /** Format: uuid */
-            id?: string;
-            name?: string;
+            id: string;
+            name: string;
             /** @enum {string} */
-            type?: "BUSINESS" | "INDIVIDUAL";
+            type: "BUSINESS" | "INDIVIDUAL";
             /** Format: uuid */
             wallet_id?: string;
             nickname?: string | null;
             email?: string | null;
             phone?: string | null;
-            is_pinned?: boolean;
-            is_self?: boolean;
+            is_pinned: boolean;
+            is_self: boolean;
+            /**
+             * @description Whether the account has at least one active INTERNAL destination (on-platform receiver). Always present; computed on list and get-by-id, false on create/update.
+             * @default false
+             */
+            has_internal_destination: boolean;
             /** Format: date-time */
-            created_at?: string;
+            created_at: string;
             /** Format: date-time */
             updated_at?: string;
-            is_deleted?: boolean | null;
-            /** Format: date-time */
-            deleted_at?: string | null;
-            /** @description Number of active destinations */
+            /** @description Number of destinations */
             destinations_count?: number;
         };
         BankingData: {

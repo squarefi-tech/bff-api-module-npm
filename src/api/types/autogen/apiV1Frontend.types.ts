@@ -932,6 +932,10 @@ export interface paths {
                     limit?: number;
                     type?: "BUSINESS" | "INDIVIDUAL";
                     search?: string;
+                    /** @description Field to sort by. When omitted, defaults to pinned accounts first, then newest. */
+                    sort_by?: "created_at" | "type" | "name" | "nickname" | "email" | "phone";
+                    /** @description Sort direction (defaults to ASC). Ignored without `sort_by`. */
+                    sort_order?: "ASC" | "DESC";
                 };
                 header?: never;
                 path: {
@@ -6205,8 +6209,11 @@ export interface paths {
                         wallet_id: string;
                         /** Format: uuid */
                         from_currency_id: string;
-                        /** Format: uuid */
-                        to_wallet_id: string;
+                        /**
+                         * Format: uuid
+                         * @description Receiver — a counterparty destination of type INTERNAL (points at the target wallet)
+                         */
+                        counterparty_destination_id: string;
                         amount: number;
                         request_id: string;
                     };
@@ -9946,6 +9953,11 @@ export interface components {
             is_pinned: boolean;
             /** @description Whether this is the wallet owner’s own (self) account */
             is_self: boolean;
+            /**
+             * @description Whether the account has at least one active INTERNAL destination (on-platform receiver). Always present; computed on list and get-by-id, false on create/update.
+             * @default false
+             */
+            has_internal_destination: boolean;
             /** Format: date-time */
             created_at: string;
         };
