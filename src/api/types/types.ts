@@ -547,16 +547,21 @@ export namespace API {
         }
         // Тело создания задаём вручную: в спеке banking_data / crypto_data — пустые
         // плейсхолдеры (Record<string, never>), а наружу мы держим external_* контракт.
+        // Реквизиты переиспользуют схемы листинга через Pick — отбираем только input-поля,
+        // без серверных (created_at проставляет бэкенд) и read-only (crypto.currency).
         export interface Request {
           wallet_id?: string;
           counterparty_account_id: string;
           type: CounterpartyDestinationType;
           nickname?: string;
-          external_banking_data?: List.DestinationListItemExternalBankingData;
+          external_banking_data?: Pick<
+            List.DestinationListItemExternalBankingData,
+            'account_number' | 'routing_number' | 'bank_name' | 'swift_bic' | 'iban' | 'sort_code' | 'note' | 'address'
+          >;
 
           external_crypto_data?: Pick<List.DestinationListItemExternalCryptoData, 'currency_id' | 'address' | 'memo'>;
 
-          internal_data?: List.DestinationInternalData;
+          internal_data?: Pick<List.DestinationInternalData, 'wallet_id' | 'description'>;
         }
 
         export type Response = Detail.DestinationDetailItem;
