@@ -7562,12 +7562,10 @@ export interface components {
              * @description External vendor account ID
              */
             vendor_account_id?: string | null;
-            /** @description Bank account details for deposits. Returned null when deposits are disabled for the account. */
+            /** @description Bank account details for deposits, derived from deposit_instructions. Returned null when deposits are disabled for the account. */
             account_details?: components["schemas"]["BankAccountDetails"];
-            /** @description Deposit requisites. Returned null when deposits are disabled for the account. */
+            /** @description Deposit requisites (source of truth). Returned null when deposits are disabled for the account. */
             deposit_instructions?: Record<string, never> | null;
-            current_balance?: number | null;
-            available_balance?: number | null;
             /** @description Additional metadata from vendor */
             meta?: Record<string, never> | null;
             /**

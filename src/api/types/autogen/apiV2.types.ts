@@ -1861,6 +1861,7 @@ export interface components {
             vendors_and_counterparties?: ("SELF" | "MERCHANTS_SUPPLIERS" | "CUSTOMERS" | "EMPLOYEES" | "CONTRACTORS" | "FRIENDS" | "FAMILY")[] | null;
             stablecoin_primary_purpose?: string[] | null;
             stablecoin_primary_purpose_other?: string | null;
+            stablecoin_activity?: string | null;
             pep_declaration?: boolean | null;
             pep_full_name?: string | null;
             pep_relationship?: string | null;
@@ -1996,6 +1997,7 @@ export interface components {
             vendors_and_counterparties?: ("SELF" | "MERCHANTS_SUPPLIERS" | "CUSTOMERS" | "EMPLOYEES" | "CONTRACTORS" | "FRIENDS" | "FAMILY")[] | null;
             stablecoin_primary_purpose?: string[] | null;
             stablecoin_primary_purpose_other?: string | null;
+            stablecoin_activity?: string | null;
             pep_declaration?: boolean | null;
             pep_full_name?: string | null;
             pep_relationship?: string | null;
@@ -2300,6 +2302,11 @@ export interface components {
             /** @enum {string} */
             default_theme_mode: "dark" | "light";
             enable_kyc: boolean;
+            /** @example [
+             *       "individual",
+             *       "business"
+             *     ] */
+            allowed_kyc_entity_types: ("individual" | "business" | "universal")[] | null;
             tg_bot_name: string | null;
             theme_switch: boolean;
             enable_exchange: boolean;

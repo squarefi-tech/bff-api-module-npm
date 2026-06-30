@@ -755,67 +755,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/kyc/sumsub/generate_token": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Generate Sumsub access token
-         * @deprecated
-         * @description Generate a Sumsub access token for KYC verification
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /** @description The user data ID */
-                        user_data_id: number;
-                    };
-                };
-            };
-            responses: {
-                /** @description Sumsub access token */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example .-v2 */
-                            token?: string;
-                            /** @example 232323 */
-                            user_data_id?: number;
-                        };
-                    };
-                };
-                /** @description Bad request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/crypto": {
         parameters: {
             query?: never;
@@ -5209,18 +5148,8 @@ export interface paths {
                                 integration_vendor_id?: string;
                                 /** @description Vendor's account ID */
                                 vendor_account_id?: string;
-                                /** @description Status at vendor side (OPEN, CLOSED, etc.) */
-                                vendor_status?: string;
-                                /** @description Current balance */
-                                current_balance?: number;
-                                /** @description Available balance for withdrawal */
-                                available_balance?: number;
                                 /** @description Customer name on the account */
                                 customer_name?: string;
-                                /** @description Asset type identifier (e.g., FIAT_TESTNET_USD) */
-                                asset_type_id?: string;
-                                /** @description Deposit type (PUSH, PULL) */
-                                deposit_type?: string;
                                 /** @description Additional metadata */
                                 meta?: Record<string, never>;
                                 /** @description Rail/vendor specific account details */

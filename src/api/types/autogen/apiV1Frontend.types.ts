@@ -5810,6 +5810,95 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/frontend/orders/{order_id}/comment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set or clear an order's comment
+         * @description Saves (or edits) a single free-text comment attached to an order
+         *     (incoming or outgoing). Useful for noting who an incoming crypto deposit
+         *     came from. Send `comment: null` or an empty string to clear it.
+         *
+         *     The response includes the saved `comment` plus audit metadata
+         *     (`comment_updated_by` = editor's user_data uuid, `comment_updated_at`).
+         *
+         *     **Access Control**: caller must be `admin` or `owner` of the order's wallet.
+         *
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    order_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        wallet_id: string;
+                        /** @description Comment text. `null` or empty clears the comment. */
+                        comment?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Comment saved */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["Order"];
+                        };
+                    };
+                };
+                /** @description Validation error (e.g. comment too long) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Access denied (insufficient wallet role / wrong wallet) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Order not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/frontend/orders/types": {
         parameters: {
             query?: never;
@@ -10491,12 +10580,10 @@ export interface components {
             /** Format: uuid */
             destination_currency?: string;
             vendor_account_id?: string | null;
-            /** @description Bank account details for deposits. Returned null when deposits are disabled for the account. */
+            /** @description Bank account details for deposits, derived from deposit_instructions. Returned null when deposits are disabled for the account. */
             account_details?: Record<string, never> | null;
-            /** @description Deposit requisites. Returned null when deposits are disabled for the account. */
+            /** @description Deposit requisites (source of truth). Returned null when deposits are disabled for the account. */
             deposit_instructions?: Record<string, never> | null;
-            current_balance?: number | null;
-            available_balance?: number | null;
             meta?: Record<string, never> | null;
             /** Format: date-time */
             created_at?: string;
