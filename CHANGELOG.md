@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.12] - 2026-06-30
+
 ### Fixed
 
 - `API.Orders.V2.GetById.Response` (`orders.v2.getById`) was hand-written and out of sync with the real `/v2/orders/id/{order_uuid}` response, which broke typing the data needed for deposit confirmations:
