@@ -2005,15 +2005,7 @@ export namespace API {
 
       export namespace OrderTypes {
         export type PaymentMethod =
-          | 'ACH'
-          | 'FEDWIRE'
-          | 'SWIFT'
-          | 'SEPA'
-          | 'SEPA_CT'
-          | 'CHAPS'
-          | 'FPS'
-          | 'CRYPTO_EXTERNAL'
-          | 'CRYPTO_INTERNAL';
+          'ACH' | 'FEDWIRE' | 'SWIFT' | 'SEPA' | 'SEPA_CT' | 'CHAPS' | 'FPS' | 'CRYPTO_EXTERNAL' | 'CRYPTO_INTERNAL';
 
         export type OrderTypeKycRail = {
           id: string;
@@ -2050,10 +2042,7 @@ export namespace API {
           export type OrderListToUuidFilter = Record<'to_uuid', string[] | string>;
 
           export type OrderListFilter =
-            | OrderListStatusFilter
-            | OrderListOrderTypeFilter
-            | OrderListFromUuidFilter
-            | OrderListToUuidFilter;
+            OrderListStatusFilter | OrderListOrderTypeFilter | OrderListFromUuidFilter | OrderListToUuidFilter;
           export interface Request {
             wallet_uuid: string;
             offset?: number;
@@ -2219,6 +2208,7 @@ export namespace API {
           updated_at: string;
           deleted_at?: string | null;
           is_deleted?: boolean | null;
+          internal_wallet_data_id?: string | null;
           counterparty_account: CounterpartyAccount;
           external_banking_data?: ExternalBankingData | null;
           external_crypto_data?: ExternalCryptoData | null;
@@ -2234,13 +2224,6 @@ export namespace API {
           state: string;
           postal_code: string;
           country_code: string;
-        }
-
-        export interface VirtualAccountAccountDetails {
-          rail_account_id: string;
-          rail_asset_type: string;
-          rail_product_id: string;
-          rail_customer_id: string;
         }
 
         export interface VirtualAccountDetails {
@@ -2261,7 +2244,8 @@ export namespace API {
           asset_type_id: string;
           deposit_type: string;
           meta?: Record<string, unknown>;
-          account_details: VirtualAccountAccountDetails;
+          is_deposit_enabled?: boolean;
+          // account_details: API.VirtualAccounts.VirtualAccount.AccountDetails | null; // deprecated
           deposit_instructions?: API.VirtualAccounts.VirtualAccount.DepositInstruction.DepositInstruction[];
           account_currency_details: API.Currencies.SimplifiedCurrency;
           destination_currency_details: API.Currencies.SimplifiedCurrency;
@@ -2269,13 +2253,22 @@ export namespace API {
         }
 
         export type OrderDetails = API.Orders.V2.List.ByWallet.OrderItem & {
-          request_id: string;
+          request_id?: string | null;
           updated_at: string;
-          wallet: API.Wallets.SimplifiedWallet;
+          fee?: number | null;
+          fee_currency_id?: string | null;
+          network_fee?: number | null;
+          network_fee_currency_id?: string | null;
+          exchange_rate?: number | null;
+          from_currency_id?: string | null;
+          to_currency_id?: string | null;
+          workflow_run_id?: string | null;
+          wallet: { uuid: string; tenant_id: string };
           from_currency: API.Currencies.SimplifiedCurrency;
           to_currency: API.Currencies.SimplifiedCurrency;
           virtual_account?: VirtualAccountDetails | null;
           counterparty_destination?: CounterpartyDestination | null;
+          documents?: unknown[];
         };
 
         export type Response = OrderDetails;
@@ -2495,28 +2488,28 @@ export namespace API {
         address: string;
       }
 
-      export interface AccountDetails {
-        bankName: string;
-        bankAddress: string;
-        beneficiary: API.VirtualAccounts.VirtualAccount.Beneficiary;
-        swiftCode: string;
-        ach?: {
-          accountNumber: string;
-          routingNumber: string;
-        };
-        rtp?: {
-          accountNumber: string;
-          routingNumber: string;
-        };
-        wire?: {
-          accountNumber: string;
-          routingNumber: string;
-        };
-        swift?: {
-          accountNumber: string;
-          routingNumber: string;
-        };
-      }
+      // export interface AccountDetails { // deprecated
+      //   bankName: string;
+      //   bankAddress: string;
+      //   beneficiary: API.VirtualAccounts.VirtualAccount.Beneficiary;
+      //   swiftCode: string;
+      //   ach?: {
+      //     accountNumber: string;
+      //     routingNumber: string;
+      //   };
+      //   rtp?: {
+      //     accountNumber: string;
+      //     routingNumber: string;
+      //   };
+      //   wire?: {
+      //     accountNumber: string;
+      //     routingNumber: string;
+      //   };
+      //   swift?: {
+      //     accountNumber: string;
+      //     routingNumber: string;
+      //   };
+      // }
 
       export interface PaymentRail {
         currency: string;
@@ -2531,15 +2524,7 @@ export namespace API {
 
       export namespace DepositInstruction {
         export type InstructionType =
-          | 'ACH'
-          | 'FEDWIRE'
-          | 'SWIFT'
-          | 'CHAPS'
-          | 'FPS'
-          | 'SEPA'
-          | 'CRYPTO_EXTERNAL'
-          | 'CRYPTO_INTERNAL'
-          | 'SEPA_CT';
+          'ACH' | 'FEDWIRE' | 'SWIFT' | 'CHAPS' | 'FPS' | 'SEPA' | 'CRYPTO_EXTERNAL' | 'CRYPTO_INTERNAL' | 'SEPA_CT';
 
         export interface Address {
           city: string;
@@ -2634,14 +2619,14 @@ export namespace API {
         destination_address: string;
         integration_vendor_id: string;
         vendor_account_id: string;
-        account_details: API.VirtualAccounts.VirtualAccount.AccountDetails;
+        // account_details: API.VirtualAccounts.VirtualAccount.AccountDetails; // deprecated
         virtual_accounts_program: API.VirtualAccounts.Programs.Program;
         deposit_instructions?: API.VirtualAccounts.VirtualAccount.DepositInstruction.DepositInstruction[];
       }
       export interface VirtualAccountDetailItem {
         account_currency: string;
         // account_currency_details: API.Currencies.Currency;
-        account_details: API.VirtualAccounts.VirtualAccount.AccountDetails;
+        // account_details: API.VirtualAccounts.VirtualAccount.AccountDetails; // deprecated
         balance: number;
         crypto_deposit_details: {
           currency_id: string;

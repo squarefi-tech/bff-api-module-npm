@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `API.Orders.V2.GetById.Response` (`orders.v2.getById`) was hand-written and out of sync with the real `/v2/orders/id/{order_uuid}` response, which broke typing the data needed for deposit confirmations:
+  - Removed the fictional `VirtualAccountAccountDetails` interface (`{ rail_account_id, rail_asset_type, ... }`) that the API never returns.
+  - Added `virtual_account.is_deposit_enabled` and `counterparty_destination.internal_wallet_data_id`, both present in real responses.
+  - `request_id` is now optional/nullable (it is `null` on onramp deposits) instead of a required `string`.
+  - Added the top-level fields the endpoint actually returns: `fee`, `fee_currency_id`, `network_fee`, `network_fee_currency_id`, `exchange_rate`, `from_currency_id`, `to_currency_id`, `workflow_run_id`, and `documents`.
+  - `wallet` now reflects the trimmed `{ uuid, tenant_id }` object this endpoint returns instead of the fuller `SimplifiedWallet` (which advertised a `user_id` that is absent here).
+
+### Removed
+
+- Deprecated `API.VirtualAccounts.VirtualAccount.AccountDetails` and the `account_details` field on `VirtualAccountDetails` (order `getById`), `VirtualAccountListItem`, and `VirtualAccountDetailItem`. The shape was unreliable across order flows (e.g. `null` on offramp); use `deposit_instructions` as the canonical source of beneficiary/bank requisites instead.
+
 ## [1.36.11] - 2026-06-30
 
 ## [1.36.10] - 2026-06-26
