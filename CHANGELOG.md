@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Regenerated autogen types for the current backend release: the OTP `request_id` is no longer required when creating or deleting a counterparty destination (the backend dropped it), and invite accept/decline/create/cancel endpoints now document a `409` "operation already in progress" concurrency response. `counterparties.destinations.delete` request type accordingly relaxes `request_id` from required to optional (it derived the requirement from the spec, which would otherwise have collapsed the request type to `never`); existing callers that still pass `request_id` keep working.
+
 ## [1.36.12] - 2026-06-30
 
 ### Fixed

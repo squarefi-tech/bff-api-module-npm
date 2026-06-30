@@ -568,11 +568,11 @@ export namespace API {
       }
 
       export namespace Delete {
-        // request_id (OTP-подтверждение) тянется из спеки; вручную — только переименование id.
-        export type Request = NonNullable<
-          pathsV1Frontend['/frontend/counterparty/destinations/{id}']['delete']['parameters']['query']
-        > & {
+        // Бэк убрал обязательный OTP request_id из квери delete-эндпоинта (раньше тянулся из спеки).
+        // Оставляем его опциональным вручную, чтобы не ломать существующие вызовы.
+        export type Request = {
           counterparty_destination_id: string;
+          request_id?: string;
           wallet_id?: string;
           counterparty_account_id?: string;
         };

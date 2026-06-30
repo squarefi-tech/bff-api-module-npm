@@ -596,11 +596,6 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        /**
-                         * Format: uuid
-                         * @description OTP verification request ID
-                         */
-                        request_id: string;
                         /** Format: uuid */
                         counterparty_account_id: string;
                         /** @enum {string} */
@@ -731,10 +726,7 @@ export interface paths {
         /** Delete destination */
         delete: {
             parameters: {
-                query: {
-                    /** @description OTP verification request ID */
-                    request_id: string;
-                };
+                query?: never;
                 header?: never;
                 path: {
                     id: string;

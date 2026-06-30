@@ -1313,10 +1313,7 @@ export interface paths {
         /** Delete destination */
         delete: {
             parameters: {
-                query: {
-                    /** @description OTP verification request ID */
-                    request_id: string;
-                };
+                query?: never;
                 header?: never;
                 path: {
                     id: string;
@@ -1341,7 +1338,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Access denied or verification failed */
+                /** @description Access denied */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -7696,6 +7693,13 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Operation already in progress — a concurrent accept/decline for this invite code is being processed */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
             };
         };
         delete?: never;
@@ -7773,6 +7777,13 @@ export interface paths {
                 };
                 /** @description Invite not found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Operation already in progress — a concurrent accept/decline for this invite code is being processed */
+                409: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -9876,6 +9887,13 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Operation already in progress — a concurrent invite for the same email is being processed */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
             };
         };
         delete?: never;
@@ -9988,6 +10006,13 @@ export interface paths {
                 };
                 /** @description Invite not found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Operation already in progress — a concurrent cancel for this invite is being processed */
+                409: {
                     headers: {
                         [name: string]: unknown;
                     };
