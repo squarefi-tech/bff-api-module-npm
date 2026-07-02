@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.14] - 2026-07-02
+
 ### Added
 
 - `orders.setComment(...)` for the new `PUT /frontend/orders/{order_id}/comment` endpoint: set or clear a wallet order's comment from the user cabinet (Bearer auth). Body is `{ order_id, wallet_id, comment }`; passing `comment: null` (or an empty string) clears the comment. The order read model (`API.Orders.V2.List.ByWallet.OrderItem`, used by order list and `getById`) now exposes an optional `comment` field so consumers can display the saved comment.
