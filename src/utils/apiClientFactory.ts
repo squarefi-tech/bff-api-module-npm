@@ -157,6 +157,14 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
     return res.data;
   };
 
+  const putRequest = async <T>(url: string, config?: AxiosRequestConfig): Promise<T> => {
+    const { data = {}, ...restConfig } = config ?? {};
+
+    const res = await instance.put(url, data, restConfig);
+
+    return res.data;
+  };
+
   const deleteRequest = async (url: string, config?: AxiosRequestConfig) => {
     const { data = {}, ...restConfig } = config ?? {};
 
@@ -173,7 +181,7 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
     return res.data;
   };
 
-  return { patchRequest, postRequest, deleteRequest, getRequest };
+  return { patchRequest, postRequest, putRequest, deleteRequest, getRequest };
 };
 
 type FetchRequestConfig = {
