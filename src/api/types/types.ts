@@ -1280,6 +1280,18 @@ export namespace API {
     }
   }
   export namespace Orders {
+    export namespace Comment {
+      export type Request = {
+        order_id: string;
+        wallet_id: string;
+        comment?: string | null;
+      };
+      export type Response = {
+        success: boolean;
+        data: API.Orders.V2.List.ByWallet.OrderItem;
+      };
+    }
+
     export namespace Create {
       export namespace ByOrderType {
         export namespace INTERNAL_TRANSFER {
@@ -2145,6 +2157,7 @@ export namespace API {
             sub_account_id?: string | null;
             meta: OrderMeta;
             info?: string | null;
+            comment?: string | null;
           }
 
           export type Response = {

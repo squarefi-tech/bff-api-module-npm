@@ -1,6 +1,6 @@
 import { API } from './types/types';
 
-import { apiClientV1 } from '../utils/apiClientFactory';
+import { apiClientV1, apiClientV1Frontend } from '../utils/apiClientFactory';
 
 import { OrderType } from '../constants';
 
@@ -94,6 +94,12 @@ export const orders = {
         ),
     },
   },
+
+  setComment: ({ order_id, ...data }: API.Orders.Comment.Request): Promise<API.Orders.Comment.Response> =>
+    apiClientV1Frontend.putRequest<API.Orders.Comment.Response>(`/frontend/orders/${order_id}/comment`, {
+      data,
+    }),
+
   v2: {
     calc: ({ signal, ...params }: API.Orders.V2.Calc.Request): Promise<API.Orders.V2.Calc.Response> =>
       apiClientV1.getRequest<API.Orders.V2.Calc.Response>('/v2/orders/calc', {
