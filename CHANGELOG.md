@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.15] - 2026-07-05
+
 ### Changed
 
 - **Realtime wallet-transactions subscription moved from Postgres Changes to Broadcast.** `useSupabaseSubscription` / `useWalletTransactionsSubscription` now join a **private** broadcast channel `wallet-transactions-<walletId>` and listen for the `tx` event, instead of `postgres_changes` on the `transactions` table. This keeps the `transactions` table fully closed to clients (no `anon` grant needed) — the client only receives an empty "something changed" ping and refetches through the BFF. **Backend requirements:** a trigger on `public.transactions` that emits `realtime.send('{}'::jsonb, 'tx', 'wallet-transactions-' || wallet_id, true)`, plus an RLS `SELECT` policy on `realtime.messages` for the connecting role (e.g. `to anon using (topic like 'wallet-transactions-%')`). The Supabase client still connects with the anon/publishable key — no user JWT required.
