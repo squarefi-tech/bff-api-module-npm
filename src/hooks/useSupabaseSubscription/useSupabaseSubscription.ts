@@ -22,8 +22,11 @@ export const useSupabaseSubscription = ({ config, callback, enabled = true, key 
       subscriptionRef.current = null;
     }
 
+    // The channel name IS the broadcast topic — it must match what the DB trigger sends
+    // (`wallet-transactions-<walletId>`). `key` only re-triggers the effect (see deps), it must
+    // never override the topic, otherwise the client subscribes to the wrong channel.
     const subscription = supabaseClient
-      .channel(key || config.channelName, { config: { private: true } })
+      .channel(config.channelName, { config: { private: true } })
       .on('broadcast', { event: config.event }, (payload) => callbackRef.current(payload))
       .subscribe();
 

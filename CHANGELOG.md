@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Realtime broadcast subscription used `key` as the channel name when it was provided, so the topic stopped matching what the DB trigger emits (`wallet-transactions-<walletId>`) and no events arrived (e.g. neo-bank passes `key: pathname`). The channel is now always `config.channelName`; `key` only re-triggers the subscription effect.
+
 ## [1.36.15] - 2026-07-05
 
 ### Changed
