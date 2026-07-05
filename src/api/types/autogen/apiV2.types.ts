@@ -2298,6 +2298,10 @@ export interface components {
             readonly support_text?: string | null;
             readonly support_phone?: string | null;
         };
+        SupportedLocalesEntity: {
+            default: string;
+            supported: string[];
+        };
         SystemConfigDto: {
             /** @enum {string} */
             default_theme_mode: "dark" | "light";
@@ -2317,6 +2321,7 @@ export interface components {
             readonly statement_branding?: components["schemas"]["StatementBrandingEntity"] | null;
             /** @enum {string} */
             kyc_data_provider: "persona" | "sumsub";
+            readonly supported_locales?: components["schemas"]["SupportedLocalesEntity"] | null;
             base_currency: string;
         };
         SystemChainsResponseDto: {

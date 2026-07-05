@@ -44,7 +44,7 @@ export interface paths {
                                     id?: string;
                                     name?: string;
                                     /** @enum {string} */
-                                    role?: "READ_ONLY" | "DEVELOPER" | "PRODUCTION" | "TENANT_ADMIN" | "OWNER";
+                                    role?: "READ_ONLY" | "DEVELOPER" | "PRODUCTION" | "OWNER";
                                     is_enabled?: boolean;
                                     /** Format: date-time */
                                     created_at?: string;
@@ -112,7 +112,7 @@ export interface paths {
                                     id?: string;
                                     name?: string;
                                     /** @enum {string} */
-                                    role?: "READ_ONLY" | "DEVELOPER" | "PRODUCTION" | "TENANT_ADMIN" | "OWNER";
+                                    role?: "READ_ONLY" | "DEVELOPER" | "PRODUCTION" | "OWNER";
                                     /** Format: uuid */
                                     wallet_id?: string;
                                     /** Format: uuid */
@@ -7775,7 +7775,7 @@ export interface components {
              * @description Permission level of the API key
              * @enum {string}
              */
-            role?: "READ_ONLY" | "DEVELOPER" | "PRODUCTION" | "TENANT_ADMIN" | "OWNER";
+            role?: "READ_ONLY" | "DEVELOPER" | "PRODUCTION" | "OWNER";
             /**
              * Format: uuid
              * @description Associated wallet ID
