@@ -1,9 +1,7 @@
 export interface SubscriptionConfig {
   channelName: string;
-  table: string;
-  schema?: string;
-  event?: 'INSERT' | 'UPDATE' | 'DELETE' | '*';
-  filter?: string;
+  /** Broadcast event name emitted by the database trigger (realtime.send). */
+  event: string;
 }
 
 export interface UseSupabaseSubscriptionProps {

@@ -23,17 +23,8 @@ export const useSupabaseSubscription = ({ config, callback, enabled = true, key 
     }
 
     const subscription = supabaseClient
-      .channel(key || config.channelName)
-      .on(
-        'postgres_changes' as any,
-        {
-          event: config.event || '*',
-          schema: config.schema || 'public',
-          table: config.table,
-          ...(config.filter && { filter: config.filter }),
-        },
-        (payload) => callbackRef.current(payload),
-      )
+      .channel(key || config.channelName, { config: { private: true } })
+      .on('broadcast', { event: config.event }, (payload) => callbackRef.current(payload))
       .subscribe();
 
     subscriptionRef.current = subscription;
@@ -44,7 +35,7 @@ export const useSupabaseSubscription = ({ config, callback, enabled = true, key 
         subscriptionRef.current = null;
       }
     };
-  }, [enabled, config.channelName, config.table, config.schema, config.event, config.filter, supabaseClient, key]);
+  }, [enabled, config.channelName, config.event, supabaseClient, key]);
 
   return {
     isConnected: !!subscriptionRef.current,
