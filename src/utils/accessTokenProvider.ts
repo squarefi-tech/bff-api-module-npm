@@ -11,6 +11,7 @@ export type UnauthorizedHandler = () => void;
 
 let accessTokenProvider: AccessTokenProvider | null = null;
 let unauthorizedHandler: UnauthorizedHandler | null = null;
+let inFlightRefresh: Promise<string | null> | null = null;
 
 /**
  * Register an external source of the access token (e.g. Clerk `getToken`).
@@ -35,6 +36,22 @@ export const isExternalAuthMode = () => accessTokenProvider !== null;
 
 export const resolveAccessToken = async (options?: ResolveTokenOptions): Promise<string | null> => {
   if (accessTokenProvider) {
+    // Coalesce concurrent force-refreshes so a burst of 401s triggers a single provider refresh.
+    if (options?.forceRefresh) {
+      if (!inFlightRefresh) {
+        const provider = accessTokenProvider;
+        inFlightRefresh = Promise.resolve()
+          .then(() => provider(options))
+          .then((token) => token ?? null)
+          .catch(() => null)
+          .finally(() => {
+            inFlightRefresh = null;
+          });
+      }
+
+      return inFlightRefresh;
+    }
+
     try {
       return (await accessTokenProvider(options)) ?? null;
     } catch {

@@ -43,7 +43,10 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
   });
 
   instance.interceptors.request.use(async (config) => {
-    const access_token = await resolveAccessToken();
+    // On a retry after 401 (external auth mode), force a fresh token so the retry never reuses the
+    // token the server just rejected, regardless of whether the provider caches it.
+    const isRetry = Boolean(config.context?.isRetryRequest);
+    const access_token = await resolveAccessToken({ forceRefresh: isRetry });
 
     const modifiedHeaders = {
       ...config.headers,
@@ -53,6 +56,8 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
     if (access_token) {
       const authHeader = isBearerToken ? `Bearer ${access_token}` : access_token;
       modifiedHeaders.Authorization = authHeader;
+    } else {
+      delete modifiedHeaders.Authorization;
     }
 
     config.context = {
@@ -79,27 +84,20 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
         const { response, config: failedRequestConfig } = error;
         const isRetryRequest = failedRequestConfig.context?.isRetryRequest;
 
-        // External auth mode (e.g. Clerk): the provider owns token refresh.
-        // Force a fresh token and retry once; if that still fails, sign out.
+        // External auth mode (e.g. Clerk): the provider owns token refresh. Retry once — the request
+        // interceptor force-refreshes the token on the retry — then sign out if it still fails.
         if (isExternalAuthMode()) {
           if (isRetryRequest) {
             triggerUnauthorized();
-            return Promise.reject(response);
+            return Promise.reject(error);
           }
 
-          return resolveAccessToken({ forceRefresh: true }).then((freshToken) => {
-            if (!freshToken) {
-              triggerUnauthorized();
-              return Promise.reject(response);
-            }
+          failedRequestConfig.context = {
+            ...failedRequestConfig.context,
+            isRetryRequest: true,
+          };
 
-            failedRequestConfig.context = {
-              ...failedRequestConfig.context,
-              isRetryRequest: true,
-            };
-
-            return instance(failedRequestConfig);
-          });
+          return instance(failedRequestConfig);
         }
 
         const { refresh_token } = getTokens();
