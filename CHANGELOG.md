@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Step-up reverification handler** (`setOnReverificationRequired`). Consumers register an async handler that the axios client invokes when the backend rejects a request with HTTP `403` and a `two_factor_reverification_required` code — i.e. a sensitive action needs a fresh second-factor verification. The handler drives the provider-specific re-verification (e.g. Clerk) and resolves `true` on success, at which point the SDK retries the original request once (a repeated `403` is not retried again). The error code is the backend's own neutral contract, so the SDK stays provider-agnostic. With no handler registered, such responses propagate unchanged. Exposes `ReverificationHandler` / `ReverificationMeta` types.
+
 ## [1.36.20] - 2026-07-07
 
 ### Removed

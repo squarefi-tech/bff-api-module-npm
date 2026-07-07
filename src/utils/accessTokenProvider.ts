@@ -9,8 +9,19 @@ export type AccessTokenProvider = (options?: ResolveTokenOptions) => Promise<str
 
 export type UnauthorizedHandler = () => void;
 
+/** Details the backend attaches to a step-up (2FA reverification) rejection. */
+export type ReverificationMeta = Record<string, unknown>;
+
+/**
+ * Handler that performs a step-up reverification (e.g. re-entering an already-enrolled second
+ * factor). Resolves `true` once the user has re-verified so the original request can be retried,
+ * or `false` if the reverification was cancelled or failed.
+ */
+export type ReverificationHandler = (meta: ReverificationMeta) => Promise<boolean>;
+
 let accessTokenProvider: AccessTokenProvider | null = null;
 let unauthorizedHandler: UnauthorizedHandler | null = null;
+let reverificationHandler: ReverificationHandler | null = null;
 let inFlightRefresh: Promise<string | null> | null = null;
 
 /**
@@ -29,6 +40,16 @@ export const setAccessTokenProvider = (provider: AccessTokenProvider | null) => 
  */
 export const setOnUnauthorized = (handler: UnauthorizedHandler | null) => {
   unauthorizedHandler = handler;
+};
+
+/**
+ * Register a handler invoked when the backend rejects a request because a step-up 2FA
+ * reverification is required (HTTP `403` with a `two_factor_reverification_required` code). The
+ * handler drives the provider-specific re-verification (e.g. Clerk) and resolves `true` on success
+ * so the API client retries the original request once. Pass `null` to unregister.
+ */
+export const setOnReverificationRequired = (handler: ReverificationHandler | null) => {
+  reverificationHandler = handler;
 };
 
 /** Whether an external token provider is active (Clerk mode). */
@@ -65,3 +86,7 @@ export const resolveAccessToken = async (options?: ResolveTokenOptions): Promise
 export const triggerUnauthorized = () => {
   unauthorizedHandler?.();
 };
+
+/** Invokes the registered reverification handler; resolves `false` when none is registered. */
+export const triggerReverification = (meta: ReverificationMeta): Promise<boolean> =>
+  reverificationHandler ? reverificationHandler(meta) : Promise.resolve(false);
