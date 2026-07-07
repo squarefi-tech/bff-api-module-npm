@@ -9,11 +9,8 @@ export type AccessTokenProvider = (options?: ResolveTokenOptions) => Promise<str
 
 export type UnauthorizedHandler = () => void;
 
-export type TwoFactorRequiredHandler = () => void;
-
 let accessTokenProvider: AccessTokenProvider | null = null;
 let unauthorizedHandler: UnauthorizedHandler | null = null;
-let twoFactorRequiredHandler: TwoFactorRequiredHandler | null = null;
 let inFlightRefresh: Promise<string | null> | null = null;
 
 /**
@@ -32,16 +29,6 @@ export const setAccessTokenProvider = (provider: AccessTokenProvider | null) => 
  */
 export const setOnUnauthorized = (handler: UnauthorizedHandler | null) => {
   unauthorizedHandler = handler;
-};
-
-/**
- * Register a callback invoked when the backend rejects a request because
- * two-factor authentication is required but not yet satisfied (HTTP 403 with a
- * `two_factor_required` error code). The consumer typically redirects the user
- * to the 2FA setup flow. Pass `null` to unregister.
- */
-export const setOnTwoFactorRequired = (handler: TwoFactorRequiredHandler | null) => {
-  twoFactorRequiredHandler = handler;
 };
 
 /** Whether an external token provider is active (Clerk mode). */
@@ -77,8 +64,4 @@ export const resolveAccessToken = async (options?: ResolveTokenOptions): Promise
 
 export const triggerUnauthorized = () => {
   unauthorizedHandler?.();
-};
-
-export const triggerTwoFactorRequired = () => {
-  twoFactorRequiredHandler?.();
 };

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **`setOnTwoFactorRequired` handler** (added in 1.36.19) and its `403 { code: 'two_factor_required' }` detection in the axios and fetch clients. 2FA enforcement is now handled natively through Clerk on the consumer side (session tasks for enrollment, `useReverification` for step-up re-verification via Clerk's native `clerk_error` responses), so the SDK no longer intercepts backend 2FA verdicts. Such `403` responses now propagate to the consumer unchanged. `setAccessTokenProvider` / `setOnUnauthorized` are unaffected.
+
 ## [1.36.19] - 2026-07-07
 
 ### Added

@@ -2,11 +2,9 @@ export { squarefi_bff_api_client } from './api';
 export * from './utils/apiClientFactory';
 export {
   setAccessTokenProvider,
-  setOnTwoFactorRequired,
   setOnUnauthorized,
   type AccessTokenProvider,
   type ResolveTokenOptions,
-  type TwoFactorRequiredHandler,
   type UnauthorizedHandler,
 } from './utils/accessTokenProvider';
 export * from './utils/tokensFactory';
