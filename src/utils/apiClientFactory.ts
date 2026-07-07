@@ -6,6 +6,7 @@ import { telegramSignUpPath, telegramSignInPath, refreshTokenPath } from '../api
 
 import { AppEnviroment, ResponseStatus } from '../constants';
 
+import { isExternalAuthMode, resolveAccessToken, triggerUnauthorized } from './accessTokenProvider';
 import { deleteTokens, getTokens, refreshTokens } from './tokensFactory';
 
 // eslint-disable-next-line no-constant-condition
@@ -41,8 +42,8 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
     timeout: 60000,
   });
 
-  instance.interceptors.request.use((config) => {
-    const { access_token } = getTokens();
+  instance.interceptors.request.use(async (config) => {
+    const access_token = await resolveAccessToken();
 
     const modifiedHeaders = {
       ...config.headers,
@@ -76,8 +77,32 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
         !error?.response?.config.context?.bypassUnauthorizedHandler
       ) {
         const { response, config: failedRequestConfig } = error;
-        const { refresh_token } = getTokens();
         const isRetryRequest = failedRequestConfig.context?.isRetryRequest;
+
+        // External auth mode (e.g. Clerk): the provider owns token refresh. Force a fresh token and
+        // retry once; sign out if there is no fresh token or the retry still fails.
+        if (isExternalAuthMode()) {
+          if (isRetryRequest) {
+            triggerUnauthorized();
+            return Promise.reject(error);
+          }
+
+          return resolveAccessToken({ forceRefresh: true }).then((freshToken) => {
+            if (!freshToken) {
+              triggerUnauthorized();
+              return Promise.reject(error);
+            }
+
+            failedRequestConfig.context = {
+              ...failedRequestConfig.context,
+              isRetryRequest: true,
+            };
+
+            return instance(failedRequestConfig);
+          });
+        }
+
+        const { refresh_token } = getTokens();
 
         const isRefreshTokenRequest = failedRequestConfig.url?.includes(refreshTokenPath);
         const isTelegramSignInRequest = failedRequestConfig.url?.includes(telegramSignInPath);
@@ -209,8 +234,8 @@ export const createFetchApiClient = ({ baseURL, isBearerToken, tenantId }: Creat
     return `${fullUrl}?${searchParams.toString()}`;
   };
 
-  const getHeaders = (additionalHeaders?: Record<string, string>): HeadersInit => {
-    const { access_token } = getTokens();
+  const getHeaders = async (additionalHeaders?: Record<string, string>): Promise<HeadersInit> => {
+    const access_token = await resolveAccessToken();
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'x-tenant-id': tenantId,
@@ -255,7 +280,7 @@ export const createFetchApiClient = ({ baseURL, isBearerToken, tenantId }: Creat
     const fullUrl = buildUrl(url, config?.params);
     const response = await fetch(fullUrl, {
       method: 'GET',
-      headers: getHeaders(config?.headers),
+      headers: await getHeaders(config?.headers),
     });
 
     return handleResponse<T>(response, config?.responseType);
@@ -265,7 +290,7 @@ export const createFetchApiClient = ({ baseURL, isBearerToken, tenantId }: Creat
     const fullUrl = buildUrl(url);
     const response = await fetch(fullUrl, {
       method: 'POST',
-      headers: getHeaders(config?.headers),
+      headers: await getHeaders(config?.headers),
       body: config?.data ? JSON.stringify(config.data) : undefined,
     });
 
@@ -276,7 +301,7 @@ export const createFetchApiClient = ({ baseURL, isBearerToken, tenantId }: Creat
     const fullUrl = buildUrl(url);
     const response = await fetch(fullUrl, {
       method: 'PATCH',
-      headers: getHeaders(config?.headers),
+      headers: await getHeaders(config?.headers),
       body: config?.data ? JSON.stringify(config.data) : undefined,
     });
 
@@ -287,7 +312,7 @@ export const createFetchApiClient = ({ baseURL, isBearerToken, tenantId }: Creat
     const fullUrl = buildUrl(url);
     const response = await fetch(fullUrl, {
       method: 'DELETE',
-      headers: getHeaders(config?.headers),
+      headers: await getHeaders(config?.headers),
       body: config?.data ? JSON.stringify(config.data) : undefined,
     });
 
