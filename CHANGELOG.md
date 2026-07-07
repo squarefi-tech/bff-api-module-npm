@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.18] - 2026-07-07
+
 ### Added
 
 - **External access-token provider** (`setAccessTokenProvider`, `setOnUnauthorized`). Consumers can now supply the bearer token from an external identity provider (e.g. Clerk) instead of the built-in localStorage tokens. When a provider is registered, the axios and fetch API clients read the token from it on every request, and the `401` handler retries once with a force-refreshed token (concurrent force-refreshes are coalesced into one) before invoking the unauthorized handler — bypassing the legacy `/auth/refresh/refresh-token` flow. With no provider set, behavior is unchanged (localStorage + backend refresh).
