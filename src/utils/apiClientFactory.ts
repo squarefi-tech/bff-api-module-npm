@@ -6,10 +6,18 @@ import { telegramSignUpPath, telegramSignInPath, refreshTokenPath } from '../api
 
 import { AppEnviroment, ResponseStatus } from '../constants';
 
-import { isExternalAuthMode, resolveAccessToken, triggerUnauthorized } from './accessTokenProvider';
+import {
+  isExternalAuthMode,
+  resolveAccessToken,
+  triggerTwoFactorRequired,
+  triggerUnauthorized,
+} from './accessTokenProvider';
 import { deleteTokens, getTokens, refreshTokens } from './tokensFactory';
 
 // eslint-disable-next-line no-constant-condition
+
+// Backend signals that a still-unsatisfied 2FA requirement blocks the request with this error code.
+const TWO_FACTOR_REQUIRED_ERROR_CODE = 'two_factor_required';
 
 const apiV1BaseURL = process.env.API_URL ?? 'ENV variable API_URL is not defined';
 const apiV2BaseURL = process.env.API_V2_URL ?? 'ENV variable API_V2_URL is not defined';
@@ -70,6 +78,13 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
     (response) => response,
     (error: AxiosError) => {
       if (typeof window === 'undefined') {
+        return Promise.reject(error);
+      }
+      if (
+        error?.response?.status === ResponseStatus.FORBIDDEN &&
+        error?.response?.data?.code === TWO_FACTOR_REQUIRED_ERROR_CODE
+      ) {
+        triggerTwoFactorRequired();
         return Promise.reject(error);
       }
       if (
@@ -255,6 +270,9 @@ export const createFetchApiClient = ({ baseURL, isBearerToken, tenantId }: Creat
       let errorMessage = `HTTP error! status: ${response.status}`;
       try {
         const errorData = await response.json();
+        if (response.status === ResponseStatus.FORBIDDEN && errorData?.code === TWO_FACTOR_REQUIRED_ERROR_CODE) {
+          triggerTwoFactorRequired();
+        }
         errorMessage = errorData.message || errorData.error || errorMessage;
       } catch {
         // If response is not JSON, use default error message

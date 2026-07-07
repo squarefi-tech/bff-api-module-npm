@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Two-factor-required handler** (`setOnTwoFactorRequired`). Consumers can register a callback that the API clients invoke when the backend rejects a request with HTTP `403` and a `two_factor_required` error code — i.e. the session is authenticated but 2FA is not yet satisfied. This lets the app react to the backend's authoritative 2FA verdict (e.g. redirect to the 2FA setup flow) instead of surfacing a generic error. Detection is wired into both the axios and native-fetch clients; with no handler registered, behavior is unchanged.
+
 ## [1.36.18] - 2026-07-07
 
 ### Added
