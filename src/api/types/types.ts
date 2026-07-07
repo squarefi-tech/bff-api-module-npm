@@ -93,6 +93,11 @@ export namespace API {
         }
       }
     }
+
+    export namespace Register {
+      export type Request = operations['AuthController_register']['requestBody']['content']['application/json'];
+      export type Response = operations['AuthController_register']['responses']['200']['content']['application/json'];
+    }
     // export interface SupabaseGetSessionResponse {
     //   session?: Tokens;
     //   // user?: User;
@@ -2017,7 +2022,15 @@ export namespace API {
 
       export namespace OrderTypes {
         export type PaymentMethod =
-          'ACH' | 'FEDWIRE' | 'SWIFT' | 'SEPA' | 'SEPA_CT' | 'CHAPS' | 'FPS' | 'CRYPTO_EXTERNAL' | 'CRYPTO_INTERNAL';
+          | 'ACH'
+          | 'FEDWIRE'
+          | 'SWIFT'
+          | 'SEPA'
+          | 'SEPA_CT'
+          | 'CHAPS'
+          | 'FPS'
+          | 'CRYPTO_EXTERNAL'
+          | 'CRYPTO_INTERNAL';
 
         export type OrderTypeKycRail = {
           id: string;
@@ -2054,7 +2067,10 @@ export namespace API {
           export type OrderListToUuidFilter = Record<'to_uuid', string[] | string>;
 
           export type OrderListFilter =
-            OrderListStatusFilter | OrderListOrderTypeFilter | OrderListFromUuidFilter | OrderListToUuidFilter;
+            | OrderListStatusFilter
+            | OrderListOrderTypeFilter
+            | OrderListFromUuidFilter
+            | OrderListToUuidFilter;
           export interface Request {
             wallet_uuid: string;
             offset?: number;
@@ -2537,7 +2553,15 @@ export namespace API {
 
       export namespace DepositInstruction {
         export type InstructionType =
-          'ACH' | 'FEDWIRE' | 'SWIFT' | 'CHAPS' | 'FPS' | 'SEPA' | 'CRYPTO_EXTERNAL' | 'CRYPTO_INTERNAL' | 'SEPA_CT';
+          | 'ACH'
+          | 'FEDWIRE'
+          | 'SWIFT'
+          | 'CHAPS'
+          | 'FPS'
+          | 'SEPA'
+          | 'CRYPTO_EXTERNAL'
+          | 'CRYPTO_INTERNAL'
+          | 'SEPA_CT';
 
         export interface Address {
           city: string;

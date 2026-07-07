@@ -53,7 +53,10 @@ export const auth = {
         context: { bypassUnauthorizedHandler: true },
       }),
     telegram: (data: API.Auth.Telegram.Signin.Request): Promise<API.Auth.Telegram.Signin.Response> =>
-      apiClientV2.postRequest<API.Auth.Telegram.Signin.Response>(telegramSignInPath, { data, context: { bypassUnauthorizedHandler: true } }),
+      apiClientV2.postRequest<API.Auth.Telegram.Signin.Response>(telegramSignInPath, {
+        data,
+        context: { bypassUnauthorizedHandler: true },
+      }),
     password: (email: string, password: string, captcha: string): Promise<API.Auth.Tokens> =>
       apiClientV2.postRequest<API.Auth.Tokens>('/auth/sign-in/password/email', {
         data: { email, password },
@@ -75,8 +78,13 @@ export const auth = {
         context: { bypassUnauthorizedHandler: true },
       }),
     telegram: (data: API.Auth.Telegram.Signup.Request): Promise<API.Auth.Telegram.Signup.Response> =>
-      apiClientV2.postRequest<API.Auth.Telegram.Signup.Response>(telegramSignUpPath, { data, context: { bypassUnauthorizedHandler: true } }),
+      apiClientV2.postRequest<API.Auth.Telegram.Signup.Response>(telegramSignUpPath, {
+        data,
+        context: { bypassUnauthorizedHandler: true },
+      }),
   },
+  register: (data: API.Auth.Register.Request = {}): Promise<API.Auth.Register.Response> =>
+    apiClientV2.postRequest<API.Auth.Register.Response>('/auth/register', { data }),
   refresh: {
     refresh_token: (data: API.Auth.RefreshToken.Request): Promise<API.Auth.RefreshToken.Response> =>
       apiClientV2.postRequest<API.Auth.RefreshToken.Response>(refreshTokenPath, { data }),
