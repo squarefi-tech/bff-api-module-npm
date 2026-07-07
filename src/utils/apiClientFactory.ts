@@ -6,10 +6,18 @@ import { telegramSignUpPath, telegramSignInPath, refreshTokenPath } from '../api
 
 import { AppEnviroment, ResponseStatus } from '../constants';
 
-import { isExternalAuthMode, resolveAccessToken, triggerUnauthorized } from './accessTokenProvider';
+import {
+  isExternalAuthMode,
+  resolveAccessToken,
+  triggerReverification,
+  triggerUnauthorized,
+} from './accessTokenProvider';
 import { deleteTokens, getTokens, refreshTokens } from './tokensFactory';
 
 // eslint-disable-next-line no-constant-condition
+
+// Backend signals that a sensitive request needs a fresh second-factor verification with this code.
+const TWO_FACTOR_REVERIFICATION_CODE = 'two_factor_reverification_required';
 
 const apiV1BaseURL = process.env.API_URL ?? 'ENV variable API_URL is not defined';
 const apiV2BaseURL = process.env.API_V2_URL ?? 'ENV variable API_V2_URL is not defined';
@@ -72,6 +80,30 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
       if (typeof window === 'undefined') {
         return Promise.reject(error);
       }
+
+      // Step-up 2FA: the backend rejects a sensitive request until the user re-verifies their
+      // second factor. Hand off to the consumer's reverification handler and retry once on success.
+      if (
+        error?.response?.status === ResponseStatus.FORBIDDEN &&
+        error?.response?.data?.code === TWO_FACTOR_REVERIFICATION_CODE &&
+        !error?.response?.config.context?.isRetryRequest
+      ) {
+        const { response, config: failedRequestConfig } = error;
+
+        return triggerReverification(response.data).then((didReverify) => {
+          if (!didReverify) {
+            return Promise.reject(error);
+          }
+
+          failedRequestConfig.context = {
+            ...failedRequestConfig.context,
+            isRetryRequest: true,
+          };
+
+          return instance(failedRequestConfig);
+        });
+      }
+
       if (
         error?.response?.status === ResponseStatus.UNAUTHORIZED &&
         !error?.response?.config.context?.bypassUnauthorizedHandler
