@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **External access-token provider** (`setAccessTokenProvider`, `setOnUnauthorized`, `resolveAccessToken`, `isExternalAuthMode`, `triggerUnauthorized`). Consumers can now supply the bearer token from an external identity provider (e.g. Clerk) instead of the built-in localStorage tokens. When a provider is registered, the axios and fetch API clients read the token from it on every request, and the `401` handler refreshes once via the provider (`forceRefresh`) and retries before invoking the unauthorized handler — bypassing the legacy `/auth/refresh/refresh-token` flow. With no provider set, behavior is unchanged (localStorage + backend refresh).
+
 ## [1.36.17] - 2026-07-05
+
+### Changed
+
+- Regenerated OpenAPI types for the current backend release: updated the role enum in the V1 external types and added the supported-locales entity in the V2 types.
 
 ## [1.36.16] - 2026-07-05
 

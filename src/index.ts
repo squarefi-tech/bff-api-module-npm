@@ -1,5 +1,6 @@
 export { squarefi_bff_api_client } from './api';
 export * from './utils/apiClientFactory';
+export * from './utils/accessTokenProvider';
 export * from './utils/tokensFactory';
 export * from './utils/fileStorage';
 export * from './constants';
