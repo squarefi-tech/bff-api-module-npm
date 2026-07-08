@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`bypassUnauthorizedHandler` option on `user.userData.get`.** `get` now accepts an optional `GetUserDataOptions` argument; when `bypassUnauthorizedHandler` is `true`, that single request opts out of the client's `401` recovery (token force-refresh, retry, and the `onUnauthorized` sign-out) and rejects to the caller instead. This lets the consumer probe whether the backend `user_data` record exists: a freshly authenticated account (e.g. after a Clerk sign-up) has no record yet and returns `401`, which must trigger provisioning via `POST /auth/register` rather than signing the user out. Exposes the `GetUserDataOptions` type. Existing `get()` calls are unaffected (the argument is optional and defaults to the previous behavior).
+
 ## [1.36.22] - 2026-07-07
 
 ## [1.36.21] - 2026-07-07
