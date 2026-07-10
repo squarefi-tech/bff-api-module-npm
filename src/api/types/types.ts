@@ -1578,7 +1578,7 @@ export namespace API {
       };
       export interface OrderInfo {
         id: string;
-        transaction_type: string;
+        transaction_type: string | null;
         description: string | null;
         direction: 'deposit' | 'withdrawal';
         is_internal: boolean;
@@ -2018,7 +2018,7 @@ export namespace API {
         };
         export interface OrderInfo {
           id: OrderType | string;
-          transaction_type: string;
+          transaction_type: string | null;
           description: string | null;
           direction: string | null;
           is_internal: boolean;
