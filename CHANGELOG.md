@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`orders.frontend.*` surface** wrapping the two-stage `/frontend/orders/*` API. Adds order creation (`orders.frontend.create.withdrawal.{crypto,internal,wire,ach,sepa,swift,chaps,fps,card}` and `orders.frontend.create.exchange`) plus the two-stage lifecycle actions `orders.frontend.approve` and `orders.frontend.cancel`, all returning the shared `{ success, data, message }` order envelope. Request types alias the autogen frontend schemas (`FrontendCryptoTransferRequest`, `FrontendL2FOrderRequest`, `FrontendExchangeOrderRequest`) or are derived from the OpenAPI paths for the inline-body routes (`withdrawal/internal`, `withdrawal/card`). Exposes the `API.Orders.Frontend.*` types.
+- **Frontend order read helpers** `orders.frontend.calc`, `orders.frontend.getById`, `orders.frontend.getByUuid`, `orders.frontend.list.byWallet`, `orders.frontend.list.csv.getByWalletUuid`, `orders.frontend.types.list`, and `orders.frontend.types.getById`. Request params are typed from the OpenAPI paths; `list`/`csv` JSON-stringify the `filters` array like `orders.v2.list.byWallet`. The backend OpenAPI spec does not type these read responses, so they reuse the closest existing shapes (v1 calc, v2 list, frontend `Order`, order-types).
+- The pre-existing top-level `orders.setComment` is unchanged.
+
 ## [1.36.23] - 2026-07-08
 
 ### Added
