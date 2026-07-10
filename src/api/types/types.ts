@@ -2381,14 +2381,14 @@ export namespace API {
 
       export namespace GetById {
         export type Request = pathsV1Frontend['/frontend/orders/id/{order_id}']['get']['parameters']['path'];
-        // The OpenAPI spec leaves this 200 body untyped (content: never); reuse the frontend Order schema.
-        export type Response = componentsV1Frontend['schemas']['Order'];
+        export type Response =
+          pathsV1Frontend['/frontend/orders/id/{order_id}']['get']['responses'][200]['content']['application/json'];
       }
 
       export namespace GetByUuid {
         export type Request = pathsV1Frontend['/frontend/orders/uuid/{order_uuid}']['get']['parameters']['path'];
-        // The OpenAPI spec leaves this 200 body untyped (content: never); reuse the frontend Order schema.
-        export type Response = componentsV1Frontend['schemas']['Order'];
+        export type Response =
+          pathsV1Frontend['/frontend/orders/uuid/{order_uuid}']['get']['responses'][200]['content']['application/json'];
       }
 
       export namespace List {
@@ -2404,8 +2404,8 @@ export namespace API {
             date_to?: string;
             show_low_balance?: 'true' | 'false';
           }
-          // The OpenAPI spec leaves this 200 body untyped (content: never); reuse the v2 list shape.
-          export type Response = API.Orders.V2.List.ByWallet.Response;
+          export type Response =
+            pathsV1Frontend['/frontend/orders/wallet/{wallet_uuid}']['get']['responses'][200]['content']['application/json'];
         }
 
         export namespace Csv {
