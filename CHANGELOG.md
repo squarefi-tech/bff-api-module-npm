@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `API.Orders.V2.OrderTypes.OrderInfo.transaction_type` (and the nested `Orders.V2` `OrderTypes.OrderInfo`) is now typed `string | null` instead of `string`. The order-types directory endpoint returns `transaction_type: null` for non-directional types (`EXCHANGE_*`, `AUTO_CONVERT_CRYPTO`, `CARD_ISSUING_FEE`, `REFUND_CARD_*`, `TRANSFER_INTERNAL`, `OMNIBUS_INTERNAL_TRANSFER`); the previous non-null type hid this, so consumers calling `.transaction_type.includes(...)` without a guard crashed at runtime. The type now forces a null check.
+
 ## [1.36.24] - 2026-07-10
 
 ### Added
@@ -50,7 +54,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **External access-token provider** (`setAccessTokenProvider`, `setOnUnauthorized`). Consumers can now supply the bearer token from an external identity provider (e.g. Clerk) instead of the built-in localStorage tokens. When a provider is registered, the axios and fetch API clients read the token from it on every request, and the `401` handler retries once with a force-refreshed token (concurrent force-refreshes are coalesced into one) before invoking the unauthorized handler — bypassing the legacy `/auth/refresh/refresh-token` flow. With no provider set, behavior is unchanged (localStorage + backend refresh).
-
 ## [1.36.17] - 2026-07-05
 
 ### Changed
