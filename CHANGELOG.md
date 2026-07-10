@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.25] - 2026-07-10
+
 ### Fixed
 
 - `API.Orders.V2.OrderTypes.OrderInfo.transaction_type` (and the nested `Orders.V2` `OrderTypes.OrderInfo`) is now typed `string | null` instead of `string`. The order-types directory endpoint returns `transaction_type: null` for non-directional types (`EXCHANGE_*`, `AUTO_CONVERT_CRYPTO`, `CARD_ISSUING_FEE`, `REFUND_CARD_*`, `TRANSFER_INTERNAL`, `OMNIBUS_INTERNAL_TRANSFER`); the previous non-null type hid this, so consumers calling `.transaction_type.includes(...)` without a guard crashed at runtime. The type now forces a null check.
