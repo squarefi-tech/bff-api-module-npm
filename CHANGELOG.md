@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.24] - 2026-07-10
+
 ### Added
 
 - **`orders.frontend.*` surface** wrapping the two-stage `/frontend/orders/*` API. Adds order creation (`orders.frontend.create.withdrawal.{crypto,internal,wire,ach,sepa,swift,chaps,fps,card}` and `orders.frontend.create.exchange`) plus the two-stage lifecycle actions `orders.frontend.approve` and `orders.frontend.cancel`, all returning the shared `{ success, data, message }` order envelope. Request types alias the autogen frontend schemas (`FrontendCryptoTransferRequest`, `FrontendL2FOrderRequest`, `FrontendExchangeOrderRequest`) or are derived from the OpenAPI paths for the inline-body routes (`withdrawal/internal`, `withdrawal/card`). Exposes the `API.Orders.Frontend.*` types.
