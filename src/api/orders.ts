@@ -95,11 +95,6 @@ export const orders = {
     },
   },
 
-  setComment: ({ order_id, ...data }: API.Orders.Comment.Request): Promise<API.Orders.Comment.Response> =>
-    apiClientV1Frontend.putRequest<API.Orders.Comment.Response>(`/frontend/orders/${order_id}/comment`, {
-      data,
-    }),
-
   v2: {
     calc: ({ signal, ...params }: API.Orders.V2.Calc.Request): Promise<API.Orders.V2.Calc.Response> =>
       apiClientV1.getRequest<API.Orders.V2.Calc.Response>('/v2/orders/calc', {
@@ -449,6 +444,14 @@ export const orders = {
 
     cancel: ({ order_id, ...data }: API.Orders.Frontend.Cancel.Request): Promise<API.Orders.Frontend.Cancel.Response> =>
       apiClientV1Frontend.postRequest<API.Orders.Frontend.Cancel.Response>(`/frontend/orders/${order_id}/cancel`, {
+        data,
+      }),
+
+    setComment: ({
+      order_id,
+      ...data
+    }: API.Orders.Frontend.Comment.Request): Promise<API.Orders.Frontend.Comment.Response> =>
+      apiClientV1Frontend.putRequest<API.Orders.Frontend.Comment.Response>(`/frontend/orders/${order_id}/comment`, {
         data,
       }),
 
