@@ -1799,7 +1799,12 @@ export interface paths {
         };
         /**
          * Initialize Persona KYC session for a wallet
-         * @description Creates a Persona inquiry via the Auth API for the specified wallet
+         * @deprecated
+         * @description **Deprecated** — use the provider-agnostic
+         *     `POST /admin/kyc_verification/{wallet_id}/init` instead. This endpoint is
+         *     Persona-only and calls a deprecated upstream method.
+         *
+         *     Creates a Persona inquiry via the Auth API for the specified wallet
          *     and returns the hosted Persona URL.
          *
          */
@@ -1909,7 +1914,12 @@ export interface paths {
         };
         /**
          * Resume Persona KYC session for a wallet
-         * @description Resumes an existing Persona inquiry via the Auth API for the specified wallet
+         * @deprecated
+         * @description **Deprecated** — use the provider-agnostic
+         *     `POST /admin/kyc_verification/{wallet_id}/resume` instead. This endpoint is
+         *     Persona-only and calls a deprecated upstream method.
+         *
+         *     Resumes an existing Persona inquiry via the Auth API for the specified wallet
          *     and returns the hosted Persona URL.
          *
          */
@@ -2004,6 +2014,261 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/kyc_verification/{wallet_id}/init": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Initialize KYC verification for a wallet
+         * @description Starts a provider-agnostic KYC data-collection flow for the wallet. The
+         *     KYC provider (Persona, Sumsub, …) is resolved internally per tenant — the
+         *     caller does not choose it. Returns the provider verification id plus an
+         *     optional short-lived SDK token and provider-specific payload the client
+         *     uses to launch the verification.
+         *
+         *     Provider-agnostic replacement for the deprecated
+         *     `POST/GET /admin/kyc_persona/{wallet_id}/init`.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Wallet UUID */
+                    wallet_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description KYC entity type
+                         * @enum {string}
+                         */
+                        type: "individual" | "business";
+                    };
+                };
+            };
+            responses: {
+                /** @description KYC verification initialized */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                /**
+                                 * Format: uuid
+                                 * @description Echo of the wallet from the path
+                                 */
+                                wallet_id: string;
+                                /**
+                                 * @description Provider that handled the flow (e.g. persona, sumsub)
+                                 * @example persona
+                                 */
+                                provider_type: string;
+                                /**
+                                 * @description Provider verification id — Persona: inquiryId, Sumsub: applicantId
+                                 * @example inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
+                                 */
+                                verification_id: string;
+                                /** @description Short-lived SDK/session token when the provider mints one — otherwise null */
+                                verification_token?: string | null;
+                                /** @description Provider-specific payload forwarded to the client SDK */
+                                provider_data?: {
+                                    [key: string]: unknown;
+                                } | null;
+                            };
+                        };
+                    };
+                };
+                /** @description Validation error (`type` missing or not in [individual, business]) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Missing or invalid tenant API key */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Wallet does not belong to tenant or insufficient admin role */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Wallet not found upstream */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description KYC provider BFF unavailable or returned an error */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description KYC admin BFF is not configured for this deployment */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/kyc_verification/{wallet_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resume KYC verification for a wallet
+         * @description Resumes an existing provider-agnostic KYC data-collection flow for the
+         *     wallet. The provider is resolved internally per tenant. `verification_ref`
+         *     is the provider reference returned by init (Persona: `inquiry_id`,
+         *     Sumsub: `applicant_id`).
+         *
+         *     Provider-agnostic replacement for the deprecated
+         *     `POST/GET /admin/kyc_persona/{wallet_id}/resume`.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Wallet UUID */
+                    wallet_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Provider verification reference (Persona: inquiry_id, Sumsub: applicant_id)
+                         * @example inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
+                         */
+                        verification_ref: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description KYC verification resumed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                /**
+                                 * Format: uuid
+                                 * @description Echo of the wallet from the path
+                                 */
+                                wallet_id: string;
+                                /**
+                                 * @description Provider that handled the flow (e.g. persona, sumsub)
+                                 * @example persona
+                                 */
+                                provider_type: string;
+                                /**
+                                 * @description Provider verification id — Persona: inquiryId, Sumsub: applicantId
+                                 * @example inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
+                                 */
+                                verification_id: string;
+                                /** @description Short-lived SDK/session token — Persona: sessionToken, Sumsub: accessToken — otherwise null */
+                                verification_token?: string | null;
+                                /** @description Provider-specific payload forwarded to the client SDK */
+                                provider_data?: {
+                                    [key: string]: unknown;
+                                } | null;
+                            };
+                        };
+                    };
+                };
+                /** @description Validation error (`verification_ref` missing or empty) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Missing or invalid tenant API key */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Wallet does not belong to tenant or insufficient admin role */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No such verification to resume upstream */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description KYC provider BFF unavailable or returned an error */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description KYC admin BFF is not configured for this deployment */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -3273,8 +3538,8 @@ export interface paths {
         put?: never;
         /**
          * Approve order
-         * @description Transitions the order from PENDING to PROCESSING and triggers the order execution pipeline.
-         *     Only orders with status PENDING can be approved.
+         * @description Transitions the order from NEW to PROCESSING and triggers the order execution pipeline.
+         *     Only orders with status NEW can be approved.
          *
          */
         post: {
@@ -3337,7 +3602,7 @@ export interface paths {
         put?: never;
         /**
          * Cancel order
-         * @description Cancels an order. Orders in PENDING or FAILED status can be canceled.
+         * @description Cancels an order. Orders in NEW or FAILED status can be canceled.
          *     Optionally provide a cancellation reason.
          *
          */

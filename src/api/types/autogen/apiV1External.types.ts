@@ -74,96 +74,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/access/info": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get API key
-         * @description Returns information about the currently authenticated API key.
-         *
-         *     **Authentication**: x-api-key header required
-         *
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description API key information retrieved successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            data?: {
-                                key?: {
-                                    /** Format: uuid */
-                                    id?: string;
-                                    name?: string;
-                                    /** @enum {string} */
-                                    role?: "READ_ONLY" | "DEVELOPER" | "PRODUCTION" | "OWNER";
-                                    /** Format: uuid */
-                                    wallet_id?: string;
-                                    /** Format: uuid */
-                                    user_id?: string;
-                                    is_enabled?: boolean;
-                                    /** Format: date-time */
-                                    created_at?: string;
-                                    /** Format: date-time */
-                                    updated_at?: string;
-                                };
-                                wallet?: {
-                                    /** Format: uuid */
-                                    uuid?: string;
-                                    /** Format: uuid */
-                                    user_id?: string;
-                                    /** Format: uuid */
-                                    tenant_id?: string;
-                                    /** Format: date-time */
-                                    created_at?: string;
-                                };
-                                /** @description Detailed permissions based on role */
-                                permissions?: {
-                                    can_read?: boolean;
-                                    can_write?: boolean;
-                                    can_create_orders?: boolean;
-                                    can_manage_cards?: boolean;
-                                    can_manage_keys?: boolean;
-                                };
-                            };
-                        };
-                    };
-                };
-                /** @description Invalid or missing API key */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ApiErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/access/webhooks": {
         parameters: {
             query?: never;
@@ -4309,8 +4219,8 @@ export interface paths {
         put?: never;
         /**
          * Approve order
-         * @description Transitions the order from PENDING to PROCESSING and triggers the order execution pipeline.
-         *     Only orders with status PENDING can be approved.
+         * @description Transitions the order from NEW to PROCESSING and triggers the order execution pipeline.
+         *     Only orders with status NEW can be approved.
          *
          */
         post: {
@@ -4347,7 +4257,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Invalid status transition (order is not in PENDING status) */
+                /** @description Invalid status transition (order is not in NEW status) */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -4383,7 +4293,7 @@ export interface paths {
         put?: never;
         /**
          * Cancel order
-         * @description Cancels an order. Orders in PENDING or FAILED status can be canceled.
+         * @description Cancels an order. Orders in NEW or FAILED status can be canceled.
          *     Optionally provide a cancellation reason.
          *
          */

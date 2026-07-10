@@ -1285,18 +1285,6 @@ export namespace API {
     }
   }
   export namespace Orders {
-    export namespace Comment {
-      export type Request = {
-        order_id: string;
-        wallet_id: string;
-        comment?: string | null;
-      };
-      export type Response = {
-        success: boolean;
-        data: API.Orders.V2.List.ByWallet.OrderItem;
-      };
-    }
-
     export namespace Create {
       export namespace ByOrderType {
         export namespace INTERNAL_TRANSFER {
@@ -2022,15 +2010,7 @@ export namespace API {
 
       export namespace OrderTypes {
         export type PaymentMethod =
-          | 'ACH'
-          | 'FEDWIRE'
-          | 'SWIFT'
-          | 'SEPA'
-          | 'SEPA_CT'
-          | 'CHAPS'
-          | 'FPS'
-          | 'CRYPTO_EXTERNAL'
-          | 'CRYPTO_INTERNAL';
+          'ACH' | 'FEDWIRE' | 'SWIFT' | 'SEPA' | 'SEPA_CT' | 'CHAPS' | 'FPS' | 'CRYPTO_EXTERNAL' | 'CRYPTO_INTERNAL';
 
         export type OrderTypeKycRail = {
           id: string;
@@ -2067,10 +2047,7 @@ export namespace API {
           export type OrderListToUuidFilter = Record<'to_uuid', string[] | string>;
 
           export type OrderListFilter =
-            | OrderListStatusFilter
-            | OrderListOrderTypeFilter
-            | OrderListFromUuidFilter
-            | OrderListToUuidFilter;
+            OrderListStatusFilter | OrderListOrderTypeFilter | OrderListFromUuidFilter | OrderListToUuidFilter;
           export interface Request {
             wallet_uuid: string;
             offset?: number;
@@ -2301,6 +2278,158 @@ export namespace API {
         };
 
         export type Response = OrderDetails;
+      }
+    }
+
+    export namespace Frontend {
+      // Shared success envelope returned by every create/approve/cancel frontend order endpoint.
+      export type OrderEnvelope = {
+        success?: boolean;
+        data?: componentsV1Frontend['schemas']['Order'];
+        message?: string;
+      };
+
+      export namespace Create {
+        export namespace Withdrawal {
+          export namespace Crypto {
+            export type Request = componentsV1Frontend['schemas']['FrontendCryptoTransferRequest'];
+            export type Response = OrderEnvelope;
+          }
+
+          export namespace Internal {
+            export type Request =
+              pathsV1Frontend['/frontend/orders/withdrawal/internal']['post']['requestBody']['content']['application/json'];
+            export type Response = OrderEnvelope;
+          }
+
+          export namespace Wire {
+            export type Request = componentsV1Frontend['schemas']['FrontendL2FOrderRequest'];
+            export type Response = OrderEnvelope;
+          }
+
+          export namespace Ach {
+            export type Request = componentsV1Frontend['schemas']['FrontendL2FOrderRequest'];
+            export type Response = OrderEnvelope;
+          }
+
+          export namespace Sepa {
+            export type Request = componentsV1Frontend['schemas']['FrontendL2FOrderRequest'];
+            export type Response = OrderEnvelope;
+          }
+
+          export namespace Swift {
+            export type Request = componentsV1Frontend['schemas']['FrontendL2FOrderRequest'];
+            export type Response = OrderEnvelope;
+          }
+
+          export namespace Chaps {
+            export type Request = componentsV1Frontend['schemas']['FrontendL2FOrderRequest'];
+            export type Response = OrderEnvelope;
+          }
+
+          export namespace Fps {
+            export type Request = componentsV1Frontend['schemas']['FrontendL2FOrderRequest'];
+            export type Response = OrderEnvelope;
+          }
+
+          export namespace Card {
+            export type Request =
+              pathsV1Frontend['/frontend/orders/withdrawal/card']['post']['requestBody']['content']['application/json'];
+            export type Response = OrderEnvelope;
+          }
+        }
+
+        export namespace Exchange {
+          export type Request = componentsV1Frontend['schemas']['FrontendExchangeOrderRequest'];
+          export type Response = OrderEnvelope;
+        }
+      }
+
+      export namespace Approve {
+        export type Request = {
+          order_id: string;
+        } & pathsV1Frontend['/frontend/orders/{order_id}/approve']['post']['requestBody']['content']['application/json'];
+        export type Response = OrderEnvelope;
+      }
+
+      export namespace Cancel {
+        export type Request = {
+          order_id: string;
+        } & pathsV1Frontend['/frontend/orders/{order_id}/cancel']['post']['requestBody']['content']['application/json'];
+        export type Response = OrderEnvelope;
+      }
+
+      export namespace Comment {
+        export type Request = {
+          order_id: string;
+          wallet_id: string;
+          comment?: string | null;
+        };
+        export type Response = {
+          success: boolean;
+          data: API.Orders.V2.List.ByWallet.OrderItem;
+        };
+      }
+
+      export namespace Calc {
+        export type Request = pathsV1Frontend['/frontend/orders/calc']['get']['parameters']['query'] & {
+          signal?: AbortSignal;
+        };
+        // The OpenAPI spec leaves this 200 body untyped (content: never); reuse the v1 calc shape.
+        export type Response = API.Orders.Calc.Response;
+      }
+
+      export namespace GetById {
+        export type Request = pathsV1Frontend['/frontend/orders/id/{order_id}']['get']['parameters']['path'];
+        export type Response =
+          pathsV1Frontend['/frontend/orders/id/{order_id}']['get']['responses'][200]['content']['application/json'];
+      }
+
+      export namespace GetByUuid {
+        export type Request = pathsV1Frontend['/frontend/orders/uuid/{order_uuid}']['get']['parameters']['path'];
+        export type Response =
+          pathsV1Frontend['/frontend/orders/uuid/{order_uuid}']['get']['responses'][200]['content']['application/json'];
+      }
+
+      export namespace List {
+        export namespace ByWallet {
+          export interface Request {
+            wallet_uuid: string;
+            offset?: number;
+            limit?: number;
+            sort_by?: string;
+            sort_order?: 'asc' | 'desc';
+            filters?: API.Orders.V2.List.ByWallet.OrderListFilter[];
+            date_from?: string;
+            date_to?: string;
+            show_low_balance?: 'true' | 'false';
+          }
+          export type Response =
+            pathsV1Frontend['/frontend/orders/wallet/{wallet_uuid}']['get']['responses'][200]['content']['application/json'];
+        }
+
+        export namespace Csv {
+          export interface Request {
+            wallet_uuid: string;
+            filters?: API.Orders.V2.List.ByWallet.OrderListFilter[];
+            date_from?: string;
+            date_to?: string;
+            show_low_balance?: 'true' | 'false';
+          }
+          export type Response = string;
+        }
+      }
+
+      export namespace Types {
+        export namespace List {
+          // The OpenAPI spec leaves this 200 body untyped (content: never); reuse the order-types shape.
+          export type Response = API.Orders.OrderTypes.List.Response;
+        }
+
+        export namespace GetById {
+          export type Request = pathsV1Frontend['/frontend/orders/types/{id}']['get']['parameters']['path'];
+          export type Response = API.Orders.OrderTypes.OrderInfo;
+        }
       }
     }
   }
@@ -2553,15 +2682,7 @@ export namespace API {
 
       export namespace DepositInstruction {
         export type InstructionType =
-          | 'ACH'
-          | 'FEDWIRE'
-          | 'SWIFT'
-          | 'CHAPS'
-          | 'FPS'
-          | 'SEPA'
-          | 'CRYPTO_EXTERNAL'
-          | 'CRYPTO_INTERNAL'
-          | 'SEPA_CT';
+          'ACH' | 'FEDWIRE' | 'SWIFT' | 'CHAPS' | 'FPS' | 'SEPA' | 'CRYPTO_EXTERNAL' | 'CRYPTO_INTERNAL' | 'SEPA_CT';
 
         export interface Address {
           city: string;

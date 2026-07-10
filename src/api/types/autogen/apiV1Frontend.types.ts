@@ -5695,7 +5695,7 @@ export interface paths {
         put?: never;
         /**
          * Approve an order
-         * @description Moves a PENDING order to PROCESSING, triggering its workflow. Validates the order's request_id via OTP.
+         * @description Moves a NEW order to PROCESSING, triggering its workflow. Validates the order's request_id via OTP.
          */
         post: {
             parameters: {
@@ -5756,7 +5756,7 @@ export interface paths {
         put?: never;
         /**
          * Cancel an order
-         * @description Cancels a PENDING/FAILED order, cancels its workflow run, and refunds the blocked funds.
+         * @description Cancels a NEW/FAILED order, cancels its workflow run, and refunds the blocked funds.
          */
         post: {
             parameters: {
@@ -6086,7 +6086,14 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["Order"][];
+                            pagination: components["schemas"]["PaginationResponse"];
+                        };
+                    };
                 };
                 /** @description Access denied to wallet */
                 403: {
@@ -6195,7 +6202,13 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["OrderDetail"];
+                        };
+                    };
                 };
                 /** @description Order not found */
                 404: {
@@ -6244,7 +6257,13 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["OrderDetail"];
+                        };
+                    };
                 };
                 /** @description Order not found */
                 404: {
@@ -10662,6 +10681,19 @@ export interface components {
             created_at?: string;
             /** Format: date-time */
             updated_at?: string | null;
+        };
+        /** @description Single-order read shape (GET /orders/id/{order_id} and GET /orders/uuid/{order_uuid}) — the base Order plus context objects hydrated from its `meta` references. */
+        OrderDetail: components["schemas"]["Order"] & {
+            /** @description Virtual account referenced by the order (fiat off-ramp/on-ramp), hydrated with currency and vendor details. Absent/null when the order has no `meta.virtual_account_id`. */
+            virtual_account?: components["schemas"]["VirtualAccount"] | null;
+            /** @description Raw `counterparty_destinations` row with embedded `counterparty_account`, `external_banking_data` and `external_crypto_data`. Present when the order has a `meta.counterparty_destination_id`; absent otherwise. */
+            counterparty_destination?: {
+                [key: string]: unknown;
+            } | null;
+            /** @description Documents attached to the order; empty array when none (or when document loading failed). */
+            documents?: {
+                [key: string]: unknown;
+            }[];
         };
         FrontendCryptoTransferRequest: {
             /**

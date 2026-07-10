@@ -95,11 +95,6 @@ export const orders = {
     },
   },
 
-  setComment: ({ order_id, ...data }: API.Orders.Comment.Request): Promise<API.Orders.Comment.Response> =>
-    apiClientV1Frontend.putRequest<API.Orders.Comment.Response>(`/frontend/orders/${order_id}/comment`, {
-      data,
-    }),
-
   v2: {
     calc: ({ signal, ...params }: API.Orders.V2.Calc.Request): Promise<API.Orders.V2.Calc.Response> =>
       apiClientV1.getRequest<API.Orders.V2.Calc.Response>('/v2/orders/calc', {
@@ -353,5 +348,168 @@ export const orders = {
 
     getById: ({ order_uuid }: API.Orders.V2.GetById.Request): Promise<API.Orders.V2.GetById.Response> =>
       apiClientV1.getRequest<API.Orders.V2.GetById.Response>(`/v2/orders/id/${order_uuid}`),
+  },
+
+  frontend: {
+    create: {
+      withdrawal: {
+        crypto: (
+          data: API.Orders.Frontend.Create.Withdrawal.Crypto.Request,
+        ): Promise<API.Orders.Frontend.Create.Withdrawal.Crypto.Response> =>
+          apiClientV1Frontend.postRequest<API.Orders.Frontend.Create.Withdrawal.Crypto.Response>(
+            '/frontend/orders/withdrawal/crypto',
+            { data },
+          ),
+
+        internal: (
+          data: API.Orders.Frontend.Create.Withdrawal.Internal.Request,
+        ): Promise<API.Orders.Frontend.Create.Withdrawal.Internal.Response> =>
+          apiClientV1Frontend.postRequest<API.Orders.Frontend.Create.Withdrawal.Internal.Response>(
+            '/frontend/orders/withdrawal/internal',
+            { data },
+          ),
+
+        wire: (
+          data: API.Orders.Frontend.Create.Withdrawal.Wire.Request,
+        ): Promise<API.Orders.Frontend.Create.Withdrawal.Wire.Response> =>
+          apiClientV1Frontend.postRequest<API.Orders.Frontend.Create.Withdrawal.Wire.Response>(
+            '/frontend/orders/withdrawal/wire',
+            { data },
+          ),
+
+        ach: (
+          data: API.Orders.Frontend.Create.Withdrawal.Ach.Request,
+        ): Promise<API.Orders.Frontend.Create.Withdrawal.Ach.Response> =>
+          apiClientV1Frontend.postRequest<API.Orders.Frontend.Create.Withdrawal.Ach.Response>(
+            '/frontend/orders/withdrawal/ach',
+            { data },
+          ),
+
+        sepa: (
+          data: API.Orders.Frontend.Create.Withdrawal.Sepa.Request,
+        ): Promise<API.Orders.Frontend.Create.Withdrawal.Sepa.Response> =>
+          apiClientV1Frontend.postRequest<API.Orders.Frontend.Create.Withdrawal.Sepa.Response>(
+            '/frontend/orders/withdrawal/sepa',
+            { data },
+          ),
+
+        swift: (
+          data: API.Orders.Frontend.Create.Withdrawal.Swift.Request,
+        ): Promise<API.Orders.Frontend.Create.Withdrawal.Swift.Response> =>
+          apiClientV1Frontend.postRequest<API.Orders.Frontend.Create.Withdrawal.Swift.Response>(
+            '/frontend/orders/withdrawal/swift',
+            { data },
+          ),
+
+        chaps: (
+          data: API.Orders.Frontend.Create.Withdrawal.Chaps.Request,
+        ): Promise<API.Orders.Frontend.Create.Withdrawal.Chaps.Response> =>
+          apiClientV1Frontend.postRequest<API.Orders.Frontend.Create.Withdrawal.Chaps.Response>(
+            '/frontend/orders/withdrawal/chaps',
+            { data },
+          ),
+
+        fps: (
+          data: API.Orders.Frontend.Create.Withdrawal.Fps.Request,
+        ): Promise<API.Orders.Frontend.Create.Withdrawal.Fps.Response> =>
+          apiClientV1Frontend.postRequest<API.Orders.Frontend.Create.Withdrawal.Fps.Response>(
+            '/frontend/orders/withdrawal/fps',
+            { data },
+          ),
+
+        card: (
+          data: API.Orders.Frontend.Create.Withdrawal.Card.Request,
+        ): Promise<API.Orders.Frontend.Create.Withdrawal.Card.Response> =>
+          apiClientV1Frontend.postRequest<API.Orders.Frontend.Create.Withdrawal.Card.Response>(
+            '/frontend/orders/withdrawal/card',
+            { data },
+          ),
+      },
+
+      exchange: (
+        data: API.Orders.Frontend.Create.Exchange.Request,
+      ): Promise<API.Orders.Frontend.Create.Exchange.Response> =>
+        apiClientV1Frontend.postRequest<API.Orders.Frontend.Create.Exchange.Response>('/frontend/orders/exchange', {
+          data,
+        }),
+    },
+
+    approve: ({
+      order_id,
+      ...data
+    }: API.Orders.Frontend.Approve.Request): Promise<API.Orders.Frontend.Approve.Response> =>
+      apiClientV1Frontend.postRequest<API.Orders.Frontend.Approve.Response>(`/frontend/orders/${order_id}/approve`, {
+        data,
+      }),
+
+    cancel: ({ order_id, ...data }: API.Orders.Frontend.Cancel.Request): Promise<API.Orders.Frontend.Cancel.Response> =>
+      apiClientV1Frontend.postRequest<API.Orders.Frontend.Cancel.Response>(`/frontend/orders/${order_id}/cancel`, {
+        data,
+      }),
+
+    setComment: ({
+      order_id,
+      ...data
+    }: API.Orders.Frontend.Comment.Request): Promise<API.Orders.Frontend.Comment.Response> =>
+      apiClientV1Frontend.putRequest<API.Orders.Frontend.Comment.Response>(`/frontend/orders/${order_id}/comment`, {
+        data,
+      }),
+
+    calc: ({ signal, ...params }: API.Orders.Frontend.Calc.Request): Promise<API.Orders.Frontend.Calc.Response> =>
+      apiClientV1Frontend.getRequest<API.Orders.Frontend.Calc.Response>('/frontend/orders/calc', {
+        params,
+        signal,
+      }),
+
+    getById: ({ order_id }: API.Orders.Frontend.GetById.Request): Promise<API.Orders.Frontend.GetById.Response> =>
+      apiClientV1Frontend.getRequest<API.Orders.Frontend.GetById.Response>(`/frontend/orders/id/${order_id}`),
+
+    getByUuid: ({
+      order_uuid,
+    }: API.Orders.Frontend.GetByUuid.Request): Promise<API.Orders.Frontend.GetByUuid.Response> =>
+      apiClientV1Frontend.getRequest<API.Orders.Frontend.GetByUuid.Response>(`/frontend/orders/uuid/${order_uuid}`),
+
+    list: {
+      byWallet: ({
+        wallet_uuid,
+        filters,
+        ...props
+      }: API.Orders.Frontend.List.ByWallet.Request): Promise<API.Orders.Frontend.List.ByWallet.Response> => {
+        const params = {
+          ...props,
+          filters: Array.isArray(filters) ? JSON.stringify(filters) : filters,
+        };
+        return apiClientV1Frontend.getRequest<API.Orders.Frontend.List.ByWallet.Response>(
+          `/frontend/orders/wallet/${wallet_uuid}`,
+          { params },
+        );
+      },
+      csv: {
+        getByWalletUuid: ({
+          wallet_uuid,
+          filters,
+          ...props
+        }: API.Orders.Frontend.List.Csv.Request): Promise<API.Orders.Frontend.List.Csv.Response> => {
+          const params = {
+            ...props,
+            filters: Array.isArray(filters) ? JSON.stringify(filters) : filters,
+          };
+          return apiClientV1Frontend.getRequest<API.Orders.Frontend.List.Csv.Response>(
+            `/frontend/orders/wallet/${wallet_uuid}/csv`,
+            { params },
+          );
+        },
+      },
+    },
+
+    types: {
+      list: (): Promise<API.Orders.Frontend.Types.List.Response> =>
+        apiClientV1Frontend.getRequest<API.Orders.Frontend.Types.List.Response>('/frontend/orders/types'),
+
+      getById: ({
+        id,
+      }: API.Orders.Frontend.Types.GetById.Request): Promise<API.Orders.Frontend.Types.GetById.Response> =>
+        apiClientV1Frontend.getRequest<API.Orders.Frontend.Types.GetById.Response>(`/frontend/orders/types/${id}`),
+    },
   },
 };

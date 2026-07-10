@@ -612,26 +612,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/exchange/rates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List of exchange rates from fiat to crypto
-         * @deprecated
-         */
-        get: operations["ExchangeRatesController_findAll"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/kyc/init/{wallet_id}/{type}": {
         parameters: {
             query?: never;
@@ -664,22 +644,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/kyc/forms/{rail_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["KycFormsController_getFormConfigByType"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/kyc/{wallet_id}/entity": {
         parameters: {
             query?: never;
@@ -694,8 +658,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Update kyc entity data */
-        patch: operations["KycEntitiesController_update"];
+        patch?: never;
         trace?: never;
     };
     "/kyc/{wallet_id}/rails": {
@@ -750,26 +713,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/countries": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List of countries
-         * @deprecated
-         */
-        get: operations["CountriesController_findAll"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/persona/inquiries/init/{wallet_id}/{type}": {
         parameters: {
             query?: never;
@@ -779,6 +722,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * Deprecated. Use POST /kyc/init/{wallet_id}/{type} instead
+         * @deprecated
+         */
         post: operations["PersonaController_initInquiry"];
         delete?: never;
         options?: never;
@@ -795,41 +742,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * Deprecated. Use POST /kyc/resume/{wallet_id}/{verification_ref} instead
+         * @deprecated
+         */
         post: operations["PersonaController_resumeInquiry"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/kyc/integration-persona-templates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get KYC integration Persona templates */
-        get: operations["IntegrationPersonaTemplateController_findAll"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/kyc/integration-sumsub-levels": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get KYC integration Sumsub levels */
-        get: operations["IntegrationSumsubLevelController_findAll"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1006,140 +923,6 @@ export interface paths {
         get: operations["SystemController_findAll"];
         put?: never;
         post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/persona-admin/{wallet_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["PersonaAdminController_syncKycEntityWithPersona"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/persona-admin/{wallet_id}/init": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["PersonaAdminController_initInquiry"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/persona-admin/{wallet_id}/resume": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post: operations["PersonaAdminController_resumeInquiry"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/wallets/{wallet_id}/users": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get wallet users list */
-        get: operations["WalletsUsersController_all"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/wallets/{wallet_id}/users/{user_data_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** View wallet user */
-        get: operations["WalletsUsersController_view"];
-        put?: never;
-        post?: never;
-        /** Delete wallet user */
-        delete: operations["WalletsUsersController_remove"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/wallets/{wallet_id}/users/{user_data_id}/role": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Change role of wallet user */
-        patch: operations["WalletsUsersController_updateRole"];
-        trace?: never;
-    };
-    "/wallets/{wallet_id}/users/{user_data_id}/activate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Activate wallet user */
-        post: operations["WalletsUsersController_activate"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/wallets/{wallet_id}/users/{user_data_id}/deactivate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Deactivate wallet user */
-        post: operations["WalletsUsersController_deactivate"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1585,16 +1368,6 @@ export interface components {
             total: number;
             data: (components["schemas"]["CryptoCurrencyDto"] | components["schemas"]["FiatCurrencyDto"])[];
         };
-        ExchangeRateDto: {
-            from: string;
-            from_uuid: string | null;
-            inverted_rate: number;
-            rate: number;
-            /** @enum {string|null} */
-            rate_source: "cryptomus" | "coingecko" | null;
-            to: string;
-            to_uuid: string | null;
-        };
         InitKycDataCollectionResponseDto: {
             providerType: string;
             verificationId: string;
@@ -1604,44 +1377,6 @@ export interface components {
             providerType: string;
             verificationId: string;
             verificationToken?: string;
-        };
-        KycFormFieldOptionDto: {
-            label: string;
-            value: string;
-        };
-        KycFormFieldValidationDto: {
-            pattern?: string;
-            message?: string;
-            minLength?: number;
-            maxLength?: number;
-            min?: number;
-            max?: number;
-        };
-        KycFormFieldDto: {
-            name: string;
-            /** @enum {string} */
-            type: "text" | "email" | "password" | "radio" | "select" | "checkbox" | "textarea" | "number" | "date" | "switch" | "file";
-            label: string;
-            placeholder?: string;
-            required?: boolean;
-            order?: number;
-            options?: components["schemas"]["KycFormFieldOptionDto"][];
-            validation?: components["schemas"]["KycFormFieldValidationDto"];
-            rows?: number;
-            value?: string;
-            accept?: string;
-        };
-        KycFormFieldContainerDto: {
-            /** @enum {string} */
-            type: "field" | "group";
-            field?: components["schemas"]["KycFormFieldDto"];
-            group?: components["schemas"]["KycFormFieldGroupDto"];
-        };
-        KycFormFieldGroupDto: {
-            name?: string;
-            isArray?: boolean;
-            fields: components["schemas"]["KycFormFieldContainerDto"][];
-            label: string;
         };
         GeneralInfo: Record<string, never>;
         ContactPersonInfo: Record<string, never>;
@@ -1887,142 +1622,6 @@ export interface components {
             physical_address?: components["schemas"]["KycAddressDto"] | null;
             beneficial_owners?: components["schemas"]["KycBeneficialOwnerDto"][] | null;
         };
-        CreateOrUpdateKycEntityDto: {
-            /** @enum {string} */
-            type: "individual" | "business" | "universal";
-            id_number?: string | null;
-            /** @enum {string|null} */
-            id_type?: "PASSPORT" | "ID_CARD" | "DRIVERS" | "NIN" | null;
-            additional_id_number?: string | null;
-            additional_id_type?: string | null;
-            articles_of_association_url?: string | null;
-            business_description?: string | null;
-            business_industry?: string[] | null;
-            business_industry_other?: string | null;
-            business_name?: string | null;
-            business_name_local?: string | null;
-            business_registration_doc_url?: string | null;
-            /** @enum {string|null} */
-            business_type?: "cooperative" | "s_corporation" | "b_corporation" | "c_corporation" | "close_corporation" | "nonprofit_corporation" | "general_partnership" | "limited_partnership" | "limited_liability_company" | "other" | "sole_proprietorship" | "trust" | null;
-            certificate_number?: string | null;
-            certificate_of_incumbency_url?: string | null;
-            /** @enum {string|null} */
-            certificate_of_registration_doc_type?: "ACRA" | "GST" | "MSME" | "CERTIFICATE_OF_REGISTRATION" | null;
-            certificate_of_registration_doc_url?: string | null;
-            compliance_screening_explanation?: string | null;
-            constitution_or_annual_report_url?: string | null;
-            country_of_birth?: string | null;
-            /** @default false */
-            dao_status: boolean | null;
-            date_of_birth?: string | null;
-            due_diligence_form?: components["schemas"]["KycEntityDueDiligenceFormEntity"] | null;
-            email?: string | null;
-            export_country?: string | null;
-            first_name?: string | null;
-            first_name_local?: string | null;
-            formation_date?: string | null;
-            formation_doc_url?: string | null;
-            gov_id_back_url?: string | null;
-            gov_id_country?: string | null;
-            gov_id_expiration_date?: string | null;
-            gov_id_front_url?: string | null;
-            gov_id_hand_hold_url?: string | null;
-            gov_id_issuance_authority?: string | null;
-            gov_id_issuance_date?: string | null;
-            gov_id_number?: string | null;
-            /** @enum {string|null} */
-            gov_id_type?: "PASSPORT" | "ID_CARD" | "DRIVERS" | null;
-            incorporation_number?: string | null;
-            last_name?: string | null;
-            last_name_local?: string | null;
-            license_expiration_date?: string | null;
-            middle_name?: string | null;
-            middle_name_local?: string | null;
-            nationality?: string | null;
-            partnership_deed_url?: string | null;
-            partnership_mins_of_meeting_url?: string | null;
-            phone?: string | null;
-            product_service_category?: string | null;
-            /** @enum {string|null} */
-            proof_of_address_type?: "UTILITY_BILL" | "BANK_STATEMENT" | "RENTAL_AGREEMENT" | "TAX_DOCUMENT" | null;
-            proof_of_address_url?: string | null;
-            proof_of_ownership_url?: string | null;
-            /** @enum {string|null} */
-            purpose?: "charitable_donations" | "ecommerce_retail_payments" | "investment_purposes" | "other" | "payments_to_friends_or_family_abroad" | "payroll" | "personal_or_living_expenses" | "protect_wealth" | "purchase_goods_and_services" | "receive_payments_for_goods_and_services" | "tax_optimization" | "third_party_money_transmission" | "treasury_management" | "operating_a_company" | "receive_payment_for_freelancing" | "receive_salary" | null;
-            purpose_other?: string | null;
-            registration_number?: string | null;
-            share_structure_url?: string | null;
-            /** @enum {string|null} */
-            source_of_funds?: "employment" | "savings" | "winnings" | "marital" | "real_estate" | "trust" | "investment" | "other" | "sales_of_goods_and_services" | "owners_capital" | "business_loans" | "private_capital" | "grant" | null;
-            supplementary_info?: string | null;
-            supplementary_url?: string | null;
-            tax_identification_number?: string | null;
-            /** @enum {string|null} */
-            tax_identification_number_type?: "EIN" | "SSN" | "VAT" | "TIN" | "UTR" | null;
-            trade_name?: string | null;
-            /** @enum {string|null} */
-            trade_type?: "00" | "01" | "02" | "03" | "04" | "05" | "06" | "07" | "08" | "09" | "10" | "11" | "12" | "13" | "14" | "15" | "16" | "17" | "18" | "19" | "20" | "21" | "22" | "23" | "24" | "25" | "26" | "27" | "28" | "29" | "30" | "31" | "32" | "33" | "34" | "35" | "36" | "37" | "38" | "39" | "40" | "41" | null;
-            /** @default false */
-            transmits_customer_funds: boolean | null;
-            ubo_declaration_url?: string | null;
-            website?: string | null;
-            selfie_url?: string | null;
-            regulatory_license_url?: string | null;
-            annual_salary?: string | null;
-            expected_monthly_volume?: string | null;
-            monthly_crypto_deposits?: string | null;
-            monthly_crypto_investment_deposit?: string | null;
-            monthly_crypto_investment_withdrawal?: string | null;
-            monthly_crypto_withdrawals?: string | null;
-            monthly_investment_deposit?: string | null;
-            monthly_investment_withdrawal?: string | null;
-            monthly_withdrawals?: string | null;
-            usd_value_of_crypto?: string | null;
-            usd_value_of_fiat?: string | null;
-            occupation?: string | null;
-            occupation_other?: string | null;
-            /** @enum {string|null} */
-            employment_status?: "EMPLOYEE" | "SELF_EMPLOYED" | "RETIRED" | "UNEMPLOYED" | "OTHER" | null;
-            employment_description?: string | null;
-            description_of_business_nature?: string | null;
-            /** @enum {string|null} */
-            primary_business?: "ACCOUNTANCY" | "ADULT_ENTERTAINMENT" | "ADULT_PRODUCTS" | "ADVERTISING_MARKETING_PR" | "ADVISOR" | "AEROSPACE" | "AGRICULTURE" | "ALCOHOL" | "ARCHITECTURE" | "ARTS_ANTIQUES" | "ASSET_WEALTH_MANAGEMENT" | "ATM" | "AUTOMOBILE_CAR_PARTS" | "AUTOMOBILE_LUXURY" | "BANK_FOREIGN" | "BANK_US" | "BARS_RESTAURANTS" | "BIO_SCIENCE" | "BOOKS_MAGAZINES_NEWSPAPERS" | "BROADCASTERS_RADIO_TV" | "BROKER" | "BUILDING_MATERIALS" | "CALL_CENTER" | "CASINO_GAMBLING" | "CHARITY" | "CHEMICAL_MANUFACTURING" | "CLOTHING_TEXTILES" | "COMMODITIES" | "COMPANY_FORMATION" | "CONSTRUCTION_TRADES" | "CRYPTO_MSB_FOREIGN" | "CRYPTO_MSB_US" | "CYBER_SECURITY" | "DATA_STORAGE_PROCESSING" | "DEFI_EXCHANGE" | "ECOMMERCE" | "ELECTRONICS_MOBILE_PHONES" | "ENGINEERING" | "EVENT_PLANNING" | "FITNESS_EQUIPMENT" | "FOOD_BEVERAGE" | "FOUNDATION" | "FREIGHT_LOGISTICS_SHIPPING" | "GOVERNMENT_FOREIGN" | "GOVERNMENT_US" | "HEALTH_SUPPLEMENTS" | "HEAVY_EQUIPMENT" | "HISTORICAL_CULTURAL_ARTIFACTS" | "HNWI" | "HOSPITALITY" | "HOSPITALS_CARE_FACILITIES" | "IMPORT_EXPORT" | "INDUSTRIAL_EQUIPMENT" | "INFLUENCER_SOCIAL_MEDIA" | "INSURANCE" | "INSURANCE_INSURANCE_COMPANIES" | "INVESTMENT_FIRMS" | "IT_MANAGED_SERVICES" | "LEGAL_SERVICES" | "LOAN" | "LOGGING_TIMBER_PAPER_MILLS" | "LUXURY_GOODS" | "LUXURY_GOODS_BROKER" | "MINER" | "MINING_EXTRACTION" | "MULTILEVEL_MARKETING" | "MUSIC_PRODUCTION" | "NFT" | "NON_BANK_CUSTODIAN" | "NON_CRYPTO_MSB_FOREIGN" | "NON_CRYPTO_MSB_US" | "OIL_GAS" | "PAWN_BROKERS" | "PAYMENT_PROCESSOR" | "PAYROLL" | "PENSION" | "POLITICAL_PARTY_GROUP" | "POOLED_INVESTMENT" | "PRECIOUS_METALS" | "PRIVATE_EQUITY" | "PRIVATE_JET_CHARTER" | "PROP_TRADING" | "PUBLIC" | "REAL_ESTATE_INVESTMENT" | "RETAILER_DURABLE" | "RETAILER_NON_DURABLE" | "SCHOOL_UNIVERSITY" | "SECURITY" | "SOFTWARE" | "SOFTWARE_BLOCKCHAIN_CRYPTO" | "SPORTING_PROFESSIONAL_CLUB" | "SPV" | "STATE_FOREIGN" | "STATE_US" | "SUPRANATIONAL_BODY" | "TAX_ADVISORS" | "TAXI_PRIVATE_TRANSPORT" | "TELECOMMUNICATIONS" | "TOBACCO" | "TOKEN_PROJECT" | "TRAVEL" | "TRUST_CORP" | "TRUST_PERSONAL" | "UTILITIES_WATER_GAS_ELECTRIC" | "VENTURE_CAPITAL" | "VIDEO_GAMES" | "WASTE_MANAGEMENT_RECYCLING" | "WEAPONS_MANUFACTURER" | "WEAPONS_MILITARY_SERVICES" | "WHV" | "WHOLESALER_DURABLE" | "WHOLESALER_NON_DURABLE" | null;
-            business_jurisdictions?: string[] | null;
-            funds_send_receive_jurisdictions?: string[] | null;
-            engage_in_activities?: ("NONE" | "ADULT_ENTERTAINMENT" | "DRUGS" | "FIREARMS" | "GAMBLING" | "MARIJUANA" | "TUMBLING")[] | null;
-            monthly_deposits?: string | null;
-            /** @enum {string|null} */
-            regulated_status?: "REGULATED" | "REGISTERED" | "LICENSED" | "NONE" | "NOT_REQUIRED" | null;
-            total_assets?: string | null;
-            vendors_and_counterparties?: ("SELF" | "MERCHANTS_SUPPLIERS" | "CUSTOMERS" | "EMPLOYEES" | "CONTRACTORS" | "FRIENDS" | "FAMILY")[] | null;
-            stablecoin_primary_purpose?: string[] | null;
-            stablecoin_primary_purpose_other?: string | null;
-            stablecoin_activity?: string | null;
-            pep_declaration?: boolean | null;
-            pep_full_name?: string | null;
-            pep_relationship?: string | null;
-            pep_country?: string | null;
-            terms_and_conditions?: boolean | null;
-            expected_monthly_transactions_count?: number | null;
-            outgoing_payment_purposes?: string[] | null;
-            incoming_payment_purposes?: string[] | null;
-            supplier_names?: string | null;
-            customer_names?: string | null;
-            business_activity_type?: string | null;
-            primary_account_currency?: string | null;
-            regulatory_authority_name?: string | null;
-            regulatory_authority_country?: string | null;
-            regulatory_license_number?: string | null;
-            regulatory_license_urls?: string[] | null;
-            state_registry_doc_url?: string | null;
-            good_standing_cert_url?: string | null;
-            business_proof_of_address_url?: string | null;
-            /** @enum {string|null} */
-            business_proof_of_address_type?: "UTILITY_BILL" | "BANK_STATEMENT" | "RENTAL_AGREEMENT" | "TAX_DOCUMENT" | null;
-            address?: components["schemas"]["KycAddressDto"] | null;
-            physical_address?: components["schemas"]["KycAddressDto"] | null;
-            beneficial_owners?: components["schemas"]["KycBeneficialOwnerDto"][] | null;
-        };
         WalletKycRailExtraActionDto: {
             /** @enum {string} */
             action: "verification";
@@ -2062,33 +1661,6 @@ export interface components {
             /** @description Has more data flag */
             readonly has_more: boolean;
         };
-        CountryDto: {
-            id: number;
-            capital: string | null;
-            currency: string | null;
-            currency_name: string | null;
-            currency_symbol: string | null;
-            emoji: string | null;
-            emojiU: string | null;
-            flag: number;
-            iso2: string | null;
-            iso3: string | null;
-            latitude: number | null;
-            longitude: number | null;
-            name: string;
-            nationality: string | null;
-            native: string | null;
-            numeric_code: string | null;
-            phonecode: string | null;
-            region: string | null;
-            region_id: number | null;
-            subregion: string | null;
-            subregion_id: number | null;
-            timezones: components["schemas"]["CountryTimezone"][] | null;
-            tld: string | null;
-            translations: components["schemas"]["CountryTranslations"][] | null;
-            wikiDataId: string | null;
-        };
         InitInquiryResponseDto: {
             /** @example inq_E6U4KitBucNKpfrDMb997AaTkQTt */
             inquiryId: string;
@@ -2096,24 +1668,6 @@ export interface components {
         ResumeInquiryResponseDto: {
             inquiryId: string;
             sessionId: string;
-        };
-        IntegrationPersonaTemplateEntityDto: Record<string, never>;
-        FindAllIntegrationPersonaTemplatesResponseDto: {
-            /** @example 20 */
-            total: number;
-            /** @description Data */
-            data: components["schemas"]["IntegrationPersonaTemplateEntityDto"][];
-            /** @description Has more data flag */
-            readonly has_more: boolean;
-        };
-        IntegrationSumsubLevelEntityDto: Record<string, never>;
-        FindAllIntegrationSumsubLevelsResponseDto: {
-            /** @example 20 */
-            total: number;
-            /** @description Data */
-            data: components["schemas"]["IntegrationSumsubLevelEntityDto"][];
-            /** @description Has more data flag */
-            readonly has_more: boolean;
         };
         CounterpartiesFilter: {
             email?: string | null;
@@ -2333,6 +1887,33 @@ export interface components {
             total: number;
             data: (components["schemas"]["CryptoCurrencyDto"] | components["schemas"]["FiatCurrencyDto"])[];
         };
+        CountryDto: {
+            id: number;
+            capital: string | null;
+            currency: string | null;
+            currency_name: string | null;
+            currency_symbol: string | null;
+            emoji: string | null;
+            emojiU: string | null;
+            flag: number;
+            iso2: string | null;
+            iso3: string | null;
+            latitude: number | null;
+            longitude: number | null;
+            name: string;
+            nationality: string | null;
+            native: string | null;
+            numeric_code: string | null;
+            phonecode: string | null;
+            region: string | null;
+            region_id: number | null;
+            subregion: string | null;
+            subregion_id: number | null;
+            timezones: components["schemas"]["CountryTimezone"][] | null;
+            tld: string | null;
+            translations: components["schemas"]["CountryTranslations"][] | null;
+            wikiDataId: string | null;
+        };
         SystemCountriesResponseDto: {
             total: number;
             data: components["schemas"]["CountryDto"][];
@@ -2359,43 +1940,19 @@ export interface components {
             total: number;
             data: components["schemas"]["StateDto"][];
         };
+        ExchangeRateDto: {
+            from: string;
+            from_uuid: string | null;
+            inverted_rate: number;
+            rate: number;
+            /** @enum {string|null} */
+            rate_source: "cryptomus" | "coingecko" | null;
+            to: string;
+            to_uuid: string | null;
+        };
         SystemExchangeRatesResponseDto: {
             total: number;
             data: components["schemas"]["ExchangeRateDto"][];
-        };
-        PersonaAdminInitInquiryRequestDto: {
-            /**
-             * @example individual
-             * @enum {string}
-             */
-            type: "individual" | "business" | "universal";
-        };
-        PersonaAdminResumeInquiryRequestDto: {
-            inquiry_id: string;
-        };
-        WalletUserInfoDto: {
-            /** @deprecated */
-            id: number;
-            first_name?: string | null;
-            last_name?: string | null;
-            logo_url?: string | null;
-            readonly email: string | null;
-        };
-        WalletUserDto: {
-            /** @enum {string} */
-            readonly role: "owner" | "admin" | "user" | "auditor";
-            is_active: boolean;
-            user_info?: components["schemas"]["WalletUserInfoDto"][];
-        };
-        WalletUsersFilterDto: {
-            is_active?: boolean;
-            /** @enum {string} */
-            role?: "owner" | "admin" | "user" | "auditor";
-            search?: string;
-        };
-        UpdateWalletUserRoleDto: {
-            /** @enum {string} */
-            role: "user" | "auditor";
         };
     };
     responses: never;
@@ -3743,39 +3300,12 @@ export interface operations {
             };
         };
     };
-    ExchangeRatesController_findAll: {
-        parameters: {
-            query: {
-                order_type: "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_PREPAID" | "WITHDRAWAL_CRYPTO" | "DEPOSIT_CRYPTO" | "DEPOSIT_FIAT_SEPA" | "DEPOSIT_FIAT_SWIFT" | "EXCHANGE_CRYPTO_INTERNAL" | "WITHDRAWAL_FIAT_SEPA" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_WHOLESALE" | "CARD_ISSUING_FEE";
-                from_uuid?: string;
-                to_uuid?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ExchangeRateDto"][];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     KycController_initDataCollection: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Whether to prefill the provider verification with the current user data (email, phone, name). Defaults to true. */
+                prefill?: boolean;
+            };
             header?: never;
             path: {
                 wallet_id: string;
@@ -3852,27 +3382,6 @@ export interface operations {
             };
         };
     };
-    KycFormsController_getFormConfigByType: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                rail_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["KycFormFieldContainerDto"][];
-                };
-            };
-        };
-    };
     KycEntitiesController_findOne: {
         parameters: {
             query?: never;
@@ -3883,51 +3392,6 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["KycEntityDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    KycEntitiesController_update: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateOrUpdateKycEntityDto"];
-            };
-        };
         responses: {
             200: {
                 headers: {
@@ -4135,32 +3599,6 @@ export interface operations {
             };
         };
     };
-    CountriesController_findAll: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["CountryDto"][];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
     PersonaController_initInquiry: {
         parameters: {
             query?: never;
@@ -4232,70 +3670,6 @@ export interface operations {
                 content?: never;
             };
             /** @description Persona reference or Inquiry not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    IntegrationPersonaTemplateController_findAll: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FindAllIntegrationPersonaTemplatesResponseDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    IntegrationSumsubLevelController_findAll: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["FindAllIntegrationSumsubLevelsResponseDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
             404: {
                 headers: {
                     [name: string]: unknown;
@@ -4916,318 +4290,6 @@ export interface operations {
             };
             /** @description Invalid tenant */
             401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PersonaAdminController_syncKycEntityWithPersona: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PersonaAdminController_initInquiry: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PersonaAdminInitInquiryRequestDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InitInquiryResponseDto"];
-                };
-            };
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PersonaAdminController_resumeInquiry: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PersonaAdminResumeInquiryRequestDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ResumeInquiryResponseDto"];
-                };
-            };
-            /** @description Invalid tenant */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletsUsersController_all: {
-        parameters: {
-            query?: {
-                /** @description Number of records to skip */
-                offset?: number;
-                /** @description Number of records to return */
-                limit?: number;
-                sort_order?: "ASC" | "DESC";
-                sort_by?: null;
-                filter?: components["schemas"]["WalletUsersFilterDto"];
-            };
-            header?: never;
-            path: {
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginationResponseDto"] & {
-                        data?: unknown;
-                    };
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletsUsersController_view: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-                user_data_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WalletUserDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletsUsersController_remove: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-                user_data_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description User removed from wallet user */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletsUsersController_updateRole: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-                user_data_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateWalletUserRoleDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WalletUserDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletsUsersController_activate: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-                user_data_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WalletUserDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletsUsersController_deactivate: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-                user_data_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WalletUserDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
                 headers: {
                     [name: string]: unknown;
                 };
