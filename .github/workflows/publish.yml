@@ -51,8 +51,9 @@ jobs:
           node-version: 20
           registry-url: https://registry.npmjs.org
 
-      # Trusted publishing requires npm >= 11.5.1; Node 20 ships an older npm.
-      - run: npm install -g npm@latest
+      # Trusted publishing requires npm >= 11.5.1. npm@latest (v12) needs Node >= 22,
+      # but this job pins Node 20 — install the 11.x line (>=11.5.1, still supports Node 20).
+      - run: npm install -g "npm@^11.5.1"
 
       - run: npm ci
       - run: npm run build
