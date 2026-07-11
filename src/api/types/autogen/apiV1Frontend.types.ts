@@ -4951,7 +4951,8 @@ export interface paths {
                         amount: number;
                         /** @description Idempotency key (UUID) */
                         request_id: string;
-                        documents?: Record<string, never>[];
+                        /** @description Optional supporting documents persisted with the order. */
+                        documents?: components["schemas"]["OrderDocumentInput"][];
                     };
                 };
             };
@@ -5621,6 +5622,8 @@ export interface paths {
                         /** @description Idempotency key */
                         reference_id?: string;
                         note?: string;
+                        /** @description Optional supporting documents persisted with the order. */
+                        documents?: components["schemas"]["OrderDocumentInput"][];
                     };
                 };
             };
@@ -10695,6 +10698,15 @@ export interface components {
                 [key: string]: unknown;
             }[];
         };
+        /** @description Supporting document attached to an order at creation time (persisted to order_documents). */
+        OrderDocumentInput: {
+            /**
+             * Format: uri
+             * @description Document URL (must be a valid URL)
+             */
+            url: string;
+            description?: string;
+        };
         FrontendCryptoTransferRequest: {
             /**
              * Format: uuid
@@ -10714,6 +10726,8 @@ export interface components {
             request_id: string;
             reference?: string;
             note?: string;
+            /** @description Optional supporting documents persisted with the order. */
+            documents?: components["schemas"]["OrderDocumentInput"][];
         };
         FrontendL2FOrderRequest: {
             /**
@@ -10734,6 +10748,8 @@ export interface components {
             request_id: string;
             reference?: string;
             note?: string;
+            /** @description Optional supporting documents persisted with the order. */
+            documents?: components["schemas"]["OrderDocumentInput"][];
         };
         FrontendExchangeOrderRequest: {
             /** Format: uuid */

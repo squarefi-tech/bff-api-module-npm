@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Optional `documents` on every `orders.frontend.create.withdrawal.*` request.** All nine withdrawal creators (`crypto`, `internal`, `wire`, `ach`, `sepa`, `swift`, `chaps`, `fps`, `card`) now accept an optional `documents` array of supporting documents persisted with the created order. Each item is `{ url: string; description?: string }` (`url` required and validated as a URI, `description` optional). The field flows through automatically from the regenerated frontend OpenAPI schemas (`FrontendCryptoTransferRequest`, `FrontendL2FOrderRequest`, and the inline `withdrawal/internal` and `withdrawal/card` bodies), and `withdrawal/internal`'s previously useless `Record<string, never>[]` typing is now the correct document shape. Exposes the `API.Orders.Frontend.OrderDocumentInput` type as a convenience alias for the document shape.
+
 ## [1.36.25] - 2026-07-10
 
 ### Fixed
