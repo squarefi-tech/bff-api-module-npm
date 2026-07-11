@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Optional `documents` on every `orders.frontend.create.withdrawal.*` request.** All nine withdrawal creators (`crypto`, `internal`, `wire`, `ach`, `sepa`, `swift`, `chaps`, `fps`, `card`) now accept an optional `documents` array of supporting documents persisted with the created order. Each item is `{ url: string; description?: string }` (`url` required and validated as a URI, `description` optional). The field flows through automatically from the regenerated frontend OpenAPI schemas (`FrontendCryptoTransferRequest`, `FrontendL2FOrderRequest`, and the inline `withdrawal/internal` and `withdrawal/card` bodies), and `withdrawal/internal`'s previously useless `Record<string, never>[]` typing is now the correct document shape. Exposes the `API.Orders.Frontend.OrderDocumentInput` type as a convenience alias for the document shape.
 
+### Removed
+
+- **BREAKING: removed the top-level `orders.calc` method** (`GET /orders/calc`). It was the legacy v1 order-calculation helper, superseded by `orders.v2.calc` and `orders.frontend.calc`. Callers should migrate to those. The `API.Orders.Calc.*` types remain, and the backend `/orders/calc` route is unaffected.
+- **BREAKING: removed the top-level `orders.orderTypes.list` method** (`GET /orders/order_types`). It was the legacy v1 order-types directory, superseded by `orders.v2.orderTypes.list`. Callers should migrate to that. The `API.Orders.OrderTypes.*` types remain.
+
 ## [1.36.25] - 2026-07-10
 
 ### Fixed
