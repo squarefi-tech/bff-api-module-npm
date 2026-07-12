@@ -1,13 +1,37 @@
 import debounce from 'lodash.debounce';
 import { useEffect, useRef, useState } from 'react';
-import { API } from '../api/types/types';
 
-type CalcData = API.Orders.V2.Calc.Response & {
+// Fixed, endpoint-agnostic result the hook always exposes — the fields every calc consumer reads. Both the
+// v2 `Calc.Response` (a superset) and the frontend `orders.frontend.calc` `OrderCalculation` satisfy it.
+// Declared explicitly (not aliased to an API type) so the hook stays decoupled and the shape it returns is
+// guaranteed regardless of which handler runs.
+type CalcResult = {
+  from_currency: string;
+  to_currency: string;
+  from_amount: number;
+  result_amount: number;
+  rate: number;
+  fees: number;
+  comission: number;
+  network_fee: number;
+  transaction_fee: number;
+  from_symbol: string;
+};
+
+type CalcData = CalcResult & {
   is_subtract: boolean;
   is_reverse: boolean;
 };
 
-export type OrderCalcHandlerProps = Omit<API.Orders.V2.Calc.Request, 'order_type'>;
+export type OrderCalcHandlerProps = {
+  from_currency_id: string;
+  to_currency_id: string;
+  amount: number;
+  is_reverse: boolean;
+  is_subtract: boolean;
+  to_address?: string;
+  signal?: AbortSignal;
+};
 
 type UpdateCalculationsProps = {
   is_reverse: boolean;
@@ -17,7 +41,7 @@ type UpdateCalculationsProps = {
 export type UseOrderCalcProps = {
   from_currency_id: string | null | undefined;
   to_currency_id: string | null | undefined;
-  calcHandler: (props: OrderCalcHandlerProps) => Promise<API.Orders.V2.Calc.Response>;
+  calcHandler: (props: OrderCalcHandlerProps) => Promise<CalcResult>;
   disableCalculation?: boolean;
   to_address?: string;
 };
@@ -34,9 +58,13 @@ export type UseOrderCalcData = {
 
 export type UseOrderCalc = (props: UseOrderCalcProps) => UseOrderCalcData;
 
-export const useOrderCalc: UseOrderCalc = (props: UseOrderCalcProps) => {
-  const { from_currency_id, to_currency_id, calcHandler, disableCalculation, to_address } = props;
-
+export const useOrderCalc: UseOrderCalc = ({
+  from_currency_id,
+  to_currency_id,
+  calcHandler,
+  disableCalculation,
+  to_address,
+}) => {
   const [sellingAmount, setSellingAmount] = useState(0);
   const [buyingAmount, setBuyingAmount] = useState(0);
   const [calcData, setCalcData] = useState<CalcData | null>(null);
@@ -94,7 +122,16 @@ export const useOrderCalc: UseOrderCalc = (props: UseOrderCalcProps) => {
       is_reverse ? setIsSellingValuePending(true) : setIsBuyingValuePending(true);
       const data = await calcHandler(calcParams);
       setCalcData({
-        ...data,
+        from_currency: data.from_currency,
+        to_currency: data.to_currency,
+        from_amount: data.from_amount,
+        result_amount: data.result_amount,
+        rate: data.rate,
+        fees: data.fees,
+        comission: data.comission,
+        network_fee: data.network_fee,
+        transaction_fee: data.transaction_fee,
+        from_symbol: data.from_symbol,
         is_reverse,
         is_subtract,
       });

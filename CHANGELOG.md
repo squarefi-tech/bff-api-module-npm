@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`useOrderCalc` now returns a fixed, endpoint-agnostic result shape and no longer depends on the `API` types.** `calcHandler` may resolve to any response that carries the calc fields the hook exposes, so a single hook covers every calc endpoint (the v2 `Calc.Response`, the frontend `orders.frontend.calc` `OrderCalculation`, etc.). Regardless of which handler is passed, `calcData` is always the same known shape — `{ from_currency, to_currency, from_amount, result_amount, rate, fees, comission, network_fee, transaction_fee, from_symbol, is_reverse, is_subtract }` — so consumers always know exactly what the hook returns. `UseOrderCalcProps` / `UseOrderCalcData` stay non-generic. **Note:** responses that carry extra fields (e.g. the v2 `to_symbol` / `net_amount` / `direction`) no longer surface them through `calcData`; read those from the endpoint response directly if needed.
+- **`OrderCalcHandlerProps` is now an explicit standalone shape** instead of `Omit<API.Orders.V2.Calc.Request, 'order_type'>`. It describes exactly the calc inputs the hook feeds to `calcHandler` (`from_currency_id`, `to_currency_id`, `amount`, `is_reverse`, `is_subtract`, optional `to_address`, optional `signal`), decoupling the hook from the v2-specific request type (whose crypto withdraw/non-withdraw union and `to_address` narrowing were irrelevant here). Structurally compatible with the previous type — callers add `order_type` and call the specific v2/frontend endpoint as before.
+
 ## [1.36.26] - 2026-07-12
 
 ### Added
@@ -74,6 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **External access-token provider** (`setAccessTokenProvider`, `setOnUnauthorized`). Consumers can now supply the bearer token from an external identity provider (e.g. Clerk) instead of the built-in localStorage tokens. When a provider is registered, the axios and fetch API clients read the token from it on every request, and the `401` handler retries once with a force-refreshed token (concurrent force-refreshes are coalesced into one) before invoking the unauthorized handler — bypassing the legacy `/auth/refresh/refresh-token` flow. With no provider set, behavior is unchanged (localStorage + backend refresh).
+
 ## [1.36.17] - 2026-07-05
 
 ### Changed
