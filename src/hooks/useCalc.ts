@@ -1,29 +1,36 @@
 import debounce from 'lodash.debounce';
 import { useEffect, useRef, useState } from 'react';
-import { API } from '../api/types/types';
 
-// The hook only reads `from_amount` / `result_amount` off the calc response, so it works for any
-// calc-like endpoint. `TResponse` is generic over the response shape and defaults to the v2 calc
-// response, so existing callers stay source-compatible; the frontend orders calc flow passes its own
-// (narrower) response type instead of casting it to the v2 shape.
+// The only fields the hook itself reads off a calc response (to drive the two-way amount binding). Any calc
+// endpoint response (v2 or frontend) structurally satisfies this, so the hook stays decoupled from the API
+// types while still carrying the caller's full response through `calcData`.
 type CalcResponseBase = {
   from_amount: number;
   result_amount: number;
 };
 
+// What the hook exposes: the caller's full response plus the flags used for the current calculation.
 type CalcData<TResponse extends CalcResponseBase> = TResponse & {
   is_subtract: boolean;
   is_reverse: boolean;
 };
 
-export type OrderCalcHandlerProps = Omit<API.Orders.V2.Calc.Request, 'order_type'>;
+export type OrderCalcHandlerProps = {
+  from_currency_id: string;
+  to_currency_id: string;
+  amount: number;
+  is_reverse: boolean;
+  is_subtract: boolean;
+  to_address?: string;
+  signal?: AbortSignal;
+};
 
 type UpdateCalculationsProps = {
   is_reverse: boolean;
   is_subtract: boolean;
 };
 
-export type UseOrderCalcProps<TResponse extends CalcResponseBase = API.Orders.V2.Calc.Response> = {
+export type UseOrderCalcProps<TResponse extends CalcResponseBase> = {
   from_currency_id: string | null | undefined;
   to_currency_id: string | null | undefined;
   calcHandler: (props: OrderCalcHandlerProps) => Promise<TResponse>;
@@ -31,7 +38,7 @@ export type UseOrderCalcProps<TResponse extends CalcResponseBase = API.Orders.V2
   to_address?: string;
 };
 
-export type UseOrderCalcData<TResponse extends CalcResponseBase = API.Orders.V2.Calc.Response> = {
+export type UseOrderCalcData<TResponse extends CalcResponseBase> = {
   calcData: CalcData<TResponse> | null;
   sellingAmount: number;
   setSellingAmount: (value: number) => void;
@@ -41,15 +48,17 @@ export type UseOrderCalcData<TResponse extends CalcResponseBase = API.Orders.V2.
   isBuyingValuePending: boolean;
 };
 
-export type UseOrderCalc = <TResponse extends CalcResponseBase = API.Orders.V2.Calc.Response>(
+export type UseOrderCalc = <TResponse extends CalcResponseBase>(
   props: UseOrderCalcProps<TResponse>,
 ) => UseOrderCalcData<TResponse>;
 
-export const useOrderCalc = <TResponse extends CalcResponseBase = API.Orders.V2.Calc.Response>(
-  props: UseOrderCalcProps<TResponse>,
-): UseOrderCalcData<TResponse> => {
-  const { from_currency_id, to_currency_id, calcHandler, disableCalculation, to_address } = props;
-
+export const useOrderCalc = <TResponse extends CalcResponseBase>({
+  from_currency_id,
+  to_currency_id,
+  calcHandler,
+  disableCalculation,
+  to_address,
+}: UseOrderCalcProps<TResponse>): UseOrderCalcData<TResponse> => {
   const [sellingAmount, setSellingAmount] = useState(0);
   const [buyingAmount, setBuyingAmount] = useState(0);
   const [calcData, setCalcData] = useState<CalcData<TResponse> | null>(null);
