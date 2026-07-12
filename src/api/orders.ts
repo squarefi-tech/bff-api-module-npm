@@ -5,17 +5,6 @@ import { apiClientV1, apiClientV1Frontend } from '../utils/apiClientFactory';
 import { OrderType } from '../constants';
 
 export const orders = {
-  calc: ({ signal, ...params }: API.Orders.Calc.Request): Promise<API.Orders.Calc.Response> =>
-    apiClientV1.getRequest<API.Orders.Calc.Response>('/orders/calc', {
-      params,
-      signal,
-    }),
-
-  orderTypes: {
-    list: (): Promise<API.Orders.OrderTypes.List.Response> =>
-      apiClientV1.getRequest<API.Orders.OrderTypes.List.Response>('/orders/order_types'),
-  },
-
   create: {
     byOrderType: {
       [OrderType.TRANSFER_INTERNAL]: (

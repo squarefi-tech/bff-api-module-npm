@@ -4951,7 +4951,8 @@ export interface paths {
                         amount: number;
                         /** @description Idempotency key (UUID) */
                         request_id: string;
-                        documents?: Record<string, never>[];
+                        /** @description Optional supporting documents persisted with the order. */
+                        documents?: components["schemas"]["OrderDocumentInput"][];
                     };
                 };
             };
@@ -5621,6 +5622,8 @@ export interface paths {
                         /** @description Idempotency key */
                         reference_id?: string;
                         note?: string;
+                        /** @description Optional supporting documents persisted with the order. */
+                        documents?: components["schemas"]["OrderDocumentInput"][];
                     };
                 };
             };
@@ -6007,7 +6010,10 @@ export interface paths {
                     from_currency_id: string;
                     to_currency_id: string;
                     /** @description If `true`, calculates inputs needed to receive the given amount. */
-                    is_reverse?: "true" | "false";
+                    is_reverse: boolean;
+                    /** @description If `true`, the network fee is subtracted from `result_amount`. If `false`, the fee is added on top of `from_amount` and the recipient gets the full converted amount. Ignored for reverse calculations. Required so the client always states the fee-allocation mode explicitly — a change of the server-side fallback can never silently alter the calculation.
+                     *      */
+                    is_subtract: boolean;
                     /** @description Destination address (for crypto withdrawals; affects network fee estimation). */
                     to_address?: string;
                 };
@@ -6022,10 +6028,25 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["OrderCalculation"];
+                        };
+                    };
                 };
                 /** @description Invalid request (e.g. unknown `order_type`, missing required parameter, exchange rate not found) */
                 400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Calculation failed (e.g. network fee estimation error) */
+                500: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -10054,6 +10075,58 @@ export interface components {
          * @enum {string}
          */
         OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE";
+        OrderCalculation: {
+            /**
+             * Format: uuid
+             * @description Source currency UUID.
+             */
+            from_currency: string;
+            /**
+             * Format: uuid
+             * @description Destination currency UUID.
+             */
+            to_currency: string;
+            /**
+             * @description Amount to be spent in the source currency.
+             * @example 100
+             */
+            from_amount: number;
+            /**
+             * @description Amount to be received in the destination currency.
+             * @example 98.5
+             */
+            result_amount: number;
+            /**
+             * @description Exchange rate applied (source → destination), 6 decimals.
+             * @example 0.985
+             */
+            rate: number;
+            /**
+             * @description Total fees (comission + network_fee), in the source currency.
+             * @example 1.5
+             */
+            fees: number;
+            /**
+             * @description Service commission (wire name is intentionally `comission`).
+             * @example 1.5
+             */
+            comission: number;
+            /**
+             * @description Estimated blockchain network fee (crypto withdrawals only, otherwise 0).
+             * @example 0
+             */
+            network_fee: number;
+            /**
+             * @description Transaction fee. Always 0 for now.
+             * @example 0
+             */
+            transaction_fee: number;
+            /**
+             * @description Source currency symbol.
+             * @example USDT
+             */
+            from_symbol: string;
+        };
         PaginationResponse: {
             offset: number;
             limit: number;
@@ -10695,6 +10768,15 @@ export interface components {
                 [key: string]: unknown;
             }[];
         };
+        /** @description Supporting document attached to an order at creation time (persisted to order_documents). */
+        OrderDocumentInput: {
+            /**
+             * Format: uri
+             * @description Document URL (must be a valid URL)
+             */
+            url: string;
+            description?: string;
+        };
         FrontendCryptoTransferRequest: {
             /**
              * Format: uuid
@@ -10714,6 +10796,8 @@ export interface components {
             request_id: string;
             reference?: string;
             note?: string;
+            /** @description Optional supporting documents persisted with the order. */
+            documents?: components["schemas"]["OrderDocumentInput"][];
         };
         FrontendL2FOrderRequest: {
             /**
@@ -10734,6 +10818,8 @@ export interface components {
             request_id: string;
             reference?: string;
             note?: string;
+            /** @description Optional supporting documents persisted with the order. */
+            documents?: components["schemas"]["OrderDocumentInput"][];
         };
         FrontendExchangeOrderRequest: {
             /** Format: uuid */

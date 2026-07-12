@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Optional `documents` on every `orders.frontend.create.withdrawal.*` request.** All nine withdrawal creators (`crypto`, `internal`, `wire`, `ach`, `sepa`, `swift`, `chaps`, `fps`, `card`) now accept an optional `documents` array of supporting documents persisted with the created order. Each item is `{ url: string; description?: string }` (`url` required and validated as a URI, `description` optional). The field flows through automatically from the regenerated frontend OpenAPI schemas (`FrontendCryptoTransferRequest`, `FrontendL2FOrderRequest`, and the inline `withdrawal/internal` and `withdrawal/card` bodies), and `withdrawal/internal`'s previously useless `Record<string, never>[]` typing is now the correct document shape. Exposes the `API.Orders.Frontend.OrderDocumentInput` type as a convenience alias for the document shape.
+
+### Changed
+
+- **`orders.frontend.calc` types now come from the (newly typed) `GET /frontend/orders/calc` spec instead of the legacy v1 fallback.**
+  - **BREAKING (type): the return type is now the response envelope `{ success: boolean; data: OrderCalculation }`** (previously reused the bare `API.Orders.Calc.Response`). Read the result from `.data`. `OrderCalculation` is `{ from_currency, to_currency, from_amount, result_amount, rate, fees, comission, network_fee, transaction_fee, from_symbol }` — it does not carry the old fallback's `to_symbol`, `net_amount`, `base_markup`, or `direction`.
+  - **BREAKING: `is_reverse` and `is_subtract` are now required `boolean` query params** (`is_reverse` was previously the string union `"true" | "false"`, and both were briefly optional). Callers must pass both — `is_reverse` selects a reverse calculation, and `is_subtract` states the fee-allocation mode: when `false` the network fee is added on top of `from_amount` instead of subtracted from `result_amount` (ignored for reverse calculations). Requiring them means a change to the server-side fallback can never silently alter the calculation.
+  - Exposes the `API.Orders.Frontend.OrderCalculation` convenience alias.
+
+### Removed
+
+- **BREAKING: removed the top-level `orders.calc` method** (`GET /orders/calc`). It was the legacy v1 order-calculation helper, superseded by `orders.v2.calc` and `orders.frontend.calc`. Callers should migrate to those. The `API.Orders.Calc.*` types remain, and the backend `/orders/calc` route is unaffected.
+- **BREAKING: removed the top-level `orders.orderTypes.list` method** (`GET /orders/order_types`). It was the legacy v1 order-types directory, superseded by `orders.v2.orderTypes.list`. Callers should migrate to that. The `API.Orders.OrderTypes.*` types remain.
+
 ## [1.36.25] - 2026-07-10
 
 ### Fixed
