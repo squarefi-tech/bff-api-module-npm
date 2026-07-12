@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`useOrderCalc` is now generic over the calc response type** (`useOrderCalc<TResponse>`), defaulting to `API.Orders.V2.Calc.Response`. The hook only reads `from_amount` / `result_amount` off the response, so it now works with any calc-like shape — in particular the narrower `orders.frontend.calc` `OrderCalculation` — without forcing callers to cast or pad the result up to the v2 shape. `calcData` is typed `TResponse & { is_reverse: boolean; is_subtract: boolean }`, and `UseOrderCalcProps` / `UseOrderCalcData` gain the same optional type parameter. Existing callers are unaffected: the default type parameter preserves the previous v2 behaviour.
+
 ## [1.36.26] - 2026-07-12
 
 ### Added
@@ -74,6 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **External access-token provider** (`setAccessTokenProvider`, `setOnUnauthorized`). Consumers can now supply the bearer token from an external identity provider (e.g. Clerk) instead of the built-in localStorage tokens. When a provider is registered, the axios and fetch API clients read the token from it on every request, and the `401` handler retries once with a force-refreshed token (concurrent force-refreshes are coalesced into one) before invoking the unauthorized handler — bypassing the legacy `/auth/refresh/refresh-token` flow. With no provider set, behavior is unchanged (localStorage + backend refresh).
+
 ## [1.36.17] - 2026-07-05
 
 ### Changed
