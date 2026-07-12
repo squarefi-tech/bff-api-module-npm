@@ -2286,6 +2286,9 @@ export namespace API {
       // `documents` field on every orders.frontend.create.withdrawal.* method.
       export type OrderDocumentInput = componentsV1Frontend['schemas']['OrderDocumentInput'];
 
+      // Result payload returned inside the `orders.frontend.calc` response envelope (`{ success, data }`).
+      export type OrderCalculation = componentsV1Frontend['schemas']['OrderCalculation'];
+
       // Shared success envelope returned by every create/approve/cancel frontend order endpoint.
       export type OrderEnvelope = {
         success?: boolean;
@@ -2379,8 +2382,8 @@ export namespace API {
         export type Request = pathsV1Frontend['/frontend/orders/calc']['get']['parameters']['query'] & {
           signal?: AbortSignal;
         };
-        // The OpenAPI spec leaves this 200 body untyped (content: never); reuse the v1 calc shape.
-        export type Response = API.Orders.Calc.Response;
+        export type Response =
+          pathsV1Frontend['/frontend/orders/calc']['get']['responses'][200]['content']['application/json'];
       }
 
       export namespace GetById {
