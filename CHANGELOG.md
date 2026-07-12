@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.27] - 2026-07-12
+
 ### Changed
 
 - **`useOrderCalc` now returns a fixed, endpoint-agnostic result shape and no longer depends on the `API` types.** `calcHandler` may resolve to any response that carries the calc fields the hook exposes, so a single hook covers every calc endpoint (the v2 `Calc.Response`, the frontend `orders.frontend.calc` `OrderCalculation`, etc.). Regardless of which handler is passed, `calcData` is always the same known shape — `{ from_currency, to_currency, from_amount, result_amount, rate, fees, comission, network_fee, transaction_fee, from_symbol, is_reverse, is_subtract }` — so consumers always know exactly what the hook returns. `UseOrderCalcProps` / `UseOrderCalcData` stay non-generic. **Note:** responses that carry extra fields (e.g. the v2 `to_symbol` / `net_amount` / `direction`) no longer surface them through `calcData`; read those from the endpoint response directly if needed.
