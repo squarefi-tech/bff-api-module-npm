@@ -1,16 +1,24 @@
 import debounce from 'lodash.debounce';
 import { useEffect, useRef, useState } from 'react';
 
-// The only fields the hook itself reads off a calc response (to drive the two-way amount binding). Any calc
-// endpoint response (v2 or frontend) structurally satisfies this, so the hook stays decoupled from the API
-// types while still carrying the caller's full response through `calcData`.
-type CalcResponseBase = {
+// Fixed, endpoint-agnostic result the hook always exposes — the fields every calc consumer reads. Both the
+// v2 `Calc.Response` (a superset) and the frontend `orders.frontend.calc` `OrderCalculation` satisfy it.
+// Declared explicitly (not aliased to an API type) so the hook stays decoupled and the shape it returns is
+// guaranteed regardless of which handler runs.
+type CalcResult = {
+  from_currency: string;
+  to_currency: string;
   from_amount: number;
   result_amount: number;
+  rate: number;
+  fees: number;
+  comission: number;
+  network_fee: number;
+  transaction_fee: number;
+  from_symbol: string;
 };
 
-// What the hook exposes: the caller's full response plus the flags used for the current calculation.
-type CalcData<TResponse extends CalcResponseBase> = TResponse & {
+type CalcData = CalcResult & {
   is_subtract: boolean;
   is_reverse: boolean;
 };
@@ -30,16 +38,16 @@ type UpdateCalculationsProps = {
   is_subtract: boolean;
 };
 
-export type UseOrderCalcProps<TResponse extends CalcResponseBase> = {
+export type UseOrderCalcProps = {
   from_currency_id: string | null | undefined;
   to_currency_id: string | null | undefined;
-  calcHandler: (props: OrderCalcHandlerProps) => Promise<TResponse>;
+  calcHandler: (props: OrderCalcHandlerProps) => Promise<CalcResult>;
   disableCalculation?: boolean;
   to_address?: string;
 };
 
-export type UseOrderCalcData<TResponse extends CalcResponseBase> = {
-  calcData: CalcData<TResponse> | null;
+export type UseOrderCalcData = {
+  calcData: CalcData | null;
   sellingAmount: number;
   setSellingAmount: (value: number) => void;
   buyingAmount: number;
@@ -48,20 +56,18 @@ export type UseOrderCalcData<TResponse extends CalcResponseBase> = {
   isBuyingValuePending: boolean;
 };
 
-export type UseOrderCalc = <TResponse extends CalcResponseBase>(
-  props: UseOrderCalcProps<TResponse>,
-) => UseOrderCalcData<TResponse>;
+export type UseOrderCalc = (props: UseOrderCalcProps) => UseOrderCalcData;
 
-export const useOrderCalc = <TResponse extends CalcResponseBase>({
+export const useOrderCalc: UseOrderCalc = ({
   from_currency_id,
   to_currency_id,
   calcHandler,
   disableCalculation,
   to_address,
-}: UseOrderCalcProps<TResponse>): UseOrderCalcData<TResponse> => {
+}) => {
   const [sellingAmount, setSellingAmount] = useState(0);
   const [buyingAmount, setBuyingAmount] = useState(0);
-  const [calcData, setCalcData] = useState<CalcData<TResponse> | null>(null);
+  const [calcData, setCalcData] = useState<CalcData | null>(null);
   const [isSellingValuePending, setIsSellingValuePending] = useState(false);
   const [isBuyingValuePending, setIsBuyingValuePending] = useState(false);
 
@@ -116,7 +122,16 @@ export const useOrderCalc = <TResponse extends CalcResponseBase>({
       is_reverse ? setIsSellingValuePending(true) : setIsBuyingValuePending(true);
       const data = await calcHandler(calcParams);
       setCalcData({
-        ...data,
+        from_currency: data.from_currency,
+        to_currency: data.to_currency,
+        from_amount: data.from_amount,
+        result_amount: data.result_amount,
+        rate: data.rate,
+        fees: data.fees,
+        comission: data.comission,
+        network_fee: data.network_fee,
+        transaction_fee: data.transaction_fee,
+        from_symbol: data.from_symbol,
         is_reverse,
         is_subtract,
       });
