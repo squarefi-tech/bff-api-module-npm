@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`orders.frontend.calc` types now come from the (newly typed) `GET /frontend/orders/calc` spec instead of the legacy v1 fallback.**
   - **BREAKING (type): the return type is now the response envelope `{ success: boolean; data: OrderCalculation }`** (previously reused the bare `API.Orders.Calc.Response`). Read the result from `.data`. `OrderCalculation` is `{ from_currency, to_currency, from_amount, result_amount, rate, fees, comission, network_fee, transaction_fee, from_symbol }` — it does not carry the old fallback's `to_symbol`, `net_amount`, `base_markup`, or `direction`.
-  - `is_reverse` is now a `boolean` query param (was the string union `"true" | "false"`), and a new optional `is_subtract?: boolean` is accepted (when `false`, the network fee is added on top of `from_amount` instead of subtracted from `result_amount`; ignored for reverse calculations).
+  - **BREAKING: `is_reverse` and `is_subtract` are now required `boolean` query params** (`is_reverse` was previously the string union `"true" | "false"`, and both were briefly optional). Callers must pass both — `is_reverse` selects a reverse calculation, and `is_subtract` states the fee-allocation mode: when `false` the network fee is added on top of `from_amount` instead of subtracted from `result_amount` (ignored for reverse calculations). Requiring them means a change to the server-side fallback can never silently alter the calculation.
   - Exposes the `API.Orders.Frontend.OrderCalculation` convenience alias.
 
 ### Removed

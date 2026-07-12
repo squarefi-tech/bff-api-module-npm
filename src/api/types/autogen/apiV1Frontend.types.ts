@@ -6010,10 +6010,10 @@ export interface paths {
                     from_currency_id: string;
                     to_currency_id: string;
                     /** @description If `true`, calculates inputs needed to receive the given amount. */
-                    is_reverse?: boolean;
-                    /** @description If `true` (default), the network fee is subtracted from `result_amount`. If `false`, the fee is added on top of `from_amount` and the recipient gets the full converted amount. Ignored for reverse calculations.
+                    is_reverse: boolean;
+                    /** @description If `true`, the network fee is subtracted from `result_amount`. If `false`, the fee is added on top of `from_amount` and the recipient gets the full converted amount. Ignored for reverse calculations. Required so the client always states the fee-allocation mode explicitly — a change of the server-side fallback can never silently alter the calculation.
                      *      */
-                    is_subtract?: boolean;
+                    is_subtract: boolean;
                     /** @description Destination address (for crypto withdrawals; affects network fee estimation). */
                     to_address?: string;
                 };
