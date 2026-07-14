@@ -17,7 +17,17 @@ import { deleteTokens, getTokens, refreshTokens } from './tokensFactory';
 // eslint-disable-next-line no-constant-condition
 
 // Backend signals that a sensitive request needs a fresh second-factor verification with this code.
-const TWO_FACTOR_REVERIFICATION_CODE = 'two_factor_reverification_required';
+// Backend error codes are UPPER_SNAKE_CASE, and the code can sit at either `data.code` or
+// `data.error.code`. Normalize to upper case and check both locations so the match stays robust.
+const TWO_FACTOR_REVERIFICATION_CODE = 'TWO_FACTOR_REVERIFICATION_REQUIRED';
+
+const isReverificationRequired = (data: unknown): boolean => {
+  const code =
+    (data as { code?: unknown; error?: { code?: unknown } })?.code ??
+    (data as { error?: { code?: unknown } })?.error?.code;
+
+  return typeof code === 'string' && code.toUpperCase() === TWO_FACTOR_REVERIFICATION_CODE;
+};
 
 const apiV1BaseURL = process.env.API_URL ?? 'ENV variable API_URL is not defined';
 const apiV2BaseURL = process.env.API_V2_URL ?? 'ENV variable API_V2_URL is not defined';
@@ -85,7 +95,7 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
       // second factor. Hand off to the consumer's reverification handler and retry once on success.
       if (
         error?.response?.status === ResponseStatus.FORBIDDEN &&
-        error?.response?.data?.code === TWO_FACTOR_REVERIFICATION_CODE &&
+        isReverificationRequired(error?.response?.data) &&
         !error?.response?.config.context?.isRetryRequest
       ) {
         const { response, config: failedRequestConfig } = error;
