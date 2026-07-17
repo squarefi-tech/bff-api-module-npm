@@ -831,7 +831,8 @@ export interface paths {
                                 postcode?: string;
                                 street1?: string;
                                 street2?: string;
-                                state_id?: number;
+                                /** @description Required when the selected country has states; countries without states may omit it */
+                                state_id?: number | null;
                             };
                         };
                         /** @description Required for crypto types (CRYPTO_EXTERNAL, CRYPTO_INTERNAL) */
@@ -3871,13 +3872,14 @@ export interface paths {
         put?: never;
         /**
          * Exchange
-         * @description Exchange between currencies within the wallet bound to the API key.
+         * @description Crypto-to-crypto exchange within the wallet bound to the API key.
          *
-         *     **Crypto-to-crypto** exchanges complete instantly (status `COMPLETE`).
-         *     **Fiat-to-crypto** and **crypto-to-fiat** exchanges create a `PENDING` order
-         *     and trigger an asynchronous Rail workflow.
+         *     Two-phase, like the banking withdrawals: the order is created in status
+         *     `NEW` with the source funds blocked. Call `POST /api/orders/{order_id}/approve`
+         *     to execute the swap (the order lands in `COMPLETE` synchronously), or
+         *     `POST /api/orders/{order_id}/cancel` to release the blocked funds.
          *
-         *     Requires an active virtual account for the fiat currency when fiat is involved.
+         *     Fiat legs are not supported — only crypto-to-crypto pairs are accepted.
          *
          */
         post: {
@@ -3893,7 +3895,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Exchange order created */
+                /** @description Exchange order created (status NEW, funds blocked — approve to execute) */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -4220,6 +4222,8 @@ export interface paths {
         /**
          * Approve order
          * @description Transitions the order from NEW to PROCESSING and triggers the order execution pipeline.
+         *     Exchange orders (EXCHANGE_OMNI) and internal transfers (TRANSFER_INTERNAL /
+         *     OMNIBUS_INTERNAL_TRANSFER) settle synchronously and land in COMPLETE.
          *     Only orders with status NEW can be approved.
          *
          */
@@ -4367,7 +4371,12 @@ export interface paths {
         put?: never;
         /**
          * Internal
-         * @description Transfers funds between wallets within the platform.
+         * @description Transfers funds between wallets within the platform. Two-phase: the
+         *     order is created in `NEW` status with the sender's funds blocked;
+         *     call `POST /api/orders/{id}/approve` to execute the transfer — it
+         *     settles synchronously (receiver credited, order `COMPLETE`). A `NEW`
+         *     order can be canceled via `POST /api/orders/{id}/cancel` to refund
+         *     the blocked funds.
          *     Wallet ID is automatically resolved from the API key — do **not** pass `wallet_id`.
          *
          *     `request_id` is used for idempotency: re-posting the same `request_id`
@@ -4407,7 +4416,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Transfer created */
+                /** @description Transfer created in NEW status (funds blocked, awaiting approve) */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -4478,6 +4487,12 @@ export interface paths {
          * @description Sends crypto from the wallet's omnibus balance to an external blockchain
          *     address (or another internal wallet) via a previously-created counterparty
          *     destination.
+         *
+         *     Two-phase: the order is created in `NEW` status with funds blocked;
+         *     `POST /api/orders/{id}/approve` dispatches the on-chain send. If the
+         *     destination address belongs to a wallet in the same tenant, the order is
+         *     created as `OMNIBUS_INTERNAL_TRANSFER` (no on-chain transaction) — still
+         *     `NEW` at create, settled synchronously to `COMPLETE` at approve.
          *
          *     **Prerequisites:**
          *     - A counterparty destination of type `CRYPTO_EXTERNAL` or `CRYPTO_INTERNAL`
@@ -7431,6 +7446,12 @@ export interface components {
              * @example 7c8d4a2b-1e3f-4d59-9b6a-2c0e5f7d8a90
              */
             to_currency_id: string;
+            /**
+             * Format: uuid
+             * @description Idempotency key (UUID v4 recommended).
+             * @example 550e8400-e29b-41d4-a716-446655440000
+             */
+            request_id: string;
         };
         /** @description Virtual bank account */
         VirtualAccount: {

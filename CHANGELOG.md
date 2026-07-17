@@ -7,7 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING: `orders.frontend.create.exchange` now requires `request_id` (UUID).** Regenerated from the updated `FrontendExchangeOrderRequest` schema. The backend uses it as an idempotency key and to OTP-gate the follow-up `orders.frontend.approve` call.
+- **`orders.frontend.create.exchange`, `orders.frontend.create.withdrawal.internal`, and `orders.frontend.create.withdrawal.crypto` now always create two-phase orders.** Previously some cases settled synchronously (crypto-to-crypto exchange, wallet-to-wallet internal transfer, same-tenant `OMNIBUS_INTERNAL_TRANSFER` crypto sends). All three now create the order in `NEW` status with the source funds blocked; call `orders.frontend.approve` (OTP-verified via `request_id`) to execute it synchronously into `COMPLETE`, or `orders.frontend.cancel` to release the blocked funds. `create.exchange` also no longer accepts fiat legs — only crypto-to-crypto pairs. This is a backend behavior change surfaced via `npm run update:types`; no SDK type changes beyond the new `request_id` field above.
+
 ## [1.36.28] - 2026-07-14
+
+### Fixed
+
+- **Step-up reverification detection no longer misses valid `403` responses.** The backend's `two_factor_reverification_required` code can arrive in either case (upper or lower) and at either `data.code` or `data.error.code`. The axios client now normalizes to upper case and checks both locations, so `setOnReverificationRequired` reliably fires instead of the raw `403` propagating to the caller.
 
 ## [1.36.27] - 2026-07-12
 
