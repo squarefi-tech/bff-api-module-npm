@@ -616,7 +616,8 @@ export interface paths {
                                 postcode?: string;
                                 street1?: string;
                                 street2?: string;
-                                state_id?: number;
+                                /** @description Required when the selected country has states; countries without states may omit it */
+                                state_id?: number | null;
                             };
                         };
                         crypto_data?: {
@@ -2518,13 +2519,14 @@ export interface paths {
         put?: never;
         /**
          * Exchange
-         * @description Exchange between currencies within a wallet.
+         * @description Crypto-to-crypto exchange within a wallet.
          *
-         *     **Crypto-to-crypto** exchanges complete instantly (status `COMPLETE`).
-         *     **Fiat-to-crypto** and **crypto-to-fiat** exchanges create a `PENDING` order
-         *     and trigger an asynchronous Rail workflow.
+         *     Two-phase, like the banking withdrawals: the order is created in status
+         *     `NEW` with the source funds blocked. Call `POST /admin/orders/{order_id}/approve`
+         *     to execute the swap (the order lands in `COMPLETE` synchronously), or
+         *     `POST /admin/orders/{order_id}/cancel` to release the blocked funds.
          *
-         *     Requires an active virtual account for the fiat currency when fiat is involved.
+         *     Fiat legs are not supported — only crypto-to-crypto pairs are accepted.
          *
          */
         post: {
@@ -2543,7 +2545,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Exchange order created */
+                /** @description Exchange order created (status NEW, funds blocked — approve to execute) */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -2609,7 +2611,15 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Internal */
+        /**
+         * Internal
+         * @description Transfers funds between two wallets within the platform. Two-phase:
+         *     the order is created in `NEW` status with the sender's funds blocked;
+         *     `POST /admin/orders/{id}/approve` executes the transfer synchronously —
+         *     receiver credited, order `COMPLETE`. A `NEW` order can be canceled to
+         *     refund the blocked funds.
+         *
+         */
         post: {
             parameters: {
                 query?: never;
@@ -2637,7 +2647,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Transfer created */
+                /** @description Transfer created in NEW status (funds blocked, awaiting approve) */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -2694,7 +2704,16 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Crypto */
+        /**
+         * Crypto
+         * @description Sends crypto from the wallet's omnibus balance via a counterparty
+         *     destination. Two-phase: created `NEW` with funds blocked;
+         *     `POST /admin/orders/{id}/approve` dispatches the on-chain send. A
+         *     destination address internal to the tenant downgrades the order to
+         *     `OMNIBUS_INTERNAL_TRANSFER` — still `NEW` at create, settled
+         *     synchronously to `COMPLETE` at approve.
+         *
+         */
         post: {
             parameters: {
                 query?: never;
@@ -3539,6 +3558,8 @@ export interface paths {
         /**
          * Approve order
          * @description Transitions the order from NEW to PROCESSING and triggers the order execution pipeline.
+         *     Exchange orders (EXCHANGE_OMNI) and internal transfers (TRANSFER_INTERNAL /
+         *     OMNIBUS_INTERNAL_TRANSFER) settle synchronously and land in COMPLETE.
          *     Only orders with status NEW can be approved.
          *
          */
@@ -8177,6 +8198,11 @@ export interface components {
              * @description Destination currency UUID
              */
             to_currency_id: string;
+            /**
+             * Format: uuid
+             * @description Idempotency key (UUID v4 recommended)
+             */
+            request_id: string;
         };
         TenantOrder: {
             /** Format: uuid */

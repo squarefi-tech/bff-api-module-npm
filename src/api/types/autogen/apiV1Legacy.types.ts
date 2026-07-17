@@ -365,7 +365,7 @@ export interface paths {
         put?: never;
         /**
          * Create a new wallet address
-         * @description Create a new blockchain address for a wallet with Utila or Processing integration
+         * @description Create a new blockchain address for a wallet with Utila integration
          */
         post: {
             parameters: {
@@ -8978,6 +8978,108 @@ export interface components {
              */
             has_more?: boolean;
         };
+        /** @description Profile information of the payment sender */
+        L2FOriginatorProfile: {
+            /**
+             * @description Name of the sender
+             * @example FS AI, A SERIES OF FINSIGHT SPECI
+             */
+            name?: string;
+            /** @description Sender's address information */
+            address?: {
+                address_line1?: string | null;
+                city?: string | null;
+                state?: string | null;
+                postal_code?: string | null;
+                country?: string | null;
+            };
+        };
+        /** @description Bank account information of the sender */
+        L2FOriginatorAccountInfo: {
+            /**
+             * @description Bank account number
+             * @example 202504243736
+             */
+            account_number?: string;
+            /**
+             * @description Routing number (for US payments)
+             * @example 91311229
+             */
+            routing_number?: string | null;
+            /** @description SWIFT BIC code (for international transfers) */
+            swift_bic?: string | null;
+            /** @description Name of the bank/institution */
+            institution_name?: string | null;
+        };
+        /**
+         * @description Standardized originator (sender) information for L2F ONRAMP orders.
+         *     Available for order types: L2F_ACH_ONRAMP, L2F_WIRE_ONRAMP, L2F_SEPA_ONRAMP, L2F_SWIFT_ONRAMP.
+         *     This field appears in order.meta.originator
+         *
+         * @example {
+         *       "profile": {
+         *         "name": "FS AI, A SERIES OF FINSIGHT SPECI",
+         *         "address": {
+         *           "address_line1": "",
+         *           "city": "",
+         *           "state": "",
+         *           "postal_code": "",
+         *           "country": ""
+         *         }
+         *       },
+         *       "account_information": {
+         *         "account_number": "202504243736",
+         *         "routing_number": "91311229",
+         *         "swift_bic": "",
+         *         "institution_name": ""
+         *       },
+         *       "reference": "20251016MMQFMP2U004005",
+         *       "memo": "bfgkp5w"
+         *     }
+         */
+        L2FOriginator: {
+            profile?: components["schemas"]["L2FOriginatorProfile"];
+            account_information?: components["schemas"]["L2FOriginatorAccountInfo"];
+            /**
+             * @description Payment reference number (rail_reference from Railio)
+             * @example 20251016MMQFMP2U004005
+             */
+            reference?: string | null;
+            /**
+             * @description Payment memo/note (rail_originator_memo from Railio)
+             * @example bfgkp5w
+             */
+            memo?: string | null;
+        } | null;
+        /**
+         * @description Optional array of document objects to attach to the order.
+         *     Documents should be uploaded to a storage service beforehand and only URLs should be provided.
+         *     Maximum 50 documents per order.
+         *
+         * @example [
+         *       {
+         *         "url": "https://storage.example.com/documents/invoice-001.pdf",
+         *         "description": "Invoice for payment #001"
+         *       },
+         *       {
+         *         "url": "https://storage.example.com/documents/contract-signed.pdf",
+         *         "description": "Signed contract"
+         *       }
+         *     ]
+         */
+        OrderDocuments: {
+            /**
+             * Format: uri
+             * @description URL of the uploaded document
+             * @example https://storage.example.com/documents/invoice-123.pdf
+             */
+            url: string;
+            /**
+             * @description Optional description of the document
+             * @example Invoice for payment #12345
+             */
+            description?: string | null;
+        }[];
         VirtualAccount: {
             /**
              * Format: uuid
@@ -9262,8 +9364,6 @@ export interface components {
         CardUpdateRequest: unknown;
         IssuingProgram: unknown;
         IssuingTransactionList: unknown;
-        L2FOriginator: unknown;
-        OrderDocuments: unknown;
     };
     responses: never;
     parameters: never;

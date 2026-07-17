@@ -1426,11 +1426,11 @@ export interface paths {
          * Check internal-transfer availability for a destination
          * @description Read-only check (writes nothing). Resolves the destination's payment
          *     details to an on-platform wallet within the tenant and reports whether an
-         *     instant internal transfer is available.
+         *     internal (off-chain) transfer is available.
          *
          *     A `true` answer means the caller can create an INTERNAL destination to
          *     `target_wallet_id` and transfer to it. Any recipient that cannot receive
-         *     an instant internal transfer is uniformly reported as `available:false`
+         *     an internal transfer is uniformly reported as `available:false`
          *     with `target_wallet_id:null` — the check does not disclose the reason.
          *
          *     Detects crypto (address), INTERNAL (stored target wallet) and banking
@@ -4831,13 +4831,15 @@ export interface paths {
         put?: never;
         /**
          * Exchange
-         * @description Exchange between currencies within a wallet.
+         * @description Crypto-to-crypto exchange within a wallet.
          *
-         *     **Crypto-to-crypto** exchanges complete instantly (status `COMPLETE`).
-         *     **Fiat-to-crypto** and **crypto-to-fiat** exchanges create a `PENDING` order
-         *     and trigger an asynchronous Rail workflow.
+         *     Two-phase, like the banking withdrawals: the order is created in status
+         *     `NEW` with the source funds blocked. Call `POST /frontend/orders/{order_id}/approve`
+         *     (OTP-gated via `request_id`) to execute the swap — the order lands in
+         *     `COMPLETE` synchronously — or `POST /frontend/orders/{order_id}/cancel`
+         *     to release the blocked funds.
          *
-         *     Requires an active virtual account for the fiat currency when fiat is involved.
+         *     Fiat legs are not supported — only crypto-to-crypto pairs are accepted.
          *     Caller must be `admin` of the wallet.
          *
          */
@@ -4854,7 +4856,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Exchange order created */
+                /** @description Exchange order created (status NEW, funds blocked — approve to execute) */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -4922,7 +4924,11 @@ export interface paths {
         put?: never;
         /**
          * Internal
-         * @description Transfers funds between two wallets within the platform.
+         * @description Transfers funds between two wallets within the platform. Two-phase:
+         *     the order is created in `NEW` status with the sender's funds blocked;
+         *     `POST /frontend/orders/{id}/approve` (OTP-gated via the `request_id`)
+         *     executes the transfer synchronously — receiver credited, order
+         *     `COMPLETE`. A `NEW` order can be canceled to refund the blocked funds.
          *     Caller must be `admin` of the source wallet.
          *
          */
@@ -4957,7 +4963,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Transfer created */
+                /** @description Transfer created in NEW status (funds blocked, awaiting approve) */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -5025,10 +5031,13 @@ export interface paths {
         put?: never;
         /**
          * Crypto
-         * @description Sends crypto from an omnibus wallet to an external address.
-         *     If the destination address belongs to a wallet in the same tenant,
-         *     the order is created as `OMNIBUS_INTERNAL_TRANSFER` with instant completion
-         *     (no on-chain transaction).
+         * @description Sends crypto from an omnibus wallet to an external address. Two-phase:
+         *     the order is created in `NEW` status with funds blocked;
+         *     `POST /frontend/orders/{id}/approve` (OTP-gated via the `request_id`)
+         *     dispatches the on-chain send. If the destination address belongs to a
+         *     wallet in the same tenant, the order is created as
+         *     `OMNIBUS_INTERNAL_TRANSFER` (no on-chain transaction) — still `NEW` at
+         *     create, settled synchronously to `COMPLETE` at approve.
          *
          */
         post: {
@@ -5698,7 +5707,11 @@ export interface paths {
         put?: never;
         /**
          * Approve an order
-         * @description Moves a NEW order to PROCESSING, triggering its workflow. Validates the order's request_id via OTP.
+         * @description Moves a NEW order to PROCESSING, triggering its workflow. Exchange orders
+         *     (EXCHANGE_OMNI) and internal transfers (TRANSFER_INTERNAL /
+         *     OMNIBUS_INTERNAL_TRANSFER) settle synchronously and land in COMPLETE.
+         *     Validates the order's request_id via OTP.
+         *
          */
         post: {
             parameters: {
@@ -8870,7 +8883,7 @@ export interface paths {
          *
          *     **Access Control**: User must own the wallet
          *
-         *     **Note**: The system will automatically use the appropriate provider (Utila or Processing) based on tenant configuration.
+         *     **Note**: New addresses are always provisioned via Utila. The legacy Processing (Accepta) provider was decommissioned; existing `processing` addresses remain readable.
          *
          */
         post: {
@@ -10836,6 +10849,11 @@ export interface components {
              * @description Destination currency UUID
              */
             to_currency_id: string;
+            /**
+             * Format: uuid
+             * @description Idempotency key (UUID); OTP-verified at approve
+             */
+            request_id: string;
         };
         /** @description Wallet invitation record */
         WalletInvite: {
