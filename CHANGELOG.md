@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.29] - 2026-07-17
+
 ### Changed
 
 - **BREAKING: `orders.frontend.create.exchange` now requires `request_id` (UUID).** Regenerated from the updated `FrontendExchangeOrderRequest` schema. The backend uses it as an idempotency key and to OTP-gate the follow-up `orders.frontend.approve` call.
