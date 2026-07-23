@@ -892,21 +892,90 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Bank data resolved successfully */
+                /** @description Bank data resolved. `data` is null ONLY when the bank-data lookup subsystem is
+                 *     disabled on the environment; with lookups enabled a failed resolution is
+                 *     reported as 400, never as a null `data`.
+                 *      */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["BankData"] | null;
+                        };
+                    };
                 };
-                /** @description Missing/unsupported code */
+                /** @description Bad request — one of:
+                 *     - `VALIDATION_ERROR` — query parameter `code` is missing/empty, or longer than 64 characters
+                 *     - `UNSUPPORTED_BANK_CODE` — `code` does not match any supported format (IBAN, SWIFT/BIC, US RTN)
+                 *     - `BANK_DATA_LOOKUP_FAILED` — the code is well-formed but could not be resolved
+                 *       (unknown code or a transient lookup failure); always reported as this single
+                 *       400, never as 404/502
+                 *     - `EXTERNAL_SERVICE_ERROR` — the bank-data lookup is temporarily unavailable
+                 *
+                 *     The body also carries a top-level `correlationId` (added by the error handler to
+                 *     every 4xx/5xx it formats).
+                 *      */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 401: components["responses"]["UnauthorizedError"];
+                /** @description Per-user bank-data lookup rate limit exceeded (stricter than the general frontend
+                 *     rate limit). The body is sent directly by the rate-limit middleware, bypassing
+                 *     the group error handler, so it carries no `correlationId` and no `details` field.
+                 *
+                 *     The platform-wide per-user and per-IP limiters can also answer 429 on this
+                 *     endpoint — same envelope, code and headers, but with the generic message
+                 *     "Too many requests. Please try again later.".
+                 *      */
+                429: {
+                    headers: {
+                        /** @description Maximum number of lookups allowed in the current window */
+                        "X-RateLimit-Limit"?: string;
+                        /** @description Lookups remaining in the current window */
+                        "X-RateLimit-Remaining"?: string;
+                        /** @description Unix timestamp (ms) at which the current window resets */
+                        "X-RateLimit-Reset"?: string;
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        /** @example {
+                         *       "success": false,
+                         *       "error": {
+                         *         "code": "RATE_LIMIT_EXCEEDED",
+                         *         "message": "Too many bank data lookups. Please slow down."
+                         *       }
+                         *     } */
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unexpected internal error, handled by the catch-all error handler; the body
+                 *     carries a `correlationId`.
+                 *      */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        /** @example {
+                         *       "success": false,
+                         *       "error": {
+                         *         "code": "INTERNAL_ERROR",
+                         *         "message": "Internal server error"
+                         *       },
+                         *       "correlationId": "3f7f2f9a-8f0e-4a3b-9a3d-2f1c9d6a1b2c"
+                         *     } */
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
@@ -4583,6 +4652,269 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/frontend/kyc_verification/{wallet_id}/init": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Initialize KYC verification for a wallet
+         * @description Starts a provider-agnostic KYC data-collection flow for the wallet via
+         *     the Auth API. The KYC provider (Persona, Sumsub, …) is resolved
+         *     internally per tenant — the caller does not choose it. Returns the
+         *     provider verification id plus an optional short-lived SDK token the
+         *     client uses to launch the verification. The caller's Bearer token is
+         *     forwarded to the Auth API.
+         *
+         *     Provider-agnostic replacement for the deprecated
+         *     `GET /frontend/kyc_persona/{wallet_id}/init`.
+         *
+         *     **Authentication**: Bearer token with x-tenant-id header required
+         *
+         *     **Access Control**: Any user with access to the wallet (scoped card-users excluded)
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Wallet UUID */
+                    wallet_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description KYC entity type
+                         * @enum {string}
+                         */
+                        type: "individual" | "business";
+                    };
+                };
+            };
+            responses: {
+                /** @description KYC verification initialized */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                /**
+                                 * Format: uuid
+                                 * @description Echo of the wallet from the path
+                                 */
+                                wallet_id: string;
+                                /**
+                                 * @description Provider that handled the flow (e.g. persona, sumsub)
+                                 * @example persona
+                                 */
+                                provider_type: string;
+                                /**
+                                 * @description Provider verification id — Persona: inquiryId, Sumsub: applicantId
+                                 * @example inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
+                                 */
+                                verification_id: string;
+                                /** @description Short-lived SDK/session token when the provider mints one — otherwise null */
+                                verification_token?: string | null;
+                            };
+                        };
+                    };
+                };
+                /** @description Validation error (`type` missing or not in [individual, business]) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid Bearer token */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Caller has no access to this wallet */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Wallet not found upstream */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Auth API unavailable, timed out, or returned a malformed payload */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/kyc_verification/{wallet_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resume KYC verification for a wallet
+         * @description Resumes an existing provider-agnostic KYC data-collection flow for the
+         *     wallet via the Auth API. The provider is resolved internally per tenant.
+         *     `verification_ref` is the provider reference returned by init (Persona:
+         *     `inquiry_id`, Sumsub: `applicant_id`). The caller's Bearer token is
+         *     forwarded to the Auth API.
+         *
+         *     Provider-agnostic replacement for the deprecated
+         *     `GET /frontend/kyc_persona/{wallet_id}/resume`.
+         *
+         *     **Authentication**: Bearer token with x-tenant-id header required
+         *
+         *     **Access Control**: Any user with access to the wallet (scoped card-users excluded)
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Wallet UUID */
+                    wallet_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Provider verification reference (Persona: inquiry_id, Sumsub: applicant_id)
+                         * @example inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
+                         */
+                        verification_ref: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description KYC verification resumed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                /**
+                                 * Format: uuid
+                                 * @description Echo of the wallet from the path
+                                 */
+                                wallet_id: string;
+                                /**
+                                 * @description Provider that handled the flow (e.g. persona, sumsub)
+                                 * @example persona
+                                 */
+                                provider_type: string;
+                                /**
+                                 * @description Provider verification id — Persona: inquiryId, Sumsub: applicantId
+                                 * @example inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
+                                 */
+                                verification_id: string;
+                                /** @description Short-lived SDK/session token when the provider mints one — otherwise null */
+                                verification_token?: string | null;
+                            };
+                        };
+                    };
+                };
+                /** @description Validation error (`verification_ref` missing or empty) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid Bearer token */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Caller has no access to this wallet */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description No such verification to resume upstream */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Auth API unavailable, timed out, or returned a malformed payload */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/frontend/orders/deposit/ach": {
         parameters: {
             query?: never;
@@ -4831,15 +5163,17 @@ export interface paths {
         put?: never;
         /**
          * Exchange
-         * @description Crypto-to-crypto exchange within a wallet.
+         * @description Currency exchange within a wallet — a pure ledger swap for any enabled
+         *     currency pair (crypto and fiat alike). Pair availability is governed by
+         *     the exchange calculation config: a disabled pair is rejected at create.
          *
          *     Two-phase, like the banking withdrawals: the order is created in status
-         *     `NEW` with the source funds blocked. Call `POST /frontend/orders/{order_id}/approve`
-         *     (OTP-gated via `request_id`) to execute the swap — the order lands in
-         *     `COMPLETE` synchronously — or `POST /frontend/orders/{order_id}/cancel`
-         *     to release the blocked funds.
+         *     `NEW` without touching the balance. Call `POST /frontend/orders/{order_id}/approve`
+         *     (OTP-gated, keyed on the order id) to check the balance, debit the
+         *     source funds and execute the swap — the order lands in `COMPLETE`
+         *     synchronously — or `POST /frontend/orders/{order_id}/cancel` to
+         *     discard the order.
          *
-         *     Fiat legs are not supported — only crypto-to-crypto pairs are accepted.
          *     Caller must be `admin` of the wallet.
          *
          */
@@ -4856,7 +5190,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Exchange order created (status NEW, funds blocked — approve to execute) */
+                /** @description Exchange order created (status NEW — approve to debit and execute) */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -4925,10 +5259,11 @@ export interface paths {
         /**
          * Internal
          * @description Transfers funds between two wallets within the platform. Two-phase:
-         *     the order is created in `NEW` status with the sender's funds blocked;
-         *     `POST /frontend/orders/{id}/approve` (OTP-gated via the `request_id`)
-         *     executes the transfer synchronously — receiver credited, order
-         *     `COMPLETE`. A `NEW` order can be canceled to refund the blocked funds.
+         *     the order is created in `NEW` status without touching the balance;
+         *     `POST /frontend/orders/{id}/approve` (OTP-gated, keyed on the order
+         *     id) checks the balance, debits the sender and executes the transfer
+         *     synchronously — receiver credited, order `COMPLETE`. A `NEW` order
+         *     can simply be canceled (no funds are held).
          *     Caller must be `admin` of the source wallet.
          *
          */
@@ -4955,15 +5290,13 @@ export interface paths {
                          */
                         counterparty_destination_id: string;
                         amount: number;
-                        /** @description Idempotency key (UUID) */
-                        request_id: string;
                         /** @description Optional supporting documents persisted with the order. */
                         documents?: components["schemas"]["OrderDocumentInput"][];
                     };
                 };
             };
             responses: {
-                /** @description Transfer created in NEW status (funds blocked, awaiting approve) */
+                /** @description Transfer created in NEW status (awaiting approve; no funds held) */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -5032,12 +5365,13 @@ export interface paths {
         /**
          * Crypto
          * @description Sends crypto from an omnibus wallet to an external address. Two-phase:
-         *     the order is created in `NEW` status with funds blocked;
-         *     `POST /frontend/orders/{id}/approve` (OTP-gated via the `request_id`)
-         *     dispatches the on-chain send. If the destination address belongs to a
-         *     wallet in the same tenant, the order is created as
-         *     `OMNIBUS_INTERNAL_TRANSFER` (no on-chain transaction) — still `NEW` at
-         *     create, settled synchronously to `COMPLETE` at approve.
+         *     the order is created in `NEW` status without touching the balance;
+         *     `POST /frontend/orders/{id}/approve` (OTP-gated, keyed on the order
+         *     id) checks the balance, debits the funds and dispatches the on-chain
+         *     send. If the destination address belongs to a wallet in the same
+         *     tenant, the order is created as `OMNIBUS_INTERNAL_TRANSFER` (no
+         *     on-chain transaction) — still `NEW` at create, debited + settled
+         *     synchronously to `COMPLETE` at approve.
          *
          */
         post: {
@@ -5707,10 +6041,13 @@ export interface paths {
         put?: never;
         /**
          * Approve an order
-         * @description Moves a NEW order to PROCESSING, triggering its workflow. Exchange orders
-         *     (EXCHANGE_OMNI) and internal transfers (TRANSFER_INTERNAL /
-         *     OMNIBUS_INTERNAL_TRANSFER) settle synchronously and land in COMPLETE.
-         *     Validates the order's request_id via OTP.
+         * @description Moves a NEW order to PROCESSING: checks the balance, debits the funds
+         *     (transaction written as `complete`) and triggers its workflow.
+         *     Exchange orders (EXCHANGE_OMNI) and internal transfers
+         *     (TRANSFER_INTERNAL / OMNIBUS_INTERNAL_TRANSFER) settle synchronously
+         *     and land in COMPLETE. An insufficient balance fails the order
+         *     (FAILED). OTP verification is mandatory and keyed on the order id
+         *     (request the OTP for the order being approved).
          *
          */
         post: {
@@ -5772,7 +6109,7 @@ export interface paths {
         put?: never;
         /**
          * Cancel an order
-         * @description Cancels a NEW/FAILED order, cancels its workflow run, and refunds the blocked funds.
+         * @description Cancels a NEW/FAILED order, cancels its workflow run, and refunds the debited funds (if the order was ever approved).
          */
         post: {
             parameters: {
@@ -5793,7 +6130,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Order canceled and funds refunded */
+                /** @description Order canceled (debited funds refunded when applicable) */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -8094,6 +8431,16 @@ export interface paths {
                          * @example true
                          */
                         empty_name?: boolean;
+                        /**
+                         * Format: uuid
+                         * @description Optional KYC entity to link (entity-first KYC model). Must be
+                         *     an entity of the current user (`GET /kyc/entities`); its type
+                         *     must be enabled for the tenant. The link is set once at
+                         *     creation and is immutable. Omitted → wallet is created
+                         *     without a linked entity (legacy behaviour).
+                         *
+                         */
+                        kyc_entity_id?: string;
                     };
                 };
             };
@@ -8142,14 +8489,14 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Bad request - invalid type */
+                /** @description Bad request — invalid name, or `kyc_entity_id` is malformed / not an entity of the current user / belongs to another tenant */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Forbidden - no permission to create wallets */
+                /** @description Forbidden — no permission to create wallets, or the entity type is not enabled for the tenant */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -9873,6 +10220,8 @@ export interface paths {
          *     - Cannot invite yourself
          *     - Cannot invite a current owner of this wallet
          *     - Cannot invite a user who is already a member (active or deactivated)
+         *     - When the tenant has KYC enabled, the wallet's entity must be `APPROVED`;
+         *       otherwise the invite is rejected with 403 `KYC_REQUIREMENTS_NOT_MET`
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -9926,7 +10275,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Access denied (insufficient wallet role) */
+                /** @description Access denied (insufficient wallet role) or KYC not approved for the wallet entity */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -10232,6 +10581,12 @@ export interface components {
             memo?: string | null;
             /** Format: uuid */
             currency_id?: string;
+            /**
+             * @description Hosting classification of the address. Defaults to unknown.
+             * @default unknown
+             * @enum {string}
+             */
+            wallet_custody_type: "custodial" | "selfhosted" | "unknown";
             currency: components["schemas"]["CounterpartyCurrencyRef"];
             /** Format: date-time */
             created_at: string;
@@ -10274,6 +10629,60 @@ export interface components {
              * @description Wallet the transfer would go to — use it to create an INTERNAL destination. Present only when available=true; null otherwise.
              */
             target_wallet_id: string | null;
+        };
+        /** @description Bank postal address resolved from the bank identifier. Intentionally mirrors the CounterpartyBankingAddress shape so the payload can prefill a counterparty form as-is. */
+        BankDataAddress: {
+            /** @description Resolved `countries.id` of the bank’s country; null when it could not be resolved */
+            country_id: number | null;
+            /** @description Always null today (reserved for future enrichment) */
+            state_id: number | null;
+            city: string | null;
+            postcode: string | null;
+            /** @description Bank street address line */
+            street1: string | null;
+            /** @description Always null today (reserved) */
+            street2: string | null;
+            /** @description Always null today (reserved) */
+            description: string | null;
+        };
+        /**
+         * @description Normalised bank data resolved from a bank identifier. Which identifier fields are populated depends on the looked-up code type: IBAN → `iban` + `swift_bic` (plus `account_number`/`sort_code` for GB IBANs), SWIFT/BIC → `swift_bic`, US RTN → `routing_number`; identifier fields not applicable to the code type are null. `bank_name` and `address` are populated for every code type whenever they are available.
+         * @example {
+         *       "account_number": "31926819",
+         *       "bank_name": "NATIONAL WESTMINSTER BANK PLC",
+         *       "note": null,
+         *       "routing_number": null,
+         *       "swift_bic": "NWBKGB2LXXX",
+         *       "iban": "GB29NWBK60161331926819",
+         *       "sort_code": "601613",
+         *       "address": {
+         *         "country_id": 230,
+         *         "state_id": null,
+         *         "city": "London",
+         *         "postcode": null,
+         *         "street1": null,
+         *         "street2": null,
+         *         "description": null
+         *       }
+         *     }
+         */
+        BankData: {
+            /** @description Populated only for GB IBANs (22 chars): the embedded 8-digit account number (IBAN positions 14-22); null otherwise */
+            account_number: string | null;
+            /** @description Registered bank name; null when unavailable */
+            bank_name: string | null;
+            /** @description Always null today (reserved) */
+            note: string | null;
+            /** @description Populated only when the looked-up code is a US routing number (echoes the RTN); null otherwise */
+            routing_number: string | null;
+            /** @description SWIFT/BIC (ISO 9362); populated for SWIFT lookups and for IBAN lookups when the IBAN resolves to a BIC */
+            swift_bic: string | null;
+            /** @description Populated only for IBAN lookups (the normalised IBAN itself) */
+            iban: string | null;
+            /** @description Populated only for GB IBANs: the embedded 6-digit sort code (IBAN positions 8-14); null otherwise */
+            sort_code: string | null;
+            /** @description Bank postal address (always present) */
+            address: components["schemas"]["BankDataAddress"];
         };
         /** @description Bank / rail account coordinates for a sub-account. Rail-dependent — some rails return only a subset of these. */
         BankAccountDetails: {
@@ -10735,7 +11144,7 @@ export interface components {
         };
         /** @description Public order metadata fields */
         OrderMeta: {
-            /** @description Idempotency key passed at creation time */
+            /** @description Legacy idempotency key — null on orders created by the current flow */
             request_id?: string | null;
             note?: string | null;
             reference?: string | null;
@@ -10805,8 +11214,6 @@ export interface components {
             counterparty_destination_id: string;
             /** Format: uuid */
             wallet_account_id?: string;
-            /** @description Idempotency key (UUID) */
-            request_id: string;
             reference?: string;
             note?: string;
             /** @description Optional supporting documents persisted with the order. */
@@ -10827,8 +11234,6 @@ export interface components {
             virtual_account_id: string;
             /** Format: uuid */
             counterparty_destination_id: string;
-            /** @description Idempotency key (UUID) */
-            request_id: string;
             reference?: string;
             note?: string;
             /** @description Optional supporting documents persisted with the order. */
@@ -10849,11 +11254,6 @@ export interface components {
              * @description Destination currency UUID
              */
             to_currency_id: string;
-            /**
-             * Format: uuid
-             * @description Idempotency key (UUID); OTP-verified at approve
-             */
-            request_id: string;
         };
         /** @description Wallet invitation record */
         WalletInvite: {
