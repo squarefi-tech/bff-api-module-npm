@@ -44,6 +44,12 @@ export type UseOrderCalcProps = {
   calcHandler: (props: OrderCalcHandlerProps) => Promise<CalcResult>;
   disableCalculation?: boolean;
   to_address?: string;
+  // Allowed range for the SELL amount. When set, a sell amount below `minSellAmount` or above
+  // `maxSellAmount` is not sent to `calcHandler` — no backend request is made, so the backend range error
+  // never surfaces. Applies to the forward direction only: a reverse (buy-amount) edit derives the sell
+  // amount server-side and cannot be range-checked up front. Omitted → no range gating (previous behaviour).
+  minSellAmount?: number | null;
+  maxSellAmount?: number | null;
 };
 
 export type UseOrderCalcData = {
@@ -64,6 +70,8 @@ export const useOrderCalc: UseOrderCalc = ({
   calcHandler,
   disableCalculation,
   to_address,
+  minSellAmount,
+  maxSellAmount,
 }) => {
   const [sellingAmount, setSellingAmount] = useState(0);
   const [buyingAmount, setBuyingAmount] = useState(0);
@@ -115,6 +123,18 @@ export const useOrderCalc: UseOrderCalc = ({
 
     if (!calcParams.amount) {
       resetOrderCalc();
+      return;
+    }
+
+    // Skip the backend calc for a sell amount outside the allowed range: returning before the request (and
+    // before the pending flag is set) means no error is thrown, so no error toast reaches the user. Forward
+    // direction only — a reverse edit derives the sell amount server-side. calcData is left untouched so the
+    // caller's stale-guard still blocks submit until a valid amount.
+    if (
+      !is_reverse &&
+      ((minSellAmount != null && calcParams.amount < minSellAmount) ||
+        (maxSellAmount != null && calcParams.amount > maxSellAmount))
+    ) {
       return;
     }
 
