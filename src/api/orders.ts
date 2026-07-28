@@ -405,14 +405,6 @@ export const orders = {
             '/frontend/orders/withdrawal/fps',
             { data },
           ),
-
-        card: (
-          data: API.Orders.Frontend.Create.Withdrawal.Card.Request,
-        ): Promise<API.Orders.Frontend.Create.Withdrawal.Card.Response> =>
-          apiClientV1Frontend.postRequest<API.Orders.Frontend.Create.Withdrawal.Card.Response>(
-            '/frontend/orders/withdrawal/card',
-            { data },
-          ),
       },
 
       exchange: (

@@ -2338,26 +2338,6 @@ export namespace API {
             export type Request = componentsV1Frontend['schemas']['FrontendL2FOrderRequest'];
             export type Response = OrderEnvelope;
           }
-
-          export namespace Card {
-            // Hand-written: the frontend spec dropped `POST /frontend/orders/withdrawal/card` (card
-            // top-ups moved to `POST /frontend/issuing/cards/{card_id}/deposit`). Shape preserved
-            // verbatim from the last generated version so existing callers keep compiling.
-            export type Request = {
-              wallet_id: string;
-              amount: number;
-              /** Source currency UUID */
-              from_uuid: string;
-              sub_account_id: string;
-              /** Optional specific card ID */
-              card_id?: string;
-              /** Idempotency key */
-              reference_id?: string;
-              note?: string;
-              documents?: OrderDocumentInput[];
-            };
-            export type Response = OrderEnvelope;
-          }
         }
 
         export namespace Exchange {
