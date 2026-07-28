@@ -858,6 +858,48 @@ export namespace API {
         }
       }
     }
+
+    export namespace Issuing {
+      type CardDepositRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/deposit'];
+      type CardWithdrawRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/withdraw'];
+      type SubAccountDepositRoot = pathsV1Frontend['/frontend/issuing/sub-accounts/{sub_account_id}/deposit'];
+      type SubAccountWithdrawRoot = pathsV1Frontend['/frontend/issuing/sub-accounts/{sub_account_id}/withdraw'];
+
+      export namespace SubAccounts {
+        export namespace Deposit {
+          export type Request = {
+            sub_account_id: string;
+          } & SubAccountDepositRoot['post']['requestBody']['content']['application/json'];
+          export type Response = SubAccountDepositRoot['post']['responses']['200']['content']['application/json'];
+        }
+
+        export namespace Withdraw {
+          export type Request = {
+            sub_account_id: string;
+          } & SubAccountWithdrawRoot['post']['requestBody']['content']['application/json'];
+          export type Response = SubAccountWithdrawRoot['post']['responses']['200']['content']['application/json'];
+        }
+      }
+
+      export namespace Cards {
+        export namespace Deposit {
+          export type Request = {
+            card_id: string;
+          } & CardDepositRoot['post']['requestBody']['content']['application/json'];
+          // The spec documents no `200` body for the card-level wrappers, but they are handled by the
+          // same controller as the sub-account routes (the sub-account is resolved from `card_id`),
+          // so the response is the sub-account one.
+          export type Response = SubAccounts.Deposit.Response;
+        }
+
+        export namespace Withdraw {
+          export type Request = {
+            card_id: string;
+          } & CardWithdrawRoot['post']['requestBody']['content']['application/json'];
+          export type Response = SubAccounts.Withdraw.Response;
+        }
+      }
+    }
   }
 
   // export namespace SubAccountsV2 {
