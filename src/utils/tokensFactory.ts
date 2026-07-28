@@ -42,6 +42,17 @@ export async function refreshTokens(): Promise<ITokens> {
       init_data_raw,
     });
 
+    // Clerk tenants answer with a one-time sign-in ticket instead of a session: there is no bearer
+    // token to store here. Those apps must exchange the ticket via Clerk JS and register
+    // `setAccessTokenProvider`, which bypasses this localStorage flow entirely.
+    if (!('access_token' in telegramSignInResponse)) {
+      return Promise.reject(
+        new Error(
+          'Telegram sign-in returned a Clerk ticket instead of a session; exchange it via Clerk and use setAccessTokenProvider',
+        ),
+      );
+    }
+
     setTokens(telegramSignInResponse);
     return telegramSignInResponse;
   }

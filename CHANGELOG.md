@@ -7,9 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`user.verification.init` and `user.verification.resume`** — the per-user Sumsub verification ladder (`POST /user/verification/init`, `POST /user/verification/resume`). `init({ flow })` starts (or moves the applicant up to) the level for the requested step and returns `{ verificationId, verificationToken }` for the Sumsub WebSDK; `resume()` re-issues the WebSDK token for the level the user is already on. `flow` is `'data' | 'documents' | 'face'`: `data` collects the base profile, `documents` and `face` are the optional follow-up steps. Both are per-user and independent of the wallet-scoped `kyc.*` entity flow. `init` answers `404` when the tenant has no level configured for that step (the per-tenant rollout gate); `resume` answers `404` when the user was never initialized.
+- **`API.User.Verification.*` types** — `Flow`, `Init.Request`, `Init.Response`, `Resume.Response`.
+- **`UserVerificationFlows` enum** (`DATA` / `DOCUMENTS` / `FACE`) in `constants.ts`, with the usual compile-time parity check against the generated `API.User.Verification.Flow` union.
+- **New read-only fields on `API.User.UserData.UserData`** (returned by `user.userData.get()`): `identity_verification_status` and `face_verification_status` carry the per-step outcome (same status union as `kyc_status`, so the existing `KYCStatuses` enum applies, default `UNVERIFIED`), plus `profile_source` and `profile_synced_at` describing where the stored profile came from and when it was last synced from the provider. Poll `user.userData.get()` after the WebSDK reports completion — the step statuses and the profile fields (`first_name`, `last_name`, `birth_date`, `nationality`) are updated from the provider verdict, not from the client.
+
+### Changed
+
+- **`auth.signin.telegram` / `auth.signup.telegram` responses are now a union.** Supabase tenants still answer with the session (`{ access_token, refresh_token, expires_in, token_type, ... }`); Clerk tenants answer with a one-time sign-in ticket (`{ ticket, expires_at }`) to be exchanged via Clerk JS (`signIn.create({ strategy: 'ticket', ticket })`). Narrow on `'access_token' in response` before reading session fields. `refreshTokens()` handles the ticket variant by rejecting with an explicit error instead of silently storing nothing — Clerk apps should register `setAccessTokenProvider` and never reach that path. This resolves the apiV2 drift that had been failing the pre-commit `update:types && build` since v1.36.30.
+- **`API.Orders.Frontend.Create.Withdrawal.Card.Request` is now a hand-written type** with the same shape as before (`wallet_id`, `amount`, `from_uuid`, `sub_account_id`, optional `card_id` / `reference_id` / `note` / `documents`). The backend removed `POST /frontend/orders/withdrawal/card` from the OpenAPI spec (card top-ups now go through `POST /frontend/issuing/cards/{card_id}/deposit`), so the generated type no longer exists. The `orders.frontend.create.withdrawal.card` method is kept as-is to avoid breaking callers, but **it may now 404 against the backend** — migrate to the issuing deposit endpoint. The same removal applies to the tenant/external/v1 `deposit/card` and `withdrawal/card` paths, which the SDK does not expose.
+- **Regenerated all OpenAPI types.** Beyond the changes above, the specs gained `/kyc/entities*` (user-scoped KYC entity CRUD plus its own `init` / `resume`, superseding the now-`@deprecated` `/kyc/init/{wallet_id}/{type}` and `/kyc/resume/{wallet_id}/{verification_ref}` that `kyc.dataCollection.*` still calls) and `/frontend/mass-payouts/*`, and dropped the `/persona/inquiries/*` and `L2F_*_OFFRAMP` paths. No SDK methods were added or removed for these — the types are available to consumers that need them.
+
 ## [1.36.31] - 2026-07-23
 
+### Added
+
+- **`useOrderCalc` accepts optional `minSellAmount` / `maxSellAmount`.** When set, a forward-direction sell amount outside the range is never sent to `calcHandler` — the hook bails out before the request and before raising the pending flag, so the backend's range error (and the resulting error toast) never fires. Reverse-direction edits are not gated, since the sell amount is derived server-side. Omitting both props keeps the previous behaviour.
+
 ## [1.36.30] - 2026-07-23
+
+### Changed
+
+- **`request_id` is no longer required on the `orders.frontend.create.*` requests.** Reverses the requirement introduced in 1.36.29: the backend dropped `request_id` from `FrontendCryptoTransferRequest`, `FrontendL2FOrderRequest`, and `FrontendExchangeOrderRequest`, and `orders.frontend.approve` is now OTP-gated by the order id instead. Regenerated from the live frontend spec.
 
 ## [1.36.29] - 2026-07-17
 

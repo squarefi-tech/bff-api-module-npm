@@ -345,6 +345,16 @@ export enum KYCStatuses {
 export const KYCStatusCheck: IsEnumEqualToUnion<KYCStatuses, API.KYC.KYCStatus> = true;
 export type KYCStatusMismatch = EnumUnionMismatch<KYCStatuses, API.KYC.KYCStatus>;
 
+// Steps of the per-user verification ladder passed to `user.verification.init`.
+export enum UserVerificationFlows {
+  DATA = 'data',
+  DOCUMENTS = 'documents',
+  FACE = 'face',
+}
+
+export const UserVerificationFlowCheck: IsEnumEqualToUnion<UserVerificationFlows, API.User.Verification.Flow> = true;
+export type UserVerificationFlowMismatch = EnumUnionMismatch<UserVerificationFlows, API.User.Verification.Flow>;
+
 export enum OrderStatuses {
   NEW = 'NEW',
   PENDING = 'PENDING',

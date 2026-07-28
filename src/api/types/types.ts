@@ -2340,8 +2340,22 @@ export namespace API {
           }
 
           export namespace Card {
-            export type Request =
-              pathsV1Frontend['/frontend/orders/withdrawal/card']['post']['requestBody']['content']['application/json'];
+            // Hand-written: the frontend spec dropped `POST /frontend/orders/withdrawal/card` (card
+            // top-ups moved to `POST /frontend/issuing/cards/{card_id}/deposit`). Shape preserved
+            // verbatim from the last generated version so existing callers keep compiling.
+            export type Request = {
+              wallet_id: string;
+              amount: number;
+              /** Source currency UUID */
+              from_uuid: string;
+              sub_account_id: string;
+              /** Optional specific card ID */
+              card_id?: string;
+              /** Idempotency key */
+              reference_id?: string;
+              note?: string;
+              documents?: OrderDocumentInput[];
+            };
             export type Response = OrderEnvelope;
           }
         }
@@ -2916,6 +2930,25 @@ export namespace API {
 
         export type Response =
           operations['UserController_updateMyUserData']['responses']['200']['content']['application/json'];
+      }
+    }
+
+    export namespace Verification {
+      // Steps of the per-user Sumsub ladder: `data` collects the base profile (name, birth date,
+      // nationality), `documents` and `face` are the optional follow-up steps. Their outcome is
+      // reported back on user-data as `identity_verification_status` / `face_verification_status`.
+      export type Flow = components['schemas']['UserVerificationFlow'];
+
+      export namespace Init {
+        export type Request =
+          operations['UserVerificationController_init']['requestBody']['content']['application/json'];
+        export type Response =
+          operations['UserVerificationController_init']['responses']['200']['content']['application/json'];
+      }
+
+      export namespace Resume {
+        export type Response =
+          operations['UserVerificationController_resume']['responses']['200']['content']['application/json'];
       }
     }
   }

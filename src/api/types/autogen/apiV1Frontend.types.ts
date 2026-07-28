@@ -2125,7 +2125,7 @@ export interface paths {
                          * Format: uuid
                          * @description Optional. Binds the card to a wallet member so a scoped `user` role can
                          *     access ONLY this card (view, sensitive data, transactions, freeze/unfreeze),
-                         *     and nothing else in the wallet (SFI-1382). Must be the `user_data.uuid` of an
+                         *     and nothing else in the wallet. Must be the `user_data.uuid` of an
                          *     active member of the target wallet; resolved server-side to the card's owner.
                          *
                          * @example a1b2c3d4-e5f6-7890-abcd-ef1234567890
@@ -2819,11 +2819,13 @@ export interface paths {
         put?: never;
         /**
          * Deposit funds to card
-         * @description Deposits funds to a card from the associated wallet.
+         * @description Thin wrapper over the sub-account deposit: the card's sub-account is
+         *     resolved from `card_id` and the request is processed by the same
+         *     implementation as POST /frontend/issuing/sub-accounts/{sub_account_id}/deposit
+         *     (same order types, validation and program routing).
          *
-         *     **Authentication**: Bearer token with x-tenant-id header required
-         *
-         *     **Access Control**: User must have access to the card
+         *     **Authentication**: Bearer token with x-tenant-id header required.
+         *     **Access Control**: wallet ADMIN role on the card's wallet.
          *
          */
         post: {
@@ -2841,85 +2843,53 @@ export interface paths {
                     "application/json": {
                         /**
                          * Format: uuid
-                         * @description Unique reference ID for idempotency (must be valid UUID)
-                         * @example 550e8400-e29b-41d4-a716-446655440000
+                         * @description Unique reference ID for idempotency
                          */
                         reference_id: string;
                         /**
                          * Format: uuid
-                         * @description UUID of the currency to deduct from wallet
-                         * @example 509eca03-bc0d-4a38-b7dc-d136d2bdaa43
+                         * @description UUID of the currency to deduct from the wallet
                          */
                         from_currency_id: string;
-                        /**
-                         * @description Amount to deposit
-                         * @example 100.5
-                         */
                         amount: number;
-                        /**
-                         * @description Optional description for the deposit
-                         * @example Monthly card funding
-                         */
                         note?: string;
                     };
                 };
             };
             responses: {
-                /** @description Deposit successful */
+                /** @description Deposit order created (COMPLETE, FAILED, or PROCESSING for workflow-routed programs) */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            data?: {
-                                /**
-                                 * Format: uuid
-                                 * @description Unique order identifier
-                                 */
-                                order_uuid?: string;
-                                /** @description Transaction ID for tracking */
-                                transaction_id?: string;
-                                /** @enum {string} */
-                                status?: "PENDING" | "COMPLETE" | "FAILED";
-                                amount_from?: number;
-                                amount_to?: number;
-                                /** Format: date-time */
-                                created_at?: string;
-                            };
-                        };
-                    };
+                    content?: never;
                 };
-                /** @description Bad Request - One of the following:
-                 *     - Missing required fields
-                 *     - Invalid reference_id format
-                 *     - Invalid amount (must be positive number)
-                 *      */
+                /** @description Validation error */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
-                /** @description Forbidden - One of the following:
-                 *     - Access denied to this card
-                 *     - Insufficient wallet balance
-                 *     - Topup not allowed (limits exceeded)
-                 *      */
+                /** @description Access denied to this card */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
-                /** @description Card or wallet not found */
+                /** @description Card or sub-account not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -2940,13 +2910,14 @@ export interface paths {
         put?: never;
         /**
          * Withdraw funds from card
-         * @description Withdraws funds from a card back to the associated wallet.
+         * @description Thin wrapper over the sub-account withdraw: the card's sub-account is
+         *     resolved from `card_id` and the request is processed by the same
+         *     implementation as POST /frontend/issuing/sub-accounts/{sub_account_id}/withdraw
+         *     (same order types and validation; concurrent withdrawals on the same
+         *     sub-account are rejected with 409).
          *
-         *     **Authentication**: Bearer token with x-tenant-id header required
-         *
-         *     **Access Control**: User must have access to the card
-         *
-         *     **Note**: This endpoint may not be implemented yet.
+         *     **Authentication**: Bearer token with x-tenant-id header required.
+         *     **Access Control**: wallet ADMIN role on the card's wallet.
          *
          */
         post: {
@@ -2962,60 +2933,54 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        /**
-                         * @description Amount to withdraw
-                         * @example 50
-                         */
+                        /** @description Amount to withdraw back to the wallet */
                         amount: number;
-                        /**
-                         * @description Optional description for the withdrawal
-                         * @example Refund to wallet
-                         */
-                        description?: string;
                     };
                 };
             };
             responses: {
-                /** @description Withdrawal successful */
+                /** @description Withdrawal completed */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            data?: {
-                                /** Format: uuid */
-                                transaction_id?: string;
-                                amount?: number;
-                                new_balance?: number;
-                                /** @example completed */
-                                status?: string;
-                            };
-                        };
-                    };
+                    content?: never;
                 };
-                /** @description Invalid amount or insufficient card balance */
+                /** @description Validation error */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description Access denied to this card */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
-                /** @description Not implemented */
-                501: {
+                /** @description Card or sub-account not found */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Another withdrawal for this sub-account is in progress */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -4915,6 +4880,573 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/frontend/mass-payouts/{wallet_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List mass payouts of a wallet */
+        get: {
+            parameters: {
+                query?: {
+                    status?: "DRAFT" | "PENDING_APPROVAL" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELED";
+                    limit?: number;
+                    offset?: number;
+                };
+                header?: never;
+                path: {
+                    /** @description Source wallet the batches belong to */
+                    wallet_id: components["parameters"]["MassPayoutWalletId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Page of batches, newest first */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                items?: components["schemas"]["MassPayout"][];
+                                total?: number;
+                                limit?: number;
+                                offset?: number;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Create a mass payout draft
+         * @description Creates a batch of payouts to existing counterparty destinations: one
+         *     source wallet, one currency, up to the tenant's batch-size limit of
+         *     recipients (default 100). The draft can be freely edited and
+         *     previewed; nothing moves until it is submitted and approved.
+         *     `virtual_account_id` is required only when the list contains banking
+         *     recipients. Requires an administrative role on the source wallet.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Source wallet the batches belong to */
+                    wallet_id: components["parameters"]["MassPayoutWalletId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        currency_id: string;
+                        /** Format: uuid */
+                        virtual_account_id?: string;
+                        name: string;
+                        items: components["schemas"]["MassPayoutItemInput"][];
+                    };
+                };
+            };
+            responses: {
+                /** @description Draft created */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["MassPayout"];
+                        };
+                    };
+                };
+                /** @description Validation error (including the batch-size limit) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Caller lacks permission on the source wallet */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/mass-payouts/{wallet_id}/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a mass payout */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Source wallet the batches belong to */
+                    wallet_id: components["parameters"]["MassPayoutWalletId"];
+                    id: components["parameters"]["MassPayoutId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Batch details with progress counters and total amount */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["MassPayout"];
+                        };
+                    };
+                };
+                /** @description Mass payout not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/mass-payouts/{wallet_id}/{id}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List items of a mass payout
+         * @description Items in upload order, paginated with limit/offset like the batch list.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    offset?: number;
+                };
+                header?: never;
+                path: {
+                    /** @description Source wallet the batches belong to */
+                    wallet_id: components["parameters"]["MassPayoutWalletId"];
+                    id: components["parameters"]["MassPayoutId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Page of items */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                items?: components["schemas"]["MassPayoutItem"][];
+                                total?: number;
+                                limit?: number;
+                                offset?: number;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/mass-payouts/{wallet_id}/{id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview a mass payout
+         * @description Dry-run before submitting: validates every recipient, estimates the fee
+         *     per item through the tenant's pricing, sums the total debit and checks
+         *     it against the wallet balance. Crypto payouts to on-platform addresses
+         *     may execute cheaper than estimated (they settle internally).
+         *
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Source wallet the batches belong to */
+                    wallet_id: components["parameters"]["MassPayoutWalletId"];
+                    id: components["parameters"]["MassPayoutId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Validation report, fee estimates and balance check */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /** Format: uuid */
+                                id?: string;
+                                /** Format: uuid */
+                                currency_id?: string;
+                                total_items?: number;
+                                total_amount?: number;
+                                total_fees?: number;
+                                total_debit?: number;
+                                balance?: {
+                                    available?: number;
+                                    sufficient?: boolean;
+                                };
+                                valid_count?: number;
+                                invalid_count?: number;
+                                items?: {
+                                    /** Format: uuid */
+                                    item_id?: string;
+                                    position?: number;
+                                    /** Format: uuid */
+                                    destination_id?: string;
+                                    amount?: number;
+                                    fee?: number;
+                                    debit_amount?: number;
+                                    result_amount?: number;
+                                }[];
+                                problems?: {
+                                    /** Format: uuid */
+                                    item_id?: string;
+                                    position?: number;
+                                    /** Format: uuid */
+                                    destination_id?: string;
+                                    error?: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/mass-payouts/{wallet_id}/{id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit a mass payout for approval
+         * @description DRAFT → PENDING_APPROVAL. Refused while any recipient is invalid — the
+         *     problems are returned in the error details so the rows can be fixed.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Source wallet the batches belong to */
+                    wallet_id: components["parameters"]["MassPayoutWalletId"];
+                    id: components["parameters"]["MassPayoutId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Batch is awaiting approval */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["MassPayout"];
+                        };
+                    };
+                };
+                /** @description Batch has invalid items (details carry the per-item problems) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Batch is not in DRAFT */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/mass-payouts/{wallet_id}/{id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve a mass payout
+         * @description PENDING_APPROVAL → PROCESSING and starts the asynchronous execution:
+         *     every item becomes a regular order (created and approved through the
+         *     standard order flow, funds are debited per order). Requires an
+         *     administrative wallet role and a recent second-factor verification — a stale one is rejected
+         *     with `TWO_FACTOR_REVERIFICATION_REQUIRED`. Execution continues past
+         *     failed items; progress is visible through the batch counters.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Source wallet the batches belong to */
+                    wallet_id: components["parameters"]["MassPayoutWalletId"];
+                    id: components["parameters"]["MassPayoutId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Execution started */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["MassPayout"];
+                        };
+                    };
+                };
+                /** @description Second-factor verification is stale or the caller lacks permission */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Batch is not awaiting approval */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/mass-payouts/{wallet_id}/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel a mass payout
+         * @description Allowed from DRAFT and PENDING_APPROVAL. A PROCESSING batch cannot be canceled — payouts are already executing.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Source wallet the batches belong to */
+                    wallet_id: components["parameters"]["MassPayoutWalletId"];
+                    id: components["parameters"]["MassPayoutId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Batch canceled */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["MassPayout"];
+                        };
+                    };
+                };
+                /** @description Batch can no longer be canceled */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/mass-payouts/{wallet_id}/{id}/report.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download the mass payout report (CSV)
+         * @description Streaming CSV: recipient, amount, item status, the linked order and its
+         *     current status, and the failure reason for every unsuccessful payout.
+         *
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Source wallet the batches belong to */
+                    wallet_id: components["parameters"]["MassPayoutWalletId"];
+                    id: components["parameters"]["MassPayoutId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description CSV file */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/csv": string;
+                    };
+                };
+                /** @description Mass payout not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/frontend/orders/deposit/ach": {
         parameters: {
             query?: never;
@@ -5046,97 +5578,6 @@ export interface paths {
             responses: {
                 /** @description Not implemented */
                 501: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/frontend/orders/deposit/card": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Card
-         * @description Returns funds from a card sub-account back to a wallet.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /** Format: uuid */
-                        wallet_id: string;
-                        amount: number;
-                        /** Format: uuid */
-                        sub_account_id: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Card return order created */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            data?: components["schemas"]["Order"];
-                            /** @example Card return order created */
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Missing required fields or invalid amount */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Authentication required */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Caller is not an admin of the wallet */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Card return failed */
-                500: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -5290,6 +5731,11 @@ export interface paths {
                          */
                         counterparty_destination_id: string;
                         amount: number;
+                        /**
+                         * Format: date-time
+                         * @description Optional. Schedule the transfer for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically.
+                         */
+                        scheduled_at?: string;
                         /** @description Optional supporting documents persisted with the order. */
                         documents?: components["schemas"]["OrderDocumentInput"][];
                     };
@@ -5924,112 +6370,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/frontend/orders/withdrawal/card": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Card
-         * @description Funds a card sub-account from a wallet.
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /** Format: uuid */
-                        wallet_id: string;
-                        amount: number;
-                        /**
-                         * Format: uuid
-                         * @description Source currency UUID
-                         */
-                        from_uuid: string;
-                        /** Format: uuid */
-                        sub_account_id: string;
-                        /**
-                         * Format: uuid
-                         * @description Optional specific card ID
-                         */
-                        card_id?: string;
-                        /** @description Idempotency key */
-                        reference_id?: string;
-                        note?: string;
-                        /** @description Optional supporting documents persisted with the order. */
-                        documents?: components["schemas"]["OrderDocumentInput"][];
-                    };
-                };
-            };
-            responses: {
-                /** @description Card topup order created */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            data?: components["schemas"]["Order"];
-                            /** @example Card topup order created */
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Missing required fields or invalid amount */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Authentication required */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Caller is not an admin of the source wallet */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Card topup failed */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/frontend/orders/{order_id}/approve": {
         parameters: {
             query?: never;
@@ -6047,7 +6387,9 @@ export interface paths {
          *     (TRANSFER_INTERNAL / OMNIBUS_INTERNAL_TRANSFER) settle synchronously
          *     and land in COMPLETE. An insufficient balance fails the order
          *     (FAILED). OTP verification is mandatory and keyed on the order id
-         *     (request the OTP for the order being approved).
+         *     (request the OTP for the order being approved). Orders created with
+         *     `scheduled_at` move to EXPECTED instead — no funds are debited until
+         *     execution at the requested time.
          *
          */
         post: {
@@ -6109,7 +6451,12 @@ export interface paths {
         put?: never;
         /**
          * Cancel an order
-         * @description Cancels a NEW/FAILED order, cancels its workflow run, and refunds the debited funds (if the order was ever approved).
+         * @description Cancels a NEW or EXPECTED order and cancels its workflow run. Neither
+         *     status holds debited funds, so cancel never moves money.
+         *     BREAKING CHANGE (2026-07-26): FAILED is no longer cancelable and returns
+         *     409. Paying back an order that was debited and then failed is now a
+         *     separate, admin-panel-only refund action.
+         *
          */
         post: {
             parameters: {
@@ -6130,7 +6477,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Order canceled (debited funds refunded when applicable) */
+                /** @description Order canceled (no balance change) */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -6783,234 +7130,6 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": components["schemas"]["FrontendCryptoTransferRequest"];
-                };
-            };
-            responses: {
-                /** @description Order created */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/frontend/orders/L2F_WIRE_OFFRAMP": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Create wire offramp */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["FrontendL2FOrderRequest"];
-                };
-            };
-            responses: {
-                /** @description Order created */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/frontend/orders/L2F_ACH_OFFRAMP": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Create ACH offramp */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["FrontendL2FOrderRequest"];
-                };
-            };
-            responses: {
-                /** @description Order created */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/frontend/orders/L2F_SEPA_OFFRAMP": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Create SEPA offramp */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["FrontendL2FOrderRequest"];
-                };
-            };
-            responses: {
-                /** @description Order created */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/frontend/orders/L2F_SWIFT_OFFRAMP": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Create SWIFT offramp */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["FrontendL2FOrderRequest"];
-                };
-            };
-            responses: {
-                /** @description Order created */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/frontend/orders/L2F_CHAPS_OFFRAMP": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Create CHAPS offramp */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["FrontendL2FOrderRequest"];
-                };
-            };
-            responses: {
-                /** @description Order created */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/frontend/orders/L2F_FPS_OFFRAMP": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Create FPS offramp */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["FrontendL2FOrderRequest"];
                 };
             };
             responses: {
@@ -10436,7 +10555,7 @@ export interface components {
          * @example EXCHANGE_OMNI
          * @enum {string}
          */
-        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE";
+        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE";
         OrderCalculation: {
             /**
              * Format: uuid
@@ -11167,11 +11286,16 @@ export interface components {
             amount_to?: number | null;
             order_type?: string;
             /** @enum {string} */
-            status?: "NEW" | "PROCESSING" | "COMPLETE" | "FAILED" | "CANCELED";
+            status?: "NEW" | "EXPECTED" | "PROCESSING" | "COMPLETE" | "FAILED" | "CANCELED" | "REFUNDED";
             /** Format: uuid */
             sub_account_id?: string | null;
             info?: string | null;
             meta?: components["schemas"]["OrderMeta"];
+            /**
+             * Format: date-time
+             * @description Requested execution time for scheduled payments (status EXPECTED); null for immediate orders
+             */
+            scheduled_at?: string | null;
             /** Format: date-time */
             created_at?: string;
             /** Format: date-time */
@@ -11216,6 +11340,11 @@ export interface components {
             wallet_account_id?: string;
             reference?: string;
             note?: string;
+            /**
+             * Format: date-time
+             * @description Optional. Schedule the payment for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically.
+             */
+            scheduled_at?: string;
             /** @description Optional supporting documents persisted with the order. */
             documents?: components["schemas"]["OrderDocumentInput"][];
         };
@@ -11236,6 +11365,11 @@ export interface components {
             counterparty_destination_id: string;
             reference?: string;
             note?: string;
+            /**
+             * Format: date-time
+             * @description Optional. Schedule the payment for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically.
+             */
+            scheduled_at?: string;
             /** @description Optional supporting documents persisted with the order. */
             documents?: components["schemas"]["OrderDocumentInput"][];
         };
@@ -11366,6 +11500,66 @@ export interface components {
             /** Format: uuid */
             wallet_id?: string;
         };
+        MassPayout: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            wallet_id?: string;
+            /** Format: uuid */
+            currency_id?: string;
+            /**
+             * Format: uuid
+             * @description Source virtual account for banking payouts (required only when the batch contains banking recipients)
+             */
+            virtual_account_id?: string | null;
+            name?: string;
+            /** @enum {string} */
+            status?: "DRAFT" | "PENDING_APPROVAL" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELED";
+            total_items?: number;
+            total_amount?: number;
+            completed_count?: number;
+            failed_count?: number;
+            /**
+             * Format: uuid
+             * @description User id of the wallet member who approved the batch; null until approved
+             */
+            approved_by?: string | null;
+            /** Format: date-time */
+            approved_at?: string | null;
+            error_message?: string | null;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            finished_at?: string | null;
+        };
+        MassPayoutItem: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            destination_id?: string;
+            amount?: number;
+            /** @enum {string} */
+            status?: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+            /**
+             * Format: uuid
+             * @description The regular order created for this item at execution
+             */
+            order_id?: string | null;
+            error_message?: string | null;
+            position?: number;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            processed_at?: string | null;
+        };
+        MassPayoutItemInput: {
+            /**
+             * Format: uuid
+             * @description Existing counterparty destination of the source wallet
+             */
+            destination_id: string;
+            amount: number;
+        };
     };
     responses: {
         /** @description Authentication credentials are missing or invalid */
@@ -11423,6 +11617,9 @@ export interface components {
          * @example e04c0c85-b031-47d7-8541-207b4e83d91a
          */
         TenantId: string;
+        /** @description Source wallet the batches belong to */
+        MassPayoutWalletId: string;
+        MassPayoutId: string;
     };
     requestBodies: never;
     headers: never;
