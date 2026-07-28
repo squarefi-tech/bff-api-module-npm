@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.32] - 2026-07-28
+
 ### Added
 
 - **`user.verification.init` and `user.verification.resume`** — the per-user Sumsub verification ladder (`POST /user/verification/init`, `POST /user/verification/resume`). `init({ flow })` starts (or moves the applicant up to) the level for the requested step and returns `{ verificationId, verificationToken }` for the Sumsub WebSDK; `resume()` re-issues the WebSDK token for the level the user is already on. `flow` is `'data' | 'documents' | 'face'`: `data` collects the base profile, `documents` and `face` are the optional follow-up steps. Both are per-user and independent of the wallet-scoped `kyc.*` entity flow. `init` answers `404` when the tenant has no level configured for that step (the per-tenant rollout gate); `resume` answers `404` when the user was never initialized.
