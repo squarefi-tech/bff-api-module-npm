@@ -7,6 +7,7 @@ import {
   CounterpartyDestinationType,
   CurrencyType,
   IssuingProgramStatus,
+  OrderStatuses,
   OrderType,
   SortingDirection,
   SubAccountType,
@@ -855,6 +856,61 @@ export namespace API {
               revoked_at: string;
             };
           };
+        }
+      }
+    }
+
+    export namespace Issuing {
+      type CardDepositRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/deposit'];
+      type CardWithdrawRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/withdraw'];
+      type SubAccountDepositRoot = pathsV1Frontend['/frontend/issuing/sub-accounts/{sub_account_id}/deposit'];
+      type SubAccountWithdrawRoot = pathsV1Frontend['/frontend/issuing/sub-accounts/{sub_account_id}/withdraw'];
+
+      // The spec narrows the returned `status` to `PENDING | COMPLETE | FAILED`, but the handler
+      // answers with the raw order status (`formatOrderResponse` -> `status: order.status`), so a
+      // workflow-routed program reports `PROCESSING` — the card routes even document that. Widen to
+      // the SDK's order-status union so an exhaustive `switch` cannot silently treat an in-flight
+      // transfer as a failure.
+      type WithOrderStatus<T extends { data?: { status?: string } }> = Omit<T, 'data'> & {
+        data?: Omit<NonNullable<T['data']>, 'status'> & { status?: `${OrderStatuses}` };
+      };
+
+      export namespace SubAccounts {
+        export namespace Deposit {
+          export type Request = {
+            sub_account_id: string;
+          } & SubAccountDepositRoot['post']['requestBody']['content']['application/json'];
+          export type Response = WithOrderStatus<
+            SubAccountDepositRoot['post']['responses']['200']['content']['application/json']
+          >;
+        }
+
+        export namespace Withdraw {
+          export type Request = {
+            sub_account_id: string;
+          } & SubAccountWithdrawRoot['post']['requestBody']['content']['application/json'];
+          export type Response = WithOrderStatus<
+            SubAccountWithdrawRoot['post']['responses']['200']['content']['application/json']
+          >;
+        }
+      }
+
+      export namespace Cards {
+        export namespace Deposit {
+          export type Request = {
+            card_id: string;
+          } & CardDepositRoot['post']['requestBody']['content']['application/json'];
+          // The spec documents no `200` body for the card-level wrappers, but the controller resolves
+          // the sub-account from `card_id` and then `return`s the sub-account handler
+          // (`IssuingV2SubAccountController.depositByCard` -> `.deposit`), so the body is identical.
+          export type Response = SubAccounts.Deposit.Response;
+        }
+
+        export namespace Withdraw {
+          export type Request = {
+            card_id: string;
+          } & CardWithdrawRoot['post']['requestBody']['content']['application/json'];
+          export type Response = SubAccounts.Withdraw.Response;
         }
       }
     }
@@ -2338,12 +2394,6 @@ export namespace API {
             export type Request = componentsV1Frontend['schemas']['FrontendL2FOrderRequest'];
             export type Response = OrderEnvelope;
           }
-
-          export namespace Card {
-            export type Request =
-              pathsV1Frontend['/frontend/orders/withdrawal/card']['post']['requestBody']['content']['application/json'];
-            export type Response = OrderEnvelope;
-          }
         }
 
         export namespace Exchange {
@@ -2916,6 +2966,25 @@ export namespace API {
 
         export type Response =
           operations['UserController_updateMyUserData']['responses']['200']['content']['application/json'];
+      }
+    }
+
+    export namespace Verification {
+      // Steps of the per-user Sumsub ladder: `data` collects the base profile (name, birth date,
+      // nationality), `documents` and `face` are the optional follow-up steps. Their outcome is
+      // reported back on user-data as `identity_verification_status` / `face_verification_status`.
+      export type Flow = components['schemas']['UserVerificationFlow'];
+
+      export namespace Init {
+        export type Request =
+          operations['UserVerificationController_init']['requestBody']['content']['application/json'];
+        export type Response =
+          operations['UserVerificationController_init']['responses']['200']['content']['application/json'];
+      }
+
+      export namespace Resume {
+        export type Response =
+          operations['UserVerificationController_resume']['responses']['200']['content']['application/json'];
       }
     }
   }

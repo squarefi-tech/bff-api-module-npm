@@ -149,7 +149,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Sign up new user with telegram data */
+        /** Sign up new user with Telegram data. Returns TelegramSessionDto for Supabase tenants, TelegramTicketDto for Clerk tenants. */
         post: operations["AuthTelegramController_signUp"];
         delete?: never;
         options?: never;
@@ -166,7 +166,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Sign in user with telegram data */
+        /** Sign in user with Telegram data. Returns TelegramSessionDto for Supabase tenants, TelegramTicketDto for Clerk tenants. */
         post: operations["AuthTelegramController_signIn"];
         delete?: never;
         options?: never;
@@ -612,6 +612,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/user/verification/init": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Init user-level Sumsub verification (data / documents / face flow) */
+        post: operations["UserVerificationController_init"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/user/verification/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Re-issue the WebSDK access token for the current level */
+        post: operations["UserVerificationController_resume"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/kyc/init/{wallet_id}/{type}": {
         parameters: {
             query?: never;
@@ -621,6 +655,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * Init KYC data collection for a wallet. Deprecated: use POST /kyc/entities/{kyc_entity_id}/init
+         * @deprecated
+         */
         post: operations["KycController_initDataCollection"];
         delete?: never;
         options?: never;
@@ -637,7 +675,80 @@ export interface paths {
         };
         get?: never;
         put?: never;
+        /**
+         * Resume KYC data collection for a wallet. Deprecated: use POST /kyc/entities/{kyc_entity_id}/resume/{verification_ref}
+         * @deprecated
+         */
         post: operations["KycController_resumeDataCollection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/kyc/entities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List KYC entities of the current user */
+        get: operations["KycEntitiesController_findMy"];
+        put?: never;
+        /** Create a KYC entity for the current user */
+        post: operations["KycEntitiesController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/kyc/entities/{kyc_entity_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Return a KYC entity by id */
+        get: operations["KycEntitiesController_findById"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/kyc/entities/{kyc_entity_id}/init": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Init KYC data collection for the entity via the tenant provider */
+        post: operations["KycEntitiesController_initDataCollection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/kyc/entities/{kyc_entity_id}/resume/{verification_ref}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resume KYC data collection for the entity */
+        post: operations["KycEntitiesController_resumeDataCollection"];
         delete?: never;
         options?: never;
         head?: never;
@@ -651,7 +762,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Return kyc entity */
+        /** Return kyc entity linked to a wallet */
         get: operations["KycEntitiesController_findOne"];
         put?: never;
         post?: never;
@@ -707,46 +818,6 @@ export interface paths {
         put?: never;
         /** Confirm terms and conditions for KYC rail */
         post: operations["WalletKycRailsController_confirmTermsAndConditions"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/persona/inquiries/init/{wallet_id}/{type}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Deprecated. Use POST /kyc/init/{wallet_id}/{type} instead
-         * @deprecated
-         */
-        post: operations["PersonaController_initInquiry"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/persona/inquiries/{wallet_id}/{inquiry_id}/resume": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Deprecated. Use POST /kyc/resume/{wallet_id}/{verification_ref} instead
-         * @deprecated
-         */
-        post: operations["PersonaController_resumeInquiry"];
         delete?: never;
         options?: never;
         head?: never;
@@ -951,6 +1022,18 @@ export interface components {
              * @enum {string|null}
              */
             kyc_status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW" | null;
+            /**
+             * @default UNVERIFIED
+             * @enum {string}
+             */
+            identity_verification_status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
+            /**
+             * @default UNVERIFIED
+             * @enum {string}
+             */
+            face_verification_status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
+            readonly profile_source: string | null;
+            readonly profile_synced_at: string | null;
             referral_name: string | null;
             tenant_id: string;
             user_id: string;
@@ -1016,6 +1099,21 @@ export interface components {
              */
             readonly scope: "global" | "local" | "others";
         };
+        TelegramSessionDto: {
+            provider_token?: string | null;
+            provider_refresh_token?: string | null;
+            access_token: string;
+            expires_in: number;
+            expires_at?: number;
+            token_type: string;
+            refresh_token?: string | null;
+        };
+        TelegramTicketDto: {
+            /** @description One-time Clerk sign-in ticket. Exchange via Clerk JS: signIn.create({ strategy: "ticket", ticket }). */
+            ticket: string;
+            /** @description Unix timestamp (seconds) when the ticket expires. */
+            expires_at: number;
+        };
         TelegramContactDto: {
             user_id: number;
             phone_number: string;
@@ -1028,15 +1126,6 @@ export interface components {
             hash: string;
             invite_code?: string;
             referrer?: string;
-        };
-        TelegramSessionDto: {
-            provider_token?: string | null;
-            provider_refresh_token?: string | null;
-            access_token: string;
-            expires_in: number;
-            expires_at?: number;
-            token_type: string;
-            refresh_token?: string | null;
         };
         TelegramSignInByTgIdDto: {
             hash: string;
@@ -1368,6 +1457,19 @@ export interface components {
             total: number;
             data: (components["schemas"]["CryptoCurrencyDto"] | components["schemas"]["FiatCurrencyDto"])[];
         };
+        /** @enum {string} */
+        UserVerificationFlow: "data" | "documents" | "face";
+        InitUserVerificationRequestDto: {
+            flow: components["schemas"]["UserVerificationFlow"];
+        };
+        InitUserVerificationResponseDto: {
+            verificationId: string;
+            verificationToken: string;
+        };
+        ResumeUserVerificationResponseDto: {
+            verificationId: string;
+            verificationToken: string;
+        };
         InitKycDataCollectionResponseDto: {
             providerType: string;
             verificationId: string;
@@ -1377,6 +1479,13 @@ export interface components {
             providerType: string;
             verificationId: string;
             verificationToken?: string;
+        };
+        CreateKycEntityRequestDto: {
+            /**
+             * @example individual
+             * @enum {string}
+             */
+            type: "individual" | "business" | "universal";
         };
         GeneralInfo: Record<string, never>;
         ContactPersonInfo: Record<string, never>;
@@ -1482,6 +1591,8 @@ export interface components {
             address?: components["schemas"]["KycAddressDto"] | null;
         };
         KycEntityDto: {
+            id: string;
+            user_data_uuid: string;
             /** @enum {string} */
             type: "individual" | "business" | "universal";
             id_number?: string | null;
@@ -1581,7 +1692,7 @@ export interface components {
              */
             status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
             /** @enum {string|null} */
-            employment_status?: "EMPLOYEE" | "SELF_EMPLOYED" | "RETIRED" | "UNEMPLOYED" | "OTHER" | null;
+            employment_status?: "EMPLOYEE" | "SELF_EMPLOYED" | "RETIRED" | "UNEMPLOYED" | "STUDENT" | "OTHER" | null;
             employment_description?: string | null;
             description_of_business_nature?: string | null;
             /** @enum {string|null} */
@@ -1618,6 +1729,20 @@ export interface components {
             business_proof_of_address_url?: string | null;
             /** @enum {string|null} */
             business_proof_of_address_type?: "UTILITY_BILL" | "BANK_STATEMENT" | "RENTAL_AGREEMENT" | "TAX_DOCUMENT" | null;
+            invoices_url?: string[] | null;
+            invoices_absence_reason?: string | null;
+            contracts_url?: string[] | null;
+            contracts_absence_reason?: string | null;
+            financial_statements_url?: string | null;
+            source_of_funds_url?: string | null;
+            business_bank_statement_url?: string[] | null;
+            professional_description?: string | null;
+            source_of_accumulated?: string | null;
+            send_and_receive?: string | null;
+            employment_status_other?: string | null;
+            purposes?: string[] | null;
+            payment_flows?: string[] | null;
+            source_of_funds_list?: string[] | null;
             address?: components["schemas"]["KycAddressDto"] | null;
             physical_address?: components["schemas"]["KycAddressDto"] | null;
             beneficial_owners?: components["schemas"]["KycBeneficialOwnerDto"][] | null;
@@ -1660,14 +1785,6 @@ export interface components {
             data: components["schemas"]["WalletKycRailTypeDto"][];
             /** @description Has more data flag */
             readonly has_more: boolean;
-        };
-        InitInquiryResponseDto: {
-            /** @example inq_E6U4KitBucNKpfrDMb997AaTkQTt */
-            inquiryId: string;
-        };
-        ResumeInquiryResponseDto: {
-            inquiryId: string;
-            sessionId: string;
         };
         CounterpartiesFilter: {
             email?: string | null;
@@ -1876,6 +1993,8 @@ export interface components {
             /** @enum {string} */
             kyc_data_provider: "persona" | "sumsub";
             readonly supported_locales?: components["schemas"]["SupportedLocalesEntity"] | null;
+            /** @enum {string} */
+            auth_provider: "supabase" | "clerk";
             base_currency: string;
         };
         SystemChainsResponseDto: {
@@ -2246,7 +2365,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TelegramSessionDto"];
+                    "application/json": components["schemas"]["TelegramSessionDto"] | components["schemas"]["TelegramTicketDto"];
                 };
             };
             /** @description Invalid tenant */
@@ -2283,18 +2402,11 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TelegramSessionDto"];
+                    "application/json": components["schemas"]["TelegramSessionDto"] | components["schemas"]["TelegramTicketDto"];
                 };
             };
             /** @description Invalid tenant */
             401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description SB tenants only */
-            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3300,6 +3412,76 @@ export interface operations {
             };
         };
     };
+    UserVerificationController_init: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InitUserVerificationRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InitUserVerificationResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description User verification is not enabled for the tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UserVerificationController_resume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResumeUserVerificationResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Verification not initialized */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     KycController_initDataCollection: {
         parameters: {
             query?: {
@@ -3322,6 +3504,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["InitKycDataCollectionResponseDto"];
                 };
+            };
+            /** @description Wallet is linked to a KYC entity of a different type */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Unauthorized */
             401: {
@@ -3367,6 +3556,192 @@ export interface operations {
                 content?: never;
             };
             /** @description You don`t have access to current wallet */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Wallet has no linked KYC entity / verification not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    KycEntitiesController_findMy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KycEntityDto"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    KycEntitiesController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateKycEntityRequestDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KycEntityDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    KycEntitiesController_findById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kyc_entity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KycEntityDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description You don`t have access to this KYC entity */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description KYC entity not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    KycEntitiesController_initDataCollection: {
+        parameters: {
+            query?: {
+                /** @description Whether to prefill the provider verification with the current user data (email, phone, name). Defaults to true. */
+                prefill?: boolean;
+            };
+            header?: never;
+            path: {
+                kyc_entity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InitKycDataCollectionResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description You don`t have access to this KYC entity */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description KYC entity not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    KycEntitiesController_resumeDataCollection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kyc_entity_id: string;
+                verification_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResumeKycDataCollectionResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description You don`t have access to this KYC entity */
             403: {
                 headers: {
                     [name: string]: unknown;
@@ -3591,85 +3966,6 @@ export interface operations {
                 };
                 content?: never;
             };
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PersonaController_initInquiry: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-                type: "individual" | "business" | "universal";
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InitInquiryResponseDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    PersonaController_resumeInquiry: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-                inquiry_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ResumeInquiryResponseDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Persona reference or Inquiry not found */
             404: {
                 headers: {
                     [name: string]: unknown;

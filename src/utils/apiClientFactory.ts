@@ -12,7 +12,7 @@ import {
   triggerReverification,
   triggerUnauthorized,
 } from './accessTokenProvider';
-import { deleteTokens, getTokens, refreshTokens } from './tokensFactory';
+import { ExternalAuthRequiredError, deleteTokens, getTokens, refreshTokens } from './tokensFactory';
 
 // eslint-disable-next-line no-constant-condition
 
@@ -49,6 +49,9 @@ type CreateApiClientOptions = {
 type RequestQueueItem = {
   resolve: Function;
   reject: Function;
+  // Settles a queued request with an error instead of replaying it. Used when the refresh failed in
+  // a way the SDK cannot recover from but that must not tear down the session.
+  fail: (error: unknown) => void;
 };
 
 let isTokenRefreshing = false;
@@ -177,6 +180,16 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
               }
             })
             .catch((tokenRefreshError) => {
+              // A Clerk tenant answered the sign-in with a one-time ticket: the SDK cannot complete
+              // it here, but the stored session is still valid and the app recovers by registering
+              // `setAccessTokenProvider`. Settle the queued requests with the error instead of
+              // wiping the tokens and redirecting to logout.
+              if (tokenRefreshError instanceof ExternalAuthRequiredError) {
+                requestQueue.forEach((request) => request.fail(tokenRefreshError));
+                requestQueue = [];
+                return;
+              }
+
               if (typeof window !== 'undefined') {
                 window.location.href = envLogoutURL;
                 deleteTokens();
@@ -198,6 +211,7 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
               return res(instance(failedRequestConfig));
             },
             reject: () => rej(instance(failedRequestConfig)),
+            fail: (queuedError) => rej(queuedError),
           });
         });
       }

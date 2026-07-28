@@ -625,6 +625,12 @@ export interface paths {
                             /** Format: uuid */
                             currency_id?: string;
                             memo?: string;
+                            /**
+                             * @description Hosting classification of the address
+                             * @default unknown
+                             * @enum {string}
+                             */
+                            wallet_custody_type?: "custodial" | "selfhosted" | "unknown";
                         };
                         /** @description Required for type INTERNAL — points at the receiver wallet on the same platform. */
                         internal_data?: {
@@ -1418,6 +1424,11 @@ export interface paths {
          * @description Creates KYC data for a wallet. Each wallet can have only one KYC record.
          *     Created with status `UNVERIFIED`.
          *
+         *     The entity is owned by the wallet's active OWNER
+         *     (`kyc_entity.user_data_uuid`) and the wallet is linked to it via
+         *     `wallets.kyc_entity_id` — a wallet without an active owner is rejected
+         *     with 400.
+         *
          */
         post: {
             parameters: {
@@ -1528,7 +1539,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Missing required fields or wallet already has KYC */
+                /** @description Missing required fields, wallet already has KYC, or wallet has no active owner */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -1537,6 +1548,13 @@ export interface paths {
                 };
                 /** @description Wallet not found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Concurrent creation for this wallet is in progress — retry later */
+                409: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2419,95 +2437,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/orders/{wallet_id}/deposit/card": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Card */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Target wallet UUID */
-                    wallet_id: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        amount: number;
-                        /** Format: uuid */
-                        sub_account_id: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Card return order created */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            data?: components["schemas"]["TenantOrder"];
-                            /** @example Card return order created */
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Missing required fields or invalid amount */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Authentication required */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Forbidden — admin role required or wallet not in tenant */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Card return failed */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/admin/orders/{wallet_id}/exchange": {
         parameters: {
             query?: never;
@@ -2519,14 +2448,15 @@ export interface paths {
         put?: never;
         /**
          * Exchange
-         * @description Crypto-to-crypto exchange within a wallet.
+         * @description Currency exchange within a wallet — a pure ledger swap for any enabled
+         *     currency pair (crypto and fiat alike). Pair availability is governed by
+         *     the exchange calculation config: a disabled pair is rejected at create.
          *
          *     Two-phase, like the banking withdrawals: the order is created in status
-         *     `NEW` with the source funds blocked. Call `POST /admin/orders/{order_id}/approve`
-         *     to execute the swap (the order lands in `COMPLETE` synchronously), or
-         *     `POST /admin/orders/{order_id}/cancel` to release the blocked funds.
-         *
-         *     Fiat legs are not supported — only crypto-to-crypto pairs are accepted.
+         *     `NEW` without touching the balance. Call `POST /admin/orders/{order_id}/approve`
+         *     to check the balance, debit the source funds and execute the swap (the
+         *     order lands in `COMPLETE` synchronously), or
+         *     `POST /admin/orders/{order_id}/cancel` to discard the order.
          *
          */
         post: {
@@ -2545,7 +2475,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Exchange order created (status NEW, funds blocked — approve to execute) */
+                /** @description Exchange order created (status NEW — approve to debit and execute) */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -2614,10 +2544,11 @@ export interface paths {
         /**
          * Internal
          * @description Transfers funds between two wallets within the platform. Two-phase:
-         *     the order is created in `NEW` status with the sender's funds blocked;
-         *     `POST /admin/orders/{id}/approve` executes the transfer synchronously —
-         *     receiver credited, order `COMPLETE`. A `NEW` order can be canceled to
-         *     refund the blocked funds.
+         *     the order is created in `NEW` status without touching the balance;
+         *     `POST /admin/orders/{id}/approve` checks the balance, debits the
+         *     sender and executes the transfer synchronously — receiver credited,
+         *     order `COMPLETE`. A `NEW` order can simply be canceled (no funds are
+         *     held).
          *
          */
         post: {
@@ -2641,13 +2572,17 @@ export interface paths {
                          */
                         counterparty_destination_id: string;
                         amount: number;
-                        request_id: string;
+                        /**
+                         * Format: date-time
+                         * @description Optional. Schedule the transfer for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically.
+                         */
+                        scheduled_at?: string;
                         documents?: Record<string, never>[];
                     };
                 };
             };
             responses: {
-                /** @description Transfer created in NEW status (funds blocked, awaiting approve) */
+                /** @description Transfer created in NEW status (awaiting approve; no funds held) */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -2707,11 +2642,12 @@ export interface paths {
         /**
          * Crypto
          * @description Sends crypto from the wallet's omnibus balance via a counterparty
-         *     destination. Two-phase: created `NEW` with funds blocked;
-         *     `POST /admin/orders/{id}/approve` dispatches the on-chain send. A
-         *     destination address internal to the tenant downgrades the order to
-         *     `OMNIBUS_INTERNAL_TRANSFER` — still `NEW` at create, settled
-         *     synchronously to `COMPLETE` at approve.
+         *     destination. Two-phase: created `NEW` without touching the balance;
+         *     `POST /admin/orders/{id}/approve` checks the balance, debits the funds
+         *     and dispatches the on-chain send. A destination address internal to
+         *     the tenant downgrades the order to `OMNIBUS_INTERNAL_TRANSFER` —
+         *     still `NEW` at create, debited + settled synchronously to `COMPLETE`
+         *     at approve.
          *
          */
         post: {
@@ -3222,104 +3158,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/admin/orders/{wallet_id}/withdrawal/card": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Card */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Source wallet UUID */
-                    wallet_id: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        amount: number;
-                        /**
-                         * Format: uuid
-                         * @description Source currency UUID
-                         */
-                        from_uuid: string;
-                        /** Format: uuid */
-                        sub_account_id: string;
-                        /** Format: uuid */
-                        card_id?: string;
-                        reference_id?: string;
-                        note?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Card topup order created */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            data?: components["schemas"]["TenantOrder"];
-                            /** @example Card topup order created */
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Missing required fields or invalid amount */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Authentication required */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Forbidden — admin role required or wallet not in tenant */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Card topup failed */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/admin/orders/individual_rates": {
         parameters: {
             query?: never;
@@ -3557,10 +3395,14 @@ export interface paths {
         put?: never;
         /**
          * Approve order
-         * @description Transitions the order from NEW to PROCESSING and triggers the order execution pipeline.
-         *     Exchange orders (EXCHANGE_OMNI) and internal transfers (TRANSFER_INTERNAL /
-         *     OMNIBUS_INTERNAL_TRANSFER) settle synchronously and land in COMPLETE.
-         *     Only orders with status NEW can be approved.
+         * @description Transitions the order from NEW to PROCESSING: checks the balance,
+         *     debits the funds (transaction written as `complete`) and triggers the
+         *     order execution pipeline. Exchange orders (EXCHANGE_OMNI) and internal
+         *     transfers (TRANSFER_INTERNAL / OMNIBUS_INTERNAL_TRANSFER) settle
+         *     synchronously and land in COMPLETE. An insufficient balance fails the
+         *     order (FAILED). Only orders with status NEW can be approved. Orders
+         *     created with `scheduled_at` move to EXPECTED instead — no funds are
+         *     debited until execution at the requested time.
          *
          */
         post: {
@@ -3623,8 +3465,13 @@ export interface paths {
         put?: never;
         /**
          * Cancel order
-         * @description Cancels an order. Orders in NEW or FAILED status can be canceled.
-         *     Optionally provide a cancellation reason.
+         * @description Cancels an order. Only NEW and EXPECTED orders can be canceled — neither
+         *     holds debited funds, so cancel never moves money. Optionally provide a
+         *     cancellation reason.
+         *
+         *     BREAKING CHANGE (2026-07-26): FAILED is no longer cancelable and returns
+         *     409. Paying back an order that was debited and then failed is now a
+         *     separate, admin-panel-only refund action.
          *
          */
         post: {
@@ -5134,6 +4981,10 @@ export interface paths {
          * Create wallet
          * @description Creates a new wallet owned by the user bound to the tenant API key.
          *     Wallet name is auto-generated if not provided.
+         *
+         *     The wallet is always created without a KYC entity — create one via
+         *     `POST /admin/kyc_entity` or start verification via
+         *     `POST /admin/kyc_verification/{wallet_id}/init` afterwards.
          *
          */
         post: {
@@ -7923,6 +7774,12 @@ export interface components {
             /** Format: uuid */
             currency_id?: string;
             memo?: string | null;
+            /**
+             * @description Hosting classification of the address. Defaults to unknown.
+             * @default unknown
+             * @enum {string}
+             */
+            wallet_custody_type: "custodial" | "selfhosted" | "unknown";
             currency: components["schemas"]["CurrencyRef"];
             /** Format: date-time */
             created_at: string;
@@ -8106,7 +7963,7 @@ export interface components {
          * @example EXCHANGE_OMNI
          * @enum {string}
          */
-        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE";
+        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE";
         OrderType: {
             id?: components["schemas"]["OrderTypeId"];
             description?: string;
@@ -8158,12 +8015,15 @@ export interface components {
             from_currency_id: string;
             /** Format: uuid */
             counterparty_destination_id: string;
-            /** @description Idempotency key (UUID v4 recommended) */
-            request_id: string;
             /** @description Free-form reference visible in order/transaction listings */
             reference?: string;
             /** @description Internal note attached to the order */
             note?: string;
+            /**
+             * Format: date-time
+             * @description Optional. Schedule the payment for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically.
+             */
+            scheduled_at?: string;
         };
         OfframpOrderRequest: {
             amount: number;
@@ -8178,12 +8038,15 @@ export interface components {
              * @description Bank counterparty destination UUID created via POST /api/counterparty/destinations. The destination type must match the rail (WIRE/ACH/SEPA/SWIFT/CHAPS/FPS).
              */
             counterparty_destination_id: string;
-            /** @description Idempotency key (UUID v4 recommended) */
-            request_id: string;
             /** @description Free-form reference visible in order/transaction listings */
             reference?: string;
             /** @description Internal note attached to the order */
             note?: string;
+            /**
+             * Format: date-time
+             * @description Optional. Schedule the payment for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically.
+             */
+            scheduled_at?: string;
         };
         ExchangeOrderRequest: {
             /** @description Amount to exchange (in source currency) */
@@ -8198,11 +8061,6 @@ export interface components {
              * @description Destination currency UUID
              */
             to_currency_id: string;
-            /**
-             * Format: uuid
-             * @description Idempotency key (UUID v4 recommended)
-             */
-            request_id: string;
         };
         TenantOrder: {
             /** Format: uuid */
@@ -8221,12 +8079,17 @@ export interface components {
             amount_to?: number | null;
             order_type?: string;
             /** @enum {string} */
-            status?: "NEW" | "PROCESSING" | "COMPLETE" | "FAILED" | "CANCELED";
+            status?: "NEW" | "EXPECTED" | "PROCESSING" | "COMPLETE" | "FAILED" | "CANCELED" | "REFUNDED";
             /** Format: uuid */
             sub_account_id?: string | null;
             info?: string | null;
             /** @description Filtered to META_ALLOWED_FIELDS */
             meta?: Record<string, never> | null;
+            /**
+             * Format: date-time
+             * @description Requested execution time for scheduled payments (status EXPECTED); null for immediate orders
+             */
+            scheduled_at?: string | null;
             /** Format: date-time */
             created_at?: string;
             /** Format: date-time */
@@ -8245,9 +8108,9 @@ export interface components {
             account_currency?: string;
             /** Format: uuid */
             destination_currency?: string;
-            /** @description Whether deposits are enabled for this account, resolved from the account's KYC rail (virtual_accounts_programs.kyc_rails.is_deposit_enabled). When false, public (Frontend/Developer) responses suppress deposit_instructions/account_details; admin responses still expose them. */
+            /** @description Whether deposits are enabled for this account, resolved from the account's KYC rail (virtual_accounts_programs.kyc_rails.is_deposit_enabled). When false, deposit_instructions is returned as an empty array on every surface (admin included) since admin routes are also consumed by BaaS API clients. */
             is_deposit_enabled?: boolean;
-            /** @description Bank deposit instructions grouped by instruction type (ACH, FEDWIRE, SWIFT) */
+            /** @description Bank deposit instructions grouped by instruction type (ACH, FEDWIRE, SWIFT). Returned as an empty array when is_deposit_enabled is false. */
             deposit_instructions?: {
                 /**
                  * @description Payment rail type
