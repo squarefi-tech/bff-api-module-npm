@@ -9,6 +9,22 @@ type ITokens = {
   refresh_token?: string | null;
 };
 
+/**
+ * Raised when the tenant's auth provider answers a sign-in with a one-time Clerk ticket
+ * (`{ ticket, expires_at }`) instead of a session. This localStorage flow cannot complete such a
+ * sign-in, but the session is **not** dead: the app is expected to exchange the ticket via Clerk JS
+ * (`signIn.create({ strategy: 'ticket', ticket })`) and register `setAccessTokenProvider`. Callers
+ * must treat it as "retry once the provider is ready", never as a reason to sign the user out.
+ */
+export class ExternalAuthRequiredError extends Error {
+  constructor(
+    message = 'Sign-in returned a Clerk ticket instead of a session; exchange it via Clerk and register setAccessTokenProvider',
+  ) {
+    super(message);
+    this.name = 'ExternalAuthRequiredError';
+  }
+}
+
 export function setTokens({ access_token, refresh_token }: ITokens) {
   access_token && setToLocalStorage('access_token', access_token);
   refresh_token && setToLocalStorage('refresh_token', refresh_token);
@@ -42,15 +58,18 @@ export async function refreshTokens(): Promise<ITokens> {
       init_data_raw,
     });
 
+    // A malformed body (empty response, HTML error page) leaves the session unusable, so it stays a
+    // plain error and drives the caller's sign-out path.
+    if (typeof telegramSignInResponse !== 'object' || telegramSignInResponse === null) {
+      return Promise.reject(new Error('Telegram sign-in returned an unexpected response body'));
+    }
+
     // Clerk tenants answer with a one-time sign-in ticket instead of a session: there is no bearer
-    // token to store here. Those apps must exchange the ticket via Clerk JS and register
-    // `setAccessTokenProvider`, which bypasses this localStorage flow entirely.
+    // token to store here. Those apps exchange the ticket via Clerk JS and register
+    // `setAccessTokenProvider`, which bypasses this localStorage flow entirely — so this is a
+    // recoverable state, not a dead session.
     if (!('access_token' in telegramSignInResponse)) {
-      return Promise.reject(
-        new Error(
-          'Telegram sign-in returned a Clerk ticket instead of a session; exchange it via Clerk and use setAccessTokenProvider',
-        ),
-      );
+      return Promise.reject(new ExternalAuthRequiredError());
     }
 
     setTokens(telegramSignInResponse);

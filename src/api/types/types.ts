@@ -7,6 +7,7 @@ import {
   CounterpartyDestinationType,
   CurrencyType,
   IssuingProgramStatus,
+  OrderStatuses,
   OrderType,
   SortingDirection,
   SubAccountType,
@@ -865,19 +866,32 @@ export namespace API {
       type SubAccountDepositRoot = pathsV1Frontend['/frontend/issuing/sub-accounts/{sub_account_id}/deposit'];
       type SubAccountWithdrawRoot = pathsV1Frontend['/frontend/issuing/sub-accounts/{sub_account_id}/withdraw'];
 
+      // The spec narrows the returned `status` to `PENDING | COMPLETE | FAILED`, but the handler
+      // answers with the raw order status (`formatOrderResponse` -> `status: order.status`), so a
+      // workflow-routed program reports `PROCESSING` — the card routes even document that. Widen to
+      // the SDK's order-status union so an exhaustive `switch` cannot silently treat an in-flight
+      // transfer as a failure.
+      type WithOrderStatus<T extends { data?: { status?: string } }> = Omit<T, 'data'> & {
+        data?: Omit<NonNullable<T['data']>, 'status'> & { status?: `${OrderStatuses}` };
+      };
+
       export namespace SubAccounts {
         export namespace Deposit {
           export type Request = {
             sub_account_id: string;
           } & SubAccountDepositRoot['post']['requestBody']['content']['application/json'];
-          export type Response = SubAccountDepositRoot['post']['responses']['200']['content']['application/json'];
+          export type Response = WithOrderStatus<
+            SubAccountDepositRoot['post']['responses']['200']['content']['application/json']
+          >;
         }
 
         export namespace Withdraw {
           export type Request = {
             sub_account_id: string;
           } & SubAccountWithdrawRoot['post']['requestBody']['content']['application/json'];
-          export type Response = SubAccountWithdrawRoot['post']['responses']['200']['content']['application/json'];
+          export type Response = WithOrderStatus<
+            SubAccountWithdrawRoot['post']['responses']['200']['content']['application/json']
+          >;
         }
       }
 
@@ -886,9 +900,9 @@ export namespace API {
           export type Request = {
             card_id: string;
           } & CardDepositRoot['post']['requestBody']['content']['application/json'];
-          // The spec documents no `200` body for the card-level wrappers, but they are handled by the
-          // same controller as the sub-account routes (the sub-account is resolved from `card_id`),
-          // so the response is the sub-account one.
+          // The spec documents no `200` body for the card-level wrappers, but the controller resolves
+          // the sub-account from `card_id` and then `return`s the sub-account handler
+          // (`IssuingV2SubAccountController.depositByCard` -> `.deposit`), so the body is identical.
           export type Response = SubAccounts.Deposit.Response;
         }
 

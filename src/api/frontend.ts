@@ -18,7 +18,8 @@ export const frontend = {
   },
   // Card money movement. Both card-level methods are thin wrappers the backend resolves to the
   // card's sub-account, so they share the sub-account order types, validation and program routing.
-  // Requires the ADMIN role on the wallet the card belongs to.
+  // All four require the ADMIN role on the owning wallet — the card's wallet for `cards.*`, the
+  // sub-account's wallet for `subAccounts.*`.
   issuing: {
     cards: {
       deposit: ({
