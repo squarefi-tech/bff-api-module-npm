@@ -7353,7 +7353,24 @@ export interface components {
             amount_to?: number | null;
             order_type?: string;
             /** @enum {string} */
-            status?: "NEW" | "EXPECTED" | "PROCESSING" | "COMPLETE" | "FAILED" | "CANCELED" | "REFUNDED";
+            status?: "NEW" | "PENDING" | "EXPECTED" | "PROCESSING" | "COMPLETE" | "FAILED" | "CANCELED" | "REFUNDED";
+            /**
+             * @description Compliance (transaction monitoring) state. Orthogonal to `status`: a `held` order is still PENDING and nothing has been credited — it resolves to COMPLETE or FAILED once the review finishes. `null` means the order was never subject to a compliance hold.
+             * @enum {string|null}
+             */
+            compliance_state?: "held" | "released" | "rejected" | null;
+            /** @description Why the order is (or was) held. */
+            compliance_reason?: string | null;
+            /**
+             * Format: date-time
+             * @description When the hold started.
+             */
+            compliance_held_at?: string | null;
+            /**
+             * Format: date-time
+             * @description When the hold was released or rejected.
+             */
+            compliance_resolved_at?: string | null;
             /** Format: uuid */
             sub_account_id?: string | null;
             info?: string | null;

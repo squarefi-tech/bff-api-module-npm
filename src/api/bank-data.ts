@@ -1,11 +1,9 @@
-import { apiClientV2 } from '../utils/apiClientFactory';
+import { apiClientV1Frontend } from '../utils/apiClientFactory';
 import { API } from './types/types';
 
 export const bankData = {
-  // getBankDataByAccountNumber: ( // TBD on backend
-  //   params: API.BankData.GetBankDataByAccountNumber.Request,
-  // ): Promise<API.BankData.GetBankDataByAccountNumber.Response> =>
-  //   apiClientV2.getRequest<API.BankData.GetBankDataByAccountNumber.Response>(`/bank-data`, {
-  //     params,
-  //   }),
+  getByCode: (params: API.BankData.GetByCode.Request): Promise<API.BankData.GetByCode.Response> =>
+    apiClientV1Frontend.getRequest<API.BankData.GetByCode.Response>('/frontend/bank-data', {
+      params,
+    }),
 };

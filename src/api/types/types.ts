@@ -113,13 +113,13 @@ export namespace API {
       };
     }
   }
-  // export namespace BankData { // TBD on backend
-  //   export namespace GetBankDataByAccountNumber {
-  //     export type Request = operations['BankDataController_getBankDataByAccountNumber']['parameters']['query'];
-  //     export type Response =
-  //       operations['BankDataController_getBankDataByCode']['responses']['200']['content']['application/json'];
-  //   }
-  // }
+  export namespace BankData {
+    export namespace GetByCode {
+      export type Request = pathsV1Frontend['/frontend/bank-data']['get']['parameters']['query'];
+      export type Response =
+        pathsV1Frontend['/frontend/bank-data']['get']['responses'][200]['content']['application/json'];
+    }
+  }
 
   export namespace Cards {
     export namespace Config {

@@ -873,9 +873,21 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Look up bank data by code
-         * @description Resolves a bank identifier (IBAN, SWIFT/BIC, or US RTN) into normalised
-         *     bank/address data suitable for prefilling a counterparty form.
+         * Look up bank data by payment method and code
+         * @description Resolves a bank identifier into the bank name and registered address for
+         *     prefilling counterparty bank details. `method` fixes the expected code
+         *     format:
+         *
+         *     | `method` | code |
+         *     | --- | --- |
+         *     | `ach`, `fedwire` | US routing number (ABA/RTN) |
+         *     | `swift`, `sepa` | SWIFT/BIC |
+         *     | `fps`, `chaps` | UK sort code (always resolves to an empty list today) |
+         *
+         *     Matching is by full code — prefix search is not supported, so `data`
+         *     carries at most one element today. A well-formed code that matches no
+         *     bank is `200` with an empty `data`, not a 404. Banks that do not accept
+         *     the selected method also resolve to an empty `data`.
          *
          *     **Authentication**: Bearer token + x-tenant-id header
          *
@@ -883,8 +895,13 @@ export interface paths {
         get: {
             parameters: {
                 query: {
-                    /** @description IBAN, SWIFT/BIC, or US routing number (optionally "routing:account") */
+                    /** @description Full bank code in the format implied by `method`. For `ach`/`fedwire`
+                     *     the legacy `routing:account` form is tolerated — the account part is
+                     *     ignored.
+                     *      */
                     code: string;
+                    /** @description Payment method the bank details are collected for */
+                    method: "ach" | "fedwire" | "swift" | "sepa" | "fps" | "chaps";
                 };
                 header?: never;
                 path?: never;
@@ -892,9 +909,9 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Bank data resolved. `data` is null ONLY when the bank-data lookup subsystem is
-                 *     disabled on the environment; with lookups enabled a failed resolution is
-                 *     reported as 400, never as a null `data`.
+                /** @description Matched banks (at most one today). An empty `data` means the code is
+                 *     well-formed but no bank was found for the requested method — clients
+                 *     fall back to manual entry.
                  *      */
                 200: {
                     headers: {
@@ -904,20 +921,24 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success: boolean;
-                            data: components["schemas"]["BankData"] | null;
+                            data: components["schemas"]["BankDataItem"][];
+                            /**
+                             * @description Convenience length of `data`
+                             * @example 1
+                             */
+                            count?: number;
                         };
                     };
                 };
-                /** @description Bad request — one of:
-                 *     - `VALIDATION_ERROR` — query parameter `code` is missing/empty, or longer than 64 characters
-                 *     - `UNSUPPORTED_BANK_CODE` — `code` does not match any supported format (IBAN, SWIFT/BIC, US RTN)
-                 *     - `BANK_DATA_LOOKUP_FAILED` — the code is well-formed but could not be resolved
-                 *       (unknown code or a transient lookup failure); always reported as this single
-                 *       400, never as 404/502
-                 *     - `EXTERNAL_SERVICE_ERROR` — the bank-data lookup is temporarily unavailable
+                /** @description Bad request — only for malformed input:
+                 *     - `VALIDATION_ERROR` — `code` is missing/empty or longer than 64
+                 *       characters, or `method` is missing/not one of the allowed values
+                 *     - `UNSUPPORTED_BANK_CODE` — `code` does not match the format required
+                 *       by `method` (e.g. a SWIFT/BIC passed with `method=ach`)
                  *
-                 *     The body also carries a top-level `correlationId` (added by the error handler to
-                 *     every 4xx/5xx it formats).
+                 *     A resolvable-but-unknown code is NOT a 400 — it answers `200` with an
+                 *     empty `data`. The body also carries a top-level `correlationId`
+                 *     (added by the error handler to every 4xx/5xx it formats).
                  *      */
                 400: {
                     headers: {
@@ -970,6 +991,25 @@ export interface paths {
                          *       "error": {
                          *         "code": "INTERNAL_ERROR",
                          *         "message": "Internal server error"
+                         *       },
+                         *       "correlationId": "3f7f2f9a-8f0e-4a3b-9a3d-2f1c9d6a1b2c"
+                         *     } */
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Bank data lookup is temporarily unavailable — safe to retry later.
+                 *     The body carries a `correlationId`.
+                 *      */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        /** @example {
+                         *       "success": false,
+                         *       "error": {
+                         *         "code": "BANK_DATA_LOOKUP_FAILED",
+                         *         "message": "Bank data lookup failed"
                          *       },
                          *       "correlationId": "3f7f2f9a-8f0e-4a3b-9a3d-2f1c9d6a1b2c"
                          *     } */
@@ -5051,7 +5091,56 @@ export interface paths {
                 };
             };
         };
-        put?: never;
+        /**
+         * Edit a mass payout draft
+         * @description Draft-only. `items` fully replaces the recipient list; `virtual_account_id: null` clears the source VA.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Source wallet the batches belong to */
+                    wallet_id: components["parameters"]["MassPayoutWalletId"];
+                    id: components["parameters"]["MassPayoutId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        name?: string;
+                        /** Format: uuid */
+                        virtual_account_id?: string | null;
+                        items?: components["schemas"]["MassPayoutItemInput"][];
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated draft */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["MassPayout"];
+                        };
+                    };
+                };
+                /** @description Batch is not editable anymore (already submitted) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -10749,11 +10838,11 @@ export interface components {
              */
             target_wallet_id: string | null;
         };
-        /** @description Bank postal address resolved from the bank identifier. Intentionally mirrors the CounterpartyBankingAddress shape so the payload can prefill a counterparty form as-is. */
+        /** @description Registered bank address. `country_id`/`state_id` reference the `countries`/`states` dictionaries served by this API, so the payload can prefill a counterparty form as-is. */
         BankDataAddress: {
             /** @description Resolved `countries.id` of the bank’s country; null when it could not be resolved */
             country_id: number | null;
-            /** @description Always null today (reserved for future enrichment) */
+            /** @description Resolved `states.id`; populated for US banks when available, null otherwise */
             state_id: number | null;
             city: string | null;
             postcode: string | null;
@@ -10761,46 +10850,28 @@ export interface components {
             street1: string | null;
             /** @description Always null today (reserved) */
             street2: string | null;
-            /** @description Always null today (reserved) */
-            description: string | null;
         };
         /**
-         * @description Normalised bank data resolved from a bank identifier. Which identifier fields are populated depends on the looked-up code type: IBAN → `iban` + `swift_bic` (plus `account_number`/`sort_code` for GB IBANs), SWIFT/BIC → `swift_bic`, US RTN → `routing_number`; identifier fields not applicable to the code type are null. `bank_name` and `address` are populated for every code type whenever they are available.
+         * @description A bank matched by the looked-up code. The list holds at most one element today (full-code match; prefix search is not supported).
          * @example {
-         *       "account_number": "31926819",
-         *       "bank_name": "NATIONAL WESTMINSTER BANK PLC",
-         *       "note": null,
-         *       "routing_number": null,
-         *       "swift_bic": "NWBKGB2LXXX",
-         *       "iban": "GB29NWBK60161331926819",
-         *       "sort_code": "601613",
+         *       "bank_name": "JPMORGAN CHASE BANK, NA",
+         *       "code": "021000021",
          *       "address": {
-         *         "country_id": 230,
-         *         "state_id": null,
-         *         "city": "London",
+         *         "country_id": 233,
+         *         "state_id": 1452,
+         *         "city": "NEW YORK",
          *         "postcode": null,
          *         "street1": null,
-         *         "street2": null,
-         *         "description": null
+         *         "street2": null
          *       }
          *     }
          */
-        BankData: {
-            /** @description Populated only for GB IBANs (22 chars): the embedded 8-digit account number (IBAN positions 14-22); null otherwise */
-            account_number: string | null;
+        BankDataItem: {
             /** @description Registered bank name; null when unavailable */
             bank_name: string | null;
-            /** @description Always null today (reserved) */
-            note: string | null;
-            /** @description Populated only when the looked-up code is a US routing number (echoes the RTN); null otherwise */
-            routing_number: string | null;
-            /** @description SWIFT/BIC (ISO 9362); populated for SWIFT lookups and for IBAN lookups when the IBAN resolves to a BIC */
-            swift_bic: string | null;
-            /** @description Populated only for IBAN lookups (the normalised IBAN itself) */
-            iban: string | null;
-            /** @description Populated only for GB IBANs: the embedded 6-digit sort code (IBAN positions 8-14); null otherwise */
-            sort_code: string | null;
-            /** @description Bank postal address (always present) */
+            /** @description Normalised code the bank was matched by (echoes the query `code`) */
+            code: string;
+            /** @description Registered bank address (always present) */
             address: components["schemas"]["BankDataAddress"];
         };
         /** @description Bank / rail account coordinates for a sub-account. Rail-dependent — some rails return only a subset of these. */
@@ -11286,7 +11357,24 @@ export interface components {
             amount_to?: number | null;
             order_type?: string;
             /** @enum {string} */
-            status?: "NEW" | "EXPECTED" | "PROCESSING" | "COMPLETE" | "FAILED" | "CANCELED" | "REFUNDED";
+            status?: "NEW" | "PENDING" | "EXPECTED" | "PROCESSING" | "COMPLETE" | "FAILED" | "CANCELED" | "REFUNDED";
+            /**
+             * @description Compliance (transaction monitoring) state. Orthogonal to `status`: a `held` order is still PENDING and nothing has been credited — it resolves to COMPLETE or FAILED once the review finishes. `null` means the order was never subject to a compliance hold.
+             * @enum {string|null}
+             */
+            compliance_state?: "held" | "released" | "rejected" | null;
+            /** @description Why the order is (or was) held. */
+            compliance_reason?: string | null;
+            /**
+             * Format: date-time
+             * @description When the hold started.
+             */
+            compliance_held_at?: string | null;
+            /**
+             * Format: date-time
+             * @description When the hold was released or rejected.
+             */
+            compliance_resolved_at?: string | null;
             /** Format: uuid */
             sub_account_id?: string | null;
             info?: string | null;
