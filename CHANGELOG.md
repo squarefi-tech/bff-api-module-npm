@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.33] - 2026-07-30
+
 ### Added
 
 - **`bankData.getByCode({ code, method })`** (`GET /frontend/bank-data`) — resolves a bank identifier into the bank name and registered address for prefilling counterparty bank details. `method` (`'ach' | 'fedwire' | 'swift' | 'sepa' | 'fps' | 'chaps'`) fixes the expected `code` format: `ach`/`fedwire` take a US routing number (ABA/RTN, the legacy `routing:account` form is still tolerated), `swift`/`sepa` take a SWIFT/BIC. `fps`/`chaps` are accepted but always resolve to an empty result today — the backend has no UK sort-code source yet. Matching is by full code only (no prefix search), so `data` holds at most one `{ bank_name, code, address: { country_id, state_id, city, postcode, street1, street2 } }` entry; a well-formed code with no match answers `200` with `data: []`, not a `404`. `address.country_id`/`state_id` reference this API's own `countries`/`states` dictionaries. Types under `API.BankData.GetByCode.*`. Replaces the previous empty `bankData` stub.
