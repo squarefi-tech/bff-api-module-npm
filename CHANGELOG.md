@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.34] - 2026-08-01
+
 ### Added
 
 - **`identity_verification_status` on wallet members** (`wallets.users.getAll` → `data[].user_data`) — the outcome of that member's Sumsub IDENTITY-document step, so a consumer can tell whether a teammate may be issued a card without a per-user lookup. `'APPROVED'` is the only value that permits issuing; every other value means "not (yet) eligible". The field is **optional**: `undefined` means _no information_ (a backend older than this field, or a member with no `user_data` row) and must not be read as "unverified" — fail open and let the API reject. Same enum as `API.User.UserData.UserData['identity_verification_status']`.
