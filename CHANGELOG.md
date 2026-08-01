@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`identity_verification_status` on wallet members** (`wallets.users.getAll` → `data[].user_data`) — the outcome of that member's Sumsub IDENTITY-document step, so a consumer can tell whether a teammate may be issued a card without a per-user lookup. `'APPROVED'` is the only value that permits issuing; every other value means "not (yet) eligible". The field is **optional**: `undefined` means _no information_ (a backend older than this field, or a member with no `user_data` row) and must not be read as "unverified" — fail open and let the API reject. Same enum as `API.User.UserData.UserData['identity_verification_status']`.
+
+### Changed
+
+- **`KYCStatuses` gained `NEEDS_ATTENTION`.** The backend enum has carried it for a while; the generated unions now expose it, and the enum-vs-union parity check in `src/constants.ts` made the gap fail the build. Exhaustive `switch`/`Record<KYCStatuses, …>` consumers must handle the new member — it is a provider-driven review state and gates exactly like `PENDING` (the user can neither proceed nor resubmit).
+- **Regenerated all OpenAPI types.** Also picked up: the per-user verification endpoints (`/frontend/user_verification/init` and `/resume`) in the frontend spec, and narrowed `type`/`method` transaction filters from `string` to literal unions (`'deposit' | 'withdrawal'`, `'p2p' | 'crypto' | 'bank_transfer' | 'exchange' | 'sbp' | 'internal_fiat'`) — a stricter type on request params that were previously free-form.
+
 ## [1.36.33] - 2026-07-30
 
 ### Added

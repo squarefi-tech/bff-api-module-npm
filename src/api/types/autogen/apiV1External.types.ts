@@ -6333,13 +6333,13 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    /** @description Filter by status (comma-separated for multi-select) */
+                    /** @description Filter by status (comma-separated for multi-select — new, pending, processing, complete, canceled, failed) */
                     status?: string;
-                    /** @description Transaction type filter */
-                    type?: string;
+                    /** @description Transaction type (direction) */
+                    type?: "deposit" | "withdrawal";
                     /** @description Transaction method filter */
-                    method?: string;
-                    /** @description Record type filter */
+                    method?: "p2p" | "crypto" | "bank_transfer" | "exchange" | "sbp" | "internal_fiat";
+                    /** @description Transaction subtype (e.g. `DEPOSIT_CRYPTO_EXTERNAL`, `CARD_PROVIDER_DEPOSIT`) */
                     record_type?: string;
                     /** @description Filter by sender or recipient address (matches `from` OR `to` fields) */
                     address?: string;
