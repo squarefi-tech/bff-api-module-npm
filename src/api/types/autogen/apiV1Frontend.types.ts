@@ -7658,6 +7658,208 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/frontend/user_verification/init": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Initialize user-level Sumsub verification
+         * @description Starts (or upgrades) the caller's user-level Sumsub verification via
+         *     the Auth API. The chosen `flow` maps to a tenant-configured Sumsub
+         *     level — `data` (personal information), `documents` (+identity
+         *     document) or `face` (+face check) — and the whole level is completed
+         *     as one WebSDK session. Returns the Sumsub applicant id plus a
+         *     short-lived WebSDK access token. The caller's Bearer token is
+         *     forwarded to the Auth API.
+         *
+         *     User-scoped: no wallet is involved, unlike
+         *     `/frontend/kyc_verification/{wallet_id}/init`.
+         *
+         *     **Authentication**: Bearer token with x-tenant-id header required
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description Verification tier to complete as one SDK session
+                         * @enum {string}
+                         */
+                        flow: "data" | "documents" | "face";
+                    };
+                };
+            };
+            responses: {
+                /** @description User verification initialized */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                /**
+                                 * @description Echo of the requested flow
+                                 * @enum {string}
+                                 */
+                                flow: "data" | "documents" | "face";
+                                /** @description Sumsub applicantId */
+                                verification_id: string;
+                                /** @description Short-lived WebSDK access token — otherwise null */
+                                verification_token?: string | null;
+                            };
+                        };
+                    };
+                };
+                /** @description Validation error (`flow` missing or not in [data, documents, face]) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid Bearer token */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description User verification is not enabled for the tenant (no Sumsub levels configured) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description A concurrent init for the same user is in progress (per-user lock) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Auth API unavailable, timed out, or returned a malformed payload */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/user_verification/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resume user-level Sumsub verification
+         * @description Re-issues the short-lived WebSDK access token for the level the caller
+         *     is already on (the WebSDK's expirationHandler contract). The caller's
+         *     Bearer token is forwarded to the Auth API.
+         *
+         *     **Authentication**: Bearer token with x-tenant-id header required
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description User verification resumed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                /** @description Always null on resume — the Auth API resumes the current level */
+                                flow?: string | null;
+                                /** @description Sumsub applicantId */
+                                verification_id: string;
+                                /** @description Short-lived WebSDK access token — otherwise null */
+                                verification_token?: string | null;
+                            };
+                        };
+                    };
+                };
+                /** @description Missing or invalid Bearer token */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Verification not initialized for this user */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Auth API unavailable, timed out, or returned a malformed payload */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/frontend/virtual-accounts/wallet/{wallet_id}": {
         parameters: {
             query?: never;
@@ -9557,13 +9759,13 @@ export interface paths {
                     sort_by?: string;
                     /** @description Sort direction */
                     sort_order?: "ASC" | "DESC";
-                    /** @description Comma-separated transaction statuses (e.g. complete,pending) */
+                    /** @description Comma-separated transaction statuses (new, pending, processing, complete, canceled, failed) */
                     status?: string;
-                    /** @description Transaction type filter */
-                    type?: string;
+                    /** @description Transaction type (direction) */
+                    type?: "deposit" | "withdrawal";
                     /** @description Transaction method filter */
-                    method?: string;
-                    /** @description Record type filter */
+                    method?: "p2p" | "crypto" | "bank_transfer" | "exchange" | "sbp" | "internal_fiat";
+                    /** @description Transaction subtype (e.g. `DEPOSIT_CRYPTO_EXTERNAL`, `CARD_PROVIDER_DEPOSIT`) */
                     record_type?: string;
                     /** @description Filter by sender or recipient address (matches `from` OR `to` fields) */
                     address?: string;
@@ -9663,13 +9865,13 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    /** @description Filter by status (comma-separated for multi-select, e.g. `completed,pending`) */
+                    /** @description Filter by status (comma-separated for multi-select — new, pending, processing, complete, canceled, failed) */
                     status?: string;
-                    /** @description Transaction type filter */
-                    type?: string;
+                    /** @description Transaction type (direction) */
+                    type?: "deposit" | "withdrawal";
                     /** @description Transaction method filter */
-                    method?: string;
-                    /** @description Record type filter */
+                    method?: "p2p" | "crypto" | "bank_transfer" | "exchange" | "sbp" | "internal_fiat";
+                    /** @description Transaction subtype (e.g. `DEPOSIT_CRYPTO_EXTERNAL`, `CARD_PROVIDER_DEPOSIT`) */
                     record_type?: string;
                     /** @description Filter by sender or recipient address (matches `from` OR `to` fields) */
                     address?: string;
@@ -9875,6 +10077,13 @@ export interface paths {
                                     first_name?: string;
                                     last_name?: string;
                                     logo_url?: string;
+                                    /**
+                                     * @description Outcome of the member's Sumsub IDENTITY-document step.
+                                     *     `APPROVED` is the only value that permits issuing a card to this member.
+                                     *
+                                     * @enum {string}
+                                     */
+                                    identity_verification_status?: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
                                 };
                             }[];
                             pagination?: components["schemas"]["PaginationResponse"];

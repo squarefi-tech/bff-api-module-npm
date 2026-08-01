@@ -8036,27 +8036,70 @@ export interface components {
                 country?: string | null;
             };
         };
-        /** @description Bank account information of the sender */
+        /** @description Bank account information of the sender.
+         *
+         *     Every key below is always present; a value the payment rail did not
+         *     provide is an empty string. Identifiers are placed by what the value
+         *     IS, not by what the rail called it: an IBAN is always in `iban` (never
+         *     in `account_number`) and a SWIFT/BIC is always in `swift_bic` (never in
+         *     `routing_number`), including for orders created before this became the
+         *     case. So `account_number` and `routing_number` carry domestic
+         *     identifiers only.
+         *      */
         L2FOriginatorAccountInfo: {
             /**
-             * @description Bank account number
+             * @description Domestic bank account number. Empty when the sender's identifier is an IBAN.
              * @example 202504243736
              */
             account_number?: string;
             /**
-             * @description Routing number (for US payments)
+             * @description Domestic routing number (US ABA and equivalents). Empty when the value is a BIC.
              * @example 91311229
              */
             routing_number?: string | null;
-            /** @description SWIFT BIC code (for international transfers) */
+            /**
+             * @description Sender's IBAN, for SEPA and SWIFT payments.
+             * @example CZ6508000000192000145399
+             */
+            iban?: string | null;
+            /**
+             * @description SWIFT BIC code of the sender's bank (for international transfers)
+             * @example FIOBCZPPXXX
+             */
             swift_bic?: string | null;
-            /** @description Name of the bank/institution */
+            /**
+             * @description Sort code of the sender's bank (UK payments)
+             * @example 60-16-13
+             */
+            sort_code?: string | null;
+            /**
+             * @description Currency of the sender's account, when the rail reports it
+             * @example EUR
+             */
+            currency_code?: string | null;
+            /**
+             * @description Name of the sender's bank. Often empty — several rails do not report
+             *     it, and a value that merely repeats the sender's own name is omitted
+             *     rather than presented as a bank.
+             *
+             * @example Fio banka, a.s.
+             */
             institution_name?: string | null;
+            /**
+             * @description Correspondent/intermediary bank, when the payment was routed through one
+             * @example SSB PITTSBURGH
+             */
+            intermediary_institution_name?: string | null;
         };
         /**
-         * @description Standardized originator (sender) information for L2F ONRAMP orders.
-         *     Available for order types: L2F_ACH_ONRAMP, L2F_WIRE_ONRAMP, L2F_SEPA_ONRAMP, L2F_SWIFT_ONRAMP.
-         *     This field appears in order.meta.originator
+         * @description Standardized originator (sender) information for incoming fiat payments,
+         *     exposed as `order.meta.originator`.
+         *
+         *     The shape is the same whichever rail carried the payment — L2F, Brale,
+         *     BCB or Delos onramps all normalize into it. Sender details come from the
+         *     paying bank, so how much is populated varies by rail and by payment:
+         *     `profile.name` is almost always present, while the sender's address is
+         *     rarely reported and is often empty for every field.
          *
          * @example {
          *       "profile": {
@@ -8072,8 +8115,12 @@ export interface components {
          *       "account_information": {
          *         "account_number": "202504243736",
          *         "routing_number": "91311229",
+         *         "iban": "",
          *         "swift_bic": "",
-         *         "institution_name": ""
+         *         "sort_code": "",
+         *         "currency_code": "USD",
+         *         "institution_name": "JPMorgan Chase",
+         *         "intermediary_institution_name": ""
          *       },
          *       "reference": "20251016MMQFMP2U004005",
          *       "memo": "bfgkp5w"
@@ -8081,7 +8128,20 @@ export interface components {
          */
         L2FOriginator: {
             profile?: components["schemas"]["L2FOriginatorProfile"];
+            /** @description Sender's bank details. Present on incoming fiat payments only —
+             *     an internal transfer carries `wallet_information` instead.
+             *      */
             account_information?: components["schemas"]["L2FOriginatorAccountInfo"];
+            /** @description Sending wallet, in place of `account_information` when the funds
+             *     came from another wallet on the platform rather than from a bank.
+             *      */
+            wallet_information?: {
+                /** Format: uuid */
+                wallet_uuid?: string;
+                wallet_name?: string;
+                /** @description Source address for a crypto transfer; null for an internal balance transfer */
+                crypto_address?: string | null;
+            } | null;
             /**
              * @description Payment reference number (rail_reference from Railio)
              * @example 20251016MMQFMP2U004005
@@ -8093,6 +8153,36 @@ export interface components {
              */
             memo?: string | null;
         } | null;
+        /**
+         * @description Same shape for an inbound SWIFT payment: the sender is identified by an
+         *     IBAN and a BIC, so the domestic fields stay empty.
+         *
+         * @example {
+         *       "profile": {
+         *         "name": "Giovanni Belfiore",
+         *         "address": {
+         *           "address_line1": "",
+         *           "city": "",
+         *           "state": "",
+         *           "postal_code": "",
+         *           "country": ""
+         *         }
+         *       },
+         *       "account_information": {
+         *         "account_number": "",
+         *         "routing_number": "",
+         *         "iban": "CZ6508000000192000145399",
+         *         "swift_bic": "FIOBCZPPXXX",
+         *         "sort_code": "",
+         *         "currency_code": "USD",
+         *         "institution_name": "",
+         *         "intermediary_institution_name": ""
+         *       },
+         *       "reference": "5pdbjv4ev351",
+         *       "memo": "Fee for services"
+         *     }
+         */
+        L2FOriginatorSwiftExample: components["schemas"]["L2FOriginator"];
         /**
          * @description Optional array of document objects to attach to the order.
          *     Documents should be uploaded to a storage service beforehand and only URLs should be provided.

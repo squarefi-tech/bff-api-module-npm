@@ -1021,17 +1021,17 @@ export interface components {
              * @default UNVERIFIED
              * @enum {string|null}
              */
-            kyc_status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW" | null;
+            kyc_status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW" | null;
             /**
              * @default UNVERIFIED
              * @enum {string}
              */
-            identity_verification_status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
+            identity_verification_status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
             /**
              * @default UNVERIFIED
              * @enum {string}
              */
-            face_verification_status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
+            face_verification_status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
             readonly profile_source: string | null;
             readonly profile_synced_at: string | null;
             referral_name: string | null;
@@ -1307,7 +1307,7 @@ export interface components {
              * @default UNVERIFIED
              * @enum {string}
              */
-            status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
+            status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
             readonly business_name?: string;
             readonly first_name?: string;
             readonly last_name?: string;
@@ -1690,7 +1690,7 @@ export interface components {
              * @default UNVERIFIED
              * @enum {string}
              */
-            status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
+            status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
             /** @enum {string|null} */
             employment_status?: "EMPLOYEE" | "SELF_EMPLOYED" | "RETIRED" | "UNEMPLOYED" | "STUDENT" | "OTHER" | null;
             employment_description?: string | null;
@@ -1762,7 +1762,7 @@ export interface components {
         WalletKycRailDto: {
             message: string | null;
             /** @enum {string} */
-            readonly status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
+            readonly status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
             /** @default false */
             terms_confirmed: boolean;
             extra_actions?: components["schemas"]["WalletKycRailExtraActionDto"][];
