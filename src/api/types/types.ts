@@ -2066,7 +2066,17 @@ export namespace API {
 
       export namespace OrderTypes {
         export type PaymentMethod =
-          'ACH' | 'FEDWIRE' | 'SWIFT' | 'SEPA' | 'SEPA_CT' | 'CHAPS' | 'FPS' | 'CRYPTO_EXTERNAL' | 'CRYPTO_INTERNAL';
+          | 'ACH'
+          | 'FEDWIRE'
+          | 'SWIFT'
+          | 'SEPA'
+          | 'SEPA_CT'
+          | 'CHAPS'
+          | 'FPS'
+          | 'RTP'
+          | 'CARD'
+          | 'CRYPTO_EXTERNAL'
+          | 'CRYPTO_INTERNAL';
 
         export type OrderTypeKycRail = {
           id: string;
