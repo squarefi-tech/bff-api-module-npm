@@ -73,6 +73,8 @@ export enum OrderTypePaymentMethod {
   CRYPTO_INTERNAL = 'CRYPTO_INTERNAL',
   CHAPS = 'CHAPS',
   FPS = 'FPS',
+  RTP = 'RTP',
+  CARD = 'CARD',
 }
 
 export const orderTypePaymentMethodCheck: IsEnumEqualToUnion<
@@ -159,6 +161,22 @@ export enum OrderType {
   DLS_SEPA_OFFRAMP = 'DLS_SEPA_OFFRAMP',
   DLS_SWIFT_ONRAMP = 'DLS_SWIFT_ONRAMP',
   DLS_SWIFT_OFFRAMP = 'DLS_SWIFT_OFFRAMP',
+  BC1_SEPA_ONRAMP = 'BC1_SEPA_ONRAMP',
+  BC1_SEPA_OFFRAMP = 'BC1_SEPA_OFFRAMP',
+  BC1_SWIFT_ONRAMP = 'BC1_SWIFT_ONRAMP',
+  BC1_SWIFT_OFFRAMP = 'BC1_SWIFT_OFFRAMP',
+  BC3_SEPA_ONRAMP = 'BC3_SEPA_ONRAMP',
+  BC3_SEPA_OFFRAMP = 'BC3_SEPA_OFFRAMP',
+  NARVI_SEPA_ONRAMP = 'NARVI_SEPA_ONRAMP',
+  NARVI_SEPA_OFFRAMP = 'NARVI_SEPA_OFFRAMP',
+  EXCHANGE_OMNI_ONRAMP = 'EXCHANGE_OMNI_ONRAMP',
+  EXCHANGE_OMNI_OFFRAMP = 'EXCHANGE_OMNI_OFFRAMP',
+  EXCHANGE_OMNI_CRYPTO = 'EXCHANGE_OMNI_CRYPTO',
+  CARD_AUTHORIZATION = 'CARD_AUTHORIZATION',
+  CARD_AUTH_REFUND = 'CARD_AUTH_REFUND',
+  REFUND_CARD_PREPAID = 'REFUND_CARD_PREPAID',
+  REFUND_CARD_SUBACCOUNT = 'REFUND_CARD_SUBACCOUNT',
+  ADJUSTMENT = 'ADJUSTMENT',
   // when extend do not forget to add new order type to the enum WalletTransactionRecordType
 }
 
@@ -257,6 +275,22 @@ export enum WalletTransactionRecordType {
   DLS_SEPA_OFFRAMP = 'DLS_SEPA_OFFRAMP',
   DLS_SWIFT_ONRAMP = 'DLS_SWIFT_ONRAMP',
   DLS_SWIFT_OFFRAMP = 'DLS_SWIFT_OFFRAMP',
+  BC1_SEPA_ONRAMP = 'BC1_SEPA_ONRAMP',
+  BC1_SEPA_OFFRAMP = 'BC1_SEPA_OFFRAMP',
+  BC1_SWIFT_ONRAMP = 'BC1_SWIFT_ONRAMP',
+  BC1_SWIFT_OFFRAMP = 'BC1_SWIFT_OFFRAMP',
+  BC3_SEPA_ONRAMP = 'BC3_SEPA_ONRAMP',
+  BC3_SEPA_OFFRAMP = 'BC3_SEPA_OFFRAMP',
+  NARVI_SEPA_ONRAMP = 'NARVI_SEPA_ONRAMP',
+  NARVI_SEPA_OFFRAMP = 'NARVI_SEPA_OFFRAMP',
+  EXCHANGE_OMNI_ONRAMP = 'EXCHANGE_OMNI_ONRAMP',
+  EXCHANGE_OMNI_OFFRAMP = 'EXCHANGE_OMNI_OFFRAMP',
+  EXCHANGE_OMNI_CRYPTO = 'EXCHANGE_OMNI_CRYPTO',
+  CARD_AUTHORIZATION = 'CARD_AUTHORIZATION',
+  CARD_AUTH_REFUND = 'CARD_AUTH_REFUND',
+  REFUND_CARD_PREPAID = 'REFUND_CARD_PREPAID',
+  REFUND_CARD_SUBACCOUNT = 'REFUND_CARD_SUBACCOUNT',
+  ADJUSTMENT = 'ADJUSTMENT',
 }
 
 export type OrderTypeMissingInWalletTransactionRecordType = Exclude<
@@ -491,12 +525,17 @@ export enum VirtualAccountsInstructionType {
   CRYPTO_INTERNAL = 'CRYPTO_INTERNAL',
 }
 
+// Payment methods a virtual account never issues deposit instructions for. Everything outside this list
+// must exist on both sides — extend it only when a new rail genuinely has no deposit instructions, so the
+// equality check below keeps forcing new payment methods into VirtualAccountsInstructionType.
+type OrderPaymentMethodWithoutDepositInstruction = OrderTypePaymentMethod.RTP | OrderTypePaymentMethod.CARD;
+
 export const isOrderPaymentMethodEqualWithVirtualAccountsInstructionType: IsEnumEqualToUnion<
-  OrderTypePaymentMethod,
+  Exclude<OrderTypePaymentMethod, OrderPaymentMethodWithoutDepositInstruction>,
   API.VirtualAccounts.VirtualAccount.DepositInstruction.InstructionType
 > = true;
 export type OrderPaymentMethodEqualWithVirtualAccountsInstructionTypeMismatch = EnumUnionMismatch<
-  OrderTypePaymentMethod,
+  Exclude<OrderTypePaymentMethod, OrderPaymentMethodWithoutDepositInstruction>,
   API.VirtualAccounts.VirtualAccount.DepositInstruction.InstructionType
 >;
 
