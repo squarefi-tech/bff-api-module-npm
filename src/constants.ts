@@ -525,15 +525,18 @@ export enum VirtualAccountsInstructionType {
   CRYPTO_INTERNAL = 'CRYPTO_INTERNAL',
 }
 
-// Every deposit instruction type is a payment method, but not the other way round: RTP and CARD are
-// order payment methods that a virtual account never issues deposit instructions for.
-export const isVirtualAccountsInstructionTypeSubsetOfOrderPaymentMethod: IsUnionSubset<
-  API.VirtualAccounts.VirtualAccount.DepositInstruction.InstructionType,
-  EnumValues<OrderTypePaymentMethod>
+// Payment methods a virtual account never issues deposit instructions for. Everything outside this list
+// must exist on both sides — extend it only when a new rail genuinely has no deposit instructions, so the
+// equality check below keeps forcing new payment methods into VirtualAccountsInstructionType.
+type OrderPaymentMethodWithoutDepositInstruction = OrderTypePaymentMethod.RTP | OrderTypePaymentMethod.CARD;
+
+export const isOrderPaymentMethodEqualWithVirtualAccountsInstructionType: IsEnumEqualToUnion<
+  Exclude<OrderTypePaymentMethod, OrderPaymentMethodWithoutDepositInstruction>,
+  API.VirtualAccounts.VirtualAccount.DepositInstruction.InstructionType
 > = true;
-export type VirtualAccountsInstructionTypeSubsetOfOrderPaymentMethodMismatch = UnionSubsetMismatch<
-  API.VirtualAccounts.VirtualAccount.DepositInstruction.InstructionType,
-  EnumValues<OrderTypePaymentMethod>
+export type OrderPaymentMethodEqualWithVirtualAccountsInstructionTypeMismatch = EnumUnionMismatch<
+  Exclude<OrderTypePaymentMethod, OrderPaymentMethodWithoutDepositInstruction>,
+  API.VirtualAccounts.VirtualAccount.DepositInstruction.InstructionType
 >;
 
 export const virtualAccountsInstructionTypeCheck: IsEnumEqualToUnion<
