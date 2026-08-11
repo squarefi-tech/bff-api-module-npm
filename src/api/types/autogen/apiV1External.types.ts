@@ -1530,6 +1530,175 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/issuing/cardholder-documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload KYC document files
+         * @description Uploads KYC files against a wallet via `multipart/form-data`, with no
+         *     cardholder involved. The form field name is the document type
+         *     (`selfie`, `gov_id_front`, `gov_id_back`); one file per type, 5MB max
+         *     each, formats png/jpeg/pdf.
+         *
+         *     Send one file per request to get per-file progress and retry a single
+         *     file, or send several at once. The response returns an `id` per file;
+         *     pass those to `POST /api/issuing/cardholders/{cardholder_id}/documents`
+         *     to attach them.
+         *
+         *     An upload that is never attached is deleted by a cleanup sweep.
+         *
+         *     **Authentication**: x-api-key header required
+         *
+         */
+        post: {
+            parameters: {
+                query?: {
+                    /** @description Wallet ID (required for non-wallet-bound API keys) */
+                    wallet_id?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        /**
+                         * Format: binary
+                         * @description Identity photo / selfie
+                         */
+                        selfie?: string;
+                        /**
+                         * Format: binary
+                         * @description Government ID, front side
+                         */
+                        gov_id_front?: string;
+                        /**
+                         * Format: binary
+                         * @description Government ID, back side
+                         */
+                        gov_id_back?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Files stored; returns one upload per file */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            /** @example Documents uploaded successfully */
+                            message?: string;
+                            data?: {
+                                documents?: components["schemas"]["CardholderDocumentUpload"][];
+                            };
+                        };
+                    };
+                };
+                /** @description No file parts, unsupported field/type, or a file exceeds 5MB */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Access denied to this wallet */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/issuing/cardholder-documents/{document_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Discard an uploaded file
+         * @description Deletes an upload that has not been attached to a cardholder yet — the
+         *     "remove this file" action of an upload form. Attached documents are
+         *     refused with 409; replace them by attaching a new file of the same type
+         *     instead.
+         *
+         *     **Authentication**: x-api-key header required
+         *
+         */
+        delete: {
+            parameters: {
+                query?: {
+                    /** @description Wallet ID (required for non-wallet-bound API keys) */
+                    wallet_id?: string;
+                };
+                header?: never;
+                path: {
+                    document_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Upload discarded */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiSuccessResponse"];
+                    };
+                };
+                /** @description Upload not found for this wallet */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Upload is already attached to a cardholder */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/issuing/cardholders": {
         parameters: {
             query?: never;
@@ -1611,9 +1780,18 @@ export interface paths {
         };
         put?: never;
         /**
-         * Create cardholder
-         * @description Creates a new cardholder AND registers them at the vendor in one request.
-         *     The `vendor_id` is resolved automatically from `issuing_program_id`.
+         * Create cardholder draft
+         * @description Creates a cardholder in `DRAFT` status. **No vendor is contacted here** — this is
+         *     step 1 of 3. The `vendor_id` is resolved automatically from `issuing_program_id`.
+         *
+         *     **The three steps**:
+         *     1. `POST /api/issuing/cardholders` — create the draft (this endpoint).
+         *     2. `POST /api/issuing/cardholders/{cardholder_id}/documents` — upload the KYC files
+         *        as `multipart/form-data`.
+         *     3. `POST /api/issuing/cardholders/{cardholder_id}/submit` — register at the vendor;
+         *        the cardholder becomes `ACTIVE`.
+         *
+         *     A draft cannot hold a card: card creation refuses anything that is not `ACTIVE`.
          *
          *     **Authentication**: x-api-key header required
          *
@@ -1621,6 +1799,13 @@ export interface paths {
          *     make two separate calls with different `issuing_program_id`.
          *
          *     **Uniqueness**: `email + wallet_id + issuing_program_id` must be unique (soft-deleted records excluded).
+         *
+         *     **Two modes**:
+         *     - `user_data_id` mode: personal data and KYC documents are seeded from an existing
+         *       verified user (requires an approved identity/face verification and a Sumsub applicant).
+         *       Manual fields only fill gaps. The Sumsub files are attached to the draft
+         *       immediately, so step 2 is usually unnecessary in this mode.
+         *     - Manual mode: `first_name`, `last_name`, `email`, `phone` are required.
          *
          *     **Important**:
          *     - For API key authentication: The wallet_id is determined by the API key itself (if the key is bound to a wallet)
@@ -1638,26 +1823,34 @@ export interface paths {
                 content: {
                     "application/json": {
                         /**
-                         * @description Cardholder's first name
+                         * Format: uuid
+                         * @description Seed personal data + KYC documents from this verified user (user_data.uuid).
+                         *     When set, personal fields become optional and only fill gaps.
+                         *
+                         * @example c3d4e5f6-a7b8-9012-cdef-123456789012
+                         */
+                        user_data_id?: string;
+                        /**
+                         * @description Cardholder's first name (required in manual mode)
                          * @example John
                          */
-                        first_name: string;
+                        first_name?: string;
                         /**
-                         * @description Cardholder's last name
+                         * @description Cardholder's last name (required in manual mode)
                          * @example Doe
                          */
-                        last_name: string;
+                        last_name?: string;
                         /**
                          * Format: email
-                         * @description Cardholder's email address
+                         * @description Cardholder's email address (required in manual mode)
                          * @example john.doe@example.com
                          */
-                        email: string;
+                        email?: string;
                         /**
-                         * @description Cardholder's phone number in E.164 format (+ followed by 1-15 digits)
+                         * @description Cardholder's phone number in E.164 format (required in manual mode)
                          * @example +14155552671
                          */
-                        phone: string;
+                        phone?: string;
                         /**
                          * Format: uuid
                          * @description Issuing program ID (required). vendor_id is resolved from the program automatically.
@@ -1665,22 +1858,48 @@ export interface paths {
                          */
                         issuing_program_id: string;
                         /**
-                         * Format: uuid
-                         * @description Sub-account ID (required for balance card vendors)
-                         * @example b2c3d4e5-f6a7-8901-bcde-f12345678901
-                         */
-                        sub_account_id?: string;
-                        /**
                          * Format: date
-                         * @description Cardholder's date of birth
+                         * @description Cardholder's date of birth (YYYY-MM-DD)
                          * @example 1990-01-15
                          */
-                        date_of_birth?: string;
+                        birth_date?: string;
                         /**
                          * @description Cardholder's nationality as ISO 3166-1 alpha-3 country code
                          * @example USA
                          */
                         nationality?: string;
+                        /**
+                         * @description Cardholder's gender (required by some vendors)
+                         * @enum {string}
+                         */
+                        gender?: "M" | "F";
+                        /**
+                         * @description Relationship of the cardholder to the account holder
+                         * @enum {string}
+                         */
+                        cardholder_relationship?: "EMPLOYEE" | "CONTRACTOR";
+                        /**
+                         * @description Identity document type (KYC vendors)
+                         * @enum {string}
+                         */
+                        gov_id_type?: "passport" | "id_card" | "driving_license";
+                        /** @description Identity document number */
+                        gov_id_number?: string;
+                        /**
+                         * @description Issuing country of the identity document (2-3 letter code)
+                         * @example USA
+                         */
+                        gov_id_country?: string;
+                        /**
+                         * Format: date
+                         * @description Identity document issue date (YYYY-MM-DD)
+                         */
+                        gov_id_issuance_date?: string;
+                        /**
+                         * Format: date
+                         * @description Identity document expiry date (YYYY-MM-DD)
+                         */
+                        gov_id_expiration_date?: string;
                         /** @description Cardholder's address */
                         address?: {
                             /**
@@ -1706,7 +1925,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Cardholder created and registered at vendor successfully */
+                /** @description Cardholder draft created (status DRAFT, not yet registered at the vendor) */
                 201: {
                     headers: {
                         [name: string]: unknown;
@@ -1716,7 +1935,7 @@ export interface paths {
                             /** @example true */
                             success?: boolean;
                             data?: components["schemas"]["Cardholder"];
-                            /** @example Cardholder created successfully */
+                            /** @example Cardholder draft created successfully */
                             message?: string;
                         };
                     };
@@ -1910,6 +2129,219 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/issuing/cardholders/{cardholder_id}/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Attach uploaded KYC documents to a cardholder
+         * @description Attaches files that were already uploaded via
+         *     `POST /api/issuing/cardholder-documents` to this cardholder. The body
+         *     carries upload ids only — no file bytes travel here.
+         *
+         *     A document of a type the cardholder already has replaces the previous
+         *     one, and the superseded file is deleted. An upload can only be attached
+         *     once, and only to a cardholder in the same wallet it was uploaded for.
+         *
+         *     Documents are not pushed to the vendor here; they travel at
+         *     `POST /cardholders/{cardholder_id}/submit`.
+         *
+         *     **Authentication**: x-api-key header required
+         *
+         *     **Access Control**: Cardholder must belong to the authenticated wallet
+         *
+         */
+        post: {
+            parameters: {
+                query?: {
+                    /** @description Wallet ID (required for non-wallet-bound API keys) */
+                    wallet_id?: string;
+                };
+                header?: never;
+                path: {
+                    cardholder_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Ids returned by the upload endpoint */
+                        document_ids: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Documents attached; returns the updated cardholder */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            /** @example Documents attached successfully */
+                            message?: string;
+                            data?: components["schemas"]["Cardholder"];
+                        };
+                    };
+                };
+                /** @description document_ids missing, empty, or listing two files of one type */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Access denied to this cardholder */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Cardholder or upload id not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description An upload is already attached to a cardholder */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/issuing/cardholders/{cardholder_id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Submit cardholder draft
+         * @description Registers a `DRAFT` cardholder at the vendor and flips it to `ACTIVE` — step 3 of the
+         *     create flow. The vendor is resolved from the cardholder's issuing program.
+         *
+         *     **Dossier check**: refused with `400 CARDHOLDER_SUBMISSION_INCOMPLETE` while the
+         *     program's KYC level is not met; `error.details.missing` lists every field and file
+         *     still needed (e.g. `gender`, `documents: selfie`).
+         *
+         *     **Retryable**: a failed submit leaves the draft untouched — complete the dossier and
+         *     call this endpoint again.
+         *
+         *     **Authentication**: x-api-key header required
+         *
+         */
+        post: {
+            parameters: {
+                query?: {
+                    /** @description Wallet ID for access validation (implied by a wallet-bound API key) */
+                    wallet_id?: string;
+                };
+                header?: never;
+                path: {
+                    cardholder_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Cardholder registered at the vendor and activated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            /** @example Cardholder submitted successfully */
+                            message?: string;
+                            data?: components["schemas"]["Cardholder"];
+                        };
+                    };
+                };
+                /** @description KYC dossier incomplete, or the program has no vendor configured */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Access denied to this cardholder */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Cardholder not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Cardholder is not a draft (already submitted) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Vendor rejected the registration; the draft is kept */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -3671,6 +4103,30 @@ export interface paths {
                 };
                 /** @description Sub-account or wallet not found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Conflict - the card provider refused the top-up during the pre-flight
+                 *     allowance check (no order was created, the wallet was not debited):
+                 *     - `TOPUP_NOT_ALLOWED` — provider does not allow a top-up for this account
+                 *     - `TOPUP_AMOUNT_EXCEEDS_VENDOR_LIMIT` — amount is above the provider's cap
+                 *      */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description `TOPUP_CHECK_UNAVAILABLE` — the provider allowance check could not be
+                 *     completed, so the top-up was refused rather than attempted. Retry later.
+                 *      */
+                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -6236,6 +6692,10 @@ export interface paths {
          *
          *     **Important**: This endpoint only works with API keys that are bound to a specific wallet.
          *
+         *     **Date range**: use `from_date` / `to_date` to request transactions for a specific period.
+         *     Both bounds are inclusive and are applied to the transaction `created_at` timestamp;
+         *     either one may be supplied on its own for an open-ended range.
+         *
          */
         get: {
             parameters: {
@@ -6248,10 +6708,42 @@ export interface paths {
                     sort_by?: string;
                     /** @description Sort direction */
                     sort_order?: "ASC" | "DESC";
-                    /** @description JSON string of filters to apply.
-                     *     Example: [{"status":"complete"},{"type":"deposit"}]
+                    /** @description Filter by status (comma-separated for multi-select — new, pending, processing, complete, canceled, failed) */
+                    status?: string;
+                    /** @description Transaction type (direction) */
+                    type?: "deposit" | "withdrawal";
+                    /** @description Transaction method filter */
+                    method?: "p2p" | "crypto" | "bank_transfer" | "exchange" | "sbp" | "internal_fiat";
+                    /** @description Transaction subtype (e.g. `DEPOSIT_CRYPTO_EXTERNAL`, `CARD_PROVIDER_DEPOSIT`) */
+                    record_type?: string;
+                    /** @description Filter by sender or recipient address (matches `from` OR `to` fields) */
+                    address?: string;
+                    /** @description Start of the `created_at` range (inclusive).
+                     *     Accepts a date (`2026-04-08`) or a full ISO 8601 timestamp (`2026-04-08T00:00:00Z`).
                      *      */
-                    filters?: string;
+                    from_date?: string;
+                    /** @description End of the `created_at` range (inclusive).
+                     *     Accepts a date (`2026-04-08`) or a full ISO 8601 timestamp (`2026-04-08T23:59:59Z`).
+                     *      */
+                    to_date?: string;
+                    /**
+                     * @deprecated
+                     * @description Deprecated alias for `from_date`. Ignored when `from_date` is present.
+                     */
+                    from_created_at?: string;
+                    /**
+                     * @deprecated
+                     * @description Deprecated alias for `to_date`. Ignored when `to_date` is present.
+                     */
+                    to_created_at?: string;
+                    /** @description Filter by currency UUID */
+                    currency_uuid?: string;
+                    /** @description Filter by billing currency from transaction meta */
+                    meta_billing_currency?: string;
+                    /** @description Filter by transaction currency from transaction meta */
+                    meta_transaction_currency?: string;
+                    /** @description When false (default), dust transactions below threshold are hidden */
+                    show_low_balance?: boolean;
                 };
                 header?: never;
                 path?: never;
@@ -6275,7 +6767,7 @@ export interface paths {
                 };
                 /** @description Bad request - One of the following:
                  *     - API key is not bound to a wallet
-                 *     - Invalid filters format
+                 *     - Invalid filter value (unknown `status`/`type`/`method`, malformed `from_date`/`to_date`)
                  *      */
                 400: {
                     headers: {
@@ -6687,6 +7179,30 @@ export interface components {
              */
             issuing_program_id?: string;
             address?: components["schemas"]["CardholderAddress"];
+        };
+        /** @description An uploaded KYC file, addressable before it is attached to a cardholder */
+        CardholderDocumentUpload: {
+            /**
+             * Format: uuid
+             * @description Pass this to the attach endpoint
+             */
+            id?: string;
+            /**
+             * @description Document type, taken from the multipart field name
+             * @enum {string}
+             */
+            type?: "selfie" | "gov_id_front" | "gov_id_back";
+            /** @description Original file name, when the client sent one */
+            filename?: string | null;
+            /** @example image/png */
+            content_type?: string;
+            /**
+             * @description File size in bytes
+             * @example 284512
+             */
+            size?: number;
+            /** Format: date-time */
+            created_at?: string;
         };
         /** @description Sub-account object */
         IssuingSubAccount: {

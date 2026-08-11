@@ -861,6 +861,7 @@ export namespace API {
     }
 
     export namespace Issuing {
+      type CardsRoot = pathsV1Frontend['/frontend/issuing/cards'];
       type CardDepositRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/deposit'];
       type CardWithdrawRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/withdraw'];
       type SubAccountDepositRoot = pathsV1Frontend['/frontend/issuing/sub-accounts/{sub_account_id}/deposit'];
@@ -896,6 +897,15 @@ export namespace API {
       }
 
       export namespace Cards {
+        export namespace List {
+          export type Request = NonNullable<CardsRoot['get']['parameters']['query']>;
+          export type Response = CardsRoot['get']['responses']['200']['content']['application/json'];
+          // Unlike the legacy `GET /issuing/cards` item, `sub_account.balance` here is read from the
+          // B2B ledger (`issuing.sub_accounts.total_available`) — the same source as the sub-account
+          // endpoint — so it matches what the card itself reports.
+          export type Card = NonNullable<Response['data']>[number];
+        }
+
         export namespace Deposit {
           export type Request = {
             card_id: string;
