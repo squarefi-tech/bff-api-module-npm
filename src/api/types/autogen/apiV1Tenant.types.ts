@@ -8552,7 +8552,13 @@ export interface components {
             } | null;
         };
         CryptoTransferRequest: {
+            /** @description Amount to send, in `from_currency_id` units. With `is_reverse: true` — the amount the recipient must receive, in destination-currency units. */
             amount: number;
+            /**
+             * @description When true, `amount` is the receive-amount and the debited amount is grossed up with fees.
+             * @default false
+             */
+            is_reverse: boolean;
             /** Format: uuid */
             from_currency_id: string;
             /** Format: uuid */
@@ -8568,7 +8574,13 @@ export interface components {
             scheduled_at?: string;
         };
         OfframpOrderRequest: {
+            /** @description Amount to send, in `from_currency_id` units. With `is_reverse: true` — the amount the recipient must receive, in destination-currency units. */
             amount: number;
+            /**
+             * @description When true, `amount` is the receive-amount and the debited amount is grossed up with fees.
+             * @default false
+             */
+            is_reverse: boolean;
             /** Format: uuid */
             from_currency_id: string;
             /** Format: uuid */
@@ -8591,8 +8603,13 @@ export interface components {
             scheduled_at?: string;
         };
         ExchangeOrderRequest: {
-            /** @description Amount to exchange (in source currency) */
+            /** @description Amount to exchange, in `from_currency_id` units. With `is_reverse: true` — the amount to receive, in `to_currency_id` units. */
             amount: number;
+            /**
+             * @description When true, `amount` is the receive-amount and the debited amount is grossed up with fees.
+             * @default false
+             */
+            is_reverse: boolean;
             /**
              * Format: uuid
              * @description Source currency UUID
