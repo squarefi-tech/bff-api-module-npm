@@ -7,7 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`frontend.issuing.cards.list(params?)`** (`GET /frontend/issuing/cards`) — the frontend card list, replacing the legacy `issuing.cards.getAll` (`GET /issuing/cards`) as the source of a card's balance. The legacy item exposes the balance as `data[].fiat_account.balance`, which the card engine migration left stale, so the number in a card table no longer matched the number on the card itself. Each item here embeds `sub_account` (`{ id, balance, account_currency, type, status, wallet_id, program_id, … }`) whose `balance` is read from the B2B ledger (`issuing.sub_accounts.total_available`) — the same source the sub-account endpoint uses — so the two agree. Items also carry `is_prepaid` (funding model: dedicated vs shared sub-account, replacing the removed vendor `type`), `limits` (per-period `*_enabled` / `*_cap` / `*_spent`), `title`, `card_name`, `last4`, `status`, `form_factor`, `brand`, `cardholder`, `expiration_date*` and the wallet/program/sub-account ids. Optional filters: `wallet_id`, `program_id`, `sub_account_type` (`'prepaid' | 'balance'`), `status` (array, serialized as the comma-separated list the endpoint documents), `last4` (partial, case-insensitive), `offset`, `limit`. Response is `{ success, data, pagination: { offset, limit, total } }`. Types under `API.Frontend.Issuing.Cards.List.*`, including `List.Card` for the item. Goes through the frontend client (Bearer + `x-tenant-id`). **`sub_account` is nullable and may be absent**: it is `null` when no sub-account is linked, and the endpoint drops it entirely in its degraded local-only mode when the issuing vendor is unreachable — read it defensively rather than assuming a balance is always present. The legacy `issuing.cards.*` methods are unchanged.
+
+### Changed
+
+- **Regenerated all OpenAPI types.** Unrelated to the addition above, the specs picked up: cardholder document management on all three v1 specs (`/{frontend,admin,api}/issuing/cardholder-documents`, `…/cardholders/{cardholder_id}/documents`, `…/cardholders/{cardholder_id}/submit`), `/admin/virtual_accounts/{id}/confirmation-pdf`, and `DELETE /user/user-data/logo` on v2. No SDK methods were added for these — the types are available to consumers that need them. Two changes are consumer-visible: the `type` filter on **`referrals.income.list`** narrowed from eight values to `'deposit' | 'withdrawal'` (`deposit_crypto`, `withdrawal_crypto`, `deposit_fiat`, `withdrawal_fiat`, `deposit_vcard`, `withdrawal_vcard` are gone and no longer compile), and the v2 wallet-transactions filter lost its `address` param and had `type` narrowed the same way — the latter is types-only, no SDK method targets those v2 operations.
+- **`orders.create.byOrderType.TRANSFER_CARD_WHOLESALE` no longer has a published spec path.** The legacy spec dropped `/orders/TRANSFER_CARD_WHOLESALE`; the method still POSTs there and still compiles because its request/response types are hand-written, so nothing here type-checks that path. Untouched by this release — same situation as the `L2F_*_OFFRAMP` methods noted in 1.36.32, and it needs to be confirmed against the backend separately.
+
 ## [1.36.35] - 2026-08-05
+
+### Added
+
+- **16 order type ids the `order_types` table already carried.** `OrderType` and `WalletTransactionRecordType` gained `BC1_SEPA_ONRAMP`/`OFFRAMP`, `BC1_SWIFT_ONRAMP`/`OFFRAMP`, `BC3_SEPA_ONRAMP`/`OFFRAMP`, `NARVI_SEPA_ONRAMP`/`OFFRAMP`, `EXCHANGE_OMNI_ONRAMP`/`OFFRAMP`/`CRYPTO`, `CARD_AUTHORIZATION`, `CARD_AUTH_REFUND`, `REFUND_CARD_PREPAID`, `REFUND_CARD_SUBACCOUNT` and `ADJUSTMENT`. Without them consumers fell back to raw ids for orders that already exist (`CARD_AUTHORIZATION`, `CARD_AUTH_REFUND`, `ADJUSTMENT`) and could not route the rails configured on virtual account programs (BC1/BC3, NARVI). Nothing was removed — ids no longer in the table still have historical orders.
+- **`RTP` and `CARD` payment methods** on `OrderTypePaymentMethod` and `API.Orders.V2.OrderTypes.PaymentMethod`; both were already in use by the table and the API docs.
+
+### Changed
+
+- **The payment-method invariant now carries an explicit exception list.** `isOrderPaymentMethodEqualWithVirtualAccountsInstructionType` stays an equality check (with its original export names) but excludes `RTP` and `CARD` via `OrderPaymentMethodWithoutDepositInstruction` — they are rails a virtual account never issues deposit instructions for. Adding a payment method still fails the build unless it is added to `VirtualAccountsInstructionType` or consciously listed as an exception.
 
 ## [1.36.34] - 2026-08-01
 

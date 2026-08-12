@@ -16,12 +16,22 @@ export const frontend = {
         apiClientV1.deleteRequest(`/frontend/access/keys/${key_id}`),
     },
   },
-  // Card money movement. Both card-level methods are thin wrappers the backend resolves to the
-  // card's sub-account, so they share the sub-account order types, validation and program routing.
-  // All four require the ADMIN role on the owning wallet — the card's wallet for `cards.*`, the
-  // sub-account's wallet for `subAccounts.*`.
+  // Card money movement (`deposit` / `withdraw`). Both card-level methods are thin wrappers the
+  // backend resolves to the card's sub-account, so they share the sub-account order types,
+  // validation and program routing. All four require the ADMIN role on the owning wallet — the
+  // card's wallet for `cards.*`, the sub-account's wallet for `subAccounts.*`.
   issuing: {
     cards: {
+      // `status` is a comma-separated list on the wire (`status=ACTIVE,FROZEN`). The spec types it as
+      // an array, which axios would default-serialize to `status[]=ACTIVE&status[]=FROZEN` — a form
+      // the endpoint does not parse — so join it here and keep the array in the public type.
+      list: ({
+        status,
+        ...params
+      }: API.Frontend.Issuing.Cards.List.Request = {}): Promise<API.Frontend.Issuing.Cards.List.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.Issuing.Cards.List.Response>('/frontend/issuing/cards', {
+          params: status?.length ? { ...params, status: status.join(',') } : params,
+        }),
       deposit: ({
         card_id,
         ...data

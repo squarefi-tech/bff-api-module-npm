@@ -254,7 +254,8 @@ export interface paths {
         put?: never;
         /** Upload Logo for user data */
         post: operations["UserController_uploadLogoFile"];
-        delete?: never;
+        /** Delete Logo for user data */
+        delete: operations["UserController_deleteLogoFile"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1255,7 +1256,7 @@ export interface components {
             status: "complete" | "pending" | "canceled" | "failed" | "processing" | "new";
             txid: string | null;
             /** @enum {string} */
-            type: "deposit_crypto" | "withdrawal_crypto" | "deposit_fiat" | "withdrawal_fiat" | "deposit_vcard" | "withdrawal_vcard" | "deposit" | "withdrawal";
+            type: "deposit" | "withdrawal";
             wallet_id: string | null;
             /** @enum {string|null} */
             method: "p2p" | "crypto" | "bank_transfer" | "exchange" | "sbp" | "internal_fiat" | null;
@@ -1376,7 +1377,7 @@ export interface components {
         TransactionsFilter: {
             created_at?: string;
             /** @enum {string} */
-            type?: "deposit_crypto" | "withdrawal_crypto" | "deposit_fiat" | "withdrawal_fiat" | "deposit_vcard" | "withdrawal_vcard" | "deposit" | "withdrawal";
+            type?: "deposit" | "withdrawal";
             /** @enum {string|null} */
             method?: "p2p" | "crypto" | "bank_transfer" | "exchange" | "sbp" | "internal_fiat" | null;
             /** @enum {string|null} */
@@ -1384,8 +1385,6 @@ export interface components {
             "currency.uuid"?: string;
             "meta.billing_amount_currency"?: string;
             "meta.transaction_amount_currency"?: string;
-            /** @description Filters items by "from OR to" fields */
-            address?: string;
             /** Format: date-time */
             from_created_at?: string;
             /** Format: date-time */
@@ -1740,6 +1739,8 @@ export interface components {
             source_of_accumulated?: string | null;
             send_and_receive?: string | null;
             employment_status_other?: string | null;
+            source_of_wealth_ubo?: string | null;
+            source_of_wealth_ubo_url?: string | null;
             purposes?: string[] | null;
             payment_flows?: string[] | null;
             source_of_funds_list?: string[] | null;
@@ -2575,7 +2576,17 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * Format: binary
+                     * @description Allowed types: JPEG, PNG, WEBP. Max size: 1 MB.
+                     */
+                    file: string;
+                };
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -2584,6 +2595,30 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["UserDataUploadLogoResponseDto"];
                 };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UserController_deleteLogoFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Unauthorized */
             401: {
@@ -2745,7 +2780,17 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * Format: binary
+                     * @description Allowed types: PDF, JPEG, PNG. Max size: 20 MB.
+                     */
+                    file: string;
+                };
+            };
+        };
         responses: {
             201: {
                 headers: {
@@ -3099,7 +3144,17 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * Format: binary
+                     * @description Allowed types: JPEG, PNG, WEBP. Max size: 1 MB.
+                     */
+                    file: string;
+                };
+            };
+        };
         responses: {
             200: {
                 headers: {
@@ -3209,7 +3264,7 @@ export interface operations {
                 /** @description Number of records to return */
                 limit?: number;
                 sort_order?: "ASC" | "DESC";
-                sort_by?: "created_at" | "type" | "status" | "amount" | "from" | "to" | "method" | "record_type" | null;
+                sort_by?: "created_at" | "type" | "status" | "amount" | "method" | "record_type" | null;
                 filter?: components["schemas"]["TransactionsFilter"];
             };
             header?: never;

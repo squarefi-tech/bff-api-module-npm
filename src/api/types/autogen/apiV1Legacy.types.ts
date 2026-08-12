@@ -4179,119 +4179,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/orders/TRANSFER_CARD_WHOLESALE": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create a wholesale card transfer order
-         * @description Create a wholesale card transfer order
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /**
-                         * @description Amount to transfer
-                         * @example 100
-                         */
-                        amount: number;
-                        /**
-                         * @description Source wallet UUID
-                         * @example 8205c701-cd41-4929-910f-fccbb949729a
-                         */
-                        wallet_id: string;
-                        /**
-                         * @description Vendor ID
-                         * @example 509eca03-bc0d-4a38-b7dc-d136d2bdaa43
-                         */
-                        vendor_id: string;
-                        /**
-                         * @description Currency ID
-                         * @example a60e477a-2ebb-4158-91ee-2f39ade8d883
-                         */
-                        currency_id: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Order successfully created */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** Format: date-time */
-                            created_at?: string;
-                            order_uuid?: string;
-                            wallet_uuid?: string;
-                            from_uuid?: string;
-                            to_uuid?: string;
-                            amount_from?: number;
-                            /** @example TRANSFER_CARD_WHOLESALE */
-                            order_type?: string;
-                            /** @enum {string} */
-                            status?: "PENDING" | "COMPLETE" | "FAILED";
-                            amount_to?: number;
-                            info?: string;
-                            meta?: {
-                                fee?: number;
-                                order_uuid?: string;
-                                fee_currency?: string;
-                                billing_amount?: number;
-                                transaction_amount?: number;
-                                transaction_currency?: string;
-                                exchange_rate?: number;
-                                network_fee?: number;
-                                meta_type?: string;
-                                vendor_id?: string;
-                            };
-                            id?: string;
-                        };
-                    };
-                };
-                /** @description Bad request - validation error */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error?: string;
-                        };
-                    };
-                };
-                /** @description Server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error?: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/orders/EXCHANGE_CRYPTO_INTERNAL": {
         parameters: {
             query?: never;
@@ -5227,7 +5114,6 @@ export interface paths {
                                 updated_at?: string;
                                 /** Format: date-time */
                                 deleted_at?: string | null;
-                                is_deleted?: boolean | null;
                                 /** @description Parent counterparty account */
                                 counterparty_account?: {
                                     id?: string;
