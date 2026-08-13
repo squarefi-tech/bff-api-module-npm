@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.37] - 2026-08-13
+
 ### Changed
 
 - **BREAKING: `is_reverse` is now required on every order-create request.** `orders.frontend.create.withdrawal.{wire,ach,sepa,swift,chaps,fps}` (`FrontendL2FOrderRequest`), `orders.frontend.create.withdrawal.crypto` (`FrontendCryptoTransferRequest`) and `orders.frontend.create.exchange` (`FrontendExchangeOrderRequest`) all gained `is_reverse: boolean`. The backend documents it as `@default false`, but the spec lists it under `required`, so the generated field is **not optional** — existing call sites stop compiling until they pass it explicitly. With `is_reverse: false` (the previous behaviour) `amount` is what gets debited, in `from_currency_id` units. With `is_reverse: true` `amount` is what the counterparty must receive — in `to_currency_id` units for exchange, in destination-currency units for the withdrawals — and the debited amount is grossed up with fees. This closes the gap where a reverse-entered amount was silently recalculated forward at create, so asking for exactly 1000 on the receiving side landed as 999.92. The flag mirrors the `is_reverse` query param `GET /frontend/orders/calc` already took: a client that calculates in reverse must now create in reverse too, or the quote and the order disagree.
