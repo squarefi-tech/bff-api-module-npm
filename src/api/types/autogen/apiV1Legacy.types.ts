@@ -1068,104 +1068,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/tenant/me": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get authenticated tenant
-         * @deprecated
-         * @description Returns information about the authenticated tenant
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Authenticated tenant information */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Tenant"];
-                    };
-                };
-                /** @description Server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/tenant/config": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get tenant configuration
-         * @deprecated
-         * @description Returns configuration for the authenticated tenant
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Tenant configuration */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["TenantConfig"];
-                    };
-                };
-                /** @description Server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/issuing/cards": {
         parameters: {
             query?: never;
@@ -2202,17 +2104,7 @@ export interface paths {
         };
         /**
          * Get card transactions
-         * @description Retrieves a list of transactions for a specific card with filtering and pagination options.
-         *     This endpoint now combines external card transactions with local top-up transactions.
-         *
-         *     **Pagination Strategy**: Due to combining two data sources (external API and local DB),
-         *     pagination fetches larger batches from both sources to ensure proper sorting before
-         *     applying the requested pagination. This prevents missing transactions that should appear
-         *     on the current page after sorting.
-         *
-         *     **Note**: For cards, the system needs to find the associated fiat_account to match local top-up transactions.
-         *     This should be replaced with direct card_id in transaction metadata in the future.
-         *
+         * @description Retrieves a list of transactions for a specific card, including card top-ups, with filtering and pagination options.
          */
         get: {
             parameters: {
@@ -2227,14 +2119,14 @@ export interface paths {
                     offset?: number;
                     /** @description Whether to use the new response format */
                     new_scheme?: boolean;
-                    /** @description Filter by transaction type */
-                    transaction_type?: string;
-                    /** @description Filter by start date (ISO 8601). Sent to external provider as `from_timestamp` and post-filtered against `cleared_at`/`created_at`. */
+                    /** @description Filter by transaction type (case-insensitive). Unknown values are rejected with a validation error. */
+                    transaction_type?: "AUTHORIZATION" | "CLEARING" | "REFUND" | "REVERSAL" | "DEPOSIT" | "WITHDRAWAL" | "TRANSFER" | "FEE" | "ATM" | "ACCOUNT_VERIFICATION" | "ORIGINAL_CREDIT" | "OTHER";
+                    /** @description Filter by start date (ISO 8601), matched against `cleared_at` (fallback `created_at`). */
                     from?: string;
-                    /** @description Filter by end date (ISO 8601). Sent to external provider as `to_timestamp` and post-filtered against `cleared_at`/`created_at`. */
+                    /** @description Filter by end date (ISO 8601), matched against `cleared_at` (fallback `created_at`). */
                     to?: string;
-                    /** @description Filter by transaction status. Forwarded to external provider and applied as a post-filter on the combined result. */
-                    status?: "PENDING" | "APPROVED" | "DECLINED" | "CANCELED";
+                    /** @description Filter by transaction status (case-insensitive). */
+                    status?: "PENDING" | "APPROVED" | "COMPLETED" | "DECLINED" | "CANCELED" | "REVERSED" | "EXPIRED";
                 };
                 header?: never;
                 path?: never;
@@ -2242,13 +2134,22 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description List of transactions retrieved successfully (includes both external and local top-up transactions) */
+                /** @description List of transactions retrieved successfully (includes card top-ups) */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
                         "application/json": components["schemas"]["IssuingTransactionList"];
+                    };
+                };
+                /** @description Validation error (unknown transaction_type) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
                     };
                 };
                 /** @description Server Error */
@@ -8372,8 +8273,6 @@ export interface components {
         Transaction: unknown;
         CryptoCurrency: unknown;
         Country: unknown;
-        Tenant: unknown;
-        TenantConfig: unknown;
         IssuingCardList: unknown;
         IssuingCard: unknown;
         CardSensitiveData: unknown;

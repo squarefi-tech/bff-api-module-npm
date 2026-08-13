@@ -7348,6 +7348,28 @@ export interface components {
             type?: string;
             /** @description Whether cards can be tokenized */
             tokenizable?: boolean;
+            /** @description What a cardholder on this program must carry. Set per program in the vendor config, so it can change without a release — read it instead of hardcoding the form. */
+            cardholder_requirements?: {
+                /**
+                 * @description Cumulative KYC level; each level includes the previous one
+                 * @enum {string}
+                 */
+                level?: "minimal" | "basic" | "full";
+                /**
+                 * @description Required field names; address fields are dotted (address.line1)
+                 * @example [
+                 *       "first_name",
+                 *       "last_name",
+                 *       "email",
+                 *       "phone",
+                 *       "birth_date",
+                 *       "nationality"
+                 *     ]
+                 */
+                required?: string[];
+                /** @description Documents that must be attached; empty below the full level */
+                required_documents?: ("gov_id_front" | "gov_id_back" | "selfie")[];
+            };
             /** @description Available order types */
             order_types?: Record<string, never>[];
             /** @description KYC requirements */
@@ -7903,10 +7925,15 @@ export interface components {
         };
         ApiCryptoTransferRequest: {
             /**
-             * @description Amount to send, in `from_currency_id` units.
+             * @description Amount to send, in `from_currency_id` units. With `is_reverse: true` — the amount the recipient must receive, in destination-currency units.
              * @example 100
              */
             amount: number;
+            /**
+             * @description Optional. When true, `amount` is the receive-amount and the debited amount is grossed up with fees.
+             * @default false
+             */
+            is_reverse: boolean;
             /**
              * Format: uuid
              * @description UUID of the source currency to debit from the wallet's omnibus balance. Get the list from `GET /api/reference/currencies`.
@@ -7949,10 +7976,15 @@ export interface components {
         };
         ApiOfframpOrderRequest: {
             /**
-             * @description Amount to send, in `from_currency_id` units.
+             * @description Amount to send, in `from_currency_id` units. With `is_reverse: true` — the amount the recipient must receive, in destination-currency units.
              * @example 1000
              */
             amount: number;
+            /**
+             * @description Optional. When true, `amount` is the receive-amount and the debited amount is grossed up with fees.
+             * @default false
+             */
+            is_reverse: boolean;
             /**
              * Format: uuid
              * @description Source currency UUID. Get from `GET /api/reference/currencies`.
@@ -7996,10 +8028,15 @@ export interface components {
         };
         ApiExchangeOrderRequest: {
             /**
-             * @description Amount to exchange, in `from_currency_id` units.
+             * @description Amount to exchange, in `from_currency_id` units. With `is_reverse: true` — the amount to receive, in `to_currency_id` units.
              * @example 100
              */
             amount: number;
+            /**
+             * @description Optional. When true, `amount` is the receive-amount and the debited amount is grossed up with fees.
+             * @default false
+             */
+            is_reverse: boolean;
             /**
              * Format: uuid
              * @description Source currency UUID. Get from `GET /api/reference/currencies`.

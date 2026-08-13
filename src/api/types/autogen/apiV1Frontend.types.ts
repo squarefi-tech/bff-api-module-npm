@@ -6023,6 +6023,360 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/frontend/notification-preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Effective delivery-channel preferences
+         * @description Full channel list with defaults applied. `IN_APP` is always enabled (cannot be disabled).
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Effective preference per channel. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                preferences?: components["schemas"]["NotificationPreference"][];
+                            };
+                        };
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+            };
+        };
+        /**
+         * Update delivery-channel preferences
+         * @description Bulk upsert. Disabling `IN_APP` is rejected with 400 (`INBOX_CHANNEL_LOCKED`). Changes apply from the next delivery.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        preferences: components["schemas"]["NotificationPreference"][];
+                    };
+                };
+            };
+            responses: {
+                /** @description Effective preference list after the update. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                preferences?: components["schemas"]["NotificationPreference"][];
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid body (`VALIDATION_ERROR`) or an attempt to disable `IN_APP` (`INBOX_CHANNEL_LOCKED`). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["UnauthorizedError"];
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the notification inbox (newest first, cursor pagination) */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Opaque cursor from a previous page (`next_cursor`). Omit for the first page. */
+                    cursor?: string;
+                    limit?: number;
+                    unread_only?: "true" | "false";
+                    wallet_id?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Page of notifications; `next_cursor` is null on the final page. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                items?: components["schemas"]["NotificationView"][];
+                                next_cursor?: string | null;
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid query (`VALIDATION_ERROR`) or a broken cursor (`NOTIFICATION_CURSOR_INVALID`). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["UnauthorizedError"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/notifications/unread-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Unread notifications count (badge) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Current unread count. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /** @example 3 */
+                                count?: number;
+                            };
+                        };
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/notifications/mark-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark specific notifications as read
+         * @description Idempotent — already-read ids are not counted. Other tabs/devices sync via the realtime `notifications.read` event.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        notification_ids: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Number of notifications actually transitioned to read. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /** @example 2 */
+                                updated?: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid body (`VALIDATION_ERROR`). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["UnauthorizedError"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/notifications/mark-all-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark every unread notification as read */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Number of notifications actually transitioned to read. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /** @example 5 */
+                                updated?: number;
+                            };
+                        };
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/notifications/realtime-token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Issue a realtime subscription token
+         * @description Subscribe-only token for the realtime SDK (`authCallback`). `channels`
+         *     lists the exact channel names the token grants — the personal channel
+         *     plus one per accessible wallet. Tokens expire after ~1 hour; the SDK
+         *     re-requests through the same endpoint.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Token, expiry and the granted channel names. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                token?: string;
+                                /** Format: date-time */
+                                expires_at?: string;
+                                channels?: string[];
+                            };
+                        };
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description Realtime delivery is disabled for this deployment (`REALTIME_DISABLED`). */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/frontend/orders/deposit/ach": {
         parameters: {
             query?: never;
@@ -11331,6 +11685,65 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/frontend/notifications/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send mock notification events (development only)
+         * @description Publishes MOCK events straight to the delivery channels so a client can verify its realtime integration: `notification.created` plus a push carrier on the personal channel, and `data.changed` on the wallet channel when `wallet_id` is passed. Nothing is stored — the mock does not appear in the inbox. Available only on development deployments.
+         */
+        post: {
+            parameters: {
+                query?: {
+                    /** @description Accessible wallet whose channel receives the mock `data.changed` signal */
+                    wallet_id?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @description Push notification text */
+                        message?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Mock events published */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /** Format: uuid */
+                                notification_id?: string;
+                                /** Format: uuid */
+                                signaled_wallet_id?: string | null;
+                            };
+                        };
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -11634,6 +12047,14 @@ export interface components {
             /** @enum {string|null} */
             form_factor?: "PHYSICAL" | "VIRTUAL" | null;
             tokenizable: boolean;
+            /** @description What a cardholder on this program must carry. Set per program in the vendor config, so it can change without a release — read it instead of hardcoding the form. */
+            cardholder_requirements?: {
+                /** @enum {string} */
+                level?: "minimal" | "basic" | "full";
+                /** @description Required field names; address fields are dotted (address.line1) */
+                required?: string[];
+                required_documents?: ("gov_id_front" | "gov_id_back" | "selfie")[];
+            };
             /** Format: uuid */
             account_currency: string;
             card_limit: number;
@@ -11831,7 +12252,7 @@ export interface components {
             /** Format: date-time */
             updated_at?: string;
         };
-        /** @description Card / sub-account transaction (GET /cards/{card_id}/transactions and GET /sub-accounts/{sub_account_id}/transactions). Fields pass through from the issuing vendor. */
+        /** @description Card / sub-account transaction (GET /cards/{card_id}/transactions and GET /sub-accounts/{sub_account_id}/transactions). */
         IssuingTransaction: {
             /** @description Transaction id in the issuing vendor */
             vendor_transaction_id?: string;
@@ -11839,7 +12260,7 @@ export interface components {
             last4?: string;
             /** @example APPROVED */
             status?: string;
-            /** @example PURCHASE */
+            /** @example CLEARING */
             transaction_type?: string;
             /** @example Purchase */
             group?: string;
@@ -12111,7 +12532,13 @@ export interface components {
              * @description Source wallet UUID
              */
             wallet_id: string;
+            /** @description Amount to send, in `from_currency_id` units. With `is_reverse: true` — the amount the recipient must receive, in destination-currency units. */
             amount: number;
+            /**
+             * @description When true, `amount` is the receive-amount and the debited amount is grossed up with fees.
+             * @default false
+             */
+            is_reverse: boolean;
             /** Format: uuid */
             from_currency_id: string;
             /** Format: uuid */
@@ -12136,7 +12563,13 @@ export interface components {
              * @description Source wallet UUID
              */
             wallet_id: string;
+            /** @description Amount to send, in `from_currency_id` units. With `is_reverse: true` — the amount the recipient must receive, in destination-currency units. */
             amount: number;
+            /**
+             * @description When true, `amount` is the receive-amount and the debited amount is grossed up with fees.
+             * @default false
+             */
+            is_reverse: boolean;
             /** Format: uuid */
             from_currency_id: string;
             /** Format: uuid */
@@ -12158,8 +12591,13 @@ export interface components {
         FrontendExchangeOrderRequest: {
             /** Format: uuid */
             wallet_id: string;
-            /** @description Amount to exchange (in source currency) */
+            /** @description Amount to exchange, in `from_currency_id` units. With `is_reverse: true` — the amount to receive, in `to_currency_id` units. */
             amount: number;
+            /**
+             * @description When true, `amount` is the receive-amount and the debited amount is grossed up with fees.
+             * @default false
+             */
+            is_reverse: boolean;
             /**
              * Format: uuid
              * @description Source currency UUID
@@ -12341,6 +12779,25 @@ export interface components {
              */
             destination_id: string;
             amount: number;
+        };
+        NotificationView: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            type: "DEPOSIT_RECEIVED" | "TRANSFER_RECEIVED" | "ORDER_STATUS_CHANGED" | "KYC_STATUS_CHANGED";
+            /** @description Structured fact snapshot; the client renders the presentation. Shape depends on `type`; evolution is additive-only. */
+            payload: Record<string, never>;
+            /** Format: uuid */
+            wallet_id: string | null;
+            /** Format: date-time */
+            read_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        NotificationPreference: {
+            /** @enum {string} */
+            channel: "IN_APP" | "PUSH";
+            enabled: boolean;
         };
     };
     responses: {
