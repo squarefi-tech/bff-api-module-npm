@@ -1970,11 +1970,16 @@ export interface components {
             readonly support_text?: string | null;
             readonly support_phone?: string | null;
         };
+        MailingDataEntity: {
+            readonly support_email?: string | null;
+        };
         SupportedLocalesEntity: {
             default: string;
             supported: string[];
         };
         SystemConfigDto: {
+            tenant_id: string;
+            app_url: string | null;
             /** @enum {string} */
             default_theme_mode: "dark" | "light";
             enable_kyc: boolean;
@@ -1991,6 +1996,7 @@ export interface components {
             enable_referral_program: boolean;
             readonly metrics_data?: components["schemas"]["MetricsDataEntity"] | null;
             readonly statement_branding?: components["schemas"]["StatementBrandingEntity"] | null;
+            readonly mailing_data?: components["schemas"]["MailingDataEntity"] | null;
             /** @enum {string} */
             kyc_data_provider: "persona" | "sumsub";
             readonly supported_locales?: components["schemas"]["SupportedLocalesEntity"] | null;

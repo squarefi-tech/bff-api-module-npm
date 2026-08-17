@@ -2644,10 +2644,10 @@ export interface paths {
          * @description Sends crypto from the wallet's omnibus balance via a counterparty
          *     destination. Two-phase: created `NEW` without touching the balance;
          *     `POST /admin/orders/{id}/approve` checks the balance, debits the funds
-         *     and dispatches the on-chain send. A destination address internal to
-         *     the tenant downgrades the order to `OMNIBUS_INTERNAL_TRANSFER` —
-         *     still `NEW` at create, debited + settled synchronously to `COMPLETE`
-         *     at approve.
+         *     and dispatches the on-chain send. This endpoint is external-only: the
+         *     order always goes on-chain, even if the destination address belongs to
+         *     a wallet on this platform. Internal (off-chain) transfers are created
+         *     only through the internal transfer endpoint.
          *
          */
         post: {
@@ -6080,11 +6080,12 @@ export interface paths {
                          */
                         cardholder_relationship?: "EMPLOYEE" | "CONTRACTOR";
                         /**
-                         * @description Identity document type (KYC vendors)
+                         * @description Identity document type (KYC vendors). Which values are accepted depends on the country that issued the document — read cardholder_requirements.country_rules[gov_id_country].gov_id_types instead of hardcoding the list (id_card_cn is the mainland China resident ID, id_card_hk the HKID).
+                         *
                          * @enum {string}
                          */
-                        gov_id_type?: "passport" | "id_card" | "driving_license";
-                        /** @description Identity document number */
+                        gov_id_type?: "passport" | "id_card" | "driving_license" | "residence_permit_eu" | "residence_permit_ae" | "id_card_cn" | "id_card_hk";
+                        /** @description Identity document number (passport / driving licence / national ID). */
                         gov_id_number?: string;
                         /**
                          * @description Issuing country of the identity document (2-3 letter code)
@@ -6098,9 +6099,16 @@ export interface paths {
                         gov_id_issuance_date?: string;
                         /**
                          * Format: date
-                         * @description Identity document expiry date (YYYY-MM-DD)
+                         * @description Identity document expiry date (YYYY-MM-DD). Required by the vendor review even for a document issued for life (an Indonesian KTP, "SEUMUR HIDUP"), which has no expiry printed on it — send the issuance date plus 100 years.
+                         *
                          */
                         gov_id_expiration_date?: string;
+                        /**
+                         * @description Tax identifier of the cardholder, separate from the document number. Required by Interlace CONSUMER programs when nationality is USA, where it must be a valid SSN (9 digits or XXX-XX-XXXX).
+                         *
+                         * @example 123-45-6789
+                         */
+                        tax_identification_number?: string;
                         /** @description Cardholder's address */
                         address?: {
                             /**
@@ -6115,7 +6123,11 @@ export interface paths {
                             line2?: string;
                             /** @example New York */
                             city?: string;
-                            /** @example NY */
+                            /**
+                             * @description Subdivision. Required for a US or Canadian address and must be the two-letter code (AL, ON); optional elsewhere.
+                             *
+                             * @example NY
+                             */
                             state?: string;
                             /** @example 10001 */
                             postal_code?: string;
@@ -6237,67 +6249,7 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        /** Update cardholder */
-        patch: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    cardholder_id: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /** Format: uuid */
-                        wallet_id: string;
-                        first_name?: string;
-                        last_name?: string;
-                        email?: string;
-                        phone?: string;
-                        /** @description ISO 3166-1 alpha-3 country code */
-                        nationality?: string;
-                        /** @enum {string} */
-                        gender?: "M" | "F";
-                        /** @enum {string} */
-                        cardholder_relationship?: "EMPLOYEE" | "CONTRACTOR";
-                        /** @enum {string} */
-                        gov_id_type?: "passport" | "id_card" | "driving_license";
-                        gov_id_number?: string;
-                        /** @description 2-3 letter uppercase country code */
-                        gov_id_country?: string;
-                        /** Format: date */
-                        gov_id_issuance_date?: string;
-                        /** Format: date */
-                        gov_id_expiration_date?: string;
-                        address?: {
-                            line1?: string;
-                            line2?: string;
-                            city?: string;
-                            state?: string;
-                            postal_code?: string;
-                            country?: string;
-                        };
-                    };
-                };
-            };
-            responses: {
-                /** @description Cardholder updated */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            data?: components["schemas"]["Cardholder"];
-                        };
-                    };
-                };
-            };
-        };
+        patch?: never;
         trace?: never;
     };
     "/admin/issuing/cardholders/{cardholder_id}/documents": {
@@ -6396,8 +6348,14 @@ export interface paths {
          * Upload KYC document files
          * @description Uploads KYC files against a wallet via `multipart/form-data`, with no
          *     cardholder involved. The form field name is the document type (`selfie`,
-         *     `gov_id_front`, `gov_id_back`); one file per type, 5MB max each, formats
-         *     png/jpeg/pdf.
+         *     `gov_id_front`, `gov_id_back`); one file per type, 5MB max each, photos
+         *     only (png/jpeg).
+         *
+         *     Send the file the camera produced, unchanged: cropping, resizing or
+         *     re-encoding a document photo can make the vendor's tampering check
+         *     answer `Forgery attempt has been made.` — a verdict far worse than the
+         *     poor quality it was meant to fix. Too small to read means retake it
+         *     (card filling the frame, straight, no glare), not improve the file.
          *
          *     The response returns an `id` per file; pass those to
          *     `POST /admin/issuing/cardholders/{cardholder_id}/documents` to attach
@@ -6541,6 +6499,13 @@ export interface paths {
          *     not met; `error.details.missing` lists every field and file still needed. A failed
          *     submit leaves the draft untouched, so it can be retried.
          *
+         *     A cardholder whose identity review came back `review_status: REJECTED` or `REQUEST`
+         *     (both readable, with `reject_reason`, on the cardholder) may be submitted again: fix
+         *     what the vendor named, replace the document if that is what it disliked, and call this
+         *     endpoint once more. The review restarts on the vendor account the person already has —
+         *     the same document cannot be registered twice at the vendor, so a fresh cardholder is
+         *     NOT the way to retry. While a review is running, another submit is refused with `409`.
+         *
          */
         post: {
             parameters: {
@@ -6582,7 +6547,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Cardholder is not a draft (already submitted) */
+                /** @description Cardholder is live at the vendor, or its review is still running */
                 409: {
                     headers: {
                         [name: string]: unknown;

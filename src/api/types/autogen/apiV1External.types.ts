@@ -1544,7 +1544,13 @@ export interface paths {
          * @description Uploads KYC files against a wallet via `multipart/form-data`, with no
          *     cardholder involved. The form field name is the document type
          *     (`selfie`, `gov_id_front`, `gov_id_back`); one file per type, 5MB max
-         *     each, formats png/jpeg/pdf.
+         *     each, photos only (png/jpeg).
+         *
+         *     Send the file the camera produced, unchanged: cropping, resizing or
+         *     re-encoding a document photo can make the vendor's tampering check
+         *     answer `Forgery attempt has been made.` — a verdict far worse than the
+         *     poor quality it was meant to fix. Too small to read means retake it
+         *     (card filling the frame, straight, no glare), not improve the file.
          *
          *     Send one file per request to get per-file progress and retry a single
          *     file, or send several at once. The response returns an `id` per file;
@@ -1879,11 +1885,12 @@ export interface paths {
                          */
                         cardholder_relationship?: "EMPLOYEE" | "CONTRACTOR";
                         /**
-                         * @description Identity document type (KYC vendors)
+                         * @description Identity document type (KYC vendors). Which values are accepted depends on the country that issued the document — read cardholder_requirements.country_rules[gov_id_country].gov_id_types instead of hardcoding the list (id_card_cn is the mainland China resident ID, id_card_hk the HKID).
+                         *
                          * @enum {string}
                          */
-                        gov_id_type?: "passport" | "id_card" | "driving_license";
-                        /** @description Identity document number */
+                        gov_id_type?: "passport" | "id_card" | "driving_license" | "residence_permit_eu" | "residence_permit_ae" | "id_card_cn" | "id_card_hk";
+                        /** @description Identity document number (passport / driving licence / national ID). */
                         gov_id_number?: string;
                         /**
                          * @description Issuing country of the identity document (2-3 letter code)
@@ -1897,9 +1904,16 @@ export interface paths {
                         gov_id_issuance_date?: string;
                         /**
                          * Format: date
-                         * @description Identity document expiry date (YYYY-MM-DD)
+                         * @description Identity document expiry date (YYYY-MM-DD). Required by the vendor review even for a document issued for life (an Indonesian KTP, "SEUMUR HIDUP"), which has no expiry printed on it — send the issuance date plus 100 years.
+                         *
                          */
                         gov_id_expiration_date?: string;
+                        /**
+                         * @description Tax identifier of the cardholder, separate from the document number. Required by Interlace CONSUMER programs when nationality is USA, where it must be a valid SSN (9 digits or XXX-XX-XXXX).
+                         *
+                         * @example 123-45-6789
+                         */
+                        tax_identification_number?: string;
                         /** @description Cardholder's address */
                         address?: {
                             /**
@@ -1914,7 +1928,11 @@ export interface paths {
                             line2?: string;
                             /** @example New York */
                             city?: string;
-                            /** @example NY */
+                            /**
+                             * @description Subdivision. Required for a US or Canadian address and must be the two-letter code (AL, ON); optional elsewhere.
+                             *
+                             * @example NY
+                             */
                             state?: string;
                             /** @example 10001 */
                             postal_code?: string;
@@ -2262,6 +2280,16 @@ export interface paths {
          *     **Retryable**: a failed submit leaves the draft untouched — complete the dossier and
          *     call this endpoint again.
          *
+         *     **After a rejection**: a cardholder whose identity review came back
+         *     `review_status: REJECTED` or `REQUEST` (read it, with `reject_reason`, from
+         *     `GET /api/issuing/cardholders/{cardholder_id}`) may be submitted again. Fix what the
+         *     vendor named — `PATCH` the field, or upload a better photo and re-attach it via
+         *     `POST /cardholders/{cardholder_id}/documents`, which replaces the document of that
+         *     type — then call this endpoint once more. The review restarts on the vendor account the
+         *     person already has: the same document cannot be registered twice at the vendor, so a
+         *     fresh cardholder is NOT the way to retry. While a review is running, another submit is
+         *     refused with `409`.
+         *
          *     **Authentication**: x-api-key header required
          *
          */
@@ -2321,7 +2349,7 @@ export interface paths {
                         "application/json": components["schemas"]["ApiErrorResponse"];
                     };
                 };
-                /** @description Cardholder is not a draft (already submitted) */
+                /** @description Cardholder is live at the vendor, or its review is still running */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -5073,10 +5101,10 @@ export interface paths {
          *
          *     Two-phase: the order is created in `NEW` status without touching the
          *     balance; `POST /api/orders/{id}/approve` checks the balance, debits the
-         *     funds and dispatches the on-chain send. If the destination address
-         *     belongs to a wallet in the same tenant, the order is created as
-         *     `OMNIBUS_INTERNAL_TRANSFER` (no on-chain transaction) — still `NEW` at
-         *     create, debited + settled synchronously to `COMPLETE` at approve.
+         *     funds and dispatches the on-chain send. This endpoint is external-only:
+         *     the order always goes on-chain, even if the destination address belongs
+         *     to a wallet on this platform. Internal (off-chain) transfers are created
+         *     only through the internal transfer endpoint.
          *
          *     **Prerequisites:**
          *     - A counterparty destination of type `CRYPTO_EXTERNAL` or `CRYPTO_INTERNAL`
@@ -7356,7 +7384,7 @@ export interface components {
                  */
                 level?: "minimal" | "basic" | "full";
                 /**
-                 * @description Required field names; address fields are dotted (address.line1)
+                 * @description Required field names; address fields are dotted (address.line1). Interlace CONSUMER also lists gov_id_issuance_date and gov_id_expiration_date (ISO YYYY-MM-DD).
                  * @example [
                  *       "first_name",
                  *       "last_name",
@@ -7369,6 +7397,37 @@ export interface components {
                 required?: string[];
                 /** @description Documents that must be attached; empty below the full level */
                 required_documents?: ("gov_id_front" | "gov_id_back" | "selfie")[];
+                /** @description Human-readable constraints the field list cannot express. Interlace CONSUMER: if nationality is USA, tax_identification_number is required and must be a valid SSN. */
+                notes?: string[];
+                /** @description What each country changes, keyed by ISO 3166-1 alpha-3 with a `default` entry; empty when the vendor reviews nothing. These fields stay out of `required` because they only hold once the nationality or address country is known: read the rule for the nationality the user picked (required_by_nationality), the rule for the address country (required_by_address), and the rule for the country that issued the document (gov_id_types). */
+                country_rules?: {
+                    [key: string]: {
+                        /**
+                         * @description gov_id_type values accepted for a document issued by this country
+                         * @example [
+                         *       "passport",
+                         *       "driving_license",
+                         *       "id_card"
+                         *     ]
+                         */
+                        gov_id_types?: string[];
+                        /**
+                         * @description Extra fields a person of this nationality must provide
+                         * @example [
+                         *       "tax_identification_number"
+                         *     ]
+                         */
+                        required_by_nationality?: string[];
+                        /**
+                         * @description Extra fields an address in this country must carry
+                         * @example [
+                         *       "address.state"
+                         *     ]
+                         */
+                        required_by_address?: string[];
+                        notes?: string[];
+                    };
+                };
             };
             /** @description Available order types */
             order_types?: Record<string, never>[];

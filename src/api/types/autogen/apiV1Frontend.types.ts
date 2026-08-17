@@ -407,7 +407,20 @@ export interface paths {
          *         "transaction_currency": "PLN",
          *         "vendor_transaction_id": "A2012189003898834946",
          *         "timestamp": "2026-01-16T23:43:37.851",
-         *         "otp": null
+         *         "otp": null,
+         *         "cardholder": {
+         *           "id": "uuid",
+         *           "first_name": "Paul",
+         *           "last_name": "Kashuba",
+         *           "phone": "+15551234567",
+         *           "email": "p.kashuba@gmail.com",
+         *           "kyc_level": "basic"
+         *         },
+         *         "sub_account": {
+         *           "id": "uuid",
+         *           "balance": 181.25,
+         *           "currency": "USD"
+         *         }
          *       },
          *       "created_at": "2026-01-16T15:43:40.168+00"
          *     }
@@ -4176,11 +4189,12 @@ export interface paths {
                          */
                         cardholder_relationship?: "EMPLOYEE" | "CONTRACTOR";
                         /**
-                         * @description Identity document type (KYC vendors)
+                         * @description Identity document type (KYC vendors). Which values are accepted depends on the country that issued the document — read cardholder_requirements.country_rules[gov_id_country].gov_id_types instead of hardcoding the list (id_card_cn is the mainland China resident ID, id_card_hk the HKID).
+                         *
                          * @enum {string}
                          */
-                        gov_id_type?: "passport" | "id_card" | "driving_license";
-                        /** @description Identity document number */
+                        gov_id_type?: "passport" | "id_card" | "driving_license" | "residence_permit_eu" | "residence_permit_ae" | "id_card_cn" | "id_card_hk";
+                        /** @description Identity document number (passport / driving licence / national ID). */
                         gov_id_number?: string;
                         /**
                          * @description Issuing country of the identity document (2-3 letter code)
@@ -4194,9 +4208,16 @@ export interface paths {
                         gov_id_issuance_date?: string;
                         /**
                          * Format: date
-                         * @description Identity document expiry date (YYYY-MM-DD)
+                         * @description Identity document expiry date (YYYY-MM-DD). Required by the vendor review even for a document issued for life (an Indonesian KTP, "SEUMUR HIDUP"), which has no expiry printed on it — send the issuance date plus 100 years.
+                         *
                          */
                         gov_id_expiration_date?: string;
+                        /**
+                         * @description Tax identifier of the cardholder, separate from the document number. Required by Interlace CONSUMER programs when nationality is USA, where it must be a valid SSN (9 digits or XXX-XX-XXXX).
+                         *
+                         * @example 123-45-6789
+                         */
+                        tax_identification_number?: string;
                         /** @description Cardholder's address */
                         address?: {
                             /**
@@ -4211,7 +4232,11 @@ export interface paths {
                             line2?: string;
                             /** @example New York */
                             city?: string;
-                            /** @example NY */
+                            /**
+                             * @description Subdivision. Required for a US or Canadian address and must be the two-letter code (AL, ON); optional elsewhere.
+                             *
+                             * @example NY
+                             */
                             state?: string;
                             /** @example 10001 */
                             postal_code?: string;
@@ -4405,110 +4430,7 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        /**
-         * Update cardholder
-         * @description Updates cardholder information.
-         *
-         *     **Authentication**: Bearer token with x-tenant-id header required
-         *
-         *     **Access Control**: Cardholder must belong to the user's wallet
-         *
-         */
-        patch: {
-            parameters: {
-                query?: {
-                    /** @description Wallet ID for access validation */
-                    wallet_id?: string;
-                };
-                header?: never;
-                path: {
-                    /** @description The ID of the cardholder to update */
-                    cardholder_id: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /** @description Cardholder's first name */
-                        first_name?: string;
-                        /** @description Cardholder's last name */
-                        last_name?: string;
-                        /**
-                         * Format: email
-                         * @description Cardholder's email address
-                         */
-                        email?: string;
-                        /** @description Cardholder's phone number */
-                        phone?: string;
-                        /**
-                         * @description Cardholder's nationality as ISO 3166-1 alpha-3 country code
-                         * @example USA
-                         */
-                        nationality?: string;
-                        /** @enum {string} */
-                        gender?: "M" | "F";
-                        /** @enum {string} */
-                        cardholder_relationship?: "EMPLOYEE" | "CONTRACTOR";
-                        /** @enum {string} */
-                        gov_id_type?: "passport" | "id_card" | "driving_license";
-                        gov_id_number?: string;
-                        /** @description 2-3 letter uppercase country code */
-                        gov_id_country?: string;
-                        /** Format: date */
-                        gov_id_issuance_date?: string;
-                        /** Format: date */
-                        gov_id_expiration_date?: string;
-                        address?: {
-                            line1?: string;
-                            line2?: string;
-                            city?: string;
-                            state?: string;
-                            postal_code?: string;
-                            country?: string;
-                        };
-                    };
-                };
-            };
-            responses: {
-                /** @description Cardholder updated successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success?: boolean;
-                            data?: components["schemas"]["IssuingCardholder"];
-                            /** @example Cardholder updated successfully */
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Invalid request parameters */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Access denied to this cardholder */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Cardholder not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-            };
-        };
+        patch?: never;
         trace?: never;
     };
     "/frontend/issuing/cardholders/{cardholder_id}/submit": {
@@ -4533,8 +4455,17 @@ export interface paths {
          *     **Retryable**: a failed submit leaves the draft untouched. Nothing is rolled back,
          *     and the same endpoint can be called again once the dossier is complete.
          *
-         *     **Idempotency**: submitting an already-active cardholder returns `409
-         *     CARDHOLDER_NOT_DRAFT` rather than registering it twice.
+         *     **After a rejection**: a cardholder whose identity review came back
+         *     `review_status: REJECTED` or `REQUEST` (read it, with `reject_reason`, from
+         *     `GET /frontend/issuing/cardholders/{cardholder_id}`) may be submitted again. Fix what
+         *     the vendor named — `PATCH` the field, or upload a better photo and re-attach it via
+         *     `POST /cardholders/{cardholder_id}/documents`, which replaces the document of that
+         *     type — then call this endpoint once more. The review restarts on the vendor account
+         *     the person already has: the same document cannot be registered twice at the vendor, so
+         *     a fresh cardholder is NOT the way to retry.
+         *
+         *     **Idempotency**: while a review is running, or once the cardholder is live, another
+         *     submit returns `409 CARDHOLDER_NOT_DRAFT` rather than spending a second review.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -4593,7 +4524,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Cardholder is not a draft (already submitted) */
+                /** @description Cardholder is live at the vendor, or its review is still running */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -4629,8 +4560,8 @@ export interface paths {
          * @description Uploads KYC files against a wallet via `multipart/form-data`, with no
          *     cardholder involved — the upload step of the create flow runs before the
          *     cardholder exists. The form field name is the document type (`selfie`,
-         *     `gov_id_front`, `gov_id_back`); one file per type, 5MB max each, formats
-         *     png/jpeg/pdf.
+         *     `gov_id_front`, `gov_id_back`); one file per type, 5MB max each, photos
+         *     only (png/jpeg).
          *
          *     Send one file per request so the UI can show progress per file and retry
          *     a single file. The response returns an `id` per file; pass those ids to
@@ -4640,6 +4571,14 @@ export interface paths {
          *     Do not set `Content-Type` manually — the browser must add the multipart
          *     boundary itself, and the file has to be appended as a `File`/`Blob`, not
          *     as a name or a base64 string.
+         *
+         *     **Send the file the camera produced, unchanged.** Do not crop, rotate,
+         *     resize or re-encode it on the client: the vendor's identity review runs
+         *     a tampering check, and a re-encoded document photo can come back as
+         *     `Forgery attempt has been made.` — a verdict far worse than the poor
+         *     quality it was meant to fix. When a photo is too small or unreadable,
+         *     ask the person to retake it (card filling the frame, straight, no
+         *     glare) instead of improving the file.
          *
          *     An upload that is never attached is deleted by a cleanup sweep.
          *
@@ -6744,10 +6683,13 @@ export interface paths {
          *     the order is created in `NEW` status without touching the balance;
          *     `POST /frontend/orders/{id}/approve` (OTP-gated, keyed on the order
          *     id) checks the balance, debits the funds and dispatches the on-chain
-         *     send. If the destination address belongs to a wallet in the same
-         *     tenant, the order is created as `OMNIBUS_INTERNAL_TRANSFER` (no
-         *     on-chain transaction) — still `NEW` at create, debited + settled
-         *     synchronously to `COMPLETE` at approve.
+         *     send. This endpoint is external-only: the order always goes on-chain,
+         *     even if the destination address belongs to a wallet on this platform
+         *     (the receiver is then credited by the regular deposit flow). Internal
+         *     (off-chain, fee-free) transfers are created only through the internal
+         *     transfer endpoint — use
+         *     `GET /frontend/counterparty/destinations/{id}/internal-transfer` to
+         *     offer that option when the destination supports it.
          *
          */
         post: {
@@ -11696,7 +11638,7 @@ export interface paths {
         put?: never;
         /**
          * Send mock notification events (development only)
-         * @description Publishes MOCK events straight to the delivery channels so a client can verify its realtime integration: `notification.created` plus a push carrier on the personal channel, and `data.changed` on the wallet channel when `wallet_id` is passed. Nothing is stored — the mock does not appear in the inbox. Available only on development deployments.
+         * @description Publishes MOCK events straight to the delivery channels so a client can verify its realtime integration: `notification.created` plus a push carrier on the personal channel, and `data.changed` on the wallet channel when `wallet_id` is passed. The mock events are not stored. Additionally, when the wallet has at least one order, a REAL `ORDER_STATUS_CHANGED` notification is produced through the regular pipeline for the wallet's newest order — it lands in the inbox of every wallet member and is delivered over realtime and push (`inbox_outcome` reports the result; `null` means no order was found). Available only on development deployments.
          */
         post: {
             parameters: {
@@ -11731,6 +11673,16 @@ export interface paths {
                                 notification_id?: string;
                                 /** Format: uuid */
                                 signaled_wallet_id?: string | null;
+                                /**
+                                 * @description Result of the real inbox notification; null when no wallet was passed or it has no orders
+                                 * @enum {string|null}
+                                 */
+                                inbox_outcome?: "PROCESSED" | "SKIPPED_UNRESOLVED" | "SKIPPED_DUPLICATE" | null;
+                                /**
+                                 * Format: uuid
+                                 * @description Order the real notification was built from
+                                 */
+                                inbox_order_uuid?: string | null;
                             };
                         };
                     };
@@ -12051,9 +12003,20 @@ export interface components {
             cardholder_requirements?: {
                 /** @enum {string} */
                 level?: "minimal" | "basic" | "full";
-                /** @description Required field names; address fields are dotted (address.line1) */
+                /** @description Required field names; address fields are dotted (address.line1). Interlace CONSUMER also lists gov_id_issuance_date and gov_id_expiration_date (ISO YYYY-MM-DD). */
                 required?: string[];
                 required_documents?: ("gov_id_front" | "gov_id_back" | "selfie")[];
+                /** @description Human-readable constraints the field list cannot express. Interlace CONSUMER: if nationality is USA, tax_identification_number is required and must be a valid SSN. */
+                notes?: string[];
+                /** @description What each country changes, keyed by ISO 3166-1 alpha-3 with a `default` entry; empty when the vendor reviews nothing. These fields stay out of `required` because they only hold once the nationality or address country is known: read the rule for the nationality the user picked (required_by_nationality), the rule for the address country (required_by_address), and the rule for the country that issued the document (gov_id_types). */
+                country_rules?: {
+                    [key: string]: {
+                        gov_id_types?: string[];
+                        required_by_nationality?: string[];
+                        required_by_address?: string[];
+                        notes?: string[];
+                    };
+                };
             };
             /** Format: uuid */
             account_currency: string;
@@ -12080,7 +12043,7 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
-        /** @description Merchant of a card transaction. */
+        /** @description Merchant of a card transaction. Always present: a row with no merchant (top-up, withdrawal, transfer) carries empty strings, so `merchant.name` is safe to read without a guard. */
         TransactionMerchant: {
             name?: string;
             category_code?: string;
@@ -12271,7 +12234,19 @@ export interface components {
             transaction_amount?: number;
             /** @example USD */
             transaction_currency?: string;
+            /** @description What actually left the card: `billing_amount` plus `fee` for a debit. Show this one when a fee sits inside the operation. */
             total_amount?: number;
+            /** @description Fee charged inside this operation, in billing currency. 0 for vendors that bill fees as their own transactions (those arrive as separate rows with `transaction_type: FEE`). */
+            fee?: number;
+            /** @description Vendor's itemisation of `fee`; empty when it gave none. */
+            fee_details?: {
+                amount?: number;
+                /** @example USD */
+                currency?: string;
+                /** @description Vendor's own fee code — no cross-vendor meaning. */
+                type?: string | null;
+            }[];
+            /** @description Units of billing currency per unit of transaction currency, so `transaction_amount * conversion_rate ≈ billing_amount`. 1 when the currencies match. */
             conversion_rate?: number;
             failure_reason?: string;
             adjustment_type?: string | null;
@@ -12423,12 +12398,30 @@ export interface components {
             account_currency?: string;
             /** Format: uuid */
             destination_currency?: string;
+            /** @description Settlement destination address (when the program settles to crypto) */
+            destination_address?: string | null;
+            /** Format: uuid */
+            integration_vendor_id?: string;
             vendor_account_id?: string | null;
+            /** @description Customer name the account is held under */
+            customer_name?: string | null;
             /** @description Bank account details for deposits, derived from deposit_instructions. Returned null when deposits are disabled for the account. */
             account_details?: Record<string, never> | null;
             /** @description Deposit requisites (source of truth). Returned null when deposits are disabled for the account. */
             deposit_instructions?: Record<string, never> | null;
             meta?: Record<string, never> | null;
+            /** @description Account currency details — present on hydrated reads (e.g. embedded in a single-order response) */
+            account_currency_details?: components["schemas"]["CurrencyDetails"] | null;
+            /** @description Destination currency details — present on hydrated reads (e.g. embedded in a single-order response) */
+            destination_currency_details?: components["schemas"]["CurrencyDetails"] | null;
+            /** @description Integration vendor details — present on hydrated reads (e.g. embedded in a single-order response) */
+            integration_vendor?: {
+                /** Format: uuid */
+                id?: string;
+                name?: string;
+                code?: string;
+                type?: string;
+            } | null;
             /** Format: date-time */
             created_at?: string;
         };
@@ -12447,12 +12440,111 @@ export interface components {
             /** Format: uuid */
             destination_currency_id?: string;
         };
-        /** @description Public order metadata fields */
+        /** @description Currency subset joined onto order and virtual-account reads (from the `crypto` table). */
+        CurrencyDetails: {
+            /** Format: uuid */
+            uuid: string;
+            name: string;
+            symbol: string;
+            icon?: string | null;
+            /** @description Number of minor-unit decimals */
+            decimal: number;
+        };
+        /** @description Public order metadata. The stored `meta` JSONB is reduced server-side to a fixed allowlist of public keys — workflow/provider internals never appear. Every field is optional: presence depends on the order type (crypto transfer, fiat off-ramp, exchange, internal transfer, card top-up, deposit). */
         OrderMeta: {
             /** @description Legacy idempotency key — null on orders created by the current flow */
             request_id?: string | null;
-            note?: string | null;
+            /** @description Amount sent/received (excluding fees) */
+            transaction_amount?: number | null;
+            /** Format: uuid */
+            transaction_amount_currency?: string | null;
+            /** @description Total amount debited (including fees) */
+            billing_amount?: number | null;
+            /** Format: uuid */
+            billing_amount_currency?: string | null;
+            fee?: number | null;
+            /** Format: uuid */
+            fee_currency?: string | null;
+            network_fee?: number | null;
+            /** Format: uuid */
+            network_fee_currency?: string | null;
+            exchange_rate?: number | null;
+            /** @description Blockchain chain ID (null for fiat orders) */
+            chain_id?: number | null;
+            /** @description Source crypto address */
+            from_address?: string | null;
+            /** @description Destination crypto address */
+            to_address?: string | null;
+            /** @description Destination crypto address (crypto transfers) */
+            to_crypto_address?: string | null;
+            /** @description Blockchain transaction id (when settled on-chain) */
+            txid?: string | null;
+            /** @description Blockchain transaction hash (when settled on-chain) */
+            transaction_hash?: string | null;
+            /** Format: uuid */
+            from_currency_id?: string | null;
+            /** Format: uuid */
+            to_currency_id?: string | null;
+            /**
+             * Format: uuid
+             * @description Sender wallet (internal transfers)
+             */
+            from_wallet_uuid?: string | null;
+            /**
+             * Format: uuid
+             * @description Receiver wallet (internal transfers)
+             */
+            to_wallet_uuid?: string | null;
+            /**
+             * Format: uuid
+             * @description Mirror-leg order id (internal transfers)
+             */
+            linked_order_id?: string | null;
+            /**
+             * Format: uuid
+             * @description Mirror-leg order uuid (internal transfers)
+             */
+            linked_order_uuid?: string | null;
+            /** @description True when the order settled as an internal (on-platform) transfer */
+            is_internal?: boolean | null;
+            /** Format: uuid */
+            counterparty_account_id?: string | null;
+            counterparty_account_name?: string | null;
+            counterparty_account_nickname?: string | null;
+            /** Format: uuid */
+            counterparty_destination_id?: string | null;
+            /** Format: uuid */
+            virtual_account_id?: string | null;
+            virtual_account_name?: string | null;
+            /**
+             * Format: uuid
+             * @description Card sub-account (card top-up orders)
+             */
+            sub_account_id?: string | null;
+            /** @description Sender details on inbound (deposit) orders, normalized to one canonical shape across rails. Keys: `profile` (sender identity), `account_information` (bank identifiers: account_number, routing_number, iban, swift_bic, sort_code, currency_code, institution_name, intermediary_institution_name), `wallet_information` (crypto counterpart on internal transfers), `reference`, `memo`. */
+            originator?: {
+                [key: string]: unknown;
+            } | null;
+            /** @description Card authorizations: card id */
+            card_id?: string | null;
+            /** @description Card authorizations: merchant name */
+            merchant_name?: string | null;
+            /** @description Card authorizations: merchant category code */
+            mcc?: string | null;
+            /** @description Card authorizations: amount in merchant currency */
+            merchant_amount?: number | null;
+            merchant_currency?: string | null;
+            is_cross_currency?: boolean | null;
+            fx_fee_percent?: number | null;
+            fee_fiat?: number | null;
+            request_type?: string | null;
+            settlement_kind?: string | null;
+            /** @description User-provided payment reference */
             reference?: string | null;
+            /** @description User-provided internal note */
+            note?: string | null;
+            /** Format: date-time */
+            completed_at?: string | null;
         };
         /** @description Order record */
         Order: {
@@ -12493,6 +12585,36 @@ export interface components {
             /** Format: uuid */
             sub_account_id?: string | null;
             info?: string | null;
+            fee?: number | null;
+            /** Format: uuid */
+            fee_currency_id?: string | null;
+            network_fee?: number | null;
+            /** Format: uuid */
+            network_fee_currency_id?: string | null;
+            exchange_rate?: number | null;
+            /** Format: uuid */
+            from_currency_id?: string | null;
+            /** Format: uuid */
+            to_currency_id?: string | null;
+            /** @description Editable free-text comment (see PUT /frontend/orders/{order_id}/comment) */
+            comment?: string | null;
+            /**
+             * Format: uuid
+             * @description user_data uuid of the last comment editor
+             */
+            comment_updated_by?: string | null;
+            /** Format: date-time */
+            comment_updated_at?: string | null;
+            /** @description Async workflow run id (null for synchronous orders) */
+            workflow_run_id?: string | null;
+            /** @description Ledger integrity: signing nonce */
+            nonce?: string | null;
+            /** @description Ledger integrity: row signature */
+            signature?: string | null;
+            /** @description Ledger integrity: signing key version */
+            sig_key_version?: string | null;
+            /** @description Computed dust flag — amount below the render threshold for either currency. Returned by the list endpoint (GET /frontend/orders/wallet/{wallet_uuid}); absent from single-order reads. */
+            is_threshold_amount?: boolean;
             meta?: components["schemas"]["OrderMeta"];
             /**
              * Format: date-time
@@ -12506,16 +12628,104 @@ export interface components {
         };
         /** @description Single-order read shape (GET /orders/id/{order_id} and GET /orders/uuid/{order_uuid}) — the base Order plus context objects hydrated from its `meta` references. */
         OrderDetail: components["schemas"]["Order"] & {
+            /** @description Owning wallet reference */
+            wallet?: {
+                /** Format: uuid */
+                uuid: string;
+                /** Format: uuid */
+                tenant_id: string;
+            };
+            /** @description Source currency details (resolved from `from_uuid`) */
+            from_currency?: components["schemas"]["CurrencyDetails"];
+            /** @description Destination currency details (resolved from `to_uuid`) */
+            to_currency?: components["schemas"]["CurrencyDetails"];
             /** @description Virtual account referenced by the order (fiat off-ramp/on-ramp), hydrated with currency and vendor details. Absent/null when the order has no `meta.virtual_account_id`. */
             virtual_account?: components["schemas"]["VirtualAccount"] | null;
-            /** @description Raw `counterparty_destinations` row with embedded `counterparty_account`, `external_banking_data` and `external_crypto_data`. Present when the order has a `meta.counterparty_destination_id`; absent otherwise. */
-            counterparty_destination?: {
-                [key: string]: unknown;
-            } | null;
-            /** @description Documents attached to the order; empty array when none (or when document loading failed). */
+            /** @description Receiver of the order. Present when the order has a `meta.counterparty_destination_id`; absent otherwise. */
+            counterparty_destination?: components["schemas"]["OrderCounterpartyDestination"] | null;
+            /** @description Documents attached to the order; empty array when none (or when document loading failed). Returned by GET /frontend/orders/id/{order_id} only; absent from the by-uuid read. */
             documents?: {
                 [key: string]: unknown;
             }[];
+        };
+        /** @description Counterparty destination as embedded in single-order reads — the raw `counterparty_destinations` row with its parent account and payload rows. Distinct from the `CounterpartyDestination` shape served by the /frontend/counterparty endpoints (`external_banking_data`/`external_crypto_data` instead of `banking_data`/`crypto_data`/`internal_data`). */
+        OrderCounterpartyDestination: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * Format: uuid
+             * @description Parent counterparty account id
+             */
+            counterparty_account_id: string;
+            /** @description User-friendly alias */
+            nickname?: string | null;
+            /**
+             * @description Destination / payment rail type
+             * @enum {string}
+             */
+            type: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
+            /** Format: uuid */
+            external_banking_data_id?: string | null;
+            /** Format: uuid */
+            external_crypto_data_id?: string | null;
+            /**
+             * Format: uuid
+             * @description Internal-destination payload id (INTERNAL type)
+             */
+            internal_wallet_data_id?: string | null;
+            /** @description Soft-delete flag; a deleted destination stays readable on historical orders */
+            is_deleted?: boolean | null;
+            /** Format: date-time */
+            deleted_at?: string | null;
+            /** @description Ledger integrity: signing nonce */
+            nonce?: string | null;
+            /** @description Ledger integrity: row signature */
+            signature?: string | null;
+            /** @description Ledger integrity: signing key version */
+            sig_key_version?: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** @description Parent counterparty account */
+            counterparty_account?: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                type: string;
+                email?: string | null;
+                phone?: string | null;
+                /**
+                 * Format: uuid
+                 * @description Owning wallet uuid
+                 */
+                wallet_id?: string | null;
+            };
+            /** @description Banking details (bank rails); null for crypto/internal destinations */
+            external_banking_data?: {
+                /** Format: uuid */
+                id?: string;
+                account_number?: string | null;
+                /** @description ABA routing number */
+                routing_number?: string | null;
+                bank_name?: string | null;
+                swift_bic?: string | null;
+                iban?: string | null;
+                note?: string | null;
+                /** Format: uuid */
+                address_id?: string | null;
+            } | null;
+            /** @description Crypto address details (crypto rails); null for bank/internal destinations */
+            external_crypto_data?: {
+                /** Format: uuid */
+                id?: string;
+                /** @description Blockchain address */
+                address?: string;
+                /** Format: uuid */
+                currency_id?: string;
+                /** @description Memo/tag (XRP, XLM, …) */
+                memo?: string | null;
+            } | null;
         };
         /** @description Supporting document attached to an order at creation time (persisted to order_documents). */
         OrderDocumentInput: {
