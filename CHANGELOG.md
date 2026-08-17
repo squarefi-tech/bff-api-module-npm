@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.38] - 2026-08-17
+
 ### Changed
 
 - **Regenerated all OpenAPI types against the current dev specs (SFI-1786).** The published `1.36.37` was cut before the backend's order-meta work landed, so the frontend order surface was typed with a fraction of what the API already returns.
