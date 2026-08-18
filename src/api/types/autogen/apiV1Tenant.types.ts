@@ -2571,7 +2571,13 @@ export interface paths {
                          * @description Counterparty destination of type INTERNAL (points at the receiver wallet).
                          */
                         counterparty_destination_id: string;
+                        /** @description Amount to send, in `from_currency_id` units. With `is_reverse: true` — the amount the receiver must be credited. */
                         amount: number;
+                        /**
+                         * @description When true, `amount` is the receive-amount and the debited amount is grossed up with fees.
+                         * @default false
+                         */
+                        is_reverse?: boolean;
                         /**
                          * Format: date-time
                          * @description Optional. Schedule the transfer for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically.

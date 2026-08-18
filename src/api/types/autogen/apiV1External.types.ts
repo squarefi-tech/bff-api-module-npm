@@ -5014,8 +5014,16 @@ export interface paths {
                          * @example b2f3d8c1-4a7e-4d22-9c5f-1e6a8d0b2a44
                          */
                         counterparty_destination_id: string;
-                        /** @example 50 */
+                        /**
+                         * @description Amount to send, in `from_currency_id` units. With `is_reverse: true` — the amount the receiver must be credited.
+                         * @example 50
+                         */
                         amount: number;
+                        /**
+                         * @description Optional. When true, `amount` is the receive-amount and the debited amount is grossed up with fees.
+                         * @default false
+                         */
+                        is_reverse?: boolean;
                         /**
                          * Format: date-time
                          * @description Optional. Schedule the transfer for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically.
