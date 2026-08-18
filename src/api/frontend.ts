@@ -49,6 +49,92 @@ export const frontend = {
           { data },
         ),
     },
+    // Cardholder create flow (see the OpenAPI spec for details):
+    //   1. `cardholders.create` — creates a DRAFT; no vendor is contacted. In `user_data_id` mode
+    //      the KYC documents are seeded from the verified user, so step 2 is usually unnecessary.
+    //   2. `cardholders.documents.upload` (one file per request, before or after the draft exists)
+    //      + `cardholders.documents.attach` — attach the returned upload ids to the draft.
+    //   3. `cardholders.submit` — registers at the vendor and flips the cardholder to ACTIVE.
+    // All write endpoints require the ADMIN role on the wallet; `wallet_id` travels as a query
+    // parameter for access validation.
+    cardholders: {
+      list: (
+        params: API.Frontend.Issuing.Cardholders.List.Request = {},
+      ): Promise<API.Frontend.Issuing.Cardholders.List.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.Issuing.Cardholders.List.Response>(
+          '/frontend/issuing/cardholders',
+          { params },
+        ),
+      create: (
+        data: API.Frontend.Issuing.Cardholders.Create.Request,
+      ): Promise<API.Frontend.Issuing.Cardholders.Create.Response> =>
+        apiClientV1Frontend.postRequest<API.Frontend.Issuing.Cardholders.Create.Response>(
+          '/frontend/issuing/cardholders',
+          { data },
+        ),
+      getById: ({
+        cardholder_id,
+        ...params
+      }: API.Frontend.Issuing.Cardholders.Get.Request): Promise<API.Frontend.Issuing.Cardholders.Get.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.Issuing.Cardholders.Get.Response>(
+          `/frontend/issuing/cardholders/${cardholder_id}`,
+          { params },
+        ),
+      delete: ({
+        cardholder_id,
+        ...params
+      }: API.Frontend.Issuing.Cardholders.Delete.Request): Promise<API.Frontend.Issuing.Cardholders.Delete.Response> =>
+        apiClientV1Frontend.deleteRequest(`/frontend/issuing/cardholders/${cardholder_id}`, { params }),
+      // Retryable: a failed submit leaves the draft untouched, so it can be called again once the
+      // dossier is complete (a `400 CARDHOLDER_SUBMISSION_INCOMPLETE` lists what is missing in
+      // `error.details.missing`). While a review is running — or once the cardholder is live —
+      // another submit returns `409 CARDHOLDER_NOT_DRAFT`.
+      submit: ({
+        cardholder_id,
+        ...params
+      }: API.Frontend.Issuing.Cardholders.Submit.Request): Promise<API.Frontend.Issuing.Cardholders.Submit.Response> =>
+        apiClientV1Frontend.postRequest<API.Frontend.Issuing.Cardholders.Submit.Response>(
+          `/frontend/issuing/cardholders/${cardholder_id}/submit`,
+          { params },
+        ),
+      documents: {
+        // Send the file the camera produced, unchanged (no crop/resize/re-encode — the vendor's
+        // tampering check can flag a re-encoded photo as forgery), one file per request so the UI
+        // can show per-file progress and retry. Content-Type is set by the browser via FormData.
+        upload: ({
+          wallet_id,
+          ...files
+        }: API.Frontend.Issuing.Cardholders.Documents.Upload.Request): Promise<API.Frontend.Issuing.Cardholders.Documents.Upload.Response> => {
+          const formData = new FormData();
+
+          Object.entries(files).forEach(([type, file]) => {
+            if (file) formData.append(type, file);
+          });
+
+          return apiClientV1Frontend.postRequest<API.Frontend.Issuing.Cardholders.Documents.Upload.Response>(
+            '/frontend/issuing/cardholder-documents',
+            { data: formData, params: { wallet_id } },
+          );
+        },
+        // Only uploads not yet attached to a cardholder can be discarded (attached ones answer 409);
+        // an upload that is never attached is deleted by a cleanup sweep anyway.
+        discard: ({
+          document_id,
+          ...params
+        }: API.Frontend.Issuing.Cardholders.Documents.Discard.Request): Promise<void> =>
+          apiClientV1Frontend.deleteRequest(`/frontend/issuing/cardholder-documents/${document_id}`, { params }),
+        // Attaching a document of a type the cardholder already has replaces the previous one.
+        attach: ({
+          cardholder_id,
+          wallet_id,
+          ...data
+        }: API.Frontend.Issuing.Cardholders.Documents.Attach.Request): Promise<API.Frontend.Issuing.Cardholders.Documents.Attach.Response> =>
+          apiClientV1Frontend.postRequest<API.Frontend.Issuing.Cardholders.Documents.Attach.Response>(
+            `/frontend/issuing/cardholders/${cardholder_id}/documents`,
+            { data, params: { wallet_id } },
+          ),
+      },
+    },
     subAccounts: {
       deposit: ({
         sub_account_id,

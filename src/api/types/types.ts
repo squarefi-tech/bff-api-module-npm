@@ -866,6 +866,11 @@ export namespace API {
       type CardWithdrawRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/withdraw'];
       type SubAccountDepositRoot = pathsV1Frontend['/frontend/issuing/sub-accounts/{sub_account_id}/deposit'];
       type SubAccountWithdrawRoot = pathsV1Frontend['/frontend/issuing/sub-accounts/{sub_account_id}/withdraw'];
+      type CardholdersRoot = pathsV1Frontend['/frontend/issuing/cardholders'];
+      type CardholderRoot = pathsV1Frontend['/frontend/issuing/cardholders/{cardholder_id}'];
+      type CardholderSubmitRoot = pathsV1Frontend['/frontend/issuing/cardholders/{cardholder_id}/submit'];
+      type CardholderDocumentsUploadRoot = pathsV1Frontend['/frontend/issuing/cardholder-documents'];
+      type CardholderAttachDocumentsRoot = pathsV1Frontend['/frontend/issuing/cardholders/{cardholder_id}/documents'];
 
       // The spec narrows the returned `status` to `PENDING | COMPLETE | FAILED`, but the handler
       // answers with the raw order status (`formatOrderResponse` -> `status: order.status`), so a
@@ -921,6 +926,80 @@ export namespace API {
             card_id: string;
           } & CardWithdrawRoot['post']['requestBody']['content']['application/json'];
           export type Response = SubAccounts.Withdraw.Response;
+        }
+      }
+
+      // Cardholder create flow is three steps: create the DRAFT (`Create`), upload + attach the KYC
+      // files (`Documents.Upload` -> `Documents.Attach`, or upload before the draft exists), then
+      // `Submit` to register at the vendor. See the endpoint descriptions in the OpenAPI spec.
+      export namespace Cardholders {
+        export type Cardholder = componentsV1Frontend['schemas']['IssuingCardholder'];
+
+        export namespace List {
+          export type Request = NonNullable<CardholdersRoot['get']['parameters']['query']>;
+          export type Response = CardholdersRoot['get']['responses']['200']['content']['application/json'];
+        }
+
+        export namespace Create {
+          export type Request = CardholdersRoot['post']['requestBody']['content']['application/json'];
+          export type Response = CardholdersRoot['post']['responses']['201']['content']['application/json'];
+        }
+
+        export namespace Get {
+          export type Request = {
+            cardholder_id: string;
+          } & NonNullable<CardholderRoot['get']['parameters']['query']>;
+          export type Response = CardholderRoot['get']['responses']['200']['content']['application/json'];
+        }
+
+        export namespace Delete {
+          export type Request = {
+            cardholder_id: string;
+          } & NonNullable<CardholderRoot['delete']['parameters']['query']>;
+          export type Response = CardholderRoot['delete']['responses']['200']['content']['application/json'];
+        }
+
+        export namespace Submit {
+          export type Request = {
+            cardholder_id: string;
+          } & CardholderSubmitRoot['post']['parameters']['query'];
+          export type Response = CardholderSubmitRoot['post']['responses']['200']['content']['application/json'];
+        }
+
+        export namespace Documents {
+          // 'selfie' | 'gov_id_front' | 'gov_id_back' — derived from the multipart form fields so a
+          // new document type in the spec shows up here automatically.
+          export type DocumentType =
+            keyof CardholderDocumentsUploadRoot['post']['requestBody']['content']['multipart/form-data'];
+
+          export namespace Upload {
+            // The spec types the multipart fields as binary strings; on the client they must be the
+            // actual File/Blob the camera produced (the vendor review rejects re-encoded photos).
+            export type Request = {
+              wallet_id: string;
+            } & { [K in DocumentType]?: File | Blob };
+            export type Response =
+              CardholderDocumentsUploadRoot['post']['responses']['201']['content']['application/json'];
+            export type Document = NonNullable<NonNullable<Response['data']>['documents']>[number];
+          }
+
+          export namespace Discard {
+            export type Request = {
+              document_id: string;
+              wallet_id: string;
+            };
+          }
+
+          export namespace Attach {
+            export type Request = {
+              cardholder_id: string;
+              wallet_id: string;
+            } & CardholderAttachDocumentsRoot['post']['requestBody']['content']['application/json'];
+            // The spec leaves `data` as an empty object, but the endpoint documents (and returns)
+            // the updated cardholder with refreshed kyc_documents — widen it accordingly.
+            type RawResponse = CardholderAttachDocumentsRoot['post']['responses']['200']['content']['application/json'];
+            export type Response = Omit<RawResponse, 'data'> & { data?: Cardholder };
+          }
         }
       }
     }

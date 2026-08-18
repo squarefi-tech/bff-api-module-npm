@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`frontend.issuing.cardholders` — SDK methods for the frontend cardholder surface (SFI-2057 follow-up to the card-create `cardholder_id` requirement).** Card creation now demands an `ACTIVE` cardholder, and until now the SDK offered no way to make one. The block wraps the three-step create flow plus management: `list` (`GET /frontend/issuing/cardholders`, paginated, filterable by `wallet_id` / `issuing_program_id`), `create` (`POST /frontend/issuing/cardholders` — DRAFT only, no vendor contact; supports both `user_data_id` seeding from a verified user and manual mode), `getById`, `delete` (soft delete; `409` while the cardholder still has active cards), and `submit` (`POST …/{cardholder_id}/submit` — registers at the vendor and flips DRAFT → ACTIVE; retryable, with `400 CARDHOLDER_SUBMISSION_INCOMPLETE` listing the missing dossier fields in `error.details.missing`).
+- **`frontend.issuing.cardholders.documents.{upload,discard,attach}` — the KYC-file half of the flow.** `upload` posts `selfie` / `gov_id_front` / `gov_id_back` as `multipart/form-data` against the wallet (files are accepted before the draft exists) and returns one upload id per file; `attach` binds those ids to a cardholder, replacing any previous document of the same type; `discard` deletes an upload that has not been attached yet. Files are typed `File | Blob` — the SDK builds the `FormData` and leaves `Content-Type` to the browser so the multipart boundary is set correctly.
+- **`API.Frontend.Issuing.Cardholders` types**, derived from the spec paths (`Cardholder`, `List`, `Create`, `Get`, `Delete`, `Submit`, `Documents.{Upload,Discard,Attach}`, `Documents.DocumentType`). One deliberate widening: the attach response's `data` is typed as the updated `Cardholder` — the spec leaves it as an empty object although the endpoint documents (and returns) the refreshed cardholder.
+
 ## [1.36.39] - 2026-08-18
 
 ### Changed
