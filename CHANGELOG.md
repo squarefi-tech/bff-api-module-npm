@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.40] - 2026-08-18
+
 ### Added
 
 - **`frontend.issuing.cardholders` — SDK methods for the frontend cardholder surface (SFI-2057 follow-up to the card-create `cardholder_id` requirement).** Card creation now demands an `ACTIVE` cardholder, and until now the SDK offered no way to make one. The block wraps the three-step create flow plus management: `list` (`GET /frontend/issuing/cardholders`, paginated, filterable by `wallet_id` / `issuing_program_id`), `create` (`POST /frontend/issuing/cardholders` — DRAFT only, no vendor contact; supports both `user_data_id` seeding from a verified user and manual mode), `getById`, `delete` (soft delete; `409` while the cardholder still has active cards), and `submit` (`POST …/{cardholder_id}/submit` — registers at the vendor and flips DRAFT → ACTIVE; retryable, with `400 CARDHOLDER_SUBMISSION_INCOMPLETE` listing the missing dossier fields in `error.details.missing`).
