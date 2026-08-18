@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`orders.frontend.create.withdrawal.internal` now accepts `is_reverse`**, superseding the note in 1.36.37 that internal transfers were forward-only. With `is_reverse: true`, `amount` is the amount the receiver must be credited and the debited amount is grossed up with fees; `false` (the default, and the previous behaviour) keeps `amount` as what gets debited, in `from_currency_id` units. **Unlike the other three create endpoints the field is optional here** — the spec does not list it under `required`, so it generates as `is_reverse?: boolean`, existing call sites keep compiling, and the flag can be adopted incrementally. Whether that asymmetry against the required `is_reverse` on `withdrawal.{wire,ach,sepa,swift,chaps,fps}`, `withdrawal.crypto` and `exchange` is deliberate — backward compatibility for a route already in production — or an oversight has not been confirmed with the backend. The tenant and external internal-transfer schemas gained the same optional field; no SDK method targets those.
+- **Regenerated all OpenAPI types.** Beyond the above, the notification-preferences surface gained a second, independent dimension: `NotificationPreference.channel` widened to `'IN_APP' | 'PUSH' | 'EMAIL'`, and the new `NotificationCategoryPreference` schema (`'TRANSACTIONS' | 'COMPLIANCE'`) is returned and accepted as `categories` alongside `preferences` on `GET` / `PUT /frontend/notification-preferences`. `preferences` in the `PUT` body is now optional, so a caller may send either dimension or both; disabling a category mutes push and email for its notifications while the inbox still receives them. No SDK method wraps those routes — types-only. No SDK methods were added, removed or changed in this release.
+
 ## [1.36.38] - 2026-08-17
 
 ### Changed

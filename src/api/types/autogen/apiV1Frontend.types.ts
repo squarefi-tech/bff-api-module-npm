@@ -5970,8 +5970,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Effective delivery-channel preferences
-         * @description Full channel list with defaults applied. `IN_APP` is always enabled (cannot be disabled).
+         * Effective notification preferences
+         * @description Both dimensions in full with defaults applied — delivery channels (`IN_APP` is always enabled) and notification categories (every category is user-configurable).
          */
         get: {
             parameters: {
@@ -5982,7 +5982,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Effective preference per channel. */
+                /** @description Effective preference per channel and per category. */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -5993,6 +5993,7 @@ export interface paths {
                             success?: boolean;
                             data?: {
                                 preferences?: components["schemas"]["NotificationPreference"][];
+                                categories?: components["schemas"]["NotificationCategoryPreference"][];
                             };
                         };
                     };
@@ -6001,8 +6002,8 @@ export interface paths {
             };
         };
         /**
-         * Update delivery-channel preferences
-         * @description Bulk upsert. Disabling `IN_APP` is rejected with 400 (`INBOX_CHANNEL_LOCKED`). Changes apply from the next delivery.
+         * Update notification preferences
+         * @description Bulk upsert of either or both dimensions. Disabling the `IN_APP` channel is rejected with 400 (`INBOX_CHANNEL_LOCKED`). A disabled category mutes push and email for its notifications; the inbox always receives them. Changes apply from the next delivery.
          */
         put: {
             parameters: {
@@ -6014,12 +6015,13 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        preferences: components["schemas"]["NotificationPreference"][];
+                        preferences?: components["schemas"]["NotificationPreference"][];
+                        categories?: components["schemas"]["NotificationCategoryPreference"][];
                     };
                 };
             };
             responses: {
-                /** @description Effective preference list after the update. */
+                /** @description Effective preferences of both dimensions after the update. */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -6030,6 +6032,7 @@ export interface paths {
                             success?: boolean;
                             data?: {
                                 preferences?: components["schemas"]["NotificationPreference"][];
+                                categories?: components["schemas"]["NotificationCategoryPreference"][];
                             };
                         };
                     };
@@ -6599,7 +6602,13 @@ export interface paths {
                          * @description Counterparty destination of type INTERNAL (points at the receiver wallet).
                          */
                         counterparty_destination_id: string;
+                        /** @description Amount to send, in `from_currency_id` units. With `is_reverse: true` — the amount the receiver must be credited. */
                         amount: number;
+                        /**
+                         * @description When true, `amount` is the receive-amount and the debited amount is grossed up with fees.
+                         * @default false
+                         */
+                        is_reverse?: boolean;
                         /**
                          * Format: date-time
                          * @description Optional. Schedule the transfer for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically.
@@ -13006,7 +13015,12 @@ export interface components {
         };
         NotificationPreference: {
             /** @enum {string} */
-            channel: "IN_APP" | "PUSH";
+            channel: "IN_APP" | "PUSH" | "EMAIL";
+            enabled: boolean;
+        };
+        NotificationCategoryPreference: {
+            /** @enum {string} */
+            category: "TRANSACTIONS" | "COMPLIANCE";
             enabled: boolean;
         };
     };
