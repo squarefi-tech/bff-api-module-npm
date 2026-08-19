@@ -1735,6 +1735,12 @@ export interface paths {
                     wallet_id?: string;
                     /** @description Filter cardholders by issuing program ID */
                     issuing_program_id?: string;
+                    /** @description Only cardholders LINKED to this CORE user (`user_data.uuid`, via the link
+                     *     written by `user_data_id`-mode provisioning). Manually created cardholders
+                     *     have no link and never match this filter. Each returned cardholder also
+                     *     carries its link as `user_data_uuid` (null when unlinked).
+                     *      */
+                    user_data_id?: string;
                     /** @description Number of items to skip */
                     offset?: number;
                     /** @description Number of items to return */
@@ -1985,7 +1991,8 @@ export interface paths {
                         "application/json": components["schemas"]["ApiErrorResponse"];
                     };
                 };
-                /** @description Cardholder with this email already exists in this wallet + issuing_program */
+                /** @description Cardholder with this email already exists in this wallet + issuing_program. `error.details.cardholder_id` names the conflicting cardholder (when it could be resolved) so the client can adopt it instead of dead-ending.
+                 *      */
                 409: {
                     headers: {
                         [name: string]: unknown;
