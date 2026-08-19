@@ -911,6 +911,48 @@ export namespace API {
           export type Card = NonNullable<Response['data']>[number];
         }
 
+        // Unified create: the endpoint routes to the balance or prepaid flow by the program's
+        // `sub_account_type`, so the client never branches on card type. Replaces the legacy
+        // `issuing.cards.create.*` (POST /issuing/cards/create|balance) methods.
+        export namespace Create {
+          // The spec marks `cardholder_id` required, but the handler equally accepts
+          // `assigned_user_data_uuid` (or the caller's own identity) and resolves the cardholder
+          // LINKED to that user via issuing_cardholder_links — provision the cardholder first
+          // through `frontend.issuing.cardholders`. The money fields were added in SFI-2129 and
+          // may lag in the deployed spec, so they are declared here explicitly.
+          export type Request = Omit<
+            CardsRoot['post']['requestBody']['content']['application/json'],
+            'cardholder_id'
+          > & {
+            cardholder_id?: string;
+            /** Card assignee (`user_data.uuid`); their linked cardholder is used. */
+            assigned_user_data_uuid?: string;
+            /**
+             * TOTAL wallet debit at issuance (fee + card top-up). Accepted only on group
+             * tariffs that already mandate an initial top-up. Requires `currency_id`.
+             */
+            initial_topup?: number;
+            /** Wallet currency to debit; required whenever the tariff has a fee or a top-up. */
+            currency_id?: string;
+            /** Client-generated id stored with the card (idempotency/tracing reference). */
+            request_id?: string;
+          };
+          // 201 data is the same decorated shape as GET /cards/{card_id}: `data.id` is the card
+          // id, `data.sub_account_id` the (possibly just-provisioned) sub-account. The top-up
+          // outcome fields were added in the SFI-2129 review round and may lag in the deployed
+          // spec, so they are declared here explicitly.
+          export type Response = CardsRoot['post']['responses']['201']['content']['application/json'] & {
+            /**
+             * Outcome of the tariff-mandated initial top-up when the tariff moved money:
+             * `topup_skipped` when no top-up applied, `topup_failed` when the card was created
+             * but the top-up could not be executed — a 201 alone is NOT proof the card is funded.
+             */
+            initial_topup_status?: 'completed' | 'topup_failed' | 'topup_skipped';
+            /** Why the top-up failed; populated when `initial_topup_status` is `topup_failed`. */
+            initial_topup_error?: string;
+          };
+        }
+
         export namespace Deposit {
           export type Request = {
             card_id: string;
@@ -933,23 +975,166 @@ export namespace API {
       // files (`Documents.Upload` -> `Documents.Attach`, or upload before the draft exists), then
       // `Submit` to register at the vendor. See the endpoint descriptions in the OpenAPI spec.
       export namespace Cardholders {
-        export type Cardholder = componentsV1Frontend['schemas']['IssuingCardholder'];
+        // The deployed schema documents only the identity subset; the wire actually carries the
+        // flattened cardholder record + flat vendor fields + the CORE annotations (SFI-2129).
+        // Widened here until the spec regen catches up — the extension mirrors the backend's
+        // `CardholderWire`.
+        export type Cardholder = componentsV1Frontend['schemas']['IssuingCardholder'] & {
+          created_at?: string;
+          wallet_id?: string | null;
+          issuing_program_id?: string | null;
+          /** DRAFT until the cardholder is submitted and registered at the vendor. */
+          status?: 'DRAFT' | 'ACTIVE';
+          gender?: string | null;
+          cardholder_relationship?: 'EMPLOYEE' | 'CONTRACTOR' | null;
+          address?: {
+            line1?: string;
+            line2?: string | null;
+            city?: string;
+            state?: string | null;
+            postal_code?: string;
+            country?: string;
+          } | null;
+          gov_id_type?: string | null;
+          gov_id_number?: string | null;
+          gov_id_country?: string | null;
+          gov_id_issuance_date?: string | null;
+          gov_id_expiration_date?: string | null;
+          /** Personal tax id (US: SSN) — independent of the gov_id document. */
+          tax_identification_number?: string | null;
+          kyc_documents?: {
+            type?: 'selfie' | 'gov_id_front' | 'gov_id_back';
+            filename?: string | null;
+            content_type?: string;
+            size?: number;
+            uploaded_at?: string;
+          }[];
+          /**
+           * Fields the program's KYC bar still wants (submit 400 `missing` vocabulary, e.g.
+           * `address.line1`, `documents: selfie`) — what the completion form should collect.
+           */
+          missing_kyc_fields?: string[];
+          /** CORE user this cardholder is linked to; null for manually-created cardholders. */
+          user_data_uuid?: string | null;
+          vendor_id?: string | null;
+          vendor_name?: string | null;
+          vendor_type?: string | null;
+          /** Vendor-side cardholder id; null while a review is pending. */
+          vendor_user_id?: string | null;
+          vendor_status?: string | null;
+          review_status?: string | null;
+          reject_reason?: string | null;
+        };
+
+        // Swap the thin spec schema for the widened `Cardholder` in a response envelope.
+        type WithCardholder<T extends { data?: unknown }> = Omit<T, 'data'> & { data?: Cardholder };
+        type WithCardholderList<T extends { data?: unknown }> = Omit<T, 'data'> & { data?: Cardholder[] };
 
         export namespace List {
-          export type Request = NonNullable<CardholdersRoot['get']['parameters']['query']>;
-          export type Response = CardholdersRoot['get']['responses']['200']['content']['application/json'];
+          export type Request = NonNullable<CardholdersRoot['get']['parameters']['query']> & {
+            /**
+             * Only cardholders LINKED to this CORE user (`user_data.uuid`). Manually created
+             * cardholders have no link and never match. Added in SFI-2129.
+             */
+            user_data_id?: string;
+          };
+          export type Response = WithCardholderList<
+            CardholdersRoot['get']['responses']['200']['content']['application/json']
+          >;
         }
 
+        // On a duplicate (same email + wallet + issuing_program) the endpoint answers `409` and
+        // the error body carries an optional `error.details.cardholder_id` — the existing
+        // cardholder to adopt instead of dead-ending (that identity key is not client-searchable).
+        // The SDK does not type error envelopes, so the field is documented here rather than declared.
         export namespace Create {
           export type Request = CardholdersRoot['post']['requestBody']['content']['application/json'];
-          export type Response = CardholdersRoot['post']['responses']['201']['content']['application/json'];
+          export type Response = WithCardholder<
+            CardholdersRoot['post']['responses']['201']['content']['application/json']
+          >;
         }
 
         export namespace Get {
           export type Request = {
             cardholder_id: string;
           } & NonNullable<CardholderRoot['get']['parameters']['query']>;
-          export type Response = CardholderRoot['get']['responses']['200']['content']['application/json'];
+          export type Response = WithCardholder<
+            CardholderRoot['get']['responses']['200']['content']['application/json']
+          >;
+        }
+
+        // PATCH /frontend/issuing/cardholders/{cardholder_id} — complete a DRAFT's dossier
+        // (address / phone / email / tax id / gov_id fields) before submitting it. Not in the
+        // deployed spec yet, so declared by hand.
+        export namespace Update {
+          export type Request = {
+            cardholder_id: string;
+            /** Query param — the wallet the cardholder belongs to (ADMIN role required). */
+            wallet_id: string;
+          } & Partial<
+            Pick<
+              Create.Request,
+              | 'first_name'
+              | 'last_name'
+              | 'email'
+              | 'phone'
+              | 'birth_date'
+              | 'nationality'
+              | 'gender'
+              | 'cardholder_relationship'
+              | 'address'
+              | 'gov_id_type'
+              | 'gov_id_number'
+              | 'gov_id_country'
+              | 'gov_id_issuance_date'
+              | 'gov_id_expiration_date'
+              | 'tax_identification_number'
+            >
+          >;
+          export type Response = { success?: boolean; data?: Cardholder; message?: string };
+        }
+
+        // POST /frontend/issuing/cardholders/eligibility — batch verdicts for a member picker
+        // ("can a card be issued to this user, and if not, what stands in the way"). Computed
+        // from local data only; the created draft's `missing_kyc_fields` stays authoritative.
+        // Not in the deployed spec yet, so declared by hand.
+        export namespace Eligibility {
+          export type Verdict =
+            /** An ACTIVE cardholder is linked — create the card right away. */
+            | 'READY'
+            /** A draft is linked — complete `will_require`, submit, then create the card. */
+            | 'DRAFT'
+            /** No cardholder yet, but the member clears the creation gates. */
+            | 'CAN_CREATE'
+            /** A verification review is in flight; wait. */
+            | 'PENDING'
+            /** No approved verification or no KYC applicant — the member must verify. */
+            | 'NEEDS_VERIFICATION'
+            /**
+             * A verification came back with a FINAL rejection — only support can
+             * reset it. Never render an actionable "verify now" for this state.
+             */
+            | 'REJECTED'
+            /** Not an active member of this wallet. */
+            | 'NOT_MEMBER';
+
+          export type Request = {
+            wallet_id: string;
+            issuing_program_id: string;
+            /** user_data uuids of the members to evaluate, max 100 per request. */
+            user_data_ids: string[];
+          };
+
+          export type Item = {
+            user_data_id: string;
+            verdict: Verdict;
+            /** The linked cardholder for READY/DRAFT verdicts, null otherwise. */
+            cardholder_id: string | null;
+            /** Fields to collect by hand (submit `missing` vocabulary). */
+            will_require: string[];
+          };
+
+          export type Response = { success?: boolean; data?: Item[] };
         }
 
         export namespace Delete {
@@ -963,7 +1148,9 @@ export namespace API {
           export type Request = {
             cardholder_id: string;
           } & CardholderSubmitRoot['post']['parameters']['query'];
-          export type Response = CardholderSubmitRoot['post']['responses']['200']['content']['application/json'];
+          export type Response = WithCardholder<
+            CardholderSubmitRoot['post']['responses']['200']['content']['application/json']
+          >;
         }
 
         export namespace Documents {

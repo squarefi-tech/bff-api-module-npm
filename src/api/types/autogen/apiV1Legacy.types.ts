@@ -1612,7 +1612,11 @@ export interface paths {
         put?: never;
         /**
          * Create a new prepaid card
-         * @description Creates a new prepaid card for the user. Initial topup amount is determined by user group settings.
+         * @deprecated
+         * @description **Deprecated.** Use `POST /frontend/issuing/cards` (unified, routes by the program's
+         *     `sub_account_type`) instead — it carries the same fee/top-up handling.
+         *
+         *     Creates a new prepaid card for the user. Initial topup amount is determined by user group settings.
          *
          *     **Cardholder is required**: Every card must be associated with a cardholder.
          *     Create a cardholder first, then pass the `cardholder_id` here.
@@ -1717,7 +1721,11 @@ export interface paths {
         put?: never;
         /**
          * Create a new balance card
-         * @description Creates a new card linked to an existing balance account for the user. Card fees and initial topup are determined by user group settings.
+         * @deprecated
+         * @description **Deprecated.** Use `POST /frontend/issuing/cards` (unified, routes by the program's
+         *     `sub_account_type`) instead — it carries the same fee/top-up handling.
+         *
+         *     Creates a new card linked to an existing balance account for the user. Card fees and initial topup are determined by user group settings.
          *
          *     **Cardholder is required**: Every card must be associated with a cardholder.
          *     Create a cardholder first, then pass the `cardholder_id` here.

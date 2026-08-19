@@ -6164,7 +6164,8 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Cardholder with this email already exists in this wallet + issuing_program */
+                /** @description Cardholder with this email already exists in this wallet + issuing_program. `error.details.cardholder_id` names the conflicting cardholder when it could be resolved.
+                 *      */
                 409: {
                     headers: {
                         [name: string]: unknown;

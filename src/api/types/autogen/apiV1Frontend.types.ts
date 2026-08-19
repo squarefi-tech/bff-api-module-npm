@@ -2208,11 +2208,46 @@ export interface paths {
                          *
                          */
                         vendor_user_id?: string;
+                        /**
+                         * @description TOTAL wallet debit asked for at issuance: the issuing fee is subtracted and
+                         *     the remainder lands on the card's sub-account. Accepted only on group tariffs
+                         *     that already mandate an initial top-up (`initial_topup_usd > 0`); otherwise the
+                         *     group amount stands. Requires `currency_id`.
+                         *
+                         * @example 100
+                         */
+                        initial_topup?: number;
+                        /**
+                         * Format: uuid
+                         * @description Wallet currency to debit for the issuing fee / initial top-up.
+                         *     **Required whenever the group tariff carries a fee or a top-up** — the request
+                         *     is refused with 400 otherwise.
+                         *
+                         */
+                        currency_id?: string;
+                        /**
+                         * Format: uuid
+                         * @description Client-generated idempotency key. A replay with the same value returns the
+                         *     already-created card (same wallet) instead of issuing/charging again; a value
+                         *     already used by another request is refused with 409. Globally unique.
+                         *
+                         */
+                        request_id?: string;
                     };
                 };
             };
             responses: {
-                /** @description Card created successfully */
+                /** @description Card created successfully. `data` is the same fully-decorated card shape as
+                 *     `GET /frontend/issuing/cards/{card_id}` — including `data.id` and
+                 *     `data.sub_account_id` (the sub-account the card spends from; for prepaid cards it
+                 *     is provisioned by this call).
+                 *
+                 *     When the group tariff carried an issuing fee / initial top-up, `data` additionally
+                 *     reports the money outcome: `initial_topup_status` is `completed` when the top-up
+                 *     landed (or there was none to land), `topup_skipped` when no sub-account could
+                 *     receive it (nothing debited), and `topup_failed` when the top-up transfer failed —
+                 *     the card exists either way; `initial_topup_error` carries the failure reason.
+                 *      */
                 201: {
                     headers: {
                         [name: string]: unknown;
@@ -2221,7 +2256,15 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            data?: components["schemas"]["IssuingCard"];
+                            data?: components["schemas"]["IssuingCard"] & {
+                                /**
+                                 * @description Outcome of the issuance-time initial top-up. Present only when the tariff charged at issuance.
+                                 * @enum {string}
+                                 */
+                                initial_topup_status?: "completed" | "topup_failed" | "topup_skipped";
+                                /** @description Reason the initial top-up was skipped or failed. Present only when initial_topup_status is not `completed`. */
+                                initial_topup_error?: string;
+                            };
                             /** @example Card created successfully */
                             message?: string;
                         };
@@ -4044,6 +4087,12 @@ export interface paths {
                     wallet_id?: string;
                     /** @description Filter cardholders by issuing program ID */
                     issuing_program_id?: string;
+                    /** @description Only cardholders LINKED to this CORE user (`user_data.uuid`, via the link
+                     *     written by `user_data_id`-mode provisioning). Manually created cardholders
+                     *     have no link and never match this filter. Each returned cardholder also
+                     *     carries its link as `user_data_uuid` (null when unlinked).
+                     *      */
+                    user_data_id?: string;
                     /** @description Number of items to skip */
                     offset?: number;
                     /** @description Number of items to return */
@@ -4283,12 +4332,31 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Cardholder with this email already exists in this wallet + issuing_program */
+                /** @description Cardholder with this email already exists in this wallet + issuing_program. `error.details.cardholder_id` names the conflicting cardholder (when it could be resolved) so the client can adopt it instead of dead-ending.
+                 *      */
                 409: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example false */
+                            success?: boolean;
+                            error?: {
+                                /** @example DUPLICATE_CARDHOLDER */
+                                code?: string;
+                                /** @example A cardholder with this email already exists for this wallet and issuing program */
+                                message?: string;
+                                details?: {
+                                    /**
+                                     * Format: uuid
+                                     * @description Id of the already-existing (conflicting) cardholder
+                                     */
+                                    cardholder_id?: string;
+                                } | null;
+                            };
+                        };
+                    };
                 };
                 /** @description Internal Server Error */
                 500: {
@@ -4428,6 +4496,131 @@ export interface paths {
                 };
             };
         };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/issuing/cardholders/eligibility": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Batch cardholder eligibility for wallet members
+         * @description For each `user_data_id`, answers whether a card can be issued to that wallet member
+         *     right away — and if not, what stands in the way. Built for member pickers: one call
+         *     per page of members, verdicts computed from LOCAL data only (memberships, verification
+         *     statuses, KYC applicant references, cardholder links) — the KYC provider is never called.
+         *
+         *     **Verdicts**:
+         *     - `READY` — an ACTIVE cardholder is linked (`cardholder_id`); create the card directly.
+         *     - `DRAFT` — a draft is linked (`cardholder_id`); complete `will_require` and submit it.
+         *     - `CAN_CREATE` — no cardholder yet, but the member clears the `user_data_id`-mode
+         *       creation gates (approved identity/face verification + KYC applicant).
+         *     - `PENDING` — a verification review is in flight; wait.
+         *     - `NEEDS_VERIFICATION` — no approved verification or no KYC applicant; the member has
+         *       to (re)run identity verification.
+         *     - `REJECTED` — a verification came back with a FINAL rejection; re-running it from the
+         *       app is not possible (support resets it), so never render a "verify now" action.
+         *     - `NOT_MEMBER` — the uuid is not an active member of this wallet.
+         *
+         *     **`will_require`**: fields the client should expect to collect BY HAND (same vocabulary
+         *     as the submit 400 `missing` list, e.g. `address.line1`, `tax_identification_number`,
+         *     `email or phone`). For `DRAFT` it is the draft's actual leftovers; for `CAN_CREATE` it
+         *     is a projection that assumes the KYC dossier covers what it usually covers — the created
+         *     draft's `missing_kyc_fields` is the authoritative version.
+         *
+         *     **Authentication**: Bearer token with x-tenant-id header; wallet ADMIN role required.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * Format: uuid
+                         * @description Wallet whose members are being evaluated
+                         */
+                        wallet_id: string;
+                        /**
+                         * Format: uuid
+                         * @description Program the card would be issued under (drives the KYC bar)
+                         */
+                        issuing_program_id: string;
+                        /** @description user_data uuids of the members to evaluate */
+                        user_data_ids: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description One verdict per requested user_data_id (duplicates collapsed) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /** Format: uuid */
+                                user_data_id: string;
+                                /** @enum {string} */
+                                verdict: "READY" | "DRAFT" | "CAN_CREATE" | "PENDING" | "NEEDS_VERIFICATION" | "REJECTED" | "NOT_MEMBER";
+                                /**
+                                 * Format: uuid
+                                 * @description The linked cardholder for READY/DRAFT verdicts
+                                 */
+                                cardholder_id: string | null;
+                                /** @description Fields to collect by hand (submit `missing` vocabulary) */
+                                will_require: string[];
+                            }[];
+                        };
+                    };
+                };
+                /** @description Invalid input (missing program, empty/oversized/malformed id list), or the program is not available for the caller's user group — the same "This program is not available for your user group" failure cardholder creation gives.
+                 *      */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Access denied to this wallet */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Issuing program not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -12267,22 +12460,78 @@ export interface components {
             /** Format: date-time */
             cleared_at?: string | null;
         };
-        /** @description Cardholder — the consumed subset (mirrors the frontend CardCardholder). The live vendor-proxied endpoint may return additional fields; only the supported subset is documented here. */
+        /** @description Cardholder wire shape: the flattened cardholder record plus flat vendor fields (`vendor_*`, `review_status`, `reject_reason`), as returned by the cardholder list/get/create/update endpoints. */
         IssuingCardholder: {
             /** Format: uuid */
             id: string;
+            /** Format: date-time */
+            created_at?: string;
             first_name: string;
             last_name: string;
             /** Format: email */
             email?: string | null;
             phone?: string | null;
-            /** @description Date of birth */
+            /** @description Date of birth (YYYY-MM-DD) */
             birth_date?: string | null;
             /**
              * @description ISO 3166 alpha-3
              * @example ESP
              */
             nationality?: string | null;
+            /** Format: uuid */
+            wallet_id?: string | null;
+            /** Format: uuid */
+            issuing_program_id?: string | null;
+            /**
+             * @description DRAFT until the cardholder is submitted and registered at the vendor.
+             * @enum {string}
+             */
+            status: "DRAFT" | "ACTIVE";
+            /** @description 'M' | 'F' where the vendor requires one */
+            gender?: string | null;
+            /** @enum {string|null} */
+            cardholder_relationship?: "EMPLOYEE" | "CONTRACTOR" | null;
+            address?: {
+                line1?: string;
+                line2?: string | null;
+                city?: string;
+                state?: string | null;
+                postal_code?: string;
+                /** @description ISO country code */
+                country?: string;
+            } | null;
+            gov_id_type?: string | null;
+            gov_id_number?: string | null;
+            gov_id_country?: string | null;
+            gov_id_issuance_date?: string | null;
+            gov_id_expiration_date?: string | null;
+            /** @description Personal tax id (US: SSN) */
+            tax_identification_number?: string | null;
+            /** @description Stored KYC file descriptors attached to the cardholder. */
+            kyc_documents?: {
+                /** @enum {string} */
+                type?: "selfie" | "gov_id_front" | "gov_id_back";
+                filename?: string | null;
+                content_type?: string;
+                size?: number;
+                /** Format: date-time */
+                uploaded_at?: string;
+            }[];
+            /** @description Fields the issuing program's KYC bar still wants from this cardholder (same vocabulary as the submit 400 `missing` list, e.g. `address.line1`, `documents: selfie`). Absent when the bar cannot be read. */
+            missing_kyc_fields?: string[];
+            /**
+             * Format: uuid
+             * @description CORE user this cardholder is linked to (user_data provisioning mode); null for manually-created cardholders.
+             */
+            user_data_uuid?: string | null;
+            vendor_id?: string | null;
+            vendor_name?: string | null;
+            vendor_type?: string | null;
+            /** @description Vendor-side cardholder id; null while a review is pending. */
+            vendor_user_id?: string | null;
+            vendor_status?: string | null;
+            review_status?: string | null;
+            reject_reason?: string | null;
         };
         /** @description Crypto wallet with nested addresses */
         CryptoWallet: {
