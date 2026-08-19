@@ -938,8 +938,19 @@ export namespace API {
             request_id?: string;
           };
           // 201 data is the same decorated shape as GET /cards/{card_id}: `data.id` is the card
-          // id, `data.sub_account_id` the (possibly just-provisioned) sub-account.
-          export type Response = CardsRoot['post']['responses']['201']['content']['application/json'];
+          // id, `data.sub_account_id` the (possibly just-provisioned) sub-account. The top-up
+          // outcome fields were added in the SFI-2129 review round and may lag in the deployed
+          // spec, so they are declared here explicitly.
+          export type Response = CardsRoot['post']['responses']['201']['content']['application/json'] & {
+            /**
+             * Outcome of the tariff-mandated initial top-up when the tariff moved money:
+             * `topup_skipped` when no top-up applied, `topup_failed` when the card was created
+             * but the top-up could not be executed — a 201 alone is NOT proof the card is funded.
+             */
+            initial_topup_status?: 'completed' | 'topup_failed' | 'topup_skipped';
+            /** Why the top-up failed; populated when `initial_topup_status` is `topup_failed`. */
+            initial_topup_error?: string;
+          };
         }
 
         export namespace Deposit {
@@ -1032,6 +1043,10 @@ export namespace API {
           >;
         }
 
+        // On a duplicate (same email + wallet + issuing_program) the endpoint answers `409` and
+        // the error body carries an optional `error.details.cardholder_id` — the existing
+        // cardholder to adopt instead of dead-ending (that identity key is not client-searchable).
+        // The SDK does not type error envelopes, so the field is documented here rather than declared.
         export namespace Create {
           export type Request = CardholdersRoot['post']['requestBody']['content']['application/json'];
           export type Response = WithCardholder<
