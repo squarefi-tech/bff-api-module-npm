@@ -55,9 +55,7 @@ export const frontend = {
       // first through `cardholders.*` — an unlinked user gets `400 CARDHOLDER_NOT_LINKED`).
       // Issuing fee / initial top-up follow the group tariff; pass `currency_id` (and optionally
       // `initial_topup`) whenever the tariff carries money.
-      create: (
-        data: API.Frontend.Issuing.Cards.Create.Request,
-      ): Promise<API.Frontend.Issuing.Cards.Create.Response> =>
+      create: (data: API.Frontend.Issuing.Cards.Create.Request): Promise<API.Frontend.Issuing.Cards.Create.Response> =>
         apiClientV1Frontend.postRequest<API.Frontend.Issuing.Cards.Create.Response>('/frontend/issuing/cards', {
           data,
         }),

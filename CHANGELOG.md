@@ -24,6 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`issuing.cards.create.{standAloneCard.prepaid, standAloneCard.balance, subAccountCard}` (SFI-2129)** — the legacy `POST /issuing/cards/create|balance` routes are deprecated backend-side (warn-logged per call). Use `frontend.issuing.cards.create`.
 
+### Changed (review round 2)
+
+- **`Eligibility.Verdict` gains `REJECTED`**: a FINAL verification rejection (support-reset only) is now distinct from `NEEDS_VERIFICATION` — clients must not render an actionable "verify now" for it.
+- **`cardholders.create` 409** now documents `error.details.existing_cardholder_id` — the conflicting cardholder to ADOPT instead of dead-ending (the email+wallet+program identity key is not client-searchable).
+- **`cards.create` response** may carry `initial_topup_status` (`completed` / `topup_failed` / `topup_skipped`) when the tariff moved money — a swallowed top-up failure is no longer indistinguishable from success.
+- The backend now annotates the PATCH cardholder response like list/get, so `Update.Response`'s widened `Cardholder` (with `missing_kyc_fields` / `user_data_uuid`) is accurate rather than aspirational.
+
 ## [1.36.39] - 2026-08-18
 
 ### Changed

@@ -1095,6 +1095,11 @@ export namespace API {
             | 'PENDING'
             /** No approved verification or no KYC applicant — the member must verify. */
             | 'NEEDS_VERIFICATION'
+            /**
+             * A verification came back with a FINAL rejection — only support can
+             * reset it. Never render an actionable "verify now" for this state.
+             */
+            | 'REJECTED'
             /** Not an active member of this wallet. */
             | 'NOT_MEMBER';
 
