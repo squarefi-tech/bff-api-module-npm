@@ -48,6 +48,19 @@ export const frontend = {
           `/frontend/issuing/cards/${card_id}/withdraw`,
           { data },
         ),
+      // Unified create — the backend routes to the balance or prepaid flow by the program's
+      // `sub_account_type`, so there is one method for both. Replaces the legacy
+      // `issuing.cards.create.*` methods. The cardholder is either an explicit `cardholder_id`
+      // or resolved from `assigned_user_data_uuid` via the user's linked cardholder (provision it
+      // first through `cardholders.*` — an unlinked user gets `400 CARDHOLDER_NOT_LINKED`).
+      // Issuing fee / initial top-up follow the group tariff; pass `currency_id` (and optionally
+      // `initial_topup`) whenever the tariff carries money.
+      create: (
+        data: API.Frontend.Issuing.Cards.Create.Request,
+      ): Promise<API.Frontend.Issuing.Cards.Create.Response> =>
+        apiClientV1Frontend.postRequest<API.Frontend.Issuing.Cards.Create.Response>('/frontend/issuing/cards', {
+          data,
+        }),
     },
     // Cardholder create flow (see the OpenAPI spec for details):
     //   1. `cardholders.create` — creates a DRAFT; no vendor is contacted. In `user_data_id` mode
@@ -85,6 +98,29 @@ export const frontend = {
         ...params
       }: API.Frontend.Issuing.Cardholders.Delete.Request): Promise<API.Frontend.Issuing.Cardholders.Delete.Response> =>
         apiClientV1Frontend.deleteRequest(`/frontend/issuing/cardholders/${cardholder_id}`, { params }),
+      // Complete a DRAFT's dossier (address / phone / email / tax id / gov_id fields) before
+      // submitting it — typically driven by the cardholder's `missing_kyc_fields`. `wallet_id`
+      // travels as a query parameter for access validation; everything else is the PATCH body.
+      update: ({
+        cardholder_id,
+        wallet_id,
+        ...data
+      }: API.Frontend.Issuing.Cardholders.Update.Request): Promise<API.Frontend.Issuing.Cardholders.Update.Response> =>
+        apiClientV1Frontend.patchRequest<API.Frontend.Issuing.Cardholders.Update.Response>(
+          `/frontend/issuing/cardholders/${cardholder_id}`,
+          { data, params: { wallet_id } },
+        ),
+      // Batch verdicts for a member picker: for each user_data uuid — can a card be issued right
+      // away (`READY`), is a draft waiting (`DRAFT`), can one be created (`CAN_CREATE`), or does
+      // the member have to verify first. `will_require` previews the fields to collect by hand;
+      // the created draft's `missing_kyc_fields` is the authoritative version.
+      eligibility: (
+        data: API.Frontend.Issuing.Cardholders.Eligibility.Request,
+      ): Promise<API.Frontend.Issuing.Cardholders.Eligibility.Response> =>
+        apiClientV1Frontend.postRequest<API.Frontend.Issuing.Cardholders.Eligibility.Response>(
+          '/frontend/issuing/cardholders/eligibility',
+          { data },
+        ),
       // Retryable: a failed submit leaves the draft untouched, so it can be called again once the
       // dossier is complete (a `400 CARDHOLDER_SUBMISSION_INCOMPLETE` lists what is missing in
       // `error.details.missing`). While a review is running — or once the cardholder is live —

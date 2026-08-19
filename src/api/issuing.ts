@@ -5,10 +5,17 @@ import { makeSecureRequest } from '../utils/encrypt';
 
 export const issuing = {
   cards: {
+    /**
+     * @deprecated The legacy `/issuing/cards/*` create routes are deprecated (SFI-2129).
+     * Use `frontend.issuing.cards.create` — the unified `POST /frontend/issuing/cards` routes
+     * by the program's `sub_account_type` and carries the same fee/top-up handling.
+     */
     create: {
       standAloneCard: {
+        /** @deprecated Use `frontend.issuing.cards.create` (SFI-2129). */
         prepaid: (data: API.Cards.Create.StandAloneRequest): Promise<API.Cards.Create.StandAloneResponse> =>
           apiClientV1.postRequest<API.Cards.Create.StandAloneResponse>('/issuing/cards/create', { data }),
+        /** @deprecated Use `frontend.issuing.cards.create` (SFI-2129). */
         balance: async (
           data: API.Cards.Create.StandAloneRequest,
         ): Promise<API.Cards.Create.ExtendedSubAccountResponse> => {
@@ -30,6 +37,7 @@ export const issuing = {
           };
         },
       },
+      /** @deprecated Use `frontend.issuing.cards.create` with `sub_account_id` (SFI-2129). */
       subAccountCard: async (
         data: API.Cards.Create.SubAccountRequest,
       ): Promise<API.Cards.Create.ExtendedSubAccountResponse> => {
