@@ -99,16 +99,6 @@ export const frontend = {
           ),
       },
       /**
-       * PLAINTEXT PAN/CVV — server-to-server only. In a browser or mobile client use
-       * `sensitiveEncrypted` instead, so the card number never travels readable.
-       */
-      sensitive: ({
-        card_id,
-      }: API.Frontend.Issuing.Cards.Sensitive.Request): Promise<API.Frontend.Issuing.Cards.Sensitive.Response> =>
-        apiClientV1Frontend.getRequest<API.Frontend.Issuing.Cards.Sensitive.Response>(
-          `/frontend/issuing/cards/${card_id}/sensitive`,
-        ),
-      /**
        * PAN/CVV over the encrypted channel: generates an AES-256 key, sends it encrypted to
        * the server's RSA public key (`SERVER_PUBLIC_KEY_BASE64`) and decrypts the answer —
        * the same exchange as the legacy `issuing.cards.sensitiveData.encrypted.secretKey`,

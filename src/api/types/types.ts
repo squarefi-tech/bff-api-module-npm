@@ -866,7 +866,6 @@ export namespace API {
       type CardFreezeRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/freeze'];
       type CardUnfreezeRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/unfreeze'];
       type CardLimitsRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/limits'];
-      type CardSensitiveRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/sensitive'];
       type CardTransactionsRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/transactions'];
       type SubAccountTransactionsRoot =
         pathsV1Frontend['/frontend/issuing/sub-accounts/{sub_account_id}/transactions'];
@@ -993,15 +992,6 @@ export namespace API {
             card_id: string;
           } & CardLimitsRoot['put']['requestBody']['content']['application/json'];
           export type Response = CardLimitsRoot['put']['responses']['200']['content']['application/json'];
-        }
-
-        /**
-         * Card PAN/CVV in PLAINTEXT. Server-to-server only — a browser or mobile client
-         * should use `SensitiveEncrypted`, which never puts the PAN in a readable body.
-         */
-        export namespace Sensitive {
-          export type Request = { card_id: string };
-          export type Response = CardSensitiveRoot['get']['responses']['200']['content']['application/json'];
         }
 
         /**
