@@ -3843,6 +3843,8 @@ export interface paths {
                     offset?: number;
                     /** @description Number of items to return */
                     limit?: number;
+                    /** @description Wallet context — tariffs follow the wallet owner's group. */
+                    wallet_id?: string;
                 };
                 header?: never;
                 path?: never;
@@ -3993,6 +3995,11 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    /** @description Wallet context: tariffs follow the wallet owner's group, and a wallet that already
+                     *     holds a sub-account on the program keeps it readable even when the rail visibility
+                     *     filter would hide it from the listing.
+                     *      */
+                    wallet_id?: string;
                     /** @description Include extra UI fields (icon, card_design, consent_text, etc.) */
                     detailed?: boolean;
                 };
@@ -4018,6 +4025,19 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 name: string;
+                                /** @enum {string} */
+                                status: "ACTIVE" | "INACTIVE";
+                                /** @description Default card spending limit */
+                                card_limit: number;
+                                /** @description Whether card supports Apple/Google Pay */
+                                tokenizable: boolean;
+                                icon?: string | null;
+                                code?: string | null;
+                                initial_topup?: number | null;
+                                card_design?: Record<string, never> | null;
+                                consent_text?: string | null;
+                                card_issuing_fee?: number | null;
+                                card_monthly_fee?: number | null;
                                 description?: string | null;
                                 /** @enum {string} */
                                 form_factor: "VIRTUAL" | "PHYSICAL";

@@ -1233,10 +1233,7 @@ export namespace API {
           export type CountryRule = NonNullable<NonNullable<CardholderRequirements['country_rules']>[string]>;
 
           export namespace List {
-            /** The spec omits `wallet_id`, but the handler reads it to resolve the tariff group. */
-            export type Request = NonNullable<ProgramsRoot['get']['parameters']['query']> & {
-              wallet_id?: string;
-            };
+            export type Request = NonNullable<ProgramsRoot['get']['parameters']['query']>;
             export type Response = ProgramsRoot['get']['responses']['200']['content']['application/json'];
           }
 
@@ -1245,6 +1242,11 @@ export namespace API {
               id: string;
             } & NonNullable<ProgramByIdRoot['get']['parameters']['query']>;
             export type Response = ProgramByIdRoot['get']['responses']['200']['content']['application/json'];
+            /**
+             * The byId payload: the same program fields as the list item, but `order_types` is the
+             * DETAILED form ({id, tokens}) — flatten to ids when a list-shaped Program is needed.
+             */
+            export type Data = NonNullable<Response['data']>;
           }
         }
       }
