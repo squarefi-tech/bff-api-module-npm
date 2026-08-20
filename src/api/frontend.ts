@@ -55,6 +55,63 @@ export const frontend = {
       // first through `cardholders.*` — an unlinked user gets `400 CARDHOLDER_NOT_LINKED`).
       // Issuing fee / initial top-up follow the group tariff; pass `currency_id` (and optionally
       // `initial_topup`) whenever the tariff carries money.
+      getById: ({
+        card_id,
+      }: API.Frontend.Issuing.Cards.Get.Request): Promise<API.Frontend.Issuing.Cards.Get.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.Issuing.Cards.Get.Response>(
+          `/frontend/issuing/cards/${card_id}`,
+        ),
+      /** Rename (and other editable card fields). */
+      update: ({
+        card_id,
+        ...data
+      }: API.Frontend.Issuing.Cards.Update.Request): Promise<API.Frontend.Issuing.Cards.Update.Response> =>
+        apiClientV1Frontend.patchRequest<API.Frontend.Issuing.Cards.Update.Response>(
+          `/frontend/issuing/cards/${card_id}`,
+          { data },
+        ),
+      /** Terminal, unlike freeze — a closed card cannot be reopened. */
+      close: ({
+        card_id,
+      }: API.Frontend.Issuing.Cards.Close.Request): Promise<API.Frontend.Issuing.Cards.Close.Response> =>
+        apiClientV1Frontend.deleteRequest(`/frontend/issuing/cards/${card_id}`),
+      freeze: ({
+        card_id,
+      }: API.Frontend.Issuing.Cards.Freeze.Request): Promise<API.Frontend.Issuing.Cards.Freeze.Response> =>
+        apiClientV1Frontend.putRequest<API.Frontend.Issuing.Cards.Freeze.Response>(
+          `/frontend/issuing/cards/${card_id}/freeze`,
+        ),
+      unfreeze: ({
+        card_id,
+      }: API.Frontend.Issuing.Cards.Unfreeze.Request): Promise<API.Frontend.Issuing.Cards.Unfreeze.Response> =>
+        apiClientV1Frontend.putRequest<API.Frontend.Issuing.Cards.Unfreeze.Response>(
+          `/frontend/issuing/cards/${card_id}/unfreeze`,
+        ),
+      limits: {
+        update: ({
+          card_id,
+          ...data
+        }: API.Frontend.Issuing.Cards.Limits.Request): Promise<API.Frontend.Issuing.Cards.Limits.Response> =>
+          apiClientV1Frontend.putRequest<API.Frontend.Issuing.Cards.Limits.Response>(
+            `/frontend/issuing/cards/${card_id}/limits`,
+            { data },
+          ),
+      },
+      /** Card PAN/CVV, encrypted for the caller's key. */
+      sensitive: ({
+        card_id,
+      }: API.Frontend.Issuing.Cards.Sensitive.Request): Promise<API.Frontend.Issuing.Cards.Sensitive.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.Issuing.Cards.Sensitive.Response>(
+          `/frontend/issuing/cards/${card_id}/sensitive`,
+        ),
+      transactions: ({
+        card_id,
+        ...params
+      }: API.Frontend.Issuing.Cards.Transactions.Request): Promise<API.Frontend.Issuing.Cards.Transactions.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.Issuing.Cards.Transactions.Response>(
+          `/frontend/issuing/cards/${card_id}/transactions`,
+          { params },
+        ),
       create: (data: API.Frontend.Issuing.Cards.Create.Request): Promise<API.Frontend.Issuing.Cards.Create.Response> =>
         apiClientV1Frontend.postRequest<API.Frontend.Issuing.Cards.Create.Response>('/frontend/issuing/cards', {
           data,
@@ -185,6 +242,21 @@ export const frontend = {
       }: API.Frontend.Issuing.SubAccounts.Get.Request): Promise<API.Frontend.Issuing.SubAccounts.Get.Response> =>
         apiClientV1Frontend.getRequest<API.Frontend.Issuing.SubAccounts.Get.Response>(
           `/frontend/issuing/sub-accounts/${sub_account_id}`,
+        ),
+      create: (
+        data: API.Frontend.Issuing.SubAccounts.Create.Request,
+      ): Promise<API.Frontend.Issuing.SubAccounts.Create.Response> =>
+        apiClientV1Frontend.postRequest<API.Frontend.Issuing.SubAccounts.Create.Response>(
+          '/frontend/issuing/sub-accounts',
+          { data },
+        ),
+      transactions: ({
+        sub_account_id,
+        ...params
+      }: API.Frontend.Issuing.SubAccounts.Transactions.Request): Promise<API.Frontend.Issuing.SubAccounts.Transactions.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.Issuing.SubAccounts.Transactions.Response>(
+          `/frontend/issuing/sub-accounts/${sub_account_id}/transactions`,
+          { params },
         ),
       deposit: ({
         sub_account_id,

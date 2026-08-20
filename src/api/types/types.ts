@@ -862,6 +862,14 @@ export namespace API {
 
     export namespace Issuing {
       type CardsRoot = pathsV1Frontend['/frontend/issuing/cards'];
+      type CardRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}'];
+      type CardFreezeRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/freeze'];
+      type CardUnfreezeRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/unfreeze'];
+      type CardLimitsRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/limits'];
+      type CardSensitiveRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/sensitive'];
+      type CardTransactionsRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/transactions'];
+      type SubAccountTransactionsRoot =
+        pathsV1Frontend['/frontend/issuing/sub-accounts/{sub_account_id}/transactions'];
       type CardDepositRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/deposit'];
       type CardWithdrawRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/withdraw'];
       type SubAccountDepositRoot = pathsV1Frontend['/frontend/issuing/sub-accounts/{sub_account_id}/deposit'];
@@ -907,6 +915,20 @@ export namespace API {
           export type Response = SubAccountRoot['get']['responses']['200']['content']['application/json'];
         }
 
+        export namespace Create {
+          export type Request = SubAccountsRoot['post']['requestBody']['content']['application/json'];
+          export type Response = SubAccountsRoot['post']['responses']['201']['content']['application/json'];
+        }
+
+        export namespace Transactions {
+          export type Request = {
+            sub_account_id: string;
+          } & NonNullable<SubAccountTransactionsRoot['get']['parameters']['query']>;
+          export type Response =
+            SubAccountTransactionsRoot['get']['responses']['200']['content']['application/json'];
+          export type Transaction = NonNullable<Response['data']>[number];
+        }
+
         export namespace Deposit {
           export type Request = {
             sub_account_id: string;
@@ -934,6 +956,57 @@ export namespace API {
           // B2B ledger (`issuing.sub_accounts.total_available`) — the same source as the sub-account
           // endpoint — so it matches what the card itself reports.
           export type Card = NonNullable<Response['data']>[number];
+        }
+
+        export namespace Get {
+          export type Request = { card_id: string };
+          export type Response = CardRoot['get']['responses']['200']['content']['application/json'];
+          export type Card = NonNullable<Response['data']>;
+        }
+
+        /** Rename (and other editable card fields). */
+        export namespace Update {
+          export type Request = {
+            card_id: string;
+          } & CardRoot['patch']['requestBody']['content']['application/json'];
+          export type Response = CardRoot['patch']['responses']['200']['content']['application/json'];
+        }
+
+        /** Close the card — terminal, unlike freeze. */
+        export namespace Close {
+          export type Request = { card_id: string };
+          export type Response = CardRoot['delete']['responses']['200']['content']['application/json'];
+        }
+
+        export namespace Freeze {
+          export type Request = { card_id: string };
+          export type Response = CardFreezeRoot['put']['responses']['200']['content']['application/json'];
+        }
+
+        export namespace Unfreeze {
+          export type Request = { card_id: string };
+          export type Response = CardUnfreezeRoot['put']['responses']['200']['content']['application/json'];
+        }
+
+        export namespace Limits {
+          export type Request = {
+            card_id: string;
+          } & CardLimitsRoot['put']['requestBody']['content']['application/json'];
+          export type Response = CardLimitsRoot['put']['responses']['200']['content']['application/json'];
+        }
+
+        /** Card PAN/CVV, encrypted for the caller's key. */
+        export namespace Sensitive {
+          export type Request = { card_id: string };
+          export type Response = CardSensitiveRoot['get']['responses']['200']['content']['application/json'];
+        }
+
+        export namespace Transactions {
+          export type Request = {
+            card_id: string;
+          } & NonNullable<CardTransactionsRoot['get']['parameters']['query']>;
+          export type Response = CardTransactionsRoot['get']['responses']['200']['content']['application/json'];
+          export type Transaction = NonNullable<Response['data']>[number];
         }
 
         // Unified create: the endpoint routes to the balance or prepaid flow by the program's
