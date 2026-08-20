@@ -12611,22 +12611,22 @@ export interface components {
         /** @description Card / sub-account transaction (GET /cards/{card_id}/transactions and GET /sub-accounts/{sub_account_id}/transactions). */
         IssuingTransaction: {
             /** @description Transaction id in the issuing vendor */
-            vendor_transaction_id?: string;
+            vendor_transaction_id: string;
             title?: string;
             last4?: string;
             /** @example APPROVED */
-            status?: string;
+            status: string;
             /** @example CLEARING */
             transaction_type?: string;
             /** @example Purchase */
             group?: string;
-            is_credit?: boolean;
-            billing_amount?: number;
+            is_credit: boolean;
+            billing_amount: number;
             /** @example USD */
-            billing_currency?: string;
-            transaction_amount?: number;
+            billing_currency: string;
+            transaction_amount: number;
             /** @example USD */
-            transaction_currency?: string;
+            transaction_currency: string;
             /** @description What actually left the card: `billing_amount` plus `fee` for a debit. Show this one when a fee sits inside the operation. */
             total_amount?: number;
             /** @description Fee charged inside this operation, in billing currency. 0 for vendors that bill fees as their own transactions (those arrive as separate rows with `transaction_type: FEE`). */
@@ -12647,7 +12647,7 @@ export interface components {
             has_receipt?: boolean;
             merchant?: components["schemas"]["TransactionMerchant"];
             /** Format: date-time */
-            created_at?: string;
+            created_at: string;
             /** Format: date-time */
             cleared_at?: string | null;
         };
