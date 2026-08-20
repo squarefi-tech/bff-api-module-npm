@@ -1210,66 +1210,41 @@ export namespace API {
           type ProgramsRoot = pathsV1Frontend['/frontend/issuing/config/programs'];
           type ProgramByIdRoot = pathsV1Frontend['/frontend/issuing/config/programs/{id}'];
 
-          /** What each country changes about the cardholder dossier. */
-          export interface CountryRule {
-            /** Allowed `gov_id_type` values for a document issued by this country. */
-            gov_id_types?: string[];
-            /** Extra fields required when this is the member's nationality. */
-            required_by_nationality?: string[];
-            /** Extra fields required when this is the address country. */
-            required_by_address?: string[];
-            notes?: string[];
-          }
-
           /**
-           * The per-program cardholder KYC bar. Set in the program's vendor config, so it can
-           * change without a release — read it instead of hardcoding the form. Hand-declared
-           * until the deployed frontend spec documents it on this route; then it collapses onto
-           * the autogen field (same forward-compat pattern as the Cardholder wire shape).
+           * A program as the frontend config route returns it — including `cardholder_requirements`
+           * (the per-program cardholder KYC bar) and `kyc_rails_id` (the wallet UI hides programs on
+           * a closed/rejected rail). Both come straight from the generated spec.
            */
-          export interface CardholderRequirements {
-            /** The KYC level the program demands. */
-            level: 'minimal' | 'basic' | 'full';
-            /** Required field names; address fields are dotted (`address.line1`). */
-            required: string[];
-            /** Document photos the program requires. */
-            required_documents: Array<'gov_id_front' | 'gov_id_back' | 'selfie'>;
-            /** Human-readable constraints the field list cannot express. */
-            notes?: string[];
-            /** Per-country overrides, keyed by ISO 3166-1 alpha-3 with a `default` entry. */
-            country_rules?: Record<string, CountryRule>;
-          }
-
-          type AutogenProgram = NonNullable<
+          export type Program = NonNullable<
             ProgramsRoot['get']['responses']['200']['content']['application/json']['data']
           >[number];
 
           /**
-           * A program as the frontend config route returns it. `cardholder_requirements` and
-           * `kyc_rails_id` are hand-added because the deployed spec does not document them yet;
-           * once it does and the types regenerate, the intersection is a no-op.
+           * The per-program cardholder KYC bar (`level` / `required` / `required_documents` /
+           * `country_rules`). Set in the program's vendor config, so it can change without a
+           * release — read it instead of hardcoding the form.
            */
-          export type Program = AutogenProgram & {
-            /** The program's KYC rail; the wallet UI hides programs on a closed/rejected rail. */
-            kyc_rails_id?: string | null;
-            cardholder_requirements?: CardholderRequirements;
-          };
+          export type CardholderRequirements = NonNullable<Program['cardholder_requirements']>;
+
+          /** The KYC level a program demands. */
+          export type CardholderKycLevel = NonNullable<CardholderRequirements['level']>;
+
+          /** What each country changes about the cardholder dossier (a `country_rules` entry). */
+          export type CountryRule = NonNullable<NonNullable<CardholderRequirements['country_rules']>[string]>;
 
           export namespace List {
             /** The spec omits `wallet_id`, but the handler reads it to resolve the tariff group. */
             export type Request = NonNullable<ProgramsRoot['get']['parameters']['query']> & {
               wallet_id?: string;
             };
-            type RawResponse = ProgramsRoot['get']['responses']['200']['content']['application/json'];
-            export type Response = Omit<RawResponse, 'data'> & { data?: Program[] };
+            export type Response = ProgramsRoot['get']['responses']['200']['content']['application/json'];
           }
 
           export namespace Get {
             export type Request = {
               id: string;
             } & NonNullable<ProgramByIdRoot['get']['parameters']['query']>;
-            type RawResponse = ProgramByIdRoot['get']['responses']['200']['content']['application/json'];
-            export type Response = Omit<RawResponse, 'data'> & { data?: Program };
+            export type Response = ProgramByIdRoot['get']['responses']['200']['content']['application/json'];
           }
         }
       }

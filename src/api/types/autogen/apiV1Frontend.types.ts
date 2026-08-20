@@ -3861,23 +3861,55 @@ export interface paths {
                             success?: boolean;
                             data?: {
                                 /** Format: uuid */
-                                id?: string;
-                                name?: string;
+                                id: string;
+                                name: string;
                                 description?: string | null;
                                 /** @enum {string} */
-                                form_factor?: "VIRTUAL" | "PHYSICAL";
+                                form_factor: "VIRTUAL" | "PHYSICAL";
                                 /** @enum {string} */
-                                type?: "DEBIT" | "CREDIT" | "PREPAID";
+                                type: "DEBIT" | "CREDIT" | "PREPAID";
                                 /** @enum {string} */
-                                brand?: "VISA" | "MASTERCARD";
+                                brand: "VISA" | "MASTERCARD";
                                 /** @enum {string} */
-                                sub_account_type?: "prepaid" | "balance";
+                                sub_account_type: "prepaid" | "balance";
                                 /** Format: uuid */
-                                account_currency?: string;
+                                account_currency: string;
+                                /**
+                                 * Format: uuid
+                                 * @description The program's KYC rail. Returned on the frontend route so the wallet UI
+                                 *     can hide programs whose rail is closed for submission and unusable
+                                 *     (never submitted or rejected).
+                                 *
+                                 */
+                                kyc_rails_id?: string | null;
+                                /** @description What a cardholder on this program must carry. Set per program in the
+                                 *     vendor config, so it can change without a release — read it instead of
+                                 *     hardcoding the form. Absent only when the program has no vendor config.
+                                 *      */
+                                cardholder_requirements?: {
+                                    /** @enum {string} */
+                                    level?: "minimal" | "basic" | "full";
+                                    /** @description Required field names; address fields are dotted (address.line1). */
+                                    required?: string[];
+                                    required_documents?: ("gov_id_front" | "gov_id_back" | "selfie")[];
+                                    /** @description Human-readable constraints the field list cannot express. */
+                                    notes?: string[];
+                                    /** @description What each country changes, keyed by ISO 3166-1 alpha-3 with a `default`
+                                     *     entry; empty when the vendor reviews nothing.
+                                     *      */
+                                    country_rules?: {
+                                        [key: string]: {
+                                            gov_id_types?: string[];
+                                            required_by_nationality?: string[];
+                                            required_by_address?: string[];
+                                            notes?: string[];
+                                        };
+                                    };
+                                };
                                 /** @description Required fields for card creation */
                                 required_fields?: Record<string, never>;
                                 /** @description Array of order type IDs */
-                                order_types?: string[];
+                                order_types: string[];
                                 /** @description Card issuing price from user group settings */
                                 issuing_price_usd?: number;
                                 /** @description Maximum cards allowed from group settings */
@@ -3887,11 +3919,11 @@ export interface paths {
                                 /** @description Monthly card creation limit from group settings */
                                 cards_per_month?: number | null;
                                 /** @enum {string} */
-                                status?: "ACTIVE" | "INACTIVE";
+                                status: "ACTIVE" | "INACTIVE";
                                 /** @description Default card spending limit */
-                                card_limit?: number;
+                                card_limit: number;
                                 /** @description Whether card supports Apple/Google Pay */
-                                tokenizable?: boolean;
+                                tokenizable: boolean;
                                 /** @description Icon URL for UI display */
                                 icon?: string | null;
                                 /** @description Program code */
@@ -3984,21 +4016,53 @@ export interface paths {
                             success?: boolean;
                             data?: {
                                 /** Format: uuid */
-                                id?: string;
-                                name?: string;
+                                id: string;
+                                name: string;
                                 description?: string | null;
                                 /** @enum {string} */
-                                form_factor?: "VIRTUAL" | "PHYSICAL";
+                                form_factor: "VIRTUAL" | "PHYSICAL";
                                 /** @enum {string} */
-                                type?: "DEBIT" | "CREDIT" | "PREPAID";
+                                type: "DEBIT" | "CREDIT" | "PREPAID";
                                 /** @enum {string} */
-                                brand?: "VISA" | "MASTERCARD";
+                                brand: "VISA" | "MASTERCARD";
                                 /** @enum {string} */
-                                sub_account_type?: "prepaid" | "balance";
+                                sub_account_type: "prepaid" | "balance";
                                 /** Format: uuid */
-                                account_currency?: string;
+                                account_currency: string;
+                                /**
+                                 * Format: uuid
+                                 * @description The program's KYC rail. Returned on the frontend route so the wallet UI
+                                 *     can hide programs whose rail is closed for submission and unusable
+                                 *     (never submitted or rejected).
+                                 *
+                                 */
+                                kyc_rails_id?: string | null;
+                                /** @description What a cardholder on this program must carry. Set per program in the
+                                 *     vendor config, so it can change without a release — read it instead of
+                                 *     hardcoding the form. Absent only when the program has no vendor config.
+                                 *      */
+                                cardholder_requirements?: {
+                                    /** @enum {string} */
+                                    level?: "minimal" | "basic" | "full";
+                                    /** @description Required field names; address fields are dotted (address.line1). */
+                                    required?: string[];
+                                    required_documents?: ("gov_id_front" | "gov_id_back" | "selfie")[];
+                                    /** @description Human-readable constraints the field list cannot express. */
+                                    notes?: string[];
+                                    /** @description What each country changes, keyed by ISO 3166-1 alpha-3 with a `default`
+                                     *     entry; empty when the vendor reviews nothing.
+                                     *      */
+                                    country_rules?: {
+                                        [key: string]: {
+                                            gov_id_types?: string[];
+                                            required_by_nationality?: string[];
+                                            required_by_address?: string[];
+                                            notes?: string[];
+                                        };
+                                    };
+                                };
                                 required_fields?: Record<string, never>;
-                                order_types?: {
+                                order_types: {
                                     /** @description Order type ID (e.g. TRANSFER_CARD_SUBACCOUNT) */
                                     id?: string;
                                     tokens?: {
