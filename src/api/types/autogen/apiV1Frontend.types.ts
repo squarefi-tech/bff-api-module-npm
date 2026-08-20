@@ -4525,6 +4525,10 @@ export interface paths {
          *     - `PENDING` — a verification review is in flight; wait.
          *     - `NEEDS_VERIFICATION` — no approved verification or no KYC applicant; the member has
          *       to (re)run identity verification.
+         *     - `NEEDS_VERIFICATION_UPGRADE` — the member IS verified, but not to the level this program
+         *       demands (a required document — usually the selfie — was never captured). Read
+         *       `required_level` to name the bar ("requires FULL verification"). Same remediation as
+         *       `NEEDS_VERIFICATION`, run to add the missing step.
          *     - `REJECTED` — a verification came back with a FINAL rejection; re-running it from the
          *       app is not possible (support resets it), so never render a "verify now" action.
          *     - `NOT_MEMBER` — the uuid is not an active member of this wallet.
@@ -4577,7 +4581,7 @@ export interface paths {
                                 /** Format: uuid */
                                 user_data_id: string;
                                 /** @enum {string} */
-                                verdict: "READY" | "DRAFT" | "CAN_CREATE" | "PENDING" | "NEEDS_VERIFICATION" | "REJECTED" | "NOT_MEMBER";
+                                verdict: "READY" | "DRAFT" | "CAN_CREATE" | "PENDING" | "NEEDS_VERIFICATION" | "NEEDS_VERIFICATION_UPGRADE" | "REJECTED" | "NOT_MEMBER";
                                 /**
                                  * Format: uuid
                                  * @description The linked cardholder for READY/DRAFT verdicts
@@ -4585,6 +4589,14 @@ export interface paths {
                                 cardholder_id: string | null;
                                 /** @description Fields to collect by hand (submit `missing` vocabulary) */
                                 will_require: string[];
+                                /**
+                                 * @description The KYC level this program demands. Lets the client name the bar in
+                                 *     the copy (e.g. "requires FULL verification" on a NEEDS_VERIFICATION
+                                 *     row). Null when the program bar could not be read.
+                                 *
+                                 * @enum {string|null}
+                                 */
+                                required_level?: "minimal" | "basic" | "full" | null;
                             }[];
                         };
                     };

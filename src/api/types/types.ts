@@ -1111,6 +1111,13 @@ export namespace API {
             /** No approved verification or no KYC applicant — the member must verify. */
             | 'NEEDS_VERIFICATION'
             /**
+             * The member IS verified, but not to the level THIS program demands (a
+             * required document — usually the selfie — was never captured). Same
+             * remediation as NEEDS_VERIFICATION; read the program's
+             * `cardholder_requirements.level` to name the bar ("requires FULL").
+             */
+            | 'NEEDS_VERIFICATION_UPGRADE'
+            /**
              * A verification came back with a FINAL rejection — only support can
              * reset it. Never render an actionable "verify now" for this state.
              */
@@ -1132,6 +1139,14 @@ export namespace API {
             cardholder_id: string | null;
             /** Fields to collect by hand (submit `missing` vocabulary). */
             will_require: string[];
+            /**
+             * The KYC level this program demands, named for the copy on a
+             * NEEDS_VERIFICATION_UPGRADE row. Prefer the program's
+             * `cardholder_requirements.level` when the program is in hand; this is
+             * the same value carried on the verdict for convenience. Null when the
+             * program bar could not be read.
+             */
+            required_level?: 'minimal' | 'basic' | 'full' | null;
           };
 
           export type Response = { success?: boolean; data?: Item[] };
@@ -1186,6 +1201,75 @@ export namespace API {
             // the updated cardholder with refreshed kyc_documents — widen it accordingly.
             type RawResponse = CardholderAttachDocumentsRoot['post']['responses']['200']['content']['application/json'];
             export type Response = Omit<RawResponse, 'data'> & { data?: Cardholder };
+          }
+        }
+      }
+
+      export namespace Config {
+        export namespace Programs {
+          type ProgramsRoot = pathsV1Frontend['/frontend/issuing/config/programs'];
+          type ProgramByIdRoot = pathsV1Frontend['/frontend/issuing/config/programs/{id}'];
+
+          /** What each country changes about the cardholder dossier. */
+          export interface CountryRule {
+            /** Allowed `gov_id_type` values for a document issued by this country. */
+            gov_id_types?: string[];
+            /** Extra fields required when this is the member's nationality. */
+            required_by_nationality?: string[];
+            /** Extra fields required when this is the address country. */
+            required_by_address?: string[];
+            notes?: string[];
+          }
+
+          /**
+           * The per-program cardholder KYC bar. Set in the program's vendor config, so it can
+           * change without a release — read it instead of hardcoding the form. Hand-declared
+           * until the deployed frontend spec documents it on this route; then it collapses onto
+           * the autogen field (same forward-compat pattern as the Cardholder wire shape).
+           */
+          export interface CardholderRequirements {
+            /** The KYC level the program demands. */
+            level: 'minimal' | 'basic' | 'full';
+            /** Required field names; address fields are dotted (`address.line1`). */
+            required: string[];
+            /** Document photos the program requires. */
+            required_documents: Array<'gov_id_front' | 'gov_id_back' | 'selfie'>;
+            /** Human-readable constraints the field list cannot express. */
+            notes?: string[];
+            /** Per-country overrides, keyed by ISO 3166-1 alpha-3 with a `default` entry. */
+            country_rules?: Record<string, CountryRule>;
+          }
+
+          type AutogenProgram = NonNullable<
+            ProgramsRoot['get']['responses']['200']['content']['application/json']['data']
+          >[number];
+
+          /**
+           * A program as the frontend config route returns it. `cardholder_requirements` and
+           * `kyc_rails_id` are hand-added because the deployed spec does not document them yet;
+           * once it does and the types regenerate, the intersection is a no-op.
+           */
+          export type Program = AutogenProgram & {
+            /** The program's KYC rail; the wallet UI hides programs on a closed/rejected rail. */
+            kyc_rails_id?: string | null;
+            cardholder_requirements?: CardholderRequirements;
+          };
+
+          export namespace List {
+            /** The spec omits `wallet_id`, but the handler reads it to resolve the tariff group. */
+            export type Request = NonNullable<ProgramsRoot['get']['parameters']['query']> & {
+              wallet_id?: string;
+            };
+            type RawResponse = ProgramsRoot['get']['responses']['200']['content']['application/json'];
+            export type Response = Omit<RawResponse, 'data'> & { data?: Program[] };
+          }
+
+          export namespace Get {
+            export type Request = {
+              id: string;
+            } & NonNullable<ProgramByIdRoot['get']['parameters']['query']>;
+            type RawResponse = ProgramByIdRoot['get']['responses']['200']['content']['application/json'];
+            export type Response = Omit<RawResponse, 'data'> & { data?: Program };
           }
         }
       }

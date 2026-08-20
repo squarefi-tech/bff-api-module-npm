@@ -189,5 +189,28 @@ export const frontend = {
           { data },
         ),
     },
+    // Program catalogue. Unlike the legacy `issuing.config.programs` (GET
+    // /issuing/config/programs), the frontend route carries each program's
+    // `cardholder_requirements` (the per-program cardholder KYC bar) and keeps
+    // `kyc_rails_id` so the wallet can hide programs on a closed/rejected rail.
+    config: {
+      programs: {
+        getAll: (
+          params: API.Frontend.Issuing.Config.Programs.List.Request = {},
+        ): Promise<API.Frontend.Issuing.Config.Programs.List.Response> =>
+          apiClientV1Frontend.getRequest<API.Frontend.Issuing.Config.Programs.List.Response>(
+            '/frontend/issuing/config/programs',
+            { params },
+          ),
+        getById: ({
+          id,
+          ...params
+        }: API.Frontend.Issuing.Config.Programs.Get.Request): Promise<API.Frontend.Issuing.Config.Programs.Get.Response> =>
+          apiClientV1Frontend.getRequest<API.Frontend.Issuing.Config.Programs.Get.Response>(
+            `/frontend/issuing/config/programs/${id}`,
+            { params },
+          ),
+      },
+    },
   },
 };
