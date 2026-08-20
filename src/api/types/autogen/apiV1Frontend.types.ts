@@ -3130,6 +3130,10 @@ export interface paths {
                     wallet_id?: string;
                     /** @description Filter sub-accounts by program ID */
                     program_id?: string;
+                    /** @description Comma-separated sub-account ids to fetch (targeted read through the list shape) */
+                    ids?: string;
+                    /** @description Filter sub-accounts by type */
+                    type?: "balance" | "prepaid";
                     /** @description Filter sub-accounts by status */
                     status?: "ACTIVE" | "INACTIVE" | "SUSPENDED";
                     /** @description Number of items to skip */

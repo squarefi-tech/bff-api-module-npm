@@ -882,6 +882,31 @@ export namespace API {
       };
 
       export namespace SubAccounts {
+        type SubAccountsRoot = pathsV1Frontend['/frontend/issuing/sub-accounts'];
+        type SubAccountRoot = pathsV1Frontend['/frontend/issuing/sub-accounts/{sub_account_id}'];
+
+        export namespace List {
+          /** `ids` is comma-separated — a targeted read of specific sub-accounts through the list shape. */
+          export type Request = NonNullable<SubAccountsRoot['get']['parameters']['query']>;
+          export type Response = SubAccountsRoot['get']['responses']['200']['content']['application/json'];
+          /**
+           * A `fiat_accounts` row enriched with computed balances, currency and the program embed.
+           * `issuing_program.cardholder_requirements` carries the program's cardholder KYC bar even
+           * when the program is hidden from the caller's config listing (rail visibility, group
+           * whitelist) — the sub-account payload is the one place it can always be read from.
+           */
+          export type SubAccount = NonNullable<Response['data']>[number];
+        }
+
+        // The byId response shape varies (external vendor resource vs the local fallback that
+        // carries the program embed) — prefer `list` with `ids` for a stable local-first shape.
+        export namespace Get {
+          export type Request = {
+            sub_account_id: string;
+          };
+          export type Response = SubAccountRoot['get']['responses']['200']['content']['application/json'];
+        }
+
         export namespace Deposit {
           export type Request = {
             sub_account_id: string;

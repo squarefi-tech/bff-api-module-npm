@@ -170,6 +170,22 @@ export const frontend = {
       },
     },
     subAccounts: {
+      // Local-first list (`fiat_accounts` + computed balances + the program embed with its
+      // cardholder KYC bar). `ids` (comma-separated) makes it a targeted read of specific
+      // sub-accounts — prefer that over `getById`, whose shape varies with the vendor.
+      getAll: (
+        params: API.Frontend.Issuing.SubAccounts.List.Request = {},
+      ): Promise<API.Frontend.Issuing.SubAccounts.List.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.Issuing.SubAccounts.List.Response>(
+          '/frontend/issuing/sub-accounts',
+          { params },
+        ),
+      getById: ({
+        sub_account_id,
+      }: API.Frontend.Issuing.SubAccounts.Get.Request): Promise<API.Frontend.Issuing.SubAccounts.Get.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.Issuing.SubAccounts.Get.Response>(
+          `/frontend/issuing/sub-accounts/${sub_account_id}`,
+        ),
       deposit: ({
         sub_account_id,
         ...data
