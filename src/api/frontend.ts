@@ -1,4 +1,5 @@
 import { apiClientV1, apiClientV1Frontend } from '../utils/apiClientFactory';
+import { makeSecureRequest } from '../utils/encrypt';
 import { API } from './types/types';
 
 export const frontend = {
@@ -97,13 +98,39 @@ export const frontend = {
             { data },
           ),
       },
-      /** Card PAN/CVV, encrypted for the caller's key. */
+      /**
+       * PLAINTEXT PAN/CVV — server-to-server only. In a browser or mobile client use
+       * `sensitiveEncrypted` instead, so the card number never travels readable.
+       */
       sensitive: ({
         card_id,
       }: API.Frontend.Issuing.Cards.Sensitive.Request): Promise<API.Frontend.Issuing.Cards.Sensitive.Response> =>
         apiClientV1Frontend.getRequest<API.Frontend.Issuing.Cards.Sensitive.Response>(
           `/frontend/issuing/cards/${card_id}/sensitive`,
         ),
+      /**
+       * PAN/CVV over the encrypted channel: generates an AES-256 key, sends it encrypted to
+       * the server's RSA public key (`SERVER_PUBLIC_KEY_BASE64`) and decrypts the answer —
+       * the same exchange as the legacy `issuing.cards.sensitiveData.encrypted.secretKey`,
+       * against the frontend route.
+       */
+      sensitiveEncrypted: async ({
+        card_id,
+      }: API.Frontend.Issuing.Cards.SensitiveEncrypted.Request): Promise<API.Frontend.Issuing.Cards.SensitiveEncrypted.Response> => {
+        const serverPublicKey = process.env.SERVER_PUBLIC_KEY_BASE64;
+        if (!serverPublicKey) {
+          throw new Error('SERVER_PUBLIC_KEY_BASE64 is not set');
+        }
+
+        return makeSecureRequest<API.Frontend.Issuing.Cards.SensitiveEncrypted.Response>({
+          callback: (props: API.Common.Encrypted.Request) =>
+            apiClientV1Frontend.postRequest<API.Common.Encrypted.Response>(
+              `/frontend/issuing/cards/${card_id}/sensitive/secretkey`,
+              { data: props },
+            ),
+          publicKey: serverPublicKey,
+        });
+      },
       transactions: ({
         card_id,
         ...params

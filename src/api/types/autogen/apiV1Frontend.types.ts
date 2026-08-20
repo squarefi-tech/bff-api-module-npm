@@ -2059,6 +2059,8 @@ export interface paths {
                     wallet_id?: string;
                     /** @description Filter cards by program ID */
                     program_id?: string;
+                    /** @description Only cards drawing from this sub-account. */
+                    sub_account_id?: string;
                     /** @description Filter cards by program sub-account type (prepaid or balance) */
                     sub_account_type?: "prepaid" | "balance";
                     /** @description Filter cards by status (matches issuing_cards.card_status).
@@ -2590,6 +2592,89 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/issuing/cards/{card_id}/sensitive/secretkey": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get card sensitive data over an encrypted channel
+         * @description PAN / CVV without ever putting them in a readable response body — prefer this
+         *     over `GET /sensitive` in any browser or mobile client.
+         *
+         *     The client generates a 32-byte AES-256 key, encrypts it to the server's RSA
+         *     public key (`RSA-OAEP`; `PKCS1` is accepted for older clients) and sends it
+         *     base64-encoded as `encrypted_key`. The response carries the card data
+         *     AES-256-CBC encrypted with that same key, plus the `iv` used.
+         *
+         *     Decrypting `data` with the key and IV yields
+         *     `{ success, data: { card_number, cvv, expiry_month, expiry_year, security_code }, timestamp }`.
+         *
+         *     **Access**: ADMIN on the card's wallet, or the scoped `user` role on their OWN card.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    card_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Base64 of the AES-256 key encrypted to the server's RSA public key. */
+                        encrypted_key: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Encrypted sensitive data */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            /** @example true */
+                            encrypted: boolean;
+                            /** @description Base64 AES-256-CBC ciphertext of the sensitive-data envelope. */
+                            data: string;
+                            /** @description Base64 IV used for the AES encryption. */
+                            iv: string;
+                        };
+                    };
+                };
+                /** @description Missing or undecryptable `encrypted_key`, or a key that is not 32 bytes */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Server key not configured, or encryption failed */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -12258,11 +12343,12 @@ export interface components {
                 [key: string]: unknown;
             } | null;
         };
-        /** @description Sub-account funding a card — the subset of `fiat_accounts` columns joined onto each card. */
+        /** @description Sub-account funding a card — the `fiat_accounts` row joined onto each card, with the same `currency` / `issuing_program` / `account_details` enrichment `GET /sub-accounts` applies, so a card page can drive top-up and render balances without a second request. */
         IssuingCardSubAccount: {
             /** Format: uuid */
             id: string;
             nick_name?: string | null;
+            /** @description Live balance from the issuing ledger (falls back to the cached column). */
             balance?: number | null;
             /** @enum {string} */
             type: "balance" | "prepaid";
@@ -12276,6 +12362,11 @@ export interface components {
              * @description crypto.uuid of the account currency
              */
             account_currency: string;
+            currency?: components["schemas"]["CurrencyRef"];
+            /** @description Program embed (carries `order_types`, which the top-up flow reads); null when program_id is null. */
+            issuing_program?: components["schemas"]["IssuingProgram"] | null;
+            /** @description Bank details from the vendor meta; empty string `""` when none are available. */
+            account_details?: components["schemas"]["BankAccountDetails"] | "";
             /** Format: uuid */
             program_id?: string | null;
             /** Format: uuid */

@@ -995,10 +995,24 @@ export namespace API {
           export type Response = CardLimitsRoot['put']['responses']['200']['content']['application/json'];
         }
 
-        /** Card PAN/CVV, encrypted for the caller's key. */
+        /**
+         * Card PAN/CVV in PLAINTEXT. Server-to-server only — a browser or mobile client
+         * should use `SensitiveEncrypted`, which never puts the PAN in a readable body.
+         */
         export namespace Sensitive {
           export type Request = { card_id: string };
           export type Response = CardSensitiveRoot['get']['responses']['200']['content']['application/json'];
+        }
+
+        /**
+         * Card PAN/CVV over an end-to-end encrypted channel: the client's AES-256 key is
+         * sent encrypted to the server's RSA public key, and the answer comes back
+         * encrypted with that same key. The SDK does the key exchange and the decryption,
+         * so the caller just receives the decrypted payload.
+         */
+        export namespace SensitiveEncrypted {
+          export type Request = { card_id: string };
+          export type Response = API.Cards.SensitiveData;
         }
 
         export namespace Transactions {
