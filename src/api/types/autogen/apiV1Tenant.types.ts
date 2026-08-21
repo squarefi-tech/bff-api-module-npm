@@ -6256,7 +6256,69 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        patch?: never;
+        /** Update cardholder */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    cardholder_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        wallet_id: string;
+                        first_name?: string;
+                        last_name?: string;
+                        email?: string;
+                        phone?: string;
+                        /** @description ISO 3166-1 alpha-3 country code */
+                        nationality?: string;
+                        /** @enum {string} */
+                        gender?: "M" | "F";
+                        /** @enum {string} */
+                        cardholder_relationship?: "EMPLOYEE" | "CONTRACTOR";
+                        /** @enum {string} */
+                        gov_id_type?: "passport" | "id_card" | "driving_license" | "residence_permit_eu" | "residence_permit_ae" | "id_card_cn" | "id_card_hk";
+                        gov_id_number?: string;
+                        /** @description 2-3 letter uppercase country code */
+                        gov_id_country?: string;
+                        /** Format: date */
+                        gov_id_issuance_date?: string;
+                        /** Format: date */
+                        gov_id_expiration_date?: string;
+                        /** @description Tax identifier (USA + Interlace CONSUMER: SSN, 9 digits or XXX-XX-XXXX) */
+                        tax_identification_number?: string;
+                        address?: {
+                            line1?: string;
+                            line2?: string;
+                            city?: string;
+                            state?: string;
+                            postal_code?: string;
+                            country?: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Cardholder updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["Cardholder"];
+                        };
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/admin/issuing/cardholders/{cardholder_id}/documents": {

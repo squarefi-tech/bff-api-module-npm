@@ -7397,7 +7397,7 @@ export interface components {
                  * @description Cumulative KYC level; each level includes the previous one
                  * @enum {string}
                  */
-                level?: "minimal" | "basic" | "full";
+                level?: "minimal" | "basic" | "declared" | "full";
                 /**
                  * @description Required field names; address fields are dotted (address.line1). Interlace CONSUMER also lists gov_id_issuance_date and gov_id_expiration_date (ISO YYYY-MM-DD).
                  * @example [

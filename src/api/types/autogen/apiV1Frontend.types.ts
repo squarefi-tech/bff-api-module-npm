@@ -2530,7 +2530,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get card sensitive data
+         * [DEPRECATED] Get card sensitive data
+         * @deprecated
          * @description Retrieves sensitive card data including full card number, CVV, and expiry date.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
@@ -3979,7 +3980,7 @@ export interface paths {
                                  *      */
                                 cardholder_requirements?: {
                                     /** @enum {string} */
-                                    level?: "minimal" | "basic" | "full";
+                                    level?: "minimal" | "basic" | "declared" | "full";
                                     /** @description Required field names; address fields are dotted (address.line1). */
                                     required?: string[];
                                     required_documents?: ("gov_id_front" | "gov_id_back" | "selfie")[];
@@ -4152,7 +4153,7 @@ export interface paths {
                                  *      */
                                 cardholder_requirements?: {
                                     /** @enum {string} */
-                                    level?: "minimal" | "basic" | "full";
+                                    level?: "minimal" | "basic" | "declared" | "full";
                                     /** @description Required field names; address fields are dotted (address.line1). */
                                     required?: string[];
                                     required_documents?: ("gov_id_front" | "gov_id_back" | "selfie")[];
@@ -4671,7 +4672,113 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Update cardholder
+         * @description Updates cardholder information.
+         *
+         *     **Authentication**: Bearer token with x-tenant-id header required
+         *
+         *     **Access Control**: Cardholder must belong to the user's wallet
+         *
+         */
+        patch: {
+            parameters: {
+                query?: {
+                    /** @description Wallet ID for access validation */
+                    wallet_id?: string;
+                };
+                header?: never;
+                path: {
+                    /** @description The ID of the cardholder to update */
+                    cardholder_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Cardholder's first name */
+                        first_name?: string;
+                        /** @description Cardholder's last name */
+                        last_name?: string;
+                        /**
+                         * Format: email
+                         * @description Cardholder's email address
+                         */
+                        email?: string;
+                        /** @description Cardholder's phone number */
+                        phone?: string;
+                        /**
+                         * @description Cardholder's nationality as ISO 3166-1 alpha-3 country code
+                         * @example USA
+                         */
+                        nationality?: string;
+                        /** @enum {string} */
+                        gender?: "M" | "F";
+                        /** @enum {string} */
+                        cardholder_relationship?: "EMPLOYEE" | "CONTRACTOR";
+                        /** @enum {string} */
+                        gov_id_type?: "passport" | "id_card" | "driving_license" | "residence_permit_eu" | "residence_permit_ae" | "id_card_cn" | "id_card_hk";
+                        /** @description Identity document number (passport / driving licence / national ID). */
+                        gov_id_number?: string;
+                        /** @description 2-3 letter uppercase country code */
+                        gov_id_country?: string;
+                        /** Format: date */
+                        gov_id_issuance_date?: string;
+                        /** Format: date */
+                        gov_id_expiration_date?: string;
+                        /** @description Tax identifier (USA + Interlace CONSUMER: SSN, 9 digits or XXX-XX-XXXX) */
+                        tax_identification_number?: string;
+                        address?: {
+                            line1?: string;
+                            line2?: string;
+                            city?: string;
+                            state?: string;
+                            postal_code?: string;
+                            country?: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Cardholder updated successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["IssuingCardholder"];
+                            /** @example Cardholder updated successfully */
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description Invalid request parameters */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Access denied to this cardholder */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Cardholder not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         trace?: never;
     };
     "/frontend/issuing/cardholders/eligibility": {
@@ -4702,9 +4809,17 @@ export interface paths {
          *       demands (a required document — usually the selfie — was never captured). Read
          *       `required_level` to name the bar ("requires FULL verification"). Same remediation as
          *       `NEEDS_VERIFICATION`, run to add the missing step.
+         *     - `NEEDS_RESUBMIT` — the VENDOR's review of the cardholder came back rejected (or asked
+         *       for part of the dossier again). Not a dead end: fix what `reject_reason` names —
+         *       `PATCH` the field, or re-upload and re-attach the document — then call
+         *       `POST /cardholders/{cardholder_id}/submit` again. The review restarts on the vendor
+         *       account the person already has; a fresh cardholder is NOT the way to retry.
          *     - `REJECTED` — a verification came back with a FINAL rejection; re-running it from the
          *       app is not possible (support resets it), so never render a "verify now" action.
          *     - `NOT_MEMBER` — the uuid is not an active member of this wallet.
+         *
+         *     A cardholder whose review is still running stays `READY`: re-submitting would only spend
+         *     another review, and the submit endpoint refuses it with `409 CARDHOLDER_NOT_DRAFT`.
          *
          *     **`will_require`**: fields the client should expect to collect BY HAND (same vocabulary
          *     as the submit 400 `missing` list, e.g. `address.line1`, `tax_identification_number`,
@@ -4754,10 +4869,10 @@ export interface paths {
                                 /** Format: uuid */
                                 user_data_id: string;
                                 /** @enum {string} */
-                                verdict: "READY" | "DRAFT" | "CAN_CREATE" | "PENDING" | "NEEDS_VERIFICATION" | "NEEDS_VERIFICATION_UPGRADE" | "REJECTED" | "NOT_MEMBER";
+                                verdict: "READY" | "DRAFT" | "CAN_CREATE" | "PENDING" | "NEEDS_VERIFICATION" | "NEEDS_VERIFICATION_UPGRADE" | "NEEDS_RESUBMIT" | "REJECTED" | "NOT_MEMBER";
                                 /**
                                  * Format: uuid
-                                 * @description The linked cardholder for READY/DRAFT verdicts
+                                 * @description The linked cardholder for READY / DRAFT / NEEDS_RESUBMIT verdicts
                                  */
                                 cardholder_id: string | null;
                                 /** @description Fields to collect by hand (submit `missing` vocabulary) */
@@ -4769,7 +4884,12 @@ export interface paths {
                                  *
                                  * @enum {string|null}
                                  */
-                                required_level?: "minimal" | "basic" | "full" | null;
+                                required_level?: "minimal" | "basic" | "declared" | "full" | null;
+                                /** @description What the vendor disliked, on a NEEDS_RESUBMIT verdict — show it before
+                                 *     asking for a correction. Null when the vendor named no reason, or the
+                                 *     verdict is not a rejection.
+                                 *      */
+                                reject_reason?: string | null;
                             }[];
                         };
                     };
@@ -6142,7 +6262,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description Batch is not in DRAFT */
+                /** @description Batch is not in DRAFT, or another operation on it is in flight */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -6213,7 +6333,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description Batch is not awaiting approval */
+                /** @description Batch is not awaiting approval, or another operation on it is in flight */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -6648,9 +6768,15 @@ export interface paths {
         put?: never;
         /**
          * Issue a realtime subscription token
-         * @description Subscribe-only token for the realtime SDK (`authCallback`). `channels`
-         *     lists the exact channel names the token grants — the personal channel
-         *     plus one per accessible wallet. Tokens expire after ~1 hour; the SDK
+         * @description Token for the realtime SDK (`authCallback`). `channels` lists the exact
+         *     channel names the token grants — the personal channel plus one per
+         *     accessible wallet. Every channel is subscribe-only; the personal channel
+         *     additionally grants `push-subscribe`, so a mobile client can activate
+         *     the device for push and subscribe it to that channel (the one native
+         *     pushes are published on) without any server-side registration step.
+         *     The token's `clientId` is the user's id — subscribe by client
+         *     (`subscribeClient`) to cover every device of the user at once, and
+         *     deactivate push on logout. Tokens expire after ~1 hour; the SDK
          *     re-requests through the same endpoint.
          *
          */
@@ -12395,7 +12521,7 @@ export interface components {
             /** @description What a cardholder on this program must carry. Set per program in the vendor config, so it can change without a release — read it instead of hardcoding the form. */
             cardholder_requirements?: {
                 /** @enum {string} */
-                level?: "minimal" | "basic" | "full";
+                level?: "minimal" | "basic" | "declared" | "full";
                 /** @description Required field names; address fields are dotted (address.line1). Interlace CONSUMER also lists gov_id_issuance_date and gov_id_expiration_date (ISO YYYY-MM-DD). */
                 required?: string[];
                 required_documents?: ("gov_id_front" | "gov_id_back" | "selfie")[];

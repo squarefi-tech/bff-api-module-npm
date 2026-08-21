@@ -1224,6 +1224,13 @@ export namespace API {
              * reset it. Never render an actionable "verify now" for this state.
              */
             | 'REJECTED'
+            /**
+             * The VENDOR rejected its review of the cardholder (or asked for part of the
+             * dossier again). Not a dead end: correct what `reject_reason` names and call
+             * `submit` again — the review restarts on the vendor account the person already
+             * has, so a fresh cardholder is NOT the way to retry.
+             */
+            | 'NEEDS_RESUBMIT'
             /** Not an active member of this wallet. */
             | 'NOT_MEMBER';
 
@@ -1248,7 +1255,9 @@ export namespace API {
              * the same value carried on the verdict for convenience. Null when the
              * program bar could not be read.
              */
-            required_level?: 'minimal' | 'basic' | 'full' | null;
+            required_level?: 'minimal' | 'basic' | 'declared' | 'full' | null;
+            /** What the vendor disliked, on a NEEDS_RESUBMIT verdict. */
+            reject_reason?: string | null;
           };
 
           export type Response = { success?: boolean; data?: Item[] };
