@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.52] - 2026-08-26
+
 ### Added
 
 - **`squarefi_bff_api_client.massPayouts` — the mass-payouts client (SFI-1528 / SFI-1503).** The `/frontend/mass-payouts/*` surface has been in the generated types for several releases but was reachable from nowhere: there was no `API.*` namespace, no client method, and the package `exports` map is `"." only`, so a consumer could not deep-import the autogen types either. This release wires all 15 operations up through the package root. Batch lifecycle: `list` (filter by `status` / `name` / `date_from` / `date_to`, paginated), `create` (DRAFT — `currency_id`, `name`, `items[]`, optional `virtual_account_id` and `scheduled_at`), `getById`, `update` (draft-only; `items` fully replaces the recipient list, `virtual_account_id: null` clears the source account and `scheduled_at: null` drops the schedule), `items` (per-row tracker, filterable by item status), `preview` (dry run: per-item fee estimates, total debit, balance check and the `problems[]` that would block a submit), `submit`, `approve`, `cancel`, and `reportCsv`. Templates — reusable recipient lists a draft can be seeded from — under `massPayouts.templates`: `list`, `create`, `getById`, `update` (`items` fully replaces the rows; `virtual_account_id: null` clears the account) and `delete`. Every method is wallet-scoped: `wallet_id` is part of the request object and travels in the path, matching the `counterparties` and `frontend.issuing` conventions.
