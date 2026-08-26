@@ -13544,8 +13544,6 @@ export interface components {
             card_issuing_fee?: number | null;
             card_monthly_fee?: number | null;
             initial_topup?: number | null;
-            /** @description Minimum top-up amount in program currency, compared against the credited amount (0 = no minimum) */
-            min_topup?: number;
             card_design?: {
                 [key: string]: unknown;
             } | null;
