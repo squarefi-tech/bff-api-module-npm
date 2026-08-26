@@ -150,6 +150,17 @@ export namespace API {
         card_issuing_fee: number | null;
         card_monthly_fee: number | null;
         initial_topup: number | null;
+        /**
+         * Minimum top-up in the program's currency, compared against the amount
+         * CREDITED to the card (after fees and conversion) — the same figure the
+         * server checks before it refuses a deposit with `TOPUP_BELOW_MINIMUM`.
+         * `0` means the program sets no minimum. Does not apply to the initial
+         * top-up at issuance.
+         *
+         * Optional on the type because programs served by a backend older than
+         * the `issuing_programs.min_topup` migration omit it.
+         */
+        min_topup?: number;
         status?: IssuingProgramStatus | string;
       }
     }
