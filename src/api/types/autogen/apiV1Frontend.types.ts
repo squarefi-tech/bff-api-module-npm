@@ -3633,7 +3633,10 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Validation error */
+                /** @description Validation error. Includes `TOPUP_BELOW_MINIMUM` — credited amount is
+                 *     below the program's `min_topup` threshold (`error.details.min_topup`,
+                 *     program currency). No order created, wallet not debited.
+                 *      */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -4284,6 +4287,9 @@ export interface paths {
                  *     - Invalid reference_id format
                  *     - Invalid amount (must be positive number)
                  *     - Insufficient wallet balance (`INSUFFICIENT_BALANCE`)
+                 *     - `TOPUP_BELOW_MINIMUM` — credited amount is below the program's
+                 *       `min_topup` threshold; `error.details.min_topup` carries the
+                 *       threshold (program currency). No order created, wallet not debited.
                  *      */
                 400: {
                     headers: {
@@ -13544,6 +13550,8 @@ export interface components {
             card_issuing_fee?: number | null;
             card_monthly_fee?: number | null;
             initial_topup?: number | null;
+            /** @description Minimum top-up amount in program currency, compared against the credited amount (0 = no minimum) */
+            min_topup?: number;
             card_design?: {
                 [key: string]: unknown;
             } | null;
