@@ -14947,7 +14947,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            type: "DEPOSIT_RECEIVED" | "TRANSFER_RECEIVED" | "ORDER_STATUS_CHANGED" | "KYC_STATUS_CHANGED";
+            type: "DEPOSIT_RECEIVED" | "TRANSFER_RECEIVED" | "ORDER_STATUS_CHANGED" | "KYC_STATUS_CHANGED" | "ANNOUNCEMENT" | "SYSTEM_MESSAGE";
             /** @description Structured fact snapshot; the client renders the presentation. Shape depends on `type`; evolution is additive-only. */
             payload: Record<string, never>;
             /** Format: uuid */
@@ -14964,7 +14964,7 @@ export interface components {
         };
         NotificationCategoryPreference: {
             /** @enum {string} */
-            category: "TRANSACTIONS" | "COMPLIANCE";
+            category: "TRANSACTIONS" | "COMPLIANCE" | "ANNOUNCEMENTS" | "SYSTEM";
             enabled: boolean;
         };
     };
