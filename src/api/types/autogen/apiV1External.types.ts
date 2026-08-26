@@ -1964,7 +1964,8 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Bad Request - Missing required fields */
+                /** @description Bad Request — missing/invalid fields, or a `user_data_id` precondition not met (user not verified, no KYC applicant, or the applicant is unknown to the KYC provider). Code `INVALID_REQUEST`; the message names the failed precondition.
+                 *      */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -2003,6 +2004,16 @@ export interface paths {
                 };
                 /** @description Internal Server Error */
                 500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description The KYC provider failed while the dossier was being pulled for `user_data_id` (code `EXTERNAL_SERVICE_ERROR`). Retry later; the draft was not created.
+                 *      */
+                502: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2156,7 +2167,120 @@ export interface paths {
         };
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Update cardholder
+         * @description Updates cardholder information (local row + vendor propagation of personal fields).
+         *     Same contract as `PATCH /frontend/issuing/cardholders/{cardholder_id}`.
+         *
+         *     **Authentication**: x-api-key header required
+         *
+         *     **Access Control**: Cardholder must belong to the authenticated wallet
+         *
+         */
+        patch: {
+            parameters: {
+                query?: {
+                    /** @description Wallet ID (required for non-wallet-bound API keys) */
+                    wallet_id?: string;
+                };
+                header?: never;
+                path: {
+                    /** @description The ID of the cardholder to update */
+                    cardholder_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description Cardholder's first name */
+                        first_name?: string;
+                        /** @description Cardholder's last name */
+                        last_name?: string;
+                        /**
+                         * Format: email
+                         * @description Cardholder's email address
+                         */
+                        email?: string;
+                        /** @description Cardholder's phone number */
+                        phone?: string;
+                        /**
+                         * @description Cardholder's nationality as ISO 3166-1 alpha-3 country code
+                         * @example USA
+                         */
+                        nationality?: string;
+                        /** @enum {string} */
+                        gender?: "M" | "F";
+                        /** @enum {string} */
+                        cardholder_relationship?: "EMPLOYEE" | "CONTRACTOR";
+                        /** @enum {string} */
+                        gov_id_type?: "passport" | "id_card" | "driving_license" | "residence_permit_eu" | "residence_permit_ae" | "id_card_cn" | "id_card_hk";
+                        /** @description Identity document number (passport / driving licence / national ID). */
+                        gov_id_number?: string;
+                        /** @description 2-3 letter uppercase country code */
+                        gov_id_country?: string;
+                        /** Format: date */
+                        gov_id_issuance_date?: string;
+                        /** Format: date */
+                        gov_id_expiration_date?: string;
+                        /** @description Tax identifier (USA + Interlace CONSUMER: SSN, 9 digits or XXX-XX-XXXX) */
+                        tax_identification_number?: string;
+                        address?: {
+                            line1?: string;
+                            line2?: string;
+                            city?: string;
+                            state?: string;
+                            postal_code?: string;
+                            country?: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Cardholder updated successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["Cardholder"];
+                            /** @example Cardholder updated successfully */
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description Invalid request parameters */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Access denied to this cardholder */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Cardholder not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/api/issuing/cardholders/{cardholder_id}/documents": {
@@ -4519,7 +4643,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error (insufficient balance, virtual account missing, etc.) */
+                /** @description Validation error — invalid body, pair disabled by the exchange config, or calculated amount too small. Balance is checked only at approve. */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -4775,7 +4899,7 @@ export interface paths {
         };
         /**
          * Get order
-         * @description Retrieves a specific order by its numeric ID.
+         * @description Retrieves a specific order by its `id` (UUID; equal to `order_uuid` for orders created by the current flow).
          *
          *     **Authentication**: x-api-key header required
          *
@@ -4785,7 +4909,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    order_id: number;
+                    order_id: string;
                 };
                 cookie?: never;
             };
@@ -4836,8 +4960,10 @@ export interface paths {
          *     debits the funds (transaction written as `complete`) and triggers the
          *     order execution pipeline. Exchange orders (EXCHANGE_OMNI) and internal
          *     transfers (TRANSFER_INTERNAL / OMNIBUS_INTERNAL_TRANSFER) settle
-         *     synchronously and land in COMPLETE. An insufficient balance fails the
-         *     order (FAILED). Only orders with status NEW can be approved. Orders
+         *     synchronously and land in COMPLETE. An insufficient balance answers
+         *     400 `INSUFFICIENT_FUNDS` and releases the order back to NEW; FAILED is
+         *     reached only when a step after the debit fails. Only orders with
+         *     status NEW can be approved. Orders
          *     created with `scheduled_at` move to EXPECTED instead — no funds are
          *     debited until execution at the requested time.
          *
@@ -4854,7 +4980,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Order approved and processing started */
+                /** @description Order approved — PROCESSING for workflow rails, COMPLETE for exchange / internal transfers, EXPECTED for scheduled orders */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -4864,10 +4990,22 @@ export interface paths {
                             /** @example true */
                             success?: boolean;
                             data?: components["schemas"]["Order"];
-                            /** @example Order approved and processing started */
-                            message?: string;
                         };
                     };
+                };
+                /** @description Insufficient funds (`INSUFFICIENT_FUNDS` — the order is released back to NEW) or validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Order does not belong to the API key's wallet */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
                 /** @description Order not found */
                 404: {
@@ -4876,7 +5014,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Invalid status transition (order is not in NEW status) */
+                /** @description Order is not in an approvable state (`INVALID_STATE`), or another lifecycle call holds the order lock (`OPERATION_IN_PROGRESS`) */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -4886,7 +5024,7 @@ export interface paths {
                             /** @example false */
                             success?: boolean;
                             error?: {
-                                /** @example INVALID_STATUS_TRANSITION */
+                                /** @example INVALID_STATE */
                                 code?: string;
                                 message?: string;
                             };
@@ -4953,10 +5091,15 @@ export interface paths {
                             /** @example true */
                             success?: boolean;
                             data?: components["schemas"]["Order"];
-                            /** @example Order canceled successfully */
-                            message?: string;
                         };
                     };
+                };
+                /** @description Order does not belong to the API key's wallet */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
                 /** @description Order not found */
                 404: {
@@ -4965,7 +5108,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Invalid status transition */
+                /** @description Order is not in a cancelable state (`INVALID_STATE`), or another lifecycle call holds the order lock (`OPERATION_IN_PROGRESS`) */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -5111,7 +5254,7 @@ export interface paths {
         /**
          * Crypto
          * @description Sends crypto from the wallet's omnibus balance to an external blockchain
-         *     address (or another internal wallet) via a previously-created counterparty
+         *     address via a previously-created counterparty
          *     destination.
          *
          *     Two-phase: the order is created in `NEW` status without touching the
@@ -5122,7 +5265,7 @@ export interface paths {
          *     only through the internal transfer endpoint.
          *
          *     **Prerequisites:**
-         *     - A counterparty destination of type `CRYPTO_EXTERNAL` or `CRYPTO_INTERNAL`
+         *     - A counterparty destination of type `CRYPTO_EXTERNAL`
          *       created via `POST /api/counterparty/destinations`.
          *     - Sufficient balance in `from_currency_id` at approve time on the wallet
          *       bound to the API key.
@@ -5215,8 +5358,8 @@ export interface paths {
          * @description USD domestic Wire offramp. Funds are debited from the wallet's virtual account
          *     and sent to the bank counterparty destination.
          *
-         *     `wallet_id` is resolved from the API key. `virtual_account_id` may be
-         *     auto-resolved when omitted.
+         *     `wallet_id` is resolved from the API key. `virtual_account_id` is
+         *     required (there is no auto-resolution).
          *
          */
         post: {
@@ -5302,8 +5445,8 @@ export interface paths {
          * ACH
          * @description USD ACH offramp. Cheaper than Wire but slower (T+1..T+2 business days).
          *
-         *     `wallet_id` is resolved from the API key. `virtual_account_id` may be
-         *     auto-resolved when omitted.
+         *     `wallet_id` is resolved from the API key. `virtual_account_id` is
+         *     required (there is no auto-resolution).
          *
          */
         post: {
@@ -5388,7 +5531,7 @@ export interface paths {
         /**
          * SEPA
          * @description EUR SEPA offramp (SEPA / SEPA Instant depending on counterparty support).
-         *     The counterparty destination must be of type `BANK_SEPA`.
+         *     The counterparty destination must be of type `SEPA`.
          *
          */
         post: {
@@ -6943,7 +7086,7 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
-         * @description Order type identifier. Must be one of the active values from the `order_types` table. Examples: `EXCHANGE_OMNI` (omnibus exchange), `L2F_SWIFT_OFFRAMP` (SWIFT offramp), `OMNIBUS_CRYPTO_TRANSFER` (crypto withdrawal). Legacy `DEPOSIT_*`, `WITHDRAWAL_*` and `AUTO_CONVERT_CRYPTO` are intentionally excluded.
+         * @description Order type identifier. Must be one of the active values from the `order_types` table. Examples: `EXCHANGE_OMNI` (omnibus exchange), `BRL_WIRE_OFFRAMP` (wire offramp), `OMNIBUS_CRYPTO_TRANSFER` (crypto withdrawal). `L2F_*` ids are historical (rail retired) and cannot be used to create orders. Legacy `DEPOSIT_*`, `WITHDRAWAL_*` and `AUTO_CONVERT_CRYPTO` are intentionally excluded.
          * @example EXCHANGE_OMNI
          * @enum {string}
          */
@@ -7085,18 +7228,28 @@ export interface components {
             /** @description Per transaction amount spent */
             per_transaction_spent?: number;
         };
-        /** @description Sensitive card data */
+        /** @description Sensitive card data, live-fetched from the vendor on every call and never persisted. */
         CardSensitiveData: {
-            /** @description Full card number */
-            card_number?: string;
-            /** @description Card security code */
-            cvv?: string;
-            /** @description Card expiration month (MM) */
-            expiry_month?: string;
-            /** @description Card expiration year (YYYY) */
-            expiry_year?: string;
-            /** @description Card PIN (if applicable) */
-            pin?: string;
+            /**
+             * @description Full card number
+             * @example 4111111111111111
+             */
+            card_number: string;
+            /**
+             * @description Card expiration date, `MM/YY`
+             * @example 07/29
+             */
+            expiry_date: string;
+            /**
+             * @description Card security code
+             * @example 123
+             */
+            cvv: string;
+            /**
+             * @description 3-D Secure password where the vendor exposes one (Wallester); `null` otherwise.
+             * @example null
+             */
+            security_code: string | null;
         };
         /** @description Card transaction */
         IssuingTransaction: {
@@ -7903,7 +8056,7 @@ export interface components {
             meta?: Record<string, never> | null;
             currency?: components["schemas"]["CurrencyRef"];
         };
-        /** @description Filtered order metadata (only public fields) */
+        /** @description Order metadata. List and single-read responses reduce it to the public allowlist; create/approve/cancel responses return the stored meta minus scheduler-internal keys */
         OrderMeta: {
             /** Format: uuid */
             request_id?: string | null;
@@ -8022,7 +8175,7 @@ export interface components {
             to_currency_id?: string;
             /**
              * Format: uuid
-             * @description UUID of a `CRYPTO_EXTERNAL` or `CRYPTO_INTERNAL` counterparty destination previously created via `POST /api/counterparty/destinations`.
+             * @description UUID of a `CRYPTO_EXTERNAL` counterparty destination previously created via `POST /api/counterparty/destinations`.
              * @example b2f3d8c1-4a7e-4d22-9c5f-1e6a8d0b2a44
              */
             counterparty_destination_id: string;
@@ -8073,13 +8226,13 @@ export interface components {
             to_currency_id?: string;
             /**
              * Format: uuid
-             * @description Virtual account UUID used as the funding source for the off-ramp. May be auto-resolved by the platform if omitted, but providing it explicitly is recommended.
+             * @description Virtual account UUID used as the funding source for the off-ramp (required; the order type is resolved from its program).
              * @example 11111111-2222-3333-4444-555555555555
              */
             virtual_account_id: string;
             /**
              * Format: uuid
-             * @description Bank counterparty destination UUID created via `POST /api/counterparty/destinations`. The destination type must match the rail (WIRE/ACH/SEPA/SWIFT/CHAPS/FPS).
+             * @description Bank counterparty destination UUID created via `POST /api/counterparty/destinations`. The destination type must match the rail (FEDWIRE for wire, ACH, SEPA, SWIFT, CHAPS, FPS).
              * @example b2f3d8c1-4a7e-4d22-9c5f-1e6a8d0b2a44
              */
             counterparty_destination_id: string;

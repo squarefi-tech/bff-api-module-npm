@@ -29,7 +29,7 @@ export const frontend = {
       list: ({
         status,
         ...params
-      }: API.Frontend.Issuing.Cards.List.Request = {}): Promise<API.Frontend.Issuing.Cards.List.Response> =>
+      }: API.Frontend.Issuing.Cards.List.Request): Promise<API.Frontend.Issuing.Cards.List.Response> =>
         apiClientV1Frontend.getRequest<API.Frontend.Issuing.Cards.List.Response>('/frontend/issuing/cards', {
           params: status?.length ? { ...params, status: status.join(',') } : params,
         }),
@@ -144,7 +144,7 @@ export const frontend = {
     // parameter for access validation.
     cardholders: {
       list: (
-        params: API.Frontend.Issuing.Cardholders.List.Request = {},
+        params: API.Frontend.Issuing.Cardholders.List.Request,
       ): Promise<API.Frontend.Issuing.Cardholders.List.Response> =>
         apiClientV1Frontend.getRequest<API.Frontend.Issuing.Cardholders.List.Response>(
           '/frontend/issuing/cardholders',
@@ -248,7 +248,7 @@ export const frontend = {
       // cardholder KYC bar). `ids` (comma-separated) makes it a targeted read of specific
       // sub-accounts — prefer that over `getById`, whose shape varies with the vendor.
       getAll: (
-        params: API.Frontend.Issuing.SubAccounts.List.Request = {},
+        params: API.Frontend.Issuing.SubAccounts.List.Request,
       ): Promise<API.Frontend.Issuing.SubAccounts.List.Response> =>
         apiClientV1Frontend.getRequest<API.Frontend.Issuing.SubAccounts.List.Response>(
           '/frontend/issuing/sub-accounts',
