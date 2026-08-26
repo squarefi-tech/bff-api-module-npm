@@ -4237,6 +4237,8 @@ export interface paths {
                  *     - Missing required fields
                  *     - Invalid reference_id format
                  *     - Invalid amount (must be positive number)
+                 *     - `TOPUP_BELOW_MINIMUM` — credited amount is below the program's
+                 *       `min_topup` threshold (`error.details.min_topup`, program currency)
                  *      */
                 400: {
                     headers: {

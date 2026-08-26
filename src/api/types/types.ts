@@ -150,6 +150,17 @@ export namespace API {
         card_issuing_fee: number | null;
         card_monthly_fee: number | null;
         initial_topup: number | null;
+        /**
+         * Minimum top-up in the program's currency, compared against the amount
+         * CREDITED to the card (after fees and conversion) — the same figure the
+         * server checks before it refuses a deposit with `TOPUP_BELOW_MINIMUM`.
+         * `0` means the program sets no minimum. Does not apply to the initial
+         * top-up at issuance.
+         *
+         * Optional on the type because programs served by a backend older than
+         * the `issuing_programs.min_topup` migration omit it.
+         */
+        min_topup?: number;
         status?: IssuingProgramStatus | string;
       }
     }
@@ -314,7 +325,35 @@ export namespace API {
       adjustment_type: string;
       review_status: string;
       group: string;
+      /**
+       * What actually left the card: `billing_amount` plus `fee` for a debit
+       * (minus it for a credit, which arrives net of what the vendor keeps).
+       * Equals `billing_amount` when no fee sits inside the operation, so it is
+       * the figure to show as the transaction's amount.
+       */
       total_amount: number;
+      /**
+       * Fee charged INSIDE this operation, in billing currency. `0` for vendors
+       * that bill fees as their own transactions — those arrive as separate rows
+       * with `transaction_type: FEE`. Optional: older backends omit it.
+       */
+      fee?: number;
+      /** Vendor's itemisation of `fee`; empty when it gave none. */
+      fee_details?: TransactionFee[];
+      /**
+       * Units of billing currency per unit of transaction currency, so
+       * `transaction_amount * conversion_rate ≈ billing_amount`. 1 when the
+       * currencies match.
+       */
+      conversion_rate?: number;
+    }
+
+    /** One line of a transaction's fee itemisation (`TransactionItem.fee_details`). */
+    export interface TransactionFee {
+      amount: number;
+      currency: string;
+      /** Vendor's own fee code — no cross-vendor meaning. */
+      type: string | null;
     }
 
     export interface TransactionsList {
