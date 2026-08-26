@@ -455,6 +455,7 @@ export const counterpartyTypeCheck: IsEnumEqualToUnion<CounterpartyType, API.Cou
 export enum CounterpartyDestinationType {
   FEDWIRE = 'FEDWIRE',
   ACH = 'ACH',
+  RTP = 'RTP',
   SWIFT = 'SWIFT',
   SEPA = 'SEPA',
   CRYPTO_EXTERNAL = 'CRYPTO_EXTERNAL',
@@ -471,6 +472,7 @@ export const counterpartyBankingDestinationTypes: Record<
 > = {
   FEDWIRE: CounterpartyDestinationType.FEDWIRE,
   ACH: CounterpartyDestinationType.ACH,
+  RTP: CounterpartyDestinationType.RTP,
   SWIFT: CounterpartyDestinationType.SWIFT,
   SEPA: CounterpartyDestinationType.SEPA,
   CHAPS: CounterpartyDestinationType.CHAPS,

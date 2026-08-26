@@ -7,25 +7,97 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`squarefi_bff_api_client.massPayouts` — the mass-payouts client (SFI-1528 / SFI-1503).** The `/frontend/mass-payouts/*` surface has been in the generated types for several releases but was reachable from nowhere: there was no `API.*` namespace, no client method, and the package `exports` map is `"." only`, so a consumer could not deep-import the autogen types either. This release wires all 15 operations up through the package root. Batch lifecycle: `list` (filter by `status` / `name` / `date_from` / `date_to`, paginated), `create` (DRAFT — `currency_id`, `name`, `items[]`, optional `virtual_account_id` and `scheduled_at`), `getById`, `update` (draft-only; `items` fully replaces the recipient list, `virtual_account_id: null` clears the source account and `scheduled_at: null` drops the schedule), `items` (per-row tracker, filterable by item status), `preview` (dry run: per-item fee estimates, total debit, balance check and the `problems[]` that would block a submit), `submit`, `approve`, `cancel`, and `reportCsv`. Templates — reusable recipient lists a draft can be seeded from — under `massPayouts.templates`: `list`, `create`, `getById`, `update` (`items` fully replaces the rows; `virtual_account_id: null` clears the account) and `delete`. Every method is wallet-scoped: `wallet_id` is part of the request object and travels in the path, matching the `counterparties` and `frontend.issuing` conventions.
+- **`massPayouts.reportCsv` returns the raw CSV body as a `string`, not the JSON envelope.** `GET …/{id}/report.csv` answers `text/csv`, so the method asks for `responseType: 'text'` and is typed off the spec's `text/csv` content rather than `application/json`. It stays on the axios frontend client (not the native fetch client used by `statements`) because that client is the only one with the Bearer variant and the 401-refresh every other `/frontend/*` call depends on.
+- **`API.MassPayouts` types**, all derived from the generated spec — no hand-written copies. Operations mirror the client (`List`, `Create`, `GetById`, `Update`, `Items`, `Preview`, `Submit`, `Approve`, `Cancel`, `ReportCsv`, `Templates.{List, Create, GetById, Update, Delete}`), and the schemas are exported as `MassPayout`, `MassPayoutItem`, `MassPayoutItemInput`, `MassPayoutDocument`, `MassPayoutCurrencyTotal`, `MassPayoutTemplate`, `MassPayoutTemplateItem`, `MassPayoutTemplateItemInput` and `MassPayoutTemplateWithItems`. The status unions (`MassPayoutStatus` — `DRAFT | PENDING_APPROVAL | SCHEDULED | PROCESSING | COMPLETED | FAILED | CANCELED`; `MassPayoutItemStatus` — `PENDING | PROCESSING | COMPLETED | FAILED | CANCELED`; `MassPayoutDocumentType` — `INVOICE | DOCUMENT`) are read off the schema fields, so a spec change lands automatically instead of drifting. `Preview.PreviewProblem` is the declared home for the per-row problem shape the submit refusal also returns in `error.details.problems` — the spec types the error envelope's `details` as free-form.
+- **Mass-payout templates in the generated types.** The regeneration adds `/frontend/mass-payouts/{wallet_id}/templates` and `…/templates/{template_id}` (the eight batch paths were already present), along with the `MassPayoutTemplate*` schemas.
+
+### Changed
+
+- **`frontend.issuing.cards.list`, `frontend.issuing.cardholders.list` and `frontend.issuing.subAccounts.getAll` now require an argument.** The regenerated spec makes `wallet_id` a required query parameter on all three, so the no-argument call form (`list()`) is gone and callers must pass at least `{ wallet_id }`. This is a compile-time break for consumers that relied on the default — the requests were already being rejected at runtime.
+- **The counterparty destination type gains the `RTP` rail.** `API.Counterparties.Destination.CounterpartyDestinationType` and `BankingDestinationType`, the `CounterpartyDestinationType` enum and the `counterpartyBankingDestinationTypes` map all carry `RTP` now, keeping the enum/union equality assertions in `constants.ts` satisfied.
+- **Regenerated all four OpenAPI type files from the dev specs** (frontend, external, legacy, tenant). Besides mass payouts this pulls in unrelated spec work in progress — invoices, notification preferences and assorted field changes — as this repo's regenerations always do.
+
+### Fixed
+
+- **The retired L2F rail no longer breaks the build.** The spec renamed `FrontendL2FOrderRequest` to `FrontendFiatWithdrawalRequest` (identical shape; the `L2F_*` order-type ids are historical and can no longer create orders), so the six `API.Orders.Create.ByOrderType.*` withdrawal aliases — `Wire`, `Ach`, `Sepa`, `Swift`, `Chaps`, `Fps` — now point at the new schema name. Public type names and shapes are unchanged.
+
 ## [1.36.51] - 2026-08-21
+
+### Added
+
+- **`NEEDS_RESUBMIT` cardholder eligibility verdict, with `reject_reason` (SFI-2148).** A cardholder the vendor pushed back now gets a verdict of its own carrying the reason, so a client can show what went wrong before asking for a correction instead of dead-ending on a generic rejection. `required_level` also gains the `declared` level it always could return.
 
 ## [1.36.50] - 2026-08-20
 
+### Removed
+
+- **`frontend.issuing.cards.sensitive` (SFI-2148).** The plaintext method answered with the PAN/CVV in a readable body — a footgun on the browser surface, where a stolen bearer token would turn into card data with a single GET. It shipped in 1.36.47 and no consumer adopted it; `cards.sensitiveEncrypted` covers the same need over the RSA/AES channel. Server-to-server callers keep the plaintext variant on the API-key surface (`/api/issuing/cards/{card_id}/sensitive`).
+
 ## [1.36.49] - 2026-08-20
+
+### Changed
+
+- **`IssuingTransaction` core fields are now required (SFI-2148).** Regenerated from the dev spec; consumers no longer have to null-check the fields the endpoint always returns.
 
 ## [1.36.48] - 2026-08-20
 
+### Added
+
+- **`frontend.issuing.cards.sensitiveEncrypted` (SFI-2148)** — the RSA/AES exchange against `POST /frontend/issuing/cards/{card_id}/sensitive/secretkey`, matching the legacy `sensitiveData.encrypted.secretKey`. The plaintext `sensitive` method is documented as server-to-server only (and removed outright in 1.36.50).
+- **`Cards.List.Request` gains the `sub_account_id` filter.**
+
+### Changed
+
+- **The card's `sub_account` embed natively carries `currency`, `issuing_program` (with `order_types`) and `account_details`**, so the card list no longer needs a second lookup to render program details.
+
 ## [1.36.47] - 2026-08-20
+
+### Added
+
+- **The frontend issuing client is complete (SFI-2129).** Wraps the frontend routes that already existed on the backend but had no client method, so a consumer can leave the legacy `issuing.*` namespace: `cards.getById`, `cards.update` (rename), `cards.close`, `cards.freeze`, `cards.unfreeze`, `cards.limits.update`, `cards.sensitive`, `cards.transactions`, plus `subAccounts.create` and `subAccounts.transactions`. All types derive from the deployed spec. Not covered for want of a frontend route: transaction CSV export, and filtering the cards list by `sub_account_id`.
 
 ## [1.36.46] - 2026-08-20
 
+### Added
+
+- **`frontend.issuing.subAccounts.getAll` / `getById` (SFI-2129).** The list is the stable local-first shape (`fiat_accounts` + computed balances + the program embed), and the regenerated types carry `issuing_program.cardholder_requirements` natively — so a client can read a program's cardholder KYC bar straight off the sub-account even when the program is hidden from its config listing. `ids` (comma-separated) turns the list into a targeted read; `getById` is kept but its shape varies with the vendor, so prefer the list.
+
 ## [1.36.45] - 2026-08-20
+
+### Changed
+
+- **Regenerated `config/programs` from dev (SFI-2129).** The backend now documents `wallet_id` on both routes and the full program field set on `byId` (status / card limit / tokenizable / fees / UI fields, the same required set as the list), so the hand-widened `wallet_id` on `List.Request` is dropped. Adds `Get.Data` for the `byId` payload, where `order_types` takes the detailed `{ id, tokens }` form.
 
 ## [1.36.44] - 2026-08-20
 
+### Changed
+
+- **`Program`, `CardholderRequirements`, `CardholderKycLevel` and `CountryRule` are derived from the spec (SFI-2129).** The dev backend documents `cardholder_requirements`, `kyc_rails_id` and the required core fields on `/frontend/issuing/config/programs`, so the hand-written bridge is gone. Public type names are unchanged.
+
 ## [1.36.43] - 2026-08-20
 
+### Added
+
+- **`frontend.issuing.config.programs.getAll` / `getById` (SFI-2129)** — the frontend program catalogue. Unlike the legacy `issuing.config.programs` it carries each program's `cardholder_requirements` (the per-program cardholder KYC bar) and keeps `kyc_rails_id` for the wallet's rail-status filter. `cardholder_requirements` and `kyc_rails_id` are hand-added for forward compatibility until the deployed spec documents them on this route.
+
+### Changed
+
+- **`Eligibility.Verdict` gains `NEEDS_VERIFICATION_UPGRADE` and `Item` gains `required_level`**, so consumers no longer hand-widen the verdict.
+
 ## [1.36.41] - 2026-08-19
+
+### Added
+
+- **`frontend.issuing.cardholders.update` (SFI-2129)** — `PATCH` the draft dossier (address / phone / email / tax id / `gov_id_*`), driven by `missing_kyc_fields`.
+- **`frontend.issuing.cardholders.eligibility` (SFI-2129)** — batch member verdicts for pickers (`READY` / `DRAFT` / `CAN_CREATE` / `PENDING` / `NEEDS_VERIFICATION` / `NOT_MEMBER`) with the `will_require` projection.
+- **`frontend.issuing.cards.create` (SFI-2129)** — the unified `POST /frontend/issuing/cards`: routes prepaid/balance by the program, resolves the cardholder from `cardholder_id` or `assigned_user_data_uuid`, and carries the fee / top-up fields (`initial_topup`, `currency_id`, `request_id`).
+
+### Changed
+
+- **The `Cardholder` type is widened to the real wire shape** — `status`, address, `gov_id_*`, tax id, `kyc_documents`, vendor fields, `missing_kyc_fields` and `user_data_uuid`.
 
 ## [1.36.40] - 2026-08-18
 

@@ -454,6 +454,7 @@ export namespace API {
       export type BankingDestinationType =
         | Extract<CounterpartyDestinationType, 'FEDWIRE'>
         | Extract<CounterpartyDestinationType, 'ACH'>
+        | Extract<CounterpartyDestinationType, 'RTP'>
         | Extract<CounterpartyDestinationType, 'SWIFT'>
         | Extract<CounterpartyDestinationType, 'SEPA'>
         | Extract<CounterpartyDestinationType, 'CHAPS'>
@@ -1788,6 +1789,156 @@ export namespace API {
       }
     }
   }
+  /**
+   * Mass payouts (SFI-1528): a wallet-scoped batch of payouts to existing counterparty
+   * destinations. A batch is created as a DRAFT, freely edited and previewed, then submitted
+   * and approved — nothing moves until approval. Templates are reusable recipient lists
+   * (no documents, no schedule) a draft can be seeded from.
+   *
+   * Every path is scoped by the source `wallet_id`, so each Request carries it alongside the
+   * query/body. Responses are the frontend `{ success, data }` envelope as the spec declares it.
+   */
+  export namespace MassPayouts {
+    type BatchesRoot = pathsV1Frontend['/frontend/mass-payouts/{wallet_id}'];
+    type BatchRoot = pathsV1Frontend['/frontend/mass-payouts/{wallet_id}/{id}'];
+    type BatchItemsRoot = pathsV1Frontend['/frontend/mass-payouts/{wallet_id}/{id}/items'];
+    type BatchPreviewRoot = pathsV1Frontend['/frontend/mass-payouts/{wallet_id}/{id}/preview'];
+    type BatchSubmitRoot = pathsV1Frontend['/frontend/mass-payouts/{wallet_id}/{id}/submit'];
+    type BatchApproveRoot = pathsV1Frontend['/frontend/mass-payouts/{wallet_id}/{id}/approve'];
+    type BatchCancelRoot = pathsV1Frontend['/frontend/mass-payouts/{wallet_id}/{id}/cancel'];
+    type BatchReportCsvRoot = pathsV1Frontend['/frontend/mass-payouts/{wallet_id}/{id}/report.csv'];
+    type TemplatesRoot = pathsV1Frontend['/frontend/mass-payouts/{wallet_id}/templates'];
+    type TemplateRoot = pathsV1Frontend['/frontend/mass-payouts/{wallet_id}/templates/{template_id}'];
+
+    /** The batch itself: progress counters, totals and the approval/schedule state. */
+    export type MassPayout = componentsV1Frontend['schemas']['MassPayout'];
+    /** A stored recipient row, with its own status and the order created for it at execution. */
+    export type MassPayoutItem = componentsV1Frontend['schemas']['MassPayoutItem'];
+    /** A recipient row as written on create/update. */
+    export type MassPayoutItemInput = componentsV1Frontend['schemas']['MassPayoutItemInput'];
+    /** Supporting attachment; an `INVOICE` satisfies the invoice rule for large rows. */
+    export type MassPayoutDocument = componentsV1Frontend['schemas']['MassPayoutDocument'];
+    /** Exact recipient total for one payout currency (cross-currency rows are listed here). */
+    export type MassPayoutCurrencyTotal = componentsV1Frontend['schemas']['MassPayoutCurrencyTotal'];
+    export type MassPayoutTemplate = componentsV1Frontend['schemas']['MassPayoutTemplate'];
+    export type MassPayoutTemplateItem = componentsV1Frontend['schemas']['MassPayoutTemplateItem'];
+    export type MassPayoutTemplateItemInput = componentsV1Frontend['schemas']['MassPayoutTemplateItemInput'];
+    export type MassPayoutTemplateWithItems = componentsV1Frontend['schemas']['MassPayoutTemplateWithItems'];
+
+    /**
+     * Status unions read off the schemas rather than re-declared, so a spec change lands here
+     * automatically. `SCHEDULED` = approved with a future send date; `CANCELED` on an item means
+     * it was never attempted.
+     */
+    export type MassPayoutStatus = NonNullable<MassPayout['status']>;
+    export type MassPayoutItemStatus = NonNullable<MassPayoutItem['status']>;
+    export type MassPayoutDocumentType = MassPayoutDocument['type'];
+
+    export namespace List {
+      export type Request = BatchesRoot['get']['parameters']['path'] &
+        NonNullable<BatchesRoot['get']['parameters']['query']>;
+      export type Response = BatchesRoot['get']['responses']['200']['content']['application/json'];
+    }
+
+    export namespace Create {
+      export type Request = BatchesRoot['post']['parameters']['path'] &
+        BatchesRoot['post']['requestBody']['content']['application/json'];
+      export type Response = BatchesRoot['post']['responses']['200']['content']['application/json'];
+    }
+
+    export namespace GetById {
+      export type Request = BatchRoot['get']['parameters']['path'];
+      export type Response = BatchRoot['get']['responses']['200']['content']['application/json'];
+    }
+
+    /**
+     * Draft-only. `items` fully replaces the recipient list; `virtual_account_id: null` clears the
+     * source virtual account and `scheduled_at: null` makes the batch execute right after approval.
+     */
+    export namespace Update {
+      export type Request = BatchRoot['put']['parameters']['path'] &
+        BatchRoot['put']['requestBody']['content']['application/json'];
+      export type Response = BatchRoot['put']['responses']['200']['content']['application/json'];
+    }
+
+    export namespace Items {
+      export type Request = BatchItemsRoot['get']['parameters']['path'] &
+        NonNullable<BatchItemsRoot['get']['parameters']['query']>;
+      export type Response = BatchItemsRoot['get']['responses']['200']['content']['application/json'];
+    }
+
+    /**
+     * Dry run before submitting: per-item fee estimates, the total debit in the batch source
+     * currency and the balance check, plus `problems[]` for the rows that would block a submit.
+     */
+    export namespace Preview {
+      export type Request = BatchPreviewRoot['get']['parameters']['path'];
+      export type Response = BatchPreviewRoot['get']['responses']['200']['content']['application/json'];
+      export type PreviewItem = NonNullable<NonNullable<Response['data']>['items']>[number];
+      /**
+       * The same shape the submit refusal returns in `error.details.problems` — the spec types the
+       * error envelope's `details` as free-form, so this is the one declared home for it.
+       */
+      export type PreviewProblem = NonNullable<NonNullable<Response['data']>['problems']>[number];
+    }
+
+    /** DRAFT to PENDING_APPROVAL. Refused while any recipient is invalid. */
+    export namespace Submit {
+      export type Request = BatchSubmitRoot['post']['parameters']['path'];
+      export type Response = BatchSubmitRoot['post']['responses']['200']['content']['application/json'];
+    }
+
+    /** Approve and start execution (or arm the schedule when `scheduled_at` is set). */
+    export namespace Approve {
+      export type Request = BatchApproveRoot['post']['parameters']['path'];
+      export type Response = BatchApproveRoot['post']['responses']['200']['content']['application/json'];
+    }
+
+    export namespace Cancel {
+      export type Request = BatchCancelRoot['post']['parameters']['path'];
+      export type Response = BatchCancelRoot['post']['responses']['200']['content']['application/json'];
+    }
+
+    /** Streaming `text/csv`, not the JSON envelope — the response is the raw CSV body. */
+    export namespace ReportCsv {
+      export type Request = BatchReportCsvRoot['get']['parameters']['path'];
+      export type Response = BatchReportCsvRoot['get']['responses']['200']['content']['text/csv'];
+    }
+
+    export namespace Templates {
+      export namespace List {
+        export type Request = TemplatesRoot['get']['parameters']['path'] &
+          NonNullable<TemplatesRoot['get']['parameters']['query']>;
+        export type Response = TemplatesRoot['get']['responses']['200']['content']['application/json'];
+      }
+
+      export namespace Create {
+        export type Request = TemplatesRoot['post']['parameters']['path'] &
+          TemplatesRoot['post']['requestBody']['content']['application/json'];
+        export type Response = TemplatesRoot['post']['responses']['200']['content']['application/json'];
+      }
+
+      export namespace GetById {
+        export type Request = TemplateRoot['get']['parameters']['path'];
+        export type Response = TemplateRoot['get']['responses']['200']['content']['application/json'];
+      }
+
+      /**
+       * `items` fully replaces the row list; `virtual_account_id: null` clears the template's
+       * source account.
+       */
+      export namespace Update {
+        export type Request = TemplateRoot['put']['parameters']['path'] &
+          TemplateRoot['put']['requestBody']['content']['application/json'];
+        export type Response = TemplateRoot['put']['responses']['200']['content']['application/json'];
+      }
+
+      export namespace Delete {
+        export type Request = TemplateRoot['delete']['parameters']['path'];
+        export type Response = TemplateRoot['delete']['responses']['200']['content']['application/json'];
+      }
+    }
+  }
   export namespace Orders {
     export namespace Create {
       export namespace ByOrderType {
@@ -2824,32 +2975,32 @@ export namespace API {
           }
 
           export namespace Wire {
-            export type Request = componentsV1Frontend['schemas']['FrontendL2FOrderRequest'];
+            export type Request = componentsV1Frontend['schemas']['FrontendFiatWithdrawalRequest'];
             export type Response = OrderEnvelope;
           }
 
           export namespace Ach {
-            export type Request = componentsV1Frontend['schemas']['FrontendL2FOrderRequest'];
+            export type Request = componentsV1Frontend['schemas']['FrontendFiatWithdrawalRequest'];
             export type Response = OrderEnvelope;
           }
 
           export namespace Sepa {
-            export type Request = componentsV1Frontend['schemas']['FrontendL2FOrderRequest'];
+            export type Request = componentsV1Frontend['schemas']['FrontendFiatWithdrawalRequest'];
             export type Response = OrderEnvelope;
           }
 
           export namespace Swift {
-            export type Request = componentsV1Frontend['schemas']['FrontendL2FOrderRequest'];
+            export type Request = componentsV1Frontend['schemas']['FrontendFiatWithdrawalRequest'];
             export type Response = OrderEnvelope;
           }
 
           export namespace Chaps {
-            export type Request = componentsV1Frontend['schemas']['FrontendL2FOrderRequest'];
+            export type Request = componentsV1Frontend['schemas']['FrontendFiatWithdrawalRequest'];
             export type Response = OrderEnvelope;
           }
 
           export namespace Fps {
-            export type Request = componentsV1Frontend['schemas']['FrontendL2FOrderRequest'];
+            export type Request = componentsV1Frontend['schemas']['FrontendFiatWithdrawalRequest'];
             export type Response = OrderEnvelope;
           }
         }

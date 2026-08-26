@@ -1310,13 +1310,45 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Sensitive card details retrieved successfully */
+                /** @description Sensitive card details retrieved successfully.
+                 *
+                 *     This legacy surface answers with a BARE object — no `{ success, data }` envelope —
+                 *     and splits the vendor's `MM/YY` expiry into `expiry_month` / `expiry_year`.
+                 *     The `/api` and `/admin` surfaces return the envelope and the raw `expiry_date`
+                 *     instead (`CardSensitiveData`), so the two shapes are not interchangeable.
+                 *      */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["CardSensitiveData"];
+                        "application/json": {
+                            /**
+                             * @description Full card number
+                             * @example 4111111111111111
+                             */
+                            card_number: string;
+                            /**
+                             * @description Card security code
+                             * @example 123
+                             */
+                            cvv: string;
+                            /**
+                             * @description Card expiration month (MM)
+                             * @example 07
+                             */
+                            expiry_month: string;
+                            /**
+                             * @description Card expiration year, as the vendor's two-digit YY
+                             * @example 29
+                             */
+                            expiry_year: string;
+                            /**
+                             * @description 3-D Secure password where the vendor exposes one (Wallester); null otherwise
+                             * @example null
+                             */
+                            security_code: string | null;
+                        };
                     };
                 };
                 /** @description Server Error */
@@ -1349,7 +1381,14 @@ export interface paths {
         put?: never;
         /**
          * Get encrypted sensitive card details
-         * @description Retrieves sensitive information about a specific card including full card number, CVV, and expiry date. The response is encrypted using the provided public key.
+         * @description Retrieves sensitive information about a specific card including full card number, CVV, and expiry date.
+         *     The response is encrypted using the provided public key.
+         *
+         *     Decrypting `data` with the matching private key yields
+         *     `{ success, data: { card_number, cvv, expiry_month, expiry_year, security_code } }` —
+         *     the same split-expiry shape the plaintext legacy `GET .../sensitive` returns, NOT the
+         *     `expiry_date` form of `CardSensitiveData` on the `/api` and `/admin` surfaces.
+         *
          */
         post: {
             parameters: {
@@ -7417,7 +7456,7 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
-         * @description Order type identifier. Must be one of the active values from the `order_types` table. Examples: `EXCHANGE_OMNI` (omnibus exchange), `L2F_SWIFT_OFFRAMP` (SWIFT offramp), `OMNIBUS_CRYPTO_TRANSFER` (crypto withdrawal). Legacy `DEPOSIT_*`, `WITHDRAWAL_*` and `AUTO_CONVERT_CRYPTO` are intentionally excluded.
+         * @description Order type identifier. Must be one of the active values from the `order_types` table. Examples: `EXCHANGE_OMNI` (omnibus exchange), `BRL_WIRE_OFFRAMP` (wire offramp), `OMNIBUS_CRYPTO_TRANSFER` (crypto withdrawal). `L2F_*` ids are historical (rail retired) and cannot be used to create orders. Legacy `DEPOSIT_*`, `WITHDRAWAL_*` and `AUTO_CONVERT_CRYPTO` are intentionally excluded.
          * @example EXCHANGE_OMNI
          * @enum {string}
          */
@@ -8283,7 +8322,6 @@ export interface components {
         Country: unknown;
         IssuingCardList: unknown;
         IssuingCard: unknown;
-        CardSensitiveData: unknown;
         CardLimitsUpdateRequest: unknown;
         IssuingCardLimits: unknown;
         CardUpdateRequest: unknown;

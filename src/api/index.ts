@@ -7,6 +7,7 @@ import { frontend } from './frontend';
 import { issuing } from './issuing';
 import { kyc } from './kyc';
 import { list } from './list';
+import { massPayouts } from './mass-payouts';
 import { orders } from './orders';
 import { referrals } from './referrals';
 import { statements } from './statements';
@@ -27,6 +28,7 @@ type Api = {
   issuing: typeof issuing;
   kyc: typeof kyc;
   list: typeof list;
+  massPayouts: typeof massPayouts;
   orders: typeof orders;
   referrals: typeof referrals;
   statements: typeof statements;
@@ -48,6 +50,7 @@ export const squarefi_bff_api_client: Api = {
   issuing,
   kyc,
   list,
+  massPayouts,
   orders,
   referrals,
   statements,

@@ -13,7 +13,7 @@ export interface paths {
         };
         /**
          * List API keys
-         * @description Returns a list of all API keys for the authenticated user.
+         * @description Returns the API keys of every wallet where the caller is `owner` or `admin` (other memberships are skipped).
          *
          *     **Authentication**: Bearer token and x-tenant-id header required
          *
@@ -64,7 +64,7 @@ export interface paths {
         put?: never;
         /**
          * Create API key
-         * @description Creates a new API key for the authenticated user.
+         * @description Creates a new API key for `wallet_id`. The caller must be `owner` or `admin` of that wallet.
          *
          *     **Authentication**: Bearer token and x-tenant-id header required
          *
@@ -134,6 +134,13 @@ export interface paths {
                 };
                 /** @description Invalid request data */
                 400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Caller is not owner/admin of the wallet */
+                403: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -300,7 +307,7 @@ export interface paths {
         };
         /**
          * List webhooks
-         * @description Returns a list of all webhook URLs configured for the user's wallets.
+         * @description Returns the webhooks of every wallet where the caller is `owner` or `admin`; a `wallet_id` filter outside that set answers 403.
          *
          *     Webhook URLs receive notifications about card transactions (authorizations, clearings, OTP).
          *
@@ -410,10 +417,10 @@ export interface paths {
          *         "otp": null,
          *         "cardholder": {
          *           "id": "uuid",
-         *           "first_name": "Paul",
-         *           "last_name": "Kashuba",
+         *           "first_name": "Jane",
+         *           "last_name": "Doe",
          *           "phone": "+15551234567",
-         *           "email": "p.kashuba@gmail.com",
+         *           "email": "jane.doe@example.com",
          *           "kyc_level": "basic"
          *         },
          *         "sub_account": {
@@ -578,7 +585,7 @@ export interface paths {
                                 /** Format: uuid */
                                 id?: string;
                                 /** @enum {string} */
-                                status?: "completed" | "failed";
+                                status?: "pending" | "processing" | "completed" | "failed";
                                 error_message?: string | null;
                                 /** Format: date-time */
                                 created_at?: string;
@@ -766,8 +773,8 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            /** @example Webhook deleted successfully */
-                            message?: string;
+                            /** @example null */
+                            data?: Record<string, never> | null;
                         };
                     };
                 };
@@ -1137,6 +1144,15 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Validation error (missing name/type, invalid fields) or wallet not found */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
                 /** @description Access denied */
                 403: {
                     headers: {
@@ -1331,7 +1347,7 @@ export interface paths {
             parameters: {
                 query?: {
                     counterparty_account_id?: string;
-                    type?: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE";
+                    type?: "ACH" | "RTP" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
                     offset?: number;
                     limit?: number;
                 };
@@ -1622,7 +1638,7 @@ export interface paths {
         put?: never;
         /**
          * Create destination
-         * @description counterparty_account_id in body. User must have access to the account's wallet.
+         * @description counterparty_account_id in body. Caller must be owner or admin of the account's wallet and the wallet's KYC must be APPROVED; other members receive 403.
          *
          *     **Banking types**: banking_data required
          *     **Crypto types**: crypto_data required
@@ -1642,7 +1658,7 @@ export interface paths {
                         /** Format: uuid */
                         counterparty_account_id: string;
                         /** @enum {string} */
-                        type: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
+                        type: "ACH" | "RTP" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
                         nickname?: string;
                         banking_data?: Record<string, never>;
                         crypto_data?: Record<string, never>;
@@ -1675,6 +1691,15 @@ export interface paths {
                                 message: string;
                             };
                         };
+                    };
+                };
+                /** @description Validation error (type-specific payload missing or invalid, target wallet inactive, or the address country contradicts the bank code country — error code BANK_COUNTRY_MISMATCH) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
                 /** @description Access denied */
@@ -2038,6 +2063,598 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/frontend/invoices/{wallet_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List invoices of a wallet
+         * @description Newest first. `status` also accepts the derived OVERDUE; SENT and PARTIALLY_PAID then exclude their overdue rows, so the filterable statuses partition the list.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    status?: "DRAFT" | "SENT" | "PARTIALLY_PAID" | "PAID" | "OVERDUE";
+                    counterparty_account_id?: string;
+                    /** @description Creation date lower bound (inclusive) */
+                    from_date?: string;
+                    /** @description Creation date upper bound (inclusive) */
+                    to_date?: string;
+                    /** @description Matches the invoice number, recipient name or notes */
+                    search?: string;
+                    limit?: number;
+                    offset?: number;
+                };
+                header?: never;
+                path: {
+                    /** @description Wallet the invoices belong to */
+                    wallet_id: components["parameters"]["InvoiceWalletId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Page of invoices */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["Invoice"][];
+                            pagination?: components["schemas"]["PaginationResponse"];
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Create an invoice draft
+         * @description Creates a draft invoice: currency, line items and optionally the
+         *     recipient (a counterparty account), a manual invoice number, a due
+         *     date and free-form notes. When the number is omitted the backend
+         *     generates <prefix>-<n>: the prefix is the first two vowels of the
+         *     tenant name, n continues the tenant-wide invoice sequence. The total
+         *     is computed from the items. Nothing is emailed until the invoice is
+         *     sent. Requires an
+         *     administrative role on the wallet.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Wallet the invoices belong to */
+                    wallet_id: components["parameters"]["InvoiceWalletId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        counterparty_account_id?: string;
+                        invoice_number?: string;
+                        /** Format: uuid */
+                        currency_id: string;
+                        /** Format: date */
+                        due_date?: string;
+                        description?: string;
+                        items: components["schemas"]["InvoiceItemInput"][];
+                    };
+                };
+            };
+            responses: {
+                /** @description Draft created */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["Invoice"] & {
+                                items?: components["schemas"]["InvoiceItem"][];
+                            };
+                        };
+                    };
+                };
+                /** @description Validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Invoice number is already taken in this wallet */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/invoices/{wallet_id}/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get an invoice
+         * @description Invoice details with its line items and linked payments.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Wallet the invoices belong to */
+                    wallet_id: components["parameters"]["InvoiceWalletId"];
+                    id: components["parameters"]["InvoiceId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Invoice with items and payments */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["Invoice"] & {
+                                items?: components["schemas"]["InvoiceItem"][];
+                                payments?: components["schemas"]["InvoicePayment"][];
+                            };
+                        };
+                    };
+                };
+                /** @description Invoice not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /**
+         * Delete an invoice draft
+         * @description Draft-only. A sent invoice cannot be deleted.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Wallet the invoices belong to */
+                    wallet_id: components["parameters"]["InvoiceWalletId"];
+                    id: components["parameters"]["InvoiceId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Draft deleted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /** Format: uuid */
+                                id?: string;
+                                /** @example true */
+                                deleted?: boolean;
+                            };
+                        };
+                    };
+                };
+                /** @description Invoice is not a draft anymore */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /**
+         * Edit an invoice draft
+         * @description Draft-only. `items` fully replaces the line list; explicit null clears `counterparty_account_id`, `due_date` or `description`.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Wallet the invoices belong to */
+                    wallet_id: components["parameters"]["InvoiceWalletId"];
+                    id: components["parameters"]["InvoiceId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        counterparty_account_id?: string | null;
+                        invoice_number?: string;
+                        /** Format: uuid */
+                        currency_id?: string;
+                        /** Format: date */
+                        due_date?: string | null;
+                        description?: string | null;
+                        items?: components["schemas"]["InvoiceItemInput"][];
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated draft */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["Invoice"] & {
+                                items?: components["schemas"]["InvoiceItem"][];
+                            };
+                        };
+                    };
+                };
+                /** @description Invoice is not editable anymore (already sent) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/frontend/invoices/{wallet_id}/{id}/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send an invoice
+         * @description Emails the invoice (PDF attached) to the recipient and marks it SENT.
+         *     The recipient is the supplied `recipient_email`, or the counterparty
+         *     account's email; without either the send is refused. Requires a due
+         *     date and at least one line item. Recipient details are snapshotted
+         *     onto the invoice — later counterparty edits do not change the issued
+         *     document. Re-sending a SENT invoice re-emails it without any state
+         *     change.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Wallet the invoices belong to */
+                    wallet_id: components["parameters"]["InvoiceWalletId"];
+                    id: components["parameters"]["InvoiceId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** Format: email */
+                        recipient_email?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Invoice sent */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["Invoice"];
+                        };
+                    };
+                };
+                /** @description Missing recipient email, due date or line items */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Invoice cannot be sent in its current status */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The invoice email could not be delivered */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/invoices/{wallet_id}/{id}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download the invoice PDF
+         * @description Generated on the fly and streamed; nothing is persisted.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Wallet the invoices belong to */
+                    wallet_id: components["parameters"]["InvoiceWalletId"];
+                    id: components["parameters"]["InvoiceId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description PDF file */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/pdf": string;
+                    };
+                };
+                /** @description Invoice not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/invoices/{wallet_id}/{id}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Link an incoming order as a payment
+         * @description Manually links a settled incoming (deposit) order of the wallet to the
+         *     invoice. The order must have credited the invoice currency and must
+         *     not be linked to any other invoice; it always counts with its full
+         *     credited amount. The invoice moves to PARTIALLY_PAID or PAID depending
+         *     on the covered total.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Wallet the invoices belong to */
+                    wallet_id: components["parameters"]["InvoiceWalletId"];
+                    id: components["parameters"]["InvoiceId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * Format: uuid
+                         * @description Order id (the `id` field of the order endpoints)
+                         */
+                        order_id: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Payment linked; the updated invoice is returned */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["Invoice"] & {
+                                payment?: components["schemas"]["InvoicePayment"];
+                            };
+                        };
+                    };
+                };
+                /** @description The order cannot be linked (not found, not incoming, not settled, wrong currency, already linked) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The invoice is not in a payable status */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/invoices/{wallet_id}/{id}/payments/{payment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Unlink a payment from an invoice
+         * @description Removes a manually linked payment (wrong order, wrong invoice). The
+         *     order becomes linkable again and the invoice totals are recomputed:
+         *     a fully paid invoice moves back to PARTIALLY_PAID, or to SENT once no
+         *     payments remain. Requires an administrative role on the wallet.
+         *
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Wallet the invoices belong to */
+                    wallet_id: components["parameters"]["InvoiceWalletId"];
+                    id: components["parameters"]["InvoiceId"];
+                    /** @description Id of the linked payment (from the invoice details `payments` list) */
+                    payment_id: components["parameters"]["InvoicePaymentId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Payment unlinked; the updated invoice is returned */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["Invoice"];
+                        };
+                    };
+                };
+                /** @description Invoice or payment not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Another payment operation on this invoice is in progress */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/frontend/issuing/cards": {
         parameters: {
             query?: never;
@@ -2054,9 +2671,9 @@ export interface paths {
          */
         get: {
             parameters: {
-                query?: {
-                    /** @description Filter cards by wallet ID */
-                    wallet_id?: string;
+                query: {
+                    /** @description Wallet ID (required) — cards are scoped to this wallet */
+                    wallet_id: string;
                     /** @description Filter cards by program ID */
                     program_id?: string;
                     /** @description Only cards drawing from this sub-account. */
@@ -2126,11 +2743,12 @@ export interface paths {
          *     **Important**:
          *     - program_id is always required
          *     - The program's sub_account_type determines which additional fields are required
-         *     - For Account cards: wallet_id is automatically retrieved from the sub-account
-         *     - For Standalone cards: wallet_id must be provided explicitly
+         *     - `wallet_id` is always required in the body — the caller must be owner/admin of that wallet;
+         *       for balance cards it is additionally re-checked against the sub-account's wallet
          *
-         *     **Cardholder is required**: Every card must be associated with a cardholder.
-         *     Create a cardholder first via `POST /frontend/issuing/cardholders`, then pass the returned `cardholder_id` here.
+         *     **Cardholder**: every card is issued to an ACTIVE (submitted) cardholder. Pass `cardholder_id`,
+         *     or omit it to use the cardholder linked to `assigned_user_data_uuid` (else to the caller) —
+         *     400 `CARDHOLDER_NOT_LINKED` when none is linked. Card creation never registers anyone at the vendor.
          *
          */
         post: {
@@ -2157,20 +2775,19 @@ export interface paths {
                         sub_account_id?: string;
                         /**
                          * Format: uuid
-                         * @description ID of the wallet (required for prepaid cards)
+                         * @description ID of the wallet (required)
                          * @example 123e4567-e89b-12d3-a456-426614174000
                          */
                         wallet_id?: string;
                         /**
                          * Format: uuid
-                         * @description ID of the cardholder to associate with this card.
-                         *     **Required.** Must be a valid cardholder ID retrieved from `GET /frontend/issuing/cardholders`
-                         *     or created via `POST /frontend/issuing/cardholders`.
-                         *     The cardholder will be automatically registered at the vendor if not already present.
+                         * @description ID of the cardholder to associate with this card. Optional — when omitted the
+                         *     cardholder linked to `assigned_user_data_uuid` (else to the caller) is used.
+                         *     The cardholder must already be ACTIVE (submitted via `POST /frontend/issuing/cardholders/{id}/submit`).
                          *
                          * @example a1b2c3d4-e5f6-7890-abcd-ef1234567890
                          */
-                        cardholder_id: string;
+                        cardholder_id?: string;
                         /**
                          * @description Name for the card
                          * @example My Card
@@ -2190,7 +2807,7 @@ export interface paths {
                          * Format: email
                          * @deprecated
                          * @description **Deprecated.** Use `cardholder_id` instead.
-                         *     Still accepted for backward compatibility but will be removed in a future version.
+                         *     Ignored (a deprecation warning is logged) — contact data comes from the cardholder record.
                          *
                          * @example user@example.com
                          */
@@ -2198,7 +2815,7 @@ export interface paths {
                         /**
                          * @deprecated
                          * @description **Deprecated.** Use `cardholder_id` instead.
-                         *     Still accepted for backward compatibility but will be removed in a future version.
+                         *     Ignored (a deprecation warning is logged) — contact data comes from the cardholder record.
                          *
                          * @example +1234567890
                          */
@@ -2206,7 +2823,7 @@ export interface paths {
                         /**
                          * @deprecated
                          * @description **Deprecated.** Use `cardholder_id` instead.
-                         *     Still accepted for backward compatibility but will be removed in a future version.
+                         *     Ignored (a deprecation warning is logged) — contact data comes from the cardholder record.
                          *
                          */
                         vendor_user_id?: string;
@@ -2321,6 +2938,13 @@ export interface paths {
                         };
                     };
                 };
+                /** @description `request_id` was already used by another card request (replay refused) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description Internal Server Error */
                 500: {
                     headers: {
@@ -2384,15 +3008,8 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Access denied to this card */
+                /** @description Access denied — also returned when the card does not exist or is not visible to the caller */
                 403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Card not found */
-                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2404,11 +3021,11 @@ export interface paths {
         post?: never;
         /**
          * Delete card
-         * @description Permanently deletes a card. This action cannot be undone.
+         * @description Closes the card at the vendor and sets its status to `CANCELED`. The record is retained (still listable), the action cannot be undone, and a second call answers 400 (`already deleted`).
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: User must have access to the card
+         *     **Access Control**: Wallet owner or admin of the card's wallet
          *
          */
         delete: {
@@ -2437,15 +3054,8 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Access denied to this card */
+                /** @description Access denied — also returned when the card does not exist or is not visible to the caller */
                 403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Card not found */
-                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2461,7 +3071,7 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: User must have access to the card
+         *     **Access Control**: Wallet owner or admin of the card's wallet
          *
          */
         patch: {
@@ -2483,7 +3093,7 @@ export interface paths {
                          */
                         card_name?: string;
                         /**
-                         * @description New title/display name
+                         * @description Alias of `card_name` (first non-empty of `card_name`, `nick_name`, `title` wins). The card name is the only editable field; an empty body returns the card unchanged
                          * @example JOHN DOE
                          */
                         title?: string;
@@ -2491,7 +3101,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Card updated successfully */
+                /** @description Card updated — the response carries the bare vendor card wire, not the decorated list shape */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -2536,7 +3146,7 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: User must have access to the card
+         *     **Access Control**: Wallet owner or admin of the card's wallet, or the scoped `user` role on its own card
          *
          *     **Security Notice**: This endpoint returns sensitive card data. Ensure proper security measures are in place.
          *
@@ -2567,23 +3177,16 @@ export interface paths {
                                 card_number?: string;
                                 /** @description Card security code */
                                 cvv?: string;
-                                /** @description Card expiration month (MM) */
-                                expiry_month?: string;
-                                /** @description Card expiration year (YYYY) */
-                                expiry_year?: string;
+                                /** @description Card expiration date (MM/YY) */
+                                expiry_date?: string;
+                                /** @description Additional security code when the vendor provides one */
+                                security_code?: string | null;
                             };
                         };
                     };
                 };
-                /** @description Access denied to this card */
+                /** @description Access denied — also returned when the card does not exist or is not visible to the caller */
                 403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Card not found */
-                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2696,7 +3299,7 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: User must have access to the card
+         *     **Access Control**: Wallet owner or admin of the card's wallet, or the scoped `user` role on its own card
          *
          */
         put: {
@@ -2725,15 +3328,8 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Access denied to this card */
+                /** @description Access denied — also returned when the card does not exist or is not visible to the caller */
                 403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Card not found */
-                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2762,7 +3358,7 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: User must have access to the card
+         *     **Access Control**: Wallet owner or admin of the card's wallet, or the scoped `user` role on its own card
          *
          */
         put: {
@@ -2791,15 +3387,8 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Access denied to this card */
+                /** @description Access denied — also returned when the card does not exist or is not visible to the caller */
                 403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Card not found */
-                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -2843,8 +3432,6 @@ export interface paths {
                     from_date?: string;
                     /** @description End date for filtering transactions */
                     to_date?: string;
-                    /** @description Include top-up transactions from card provider */
-                    include_topups?: boolean;
                 };
                 header?: never;
                 path: {
@@ -2904,7 +3491,7 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: User must have access to the card
+         *     **Access Control**: Wallet owner or admin of the card's wallet
          *
          */
         put: {
@@ -3076,6 +3663,8 @@ export interface paths {
                 /** @description Card provider refused the top-up during the pre-flight allowance check
                  *     (`TOPUP_NOT_ALLOWED` / `TOPUP_AMOUNT_EXCEEDS_VENDOR_LIMIT`). No order
                  *     was created and the wallet was not debited.
+                 *     Also returned when the card, sub-account or program is not active
+                 *     (`CARD_INACTIVE` / `SUB_ACCOUNT_INACTIVE` / `PROGRAM_INACTIVE`).
                  *      */
                 409: {
                     headers: {
@@ -3211,17 +3800,15 @@ export interface paths {
          */
         get: {
             parameters: {
-                query?: {
-                    /** @description Filter sub-accounts by wallet ID */
-                    wallet_id?: string;
+                query: {
+                    /** @description Wallet ID (required) — sub-accounts are scoped to this wallet */
+                    wallet_id: string;
                     /** @description Filter sub-accounts by program ID */
                     program_id?: string;
                     /** @description Comma-separated sub-account ids to fetch (targeted read through the list shape) */
                     ids?: string;
                     /** @description Filter sub-accounts by type */
                     type?: "balance" | "prepaid";
-                    /** @description Filter sub-accounts by status */
-                    status?: "ACTIVE" | "INACTIVE" | "SUSPENDED";
                     /** @description Number of items to skip */
                     offset?: number;
                     /** @description Number of items to return */
@@ -3443,15 +4030,8 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Access denied to this sub-account */
+                /** @description Access denied — also returned when the sub-account does not exist or is not visible to the caller */
                 403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Sub-account not found */
-                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3504,7 +4084,8 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            data?: components["schemas"]["IssuingSubAccountResource"];
+                            /** @description Updated local sub-account row (id, wallet_id, program_id, account_currency, type, status, balance, nick_name, vendor_sub_account_id, vendor_id, created_at, updated_at) */
+                            data?: Record<string, never>;
                             /** @example Sub-account updated successfully */
                             message?: string;
                         };
@@ -3517,15 +4098,8 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Access denied to this sub-account */
+                /** @description Access denied — also returned when the sub-account does not exist or is not visible to the caller */
                 403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Sub-account not found */
-                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3558,8 +4132,8 @@ export interface paths {
                     offset?: number;
                     /** @description Number of items to return */
                     limit?: number;
-                    /** @description Filter by transaction type */
-                    type?: "DEPOSIT" | "WITHDRAWAL" | "CARD_TRANSACTION" | "FEE";
+                    /** @description Exact (case-insensitive) match on the transaction status */
+                    status?: string;
                     /** @description Start date for filtering transactions */
                     from_date?: string;
                     /** @description End date for filtering transactions */
@@ -3664,7 +4238,7 @@ export interface paths {
                         note?: string;
                         /**
                          * Format: uuid
-                         * @description Optional specific card ID. If not provided, will use the first card associated with the sub-account
+                         * @description Optional audit metadata stored in `meta.card_id` (defaults to the first card of the sub-account). Funds always move through the sub-account top-up — it never changes where the money goes
                          * @example 123e4567-e89b-12d3-a456-426614174000
                          */
                         card_id?: string;
@@ -3709,6 +4283,7 @@ export interface paths {
                  *     - Missing required fields
                  *     - Invalid reference_id format
                  *     - Invalid amount (must be positive number)
+                 *     - Insufficient wallet balance (`INSUFFICIENT_BALANCE`)
                  *      */
                 400: {
                     headers: {
@@ -3716,12 +4291,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Forbidden - One of the following:
-                 *     - Access denied to this sub-account
-                 *     - Insufficient wallet balance
-                 *     - Topup not allowed (limits exceeded)
-                 *     - Sub-account is not active
-                 *      */
+                /** @description Access denied to this sub-account */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -3738,6 +4308,7 @@ export interface paths {
                 /** @description Conflict - the card provider refused the top-up during the pre-flight
                  *     allowance check (no order was created, the wallet was not debited):
                  *     - `TOPUP_NOT_ALLOWED` — provider does not allow a top-up for this account
+                 *     - `SUB_ACCOUNT_INACTIVE` / `PROGRAM_INACTIVE` — the sub-account or its program is not active
                  *     - `TOPUP_AMOUNT_EXCEEDS_VENDOR_LIMIT` — amount is above the provider's cap
                  *      */
                 409: {
@@ -3859,8 +4430,9 @@ export interface paths {
                 /** @description Bad Request - One of the following:
                  *     - Missing required fields
                  *     - Invalid amount (must be positive number)
-                 *     - Sub-account not found
-                 *     - Card service withdrawal failed
+                 *     - Sub-account does not belong to the specified wallet
+                 *     - Insufficient funds (`INSUFFICIENT_FUNDS`)
+                 *     - Program has no withdrawal order type configured (`OPERATION_NOT_ALLOWED`)
                  *      */
                 400: {
                     headers: {
@@ -3868,11 +4440,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Forbidden - One of the following:
-                 *     - Access denied to this sub-account
-                 *     - Sub-account does not belong to the specified wallet
-                 *     - Wallet not found
-                 *      */
+                /** @description Access denied to this sub-account */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -3886,10 +4454,17 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Internal Server Error or CRITICAL ERROR
+                /** @description Another operation on this sub-account is in progress (`OPERATION_IN_PROGRESS`) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Internal Server Error (including a vendor-side withdrawal failure) or CRITICAL ERROR
                  *
                  *     **CRITICAL**: If the card service withdrawal succeeded but deposit to wallet failed,
-                 *     manual reconciliation is required. The error message will contain "CRITICAL" and the order_uuid.
+                 *     manual reconciliation is required. The error message starts with "CRITICAL"; the order id is recorded on the order's `info`.
                  *      */
                 500: {
                     headers: {
@@ -4090,8 +4665,6 @@ export interface paths {
                      *     filter would hide it from the listing.
                      *      */
                     wallet_id?: string;
-                    /** @description Include extra UI fields (icon, card_design, consent_text, etc.) */
-                    detailed?: boolean;
                 };
                 header?: never;
                 path: {
@@ -4256,9 +4829,9 @@ export interface paths {
          */
         get: {
             parameters: {
-                query?: {
-                    /** @description Filter cardholders by wallet ID */
-                    wallet_id?: string;
+                query: {
+                    /** @description Wallet ID (required) — cardholders are scoped to this wallet */
+                    wallet_id: string;
                     /** @description Filter cardholders by issuing program ID */
                     issuing_program_id?: string;
                     /** @description Only cardholders LINKED to this CORE user (`user_data.uuid`, via the link
@@ -4336,7 +4909,7 @@ export interface paths {
          *
          *     **Two modes**:
          *     - `user_data_id` mode: personal data + KYC documents are seeded from an existing
-         *       verified user (approved identity/face verification + Sumsub applicant required).
+         *       verified user. An approved identity/face verification plus a KYC applicant are required only when the program's KYC level needs document photos; otherwise any active member without a final rejection can be seeded (documents are then uploaded by hand).
          *       Manual fields only fill gaps. The Sumsub files are attached to the draft
          *       immediately, so step 2 is usually unnecessary in this mode.
          *     - Manual mode: `first_name`, `last_name`, `email`, `phone` are required.
@@ -4485,7 +5058,8 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Bad Request - Missing required fields */
+                /** @description Bad Request — missing/invalid fields, or a `user_data_id` precondition not met (user not verified, no KYC applicant, or the applicant is unknown to the KYC provider). Code `INVALID_REQUEST`; the message names the failed precondition.
+                 *      */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -4499,7 +5073,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Vendor or sub-account not found */
+                /** @description `user_data_id` does not resolve to a user */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -4539,6 +5113,14 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description The KYC provider failed while the dossier was being pulled for `user_data_id` (code `EXTERNAL_SERVICE_ERROR`). Retry later; the draft was not created.
+                 *      */
+                502: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
             };
         };
         delete?: never;
@@ -4565,9 +5147,9 @@ export interface paths {
          */
         get: {
             parameters: {
-                query?: {
-                    /** @description Wallet ID for access validation */
-                    wallet_id?: string;
+                query: {
+                    /** @description Wallet ID for access validation (required) */
+                    wallet_id: string;
                 };
                 header?: never;
                 path: {
@@ -4615,14 +5197,14 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: Cardholder must belong to the user's wallet
+         *     **Access Control**: Cardholder must belong to the user's wallet; caller must be owner or admin of that wallet
          *
          */
         delete: {
             parameters: {
-                query?: {
-                    /** @description Wallet ID for access validation */
-                    wallet_id?: string;
+                query: {
+                    /** @description Wallet ID for access validation (required) */
+                    wallet_id: string;
                 };
                 header?: never;
                 path: {
@@ -4678,14 +5260,14 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: Cardholder must belong to the user's wallet
+         *     **Access Control**: Cardholder must belong to the user's wallet; caller must be owner or admin of that wallet
          *
          */
         patch: {
             parameters: {
-                query?: {
-                    /** @description Wallet ID for access validation */
-                    wallet_id?: string;
+                query: {
+                    /** @description Wallet ID for access validation (required) */
+                    wallet_id: string;
                 };
                 header?: never;
                 path: {
@@ -4801,7 +5383,7 @@ export interface paths {
          *     - `READY` — an ACTIVE cardholder is linked (`cardholder_id`); create the card directly.
          *     - `DRAFT` — a draft is linked (`cardholder_id`); complete `will_require` and submit it.
          *     - `CAN_CREATE` — no cardholder yet, but the member clears the `user_data_id`-mode
-         *       creation gates (approved identity/face verification + KYC applicant).
+         *       creation gates (approved identity/face verification + KYC applicant), or the program's KYC level needs no document dossier and the member has no final rejection.
          *     - `PENDING` — a verification review is in flight; wait.
          *     - `NEEDS_VERIFICATION` — no approved verification or no KYC applicant; the member has
          *       to (re)run identity verification.
@@ -4814,12 +5396,16 @@ export interface paths {
          *       `PATCH` the field, or re-upload and re-attach the document — then call
          *       `POST /cardholders/{cardholder_id}/submit` again. The review restarts on the vendor
          *       account the person already has; a fresh cardholder is NOT the way to retry.
+         *     - `ISSUER_REVIEW_PENDING` — the cardholder is submitted (`cardholder_id` is set) and the
+         *       ISSUER is still reviewing the person. Nothing is wrong and nothing can be done but
+         *       wait: re-submitting would only spend another review (the submit endpoint refuses it
+         *       with `409 CARDHOLDER_NOT_DRAFT`), and creating a card now is refused with
+         *       `400 INVALID_REQUEST` — `KYC review status is "PENDING"`. Show the member as pending
+         *       and poll. Only programs whose vendor reviews the person before issuance ever return
+         *       this; vendors that issue inline go straight to `READY`.
          *     - `REJECTED` — a verification came back with a FINAL rejection; re-running it from the
          *       app is not possible (support resets it), so never render a "verify now" action.
          *     - `NOT_MEMBER` — the uuid is not an active member of this wallet.
-         *
-         *     A cardholder whose review is still running stays `READY`: re-submitting would only spend
-         *     another review, and the submit endpoint refuses it with `409 CARDHOLDER_NOT_DRAFT`.
          *
          *     **`will_require`**: fields the client should expect to collect BY HAND (same vocabulary
          *     as the submit 400 `missing` list, e.g. `address.line1`, `tax_identification_number`,
@@ -4869,10 +5455,11 @@ export interface paths {
                                 /** Format: uuid */
                                 user_data_id: string;
                                 /** @enum {string} */
-                                verdict: "READY" | "DRAFT" | "CAN_CREATE" | "PENDING" | "NEEDS_VERIFICATION" | "NEEDS_VERIFICATION_UPGRADE" | "NEEDS_RESUBMIT" | "REJECTED" | "NOT_MEMBER";
+                                verdict: "READY" | "DRAFT" | "CAN_CREATE" | "PENDING" | "NEEDS_VERIFICATION" | "NEEDS_VERIFICATION_UPGRADE" | "NEEDS_RESUBMIT" | "ISSUER_REVIEW_PENDING" | "REJECTED" | "NOT_MEMBER";
                                 /**
                                  * Format: uuid
-                                 * @description The linked cardholder for READY / DRAFT / NEEDS_RESUBMIT verdicts
+                                 * @description The linked cardholder for READY / DRAFT / NEEDS_RESUBMIT / ISSUER_REVIEW_PENDING verdicts
+                                 *
                                  */
                                 cardholder_id: string | null;
                                 /** @description Fields to collect by hand (submit `missing` vocabulary) */
@@ -5338,6 +5925,7 @@ export interface paths {
         };
         /**
          * Initialize Persona KYC session for a wallet
+         * @deprecated
          * @description Creates a Persona inquiry via the Auth API for the specified wallet and
          *     returns the hosted Persona URL. The caller's Bearer token is forwarded to
          *     the Auth API; access requires the caller to be a member of the wallet
@@ -5464,6 +6052,7 @@ export interface paths {
         };
         /**
          * Resume Persona KYC session for a wallet
+         * @deprecated
          * @description Resumes an existing Persona inquiry via the Auth API for the specified
          *     wallet and returns the hosted Persona URL. The caller's Bearer token is
          *     forwarded to the Auth API; access requires the caller to be a member of
@@ -5844,6 +6433,255 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/frontend/mass-payouts/{wallet_id}/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List mass payout templates of a wallet */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    offset?: number;
+                };
+                header?: never;
+                path: {
+                    /** @description Source wallet the batches belong to */
+                    wallet_id: components["parameters"]["MassPayoutWalletId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Page of templates, newest first */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                items?: components["schemas"]["MassPayoutTemplate"][];
+                                total?: number;
+                                limit?: number;
+                                offset?: number;
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Create a mass payout template
+         * @description Saves a reusable recipient list (name, source currency/virtual account
+         *     and rows with amounts, payout currencies and references). Supporting
+         *     documents are per-payment and are not part of a template. To start a
+         *     batch from a template, read it and create a draft from its rows.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Source wallet the batches belong to */
+                    wallet_id: components["parameters"]["MassPayoutWalletId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        name: string;
+                        /** Format: uuid */
+                        currency_id: string;
+                        /** Format: uuid */
+                        virtual_account_id?: string;
+                        items: components["schemas"]["MassPayoutTemplateItemInput"][];
+                    };
+                };
+            };
+            responses: {
+                /** @description Template created */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["MassPayoutTemplateWithItems"];
+                        };
+                    };
+                };
+                /** @description Validation error (including the item and template caps) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/mass-payouts/{wallet_id}/templates/{template_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a mass payout template with its rows */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Source wallet the batches belong to */
+                    wallet_id: components["parameters"]["MassPayoutWalletId"];
+                    template_id: components["parameters"]["MassPayoutTemplateId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Template with its recipient rows */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["MassPayoutTemplateWithItems"];
+                        };
+                    };
+                };
+                /** @description Template not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        /**
+         * Edit a mass payout template
+         * @description `items` fully replaces the row list; `virtual_account_id: null` clears the template's source account.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Source wallet the batches belong to */
+                    wallet_id: components["parameters"]["MassPayoutWalletId"];
+                    template_id: components["parameters"]["MassPayoutTemplateId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        name?: string;
+                        /** Format: uuid */
+                        currency_id?: string;
+                        /** Format: uuid */
+                        virtual_account_id?: string | null;
+                        items?: components["schemas"]["MassPayoutTemplateItemInput"][];
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated template with its rows */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["MassPayoutTemplateWithItems"];
+                        };
+                    };
+                };
+                /** @description Template not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Delete a mass payout template */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Source wallet the batches belong to */
+                    wallet_id: components["parameters"]["MassPayoutWalletId"];
+                    template_id: components["parameters"]["MassPayoutTemplateId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Template deleted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /** @example true */
+                                deleted?: boolean;
+                            };
+                        };
+                    };
+                };
+                /** @description Template not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/frontend/mass-payouts/{wallet_id}": {
         parameters: {
             query?: never;
@@ -5855,7 +6693,13 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    status?: "DRAFT" | "PENDING_APPROVAL" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELED";
+                    status?: "DRAFT" | "PENDING_APPROVAL" | "SCHEDULED" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELED";
+                    /** @description Case-insensitive substring match against the batch name */
+                    name?: string;
+                    /** @description Only batches created at or after this moment */
+                    date_from?: string;
+                    /** @description Only batches created at or before this moment */
+                    date_to?: string;
                     limit?: number;
                     offset?: number;
                 };
@@ -5892,11 +6736,16 @@ export interface paths {
         /**
          * Create a mass payout draft
          * @description Creates a batch of payouts to existing counterparty destinations: one
-         *     source wallet, one currency, up to the tenant's batch-size limit of
-         *     recipients (default 100). The draft can be freely edited and
-         *     previewed; nothing moves until it is submitted and approved.
-         *     `virtual_account_id` is required only when the list contains banking
-         *     recipients. Requires an administrative role on the source wallet.
+         *     source wallet and funding currency, up to the tenant's batch-size limit
+         *     of recipients (default 100). Every row states the amount the recipient
+         *     receives; a row with a different `to_currency_id` is paid as a
+         *     cross-currency transfer converted at execution time. An optional
+         *     `scheduled_at` (at least 1 hour and at most 90 days ahead) makes the
+         *     batch execute at that moment once approved. The draft can be freely
+         *     edited and previewed; nothing moves until it is submitted and
+         *     approved. `virtual_account_id` is required only when the list contains
+         *     banking recipients. Requires an administrative role on the source
+         *     wallet.
          *
          */
         post: {
@@ -5917,6 +6766,11 @@ export interface paths {
                         /** Format: uuid */
                         virtual_account_id?: string;
                         name: string;
+                        /**
+                         * Format: date-time
+                         * @description Requested execution time; omit to execute right after approval
+                         */
+                        scheduled_at?: string;
                         items: components["schemas"]["MassPayoutItemInput"][];
                     };
                 };
@@ -5935,7 +6789,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error (including the batch-size limit) */
+                /** @description Validation error (including the batch-size limit and the scheduling horizon) */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -5991,7 +6845,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Batch details with progress counters and total amount */
+                /** @description Batch details with progress counters and totals */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -6017,7 +6871,7 @@ export interface paths {
         };
         /**
          * Edit a mass payout draft
-         * @description Draft-only. `items` fully replaces the recipient list; `virtual_account_id: null` clears the source VA.
+         * @description Draft-only. `items` fully replaces the recipient list; `virtual_account_id: null` clears the source VA; `scheduled_at: null` makes the batch execute right after approval.
          */
         put: {
             parameters: {
@@ -6036,6 +6890,8 @@ export interface paths {
                         name?: string;
                         /** Format: uuid */
                         virtual_account_id?: string | null;
+                        /** Format: date-time */
+                        scheduled_at?: string | null;
                         items?: components["schemas"]["MassPayoutItemInput"][];
                     };
                 };
@@ -6081,11 +6937,12 @@ export interface paths {
         };
         /**
          * List items of a mass payout
-         * @description Items in upload order, paginated with limit/offset like the batch list.
+         * @description Items in upload order, paginated with limit/offset like the batch list. The optional status filter narrows the tracker view (e.g. failed rows only).
          */
         get: {
             parameters: {
                 query?: {
+                    status?: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELED";
                     limit?: number;
                     offset?: number;
                 };
@@ -6136,10 +6993,14 @@ export interface paths {
         };
         /**
          * Preview a mass payout
-         * @description Dry-run before submitting: validates every recipient, estimates the fee
-         *     per item through the tenant's pricing, sums the total debit and checks
-         *     it against the wallet balance. Crypto payouts to on-platform addresses
-         *     may execute cheaper than estimated (they settle internally).
+         * @description Dry-run before submitting: validates every recipient (the invoice rule
+         *     included), estimates the fee per item through the tenant's pricing —
+         *     cross-currency rows are quoted at the current rate — and sums the
+         *     total debit in the batch source currency against the wallet balance.
+         *     Estimates are indicative: execution prices each payout at its own
+         *     moment. Crypto payouts always settle on-chain at the estimated fee; to
+         *     pay an on-platform wallet without a network fee use an INTERNAL
+         *     destination.
          *
          */
         get: {
@@ -6171,12 +7032,15 @@ export interface paths {
                                 currency_id?: string;
                                 total_items?: number;
                                 total_amount?: number;
+                                totals_by_currency?: components["schemas"]["MassPayoutCurrencyTotal"][];
                                 total_fees?: number;
                                 total_debit?: number;
                                 balance?: {
                                     available?: number;
                                     sufficient?: boolean;
                                 };
+                                /** @description Rows at or above this amount must carry an INVOICE attachment */
+                                invoice_threshold?: number;
                                 valid_count?: number;
                                 invalid_count?: number;
                                 items?: {
@@ -6186,7 +7050,14 @@ export interface paths {
                                     /** Format: uuid */
                                     destination_id?: string;
                                     amount?: number;
+                                    /** Format: uuid */
+                                    to_currency_id?: string | null;
                                     fee?: number;
+                                    /**
+                                     * Format: uuid
+                                     * @description Currency the fee is denominated in (cross-currency payouts may be charged in either leg, per the tenant pricing)
+                                     */
+                                    fee_currency_id?: string;
                                     debit_amount?: number;
                                     result_amount?: number;
                                 }[];
@@ -6223,8 +7094,12 @@ export interface paths {
         put?: never;
         /**
          * Submit a mass payout for approval
-         * @description DRAFT → PENDING_APPROVAL. Refused while any recipient is invalid — the
-         *     problems are returned in the error details so the rows can be fixed.
+         * @description DRAFT → PENDING_APPROVAL. Refused while any recipient is invalid — a
+         *     missing/deleted destination, an unsupported type, a banking row
+         *     without a source account, or a row at/above the invoice threshold
+         *     without an INVOICE attachment. The problems are returned in the error
+         *     details so the rows can be fixed. Wallet members are notified that the
+         *     batch awaits approval.
          *
          */
         post: {
@@ -6290,12 +7165,18 @@ export interface paths {
         put?: never;
         /**
          * Approve a mass payout
-         * @description PENDING_APPROVAL → PROCESSING and starts the asynchronous execution:
-         *     every item becomes a regular order (created and approved through the
-         *     standard order flow, funds are debited per order). Requires an
-         *     administrative wallet role and a recent second-factor verification — a stale one is rejected
-         *     with `TWO_FACTOR_REVERIFICATION_REQUIRED`. Execution continues past
-         *     failed items; progress is visible through the batch counters.
+         * @description PENDING_APPROVAL → PROCESSING (or SCHEDULED for a batch with a future
+         *     send date — execution then starts automatically at that moment).
+         *     Every item becomes a regular order (created and approved through the
+         *     standard order flow, funds are debited per order). The estimated total
+         *     debit is checked against the wallet balance first — a batch that
+         *     cannot cover all payouts is refused instead of paying only part of the
+         *     list. Requires an administrative wallet role. On Clerk-authenticated
+         *     tenants a second factor verified within the last 10 minutes is also
+         *     required — a stale one is rejected with
+         *     `TWO_FACTOR_REVERIFICATION_REQUIRED` (Supabase-authenticated tenants
+         *     have no step-up check). Execution continues past failed items;
+         *     progress is visible through the batch counters.
          *
          */
         post: {
@@ -6311,7 +7192,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Execution started */
+                /** @description Execution started (or scheduled) */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -6324,7 +7205,16 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Second-factor verification is stale or the caller lacks permission */
+                /** @description Insufficient funds for the estimated total debit, or invalid items */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Caller lacks an administrative wallet role, or (Clerk tenants) the second-factor verification is stale */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -6360,8 +7250,13 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Cancel a mass payout
-         * @description Allowed from DRAFT and PENDING_APPROVAL. A PROCESSING batch cannot be canceled — payouts are already executing.
+         * Cancel or stop a mass payout
+         * @description Before execution starts (DRAFT, PENDING_APPROVAL, SCHEDULED) the batch
+         *     cancels whole — every payment ends CANCELED and nothing moves. A
+         *     PROCESSING batch takes a stop request instead: payments already handed
+         *     to the payment flow finish, the untouched ones are cancelled, and the
+         *     batch finalizes as CANCELED with the paid/failed counters preserved.
+         *
          */
         post: {
             parameters: {
@@ -6376,7 +7271,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Batch canceled */
+                /** @description Batch canceled (or the stop was requested) */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -6415,8 +7310,9 @@ export interface paths {
         };
         /**
          * Download the mass payout report (CSV)
-         * @description Streaming CSV: recipient, amount, item status, the linked order and its
-         *     current status, and the failure reason for every unsuccessful payout.
+         * @description Streaming CSV: recipient, amount, payout currency, reference, item
+         *     status, the linked order and its current status, and the failure
+         *     reason for every unsuccessful payout.
          *
          */
         get: {
@@ -6469,7 +7365,7 @@ export interface paths {
         };
         /**
          * Effective notification preferences
-         * @description Both dimensions in full with defaults applied — delivery channels (`IN_APP` is always enabled) and notification categories (every category is user-configurable).
+         * @description Both dimensions in full with defaults applied — delivery channels (`IN_APP` is always enabled) and notification categories (every category is user-configurable). The channel list is what exists for the tenant — `TELEGRAM` appears only when the tenant has a Telegram bot configured.
          */
         get: {
             parameters: {
@@ -6501,7 +7397,7 @@ export interface paths {
         };
         /**
          * Update notification preferences
-         * @description Bulk upsert of either or both dimensions. Disabling the `IN_APP` channel is rejected with 400 (`INBOX_CHANNEL_LOCKED`). A disabled category mutes push and email for its notifications; the inbox always receives them. Changes apply from the next delivery.
+         * @description Bulk upsert of either or both dimensions. Disabling the `IN_APP` channel is rejected with 400 (`INBOX_CHANNEL_LOCKED`). A disabled category mutes push, email and Telegram for its notifications; the inbox always receives them. Changes apply from the next delivery.
          */
         put: {
             parameters: {
@@ -7020,7 +7916,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error (insufficient balance, virtual account missing, etc.) */
+                /** @description Validation error — invalid body, pair disabled by the exchange config, or calculated amount too small. Balance is checked only at approve. */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -7294,7 +8190,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["FrontendL2FOrderRequest"];
+                    "application/json": components["schemas"]["FrontendFiatWithdrawalRequest"];
                 };
             };
             responses: {
@@ -7374,7 +8270,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["FrontendL2FOrderRequest"];
+                    "application/json": components["schemas"]["FrontendFiatWithdrawalRequest"];
                 };
             };
             responses: {
@@ -7454,7 +8350,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["FrontendL2FOrderRequest"];
+                    "application/json": components["schemas"]["FrontendFiatWithdrawalRequest"];
                 };
             };
             responses: {
@@ -7534,7 +8430,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["FrontendL2FOrderRequest"];
+                    "application/json": components["schemas"]["FrontendFiatWithdrawalRequest"];
                 };
             };
             responses: {
@@ -7614,7 +8510,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["FrontendL2FOrderRequest"];
+                    "application/json": components["schemas"]["FrontendFiatWithdrawalRequest"];
                 };
             };
             responses: {
@@ -7694,7 +8590,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["FrontendL2FOrderRequest"];
+                    "application/json": components["schemas"]["FrontendFiatWithdrawalRequest"];
                 };
             };
             responses: {
@@ -7770,8 +8666,10 @@ export interface paths {
          *     (transaction written as `complete`) and triggers its workflow.
          *     Exchange orders (EXCHANGE_OMNI) and internal transfers
          *     (TRANSFER_INTERNAL / OMNIBUS_INTERNAL_TRANSFER) settle synchronously
-         *     and land in COMPLETE. An insufficient balance fails the order
-         *     (FAILED). OTP verification is mandatory and keyed on the order id
+         *     and land in COMPLETE. An insufficient balance answers 400
+         *     `INSUFFICIENT_FUNDS` and releases the order back to NEW (approve again
+         *     after a top-up); FAILED is reached only when a step after the debit
+         *     fails. OTP verification is mandatory and keyed on the order id
          *     (request the OTP for the order being approved). Orders created with
          *     `scheduled_at` move to EXPECTED instead — no funds are debited until
          *     execution at the requested time.
@@ -7795,7 +8693,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Order moved to PROCESSING */
+                /** @description Order approved — PROCESSING for workflow rails, COMPLETE for exchange / internal transfers, EXPECTED for scheduled orders */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -7808,7 +8706,34 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Order is not in an approvable state */
+                /** @description Insufficient funds (`INSUFFICIENT_FUNDS` — the order is released back to NEW) or validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Order does not belong to the caller's wallet */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Order not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Order is not in an approvable state (`INVALID_STATE`), or another lifecycle call holds the order lock (`OPERATION_IN_PROGRESS`) */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -7875,7 +8800,25 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Order is not in a cancelable state */
+                /** @description Order does not belong to the caller's wallet */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Order not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Order is not in a cancelable state (`INVALID_STATE`), or another lifecycle call holds the order lock (`OPERATION_IN_PROGRESS`) */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -8091,11 +9034,11 @@ export interface paths {
                     amount: number;
                     from_currency_id: string;
                     to_currency_id: string;
-                    /** @description If `true`, calculates inputs needed to receive the given amount. */
-                    is_reverse: boolean;
-                    /** @description If `true`, the network fee is subtracted from `result_amount`. If `false`, the fee is added on top of `from_amount` and the recipient gets the full converted amount. Ignored for reverse calculations. Required so the client always states the fee-allocation mode explicitly — a change of the server-side fallback can never silently alter the calculation.
+                    /** @description If `true`, calculates inputs needed to receive the given amount. Defaults to `false`. */
+                    is_reverse?: boolean;
+                    /** @description If `true`, the network fee is subtracted from `result_amount`. If `false`, the fee is added on top of `from_amount` and the recipient gets the full converted amount. Ignored for reverse calculations. Defaults to `true` when omitted.
                      *      */
-                    is_subtract: boolean;
+                    is_subtract?: boolean;
                     /** @description Destination address (for crypto withdrawals; affects network fee estimation). */
                     to_address?: string;
                 };
@@ -8284,7 +9227,7 @@ export interface paths {
         };
         /**
          * Get order
-         * @description Retrieves a specific order by its numeric ID.
+         * @description Retrieves a specific order by its `id` (UUID; equal to `order_uuid` for orders created by the current flow).
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -8294,7 +9237,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    order_id: number;
+                    order_id: string;
                 };
                 cookie?: never;
             };
@@ -8466,7 +9409,13 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create omnibus crypto transfer */
+        /**
+         * Create omnibus crypto transfer
+         * @description Legacy one-phase alias (frozen). Besides the documented fields the body must
+         *     carry `request_id` (idempotency key); `scheduled_at` is ignored.
+         *     Prefer `POST /frontend/orders/withdrawal/crypto`.
+         *
+         */
         post: {
             parameters: {
                 query?: never;
@@ -8504,7 +9453,13 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create segregated crypto transfer */
+        /**
+         * Create segregated crypto transfer
+         * @description Legacy one-phase alias (frozen). Besides the documented fields the body must
+         *     carry `request_id` (idempotency key); `scheduled_at` is ignored.
+         *     Prefer `POST /frontend/orders/withdrawal/crypto`.
+         *
+         */
         post: {
             parameters: {
                 query?: never;
@@ -8542,8 +9497,9 @@ export interface paths {
         };
         /**
          * List currencies
-         * @description Returns currencies (crypto table) with chain relations,
-         *     filtered by the tenant of the authenticated session.
+         * @description Returns every platform-enabled currency (crypto table) with chain relations,
+         *     annotated with `is_tenant_enabled`; pass `enabled_only=true` to keep only
+         *     the currencies enabled for the tenant of the authenticated session.
          *     Each currency includes an `is_tenant_enabled` flag.
          *
          *     **Authentication**: Bearer token + x-tenant-id header
@@ -9165,7 +10121,7 @@ export interface paths {
         };
         /**
          * List virtual accounts
-         * @description Retrieves a list of virtual accounts associated with a specific wallet.
+         * @description Retrieves the ACTIVE virtual accounts associated with a specific wallet.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -9175,7 +10131,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    /** @description Number of items to return */
+                    /** @description Number of items to return (default 10) */
                     limit?: number;
                     /** @description Number of items to skip */
                     offset?: number;
@@ -9199,11 +10155,7 @@ export interface paths {
                             /** @example true */
                             success?: boolean;
                             data?: components["schemas"]["VirtualAccount"][];
-                            pagination?: {
-                                offset?: number;
-                                limit?: number;
-                                total?: number;
-                            };
+                            pagination?: components["schemas"]["PaginationResponse"];
                         };
                     };
                 };
@@ -9212,14 +10164,18 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description Server error */
                 500: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -9265,46 +10221,81 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            data?: components["schemas"]["VirtualAccount"];
+                            data?: components["schemas"]["VirtualAccountCreated"];
                             /** @example Virtual account created successfully */
                             message?: string;
                         };
                     };
                 };
-                /** @description Bad request - missing required parameters */
+                /** @description Accepted — the account is pending activation at the vendor (success envelope, no account yet); re-post the same request to poll */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description `INVALID_REQUEST` — missing `va_programs_id` or wallet binding */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
-                /** @description Forbidden - KYC verification required or no access */
+                /** @description `ACCESS_DENIED` (no access to the wallet or role too low), `FORBIDDEN` (program not allowed for the caller's KYC profile) or `KYC_REQUIREMENTS_NOT_MET` (wallet KYC not approved) */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
-                /** @description Program not found */
+                /** @description `NOT_FOUND` — wallet or program not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
-                /** @description Conflict - Virtual account already exists */
+                /** @description `CONFLICT` — an account already occupies this program on the wallet; `error.details` carries the existing `account_id` and `status` */
                 409: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
-                /** @description Server error */
+                /** @description Rail pre-check failed — `VENDOR_NOT_CONFIGURED`, `RAIL_NOT_CONFIGURED`, `DEPOSITS_DISABLED`, `WALLET_RAIL_NOT_ONBOARDED` or `WALLET_RAIL_NOT_APPROVED` */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `INTERNAL_ERROR` — generic message; details are only logged server-side */
                 500: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The program's vendor is retired (Rail.io) or unsupported — no new accounts can be created on it */
+                501: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -9323,7 +10314,9 @@ export interface paths {
         };
         /**
          * List virtual account programs
-         * @description Retrieves a list of available virtual account programs filtered by wallet KYC access.
+         * @description Retrieves the ACTIVE virtual account programs available to the wallet, filtered by
+         *     the wallet's KYC rail access (tenants with KYC disabled skip the rail filtering).
+         *     Archived and draft programs are never listed.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -9333,7 +10326,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    /** @description Number of items to return */
+                    /** @description Number of items to return (default 10) */
                     limit?: number;
                     /** @description Number of items to skip */
                     offset?: number;
@@ -9357,13 +10350,9 @@ export interface paths {
                             /** @example true */
                             success?: boolean;
                             data?: components["schemas"]["VirtualAccountProgram"][];
-                            pagination?: {
-                                offset?: number;
-                                limit?: number;
-                                total?: number;
-                            };
+                            pagination?: components["schemas"]["PaginationResponse"];
                             meta?: {
-                                /** @description Total programs in database before KYC filtering */
+                                /** @description Number of programs visible to this wallet after KYC filtering (equals `pagination.total`) */
                                 total_count?: number;
                             };
                         };
@@ -9374,14 +10363,18 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description Server error */
                 500: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -9403,13 +10396,18 @@ export interface paths {
         /**
          * Get virtual account program
          * @description Retrieves detailed information about a specific virtual account program.
+         *     The by-id read is not status-filtered — a non-ACTIVE program is returned
+         *     when addressed directly.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
          */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description Wallet whose KYC entity type decides visibility; without it only universal-rail programs are visible on KYC-enabled tenants */
+                    wallet_id?: string;
+                };
                 header?: never;
                 path: {
                     /** @description The program ID */
@@ -9432,7 +10430,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Program not found */
+                /** @description Program not found, or not allowed for the wallet's KYC rail */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -9467,12 +10465,14 @@ export interface paths {
         put?: never;
         /**
          * Sync virtual account
-         * @description Fetches the latest bank account details and deposit instructions from the vendor
-         *     and updates the local record.
+         * @description Refreshes the bank account details and deposit instructions from the vendor
+         *     (Brale / Delos / BCB) and updates the local record. Historical Rail.io
+         *     (RAIL-B / RAIL-C) accounts cannot be refreshed — their stored requisites are
+         *     returned unchanged.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: User must have access to the wallet containing this virtual account
+         *     **Access Control**: User must have access to the wallet containing this virtual account; wallet KYC must be APPROVED
          *
          */
         post: {
@@ -9487,7 +10487,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Virtual account synced successfully */
+                /** @description Virtual account synced successfully. Same shape as the single-account read, without `crypto_deposit_details` */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -9496,7 +10496,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            data?: components["schemas"]["VirtualAccount"];
+                            data?: components["schemas"]["VirtualAccountDetail"];
                             /** @example Virtual account synced successfully */
                             message?: string;
                         };
@@ -9509,7 +10509,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Access denied */
+                /** @description Access denied, or wallet KYC not approved */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -9555,7 +10555,10 @@ export interface paths {
         /**
          * Get virtual account
          * @description Retrieves detailed information about a specific virtual account.
-         *     Requisites are automatically synced from vendor on every request.
+         *     For accounts linked to a vendor (Brale / Delos / BCB) the requisites are refreshed
+         *     from the vendor on read unless `skip_sync=true`; a failed refresh falls back to the
+         *     cached data (still 200). Accounts without a vendor link and historical Rail.io
+         *     accounts return the stored data.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -9577,7 +10580,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Virtual account details retrieved successfully (auto-synced) */
+                /** @description Virtual account details retrieved successfully (requisites refreshed from the vendor when linked) */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -9586,7 +10589,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            data?: components["schemas"]["VirtualAccount"];
+                            data?: components["schemas"]["VirtualAccountDetail"];
                         };
                     };
                 };
@@ -9595,21 +10598,27 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description Virtual account not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description Server error */
                 500: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -9638,7 +10647,7 @@ export interface paths {
          *     - `id` — user_data.id (numeric)
          *     - `email` — user_data.email (case-insensitive)
          *     - `phone` — user_data.phone
-         *     - `telegram` — telegram_id from auth_telegram table
+         *     - `telegram` — `telegram_user.tg_id`, or a case-insensitive `username` match (leading `@` ignored)
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -9994,6 +11003,9 @@ export interface paths {
          *
          *     Each wallet includes `access_role` (owner/admin/user/auditor) and `is_owner` boolean.
          *
+         *     Wallets where the caller holds the scoped `user` role are returned as a reduced shell
+         *     (`uuid`, `name`, `display_name`, `tenant_id`, `kyc_info`, `created_at` + the role fields) — no `logo_url`.
+         *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
          */
@@ -10039,13 +11051,11 @@ export interface paths {
                                  */
                                 display_name?: string;
                                 /** @description Avatar URL for the wallet */
-                                logo_url: string | null;
+                                logo_url?: string | null;
                                 /** Format: uuid */
                                 tenant_id: string;
                                 /** Format: date-time */
                                 created_at: string;
-                                /** Format: date-time */
-                                updated_at: string;
                                 /**
                                  * @description Legacy alias of `access_role`. Kept for backward compatibility —
                                  *     always equals `access_role`. Prefer `access_role` in new code.
@@ -10084,8 +11094,8 @@ export interface paths {
                         };
                     };
                 };
-                /** @description User not authenticated */
-                403: {
+                /** @description Missing or invalid bearer token */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -10175,10 +11185,8 @@ export interface paths {
                                 tenant_id: string;
                                 /** Format: date-time */
                                 created_at: string;
-                                /** Format: date-time */
-                                updated_at: string;
-                                /** @description Mirrors the GET-wallet shape. Always `null` on create
-                                 *     (no `kyc_entity` row exists yet).
+                                /** @description Mirrors the GET-wallet shape. `null` when the wallet was created
+                                 *     without `kyc_entity_id`; populated with the linked entity otherwise.
                                  *      */
                                 kyc_info: {
                                     type: string;
@@ -10241,7 +11249,7 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: Any user with access to the wallet
+         *     **Access Control**: Any owner/admin/auditor member of the wallet (the scoped `user` role is rejected with 403); wallet KYC must be APPROVED or HOLD
          *
          */
         get: {
@@ -10404,7 +11412,9 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: User must own the wallet
+         *     **Access Control**: Any active wallet member. The scoped `user` role receives a shell-only
+         *     response (`uuid`, `name`, `display_name`, `tenant_id`, `kyc_info`, `created_at` + the role fields) —
+         *     `logo_url`, `balance`, `fiat_accounts` and the totals are omitted for that role.
          *
          */
         get: {
@@ -10447,8 +11457,6 @@ export interface paths {
                                 tenant_id: string;
                                 /** Format: date-time */
                                 created_at: string;
-                                /** Format: date-time */
-                                updated_at: string;
                                 kyc_info: {
                                     type: string;
                                     status: string;
@@ -10577,8 +11585,6 @@ export interface paths {
                                 tenant_id: string;
                                 /** Format: date-time */
                                 created_at: string;
-                                /** Format: date-time */
-                                updated_at: string;
                                 /** @description KYC entity attached to the wallet (joined from `kyc_entity`).
                                  *     `null` when the wallet has no KYC entity yet.
                                  *      */
@@ -10643,7 +11649,7 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: User must own the wallet
+         *     **Access Control**: Any owner/admin/auditor member of the wallet (the scoped `user` role is rejected with 403); wallet KYC must be APPROVED or HOLD
          *
          *     This is a simplified version of the main wallet endpoint that:
          *     - Returns raw balance records without aggregation
@@ -10684,8 +11690,6 @@ export interface paths {
                                 tenant_id: string;
                                 /** Format: date-time */
                                 created_at: string;
-                                /** Format: date-time */
-                                updated_at: string;
                                 /** @description Array of balance records */
                                 balance: {
                                     /** Format: uuid */
@@ -10764,7 +11768,7 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: User must own the wallet
+         *     **Access Control**: Any owner/admin/auditor member of the wallet (the scoped `user` role is rejected with 403); wallet KYC must be APPROVED or HOLD
          *
          */
         get: {
@@ -10861,7 +11865,7 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: Any user with access to the wallet
+         *     **Access Control**: Any owner/admin/auditor member of the wallet (the scoped `user` role is rejected with 403); wallet KYC must be APPROVED or HOLD
          *
          */
         get: {
@@ -10934,7 +11938,7 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: User must own the wallet
+         *     **Access Control**: Owner or admin of the wallet; wallet KYC must be APPROVED
          *
          *     **Note**: New addresses are always provisioned via Utila. The legacy Processing (Accepta) provider was decommissioned; existing `processing` addresses remain readable.
          *
@@ -10946,8 +11950,8 @@ export interface paths {
                 path: {
                     /** @description The ID of the wallet */
                     wallet_id: string;
-                    /** @description The blockchain ID (e.g., 'ethereum', 'bitcoin') */
-                    chain: string;
+                    /** @description Numeric chain ID (see `GET /frontend/reference/chains`) */
+                    chain: number;
                 };
                 cookie?: never;
             };
@@ -10963,7 +11967,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description Crypto address created successfully */
+                /** @description Crypto address created — or the existing address for this chain returned (idempotent, always 201) */
                 201: {
                     headers: {
                         [name: string]: unknown;
@@ -11006,13 +12010,6 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Address for this chain already exists */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
                 /** @description Server error */
                 500: {
                     headers: {
@@ -11041,7 +12038,7 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: User must own the wallet
+         *     **Access Control**: Any owner/admin/auditor member of the wallet (the scoped `user` role is rejected with 403); wallet KYC must be APPROVED or HOLD
          *
          */
         get: {
@@ -11155,7 +12152,7 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: User must own the wallet
+         *     **Access Control**: Any owner/admin/auditor member of the wallet (the scoped `user` role is rejected with 403); wallet KYC must be APPROVED or HOLD
          *
          */
         get: {
@@ -11321,7 +12318,7 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: Any user with access to the wallet can view the user list
+         *     **Access Control**: Any owner/admin/auditor member of the wallet (the scoped `user` role is rejected with 403)
          *
          */
         get: {
@@ -11415,14 +12412,14 @@ export interface paths {
          * @description Adds a user to the wallet by their user_data.uuid.
          *
          *     **Rules:**
-         *     - Only the wallet **owner** can add users
+         *     - Only the wallet **owner** or an **admin** can add users
          *     - Target user must be in the **same tenant**
          *     - Target user must **not** be the wallet owner
-         *     - Allowed roles: `user`, `admin`
+         *     - Allowed roles: `auditor`, `user`, `admin`
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: Owner only
+         *     **Access Control**: Owner or admin of the wallet; wallet KYC must be APPROVED
          *
          */
         post: {
@@ -11477,14 +12474,14 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Bad request - missing fields or invalid role */
+                /** @description Bad request - missing fields or invalid role; `CONFLICT` when the user is already a member or is the wallet owner */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Only the wallet owner can add users / user not in same tenant */
+                /** @description Caller is not owner/admin of the wallet, wallet KYC not approved, or target user not in the same tenant */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -11493,13 +12490,6 @@ export interface paths {
                 };
                 /** @description Wallet or target user not found */
                 404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description User is already added to this wallet / cannot add owner */
-                409: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -11535,11 +12525,11 @@ export interface paths {
          * @description Removes a shared user from the wallet (sets is_active = false).
          *
          *     **Rules:**
-         *     - Only the wallet **owner** can remove users
+         *     - Only the wallet **owner** or an **admin** can remove users
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: Owner only
+         *     **Access Control**: Owner or admin of the wallet; wallet KYC must be APPROVED
          *
          */
         delete: {
@@ -11571,7 +12561,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Only the wallet owner can remove users */
+                /** @description Caller is not owner/admin of the wallet, or wallet KYC not approved */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -11601,12 +12591,12 @@ export interface paths {
          * @description Updates the role of a shared user on this wallet.
          *
          *     **Rules:**
-         *     - Only the wallet **owner** can update roles
-         *     - Allowed roles: `user`, `admin`
+         *     - Only the wallet **owner** or an **admin** can update roles
+         *     - Allowed roles: `auditor`, `user`, `admin`
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: Owner only
+         *     **Access Control**: Owner or admin of the wallet; wallet KYC must be APPROVED
          *
          */
         patch: {
@@ -11648,14 +12638,14 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Invalid role */
+                /** @description Invalid role; `CONFLICT` when the target is the wallet owner */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description Only the wallet owner can update roles */
+                /** @description Caller is not owner/admin of the wallet, or wallet KYC not approved */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -11694,12 +12684,12 @@ export interface paths {
          * @description Re-activates a previously deactivated user on this wallet.
          *
          *     **Rules:**
-         *     - Only the wallet **owner** can activate users
+         *     - Only the wallet **owner** or an **admin** can activate users
          *     - Cannot activate the wallet owner themselves
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: Owner only
+         *     **Access Control**: Owner or admin of the wallet; wallet KYC must be APPROVED
          *
          */
         post: {
@@ -11731,7 +12721,14 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Only the wallet owner can activate users */
+                /** @description Target is the wallet owner (`CONFLICT`) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Caller is not owner/admin of the wallet, or wallet KYC not approved */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -11740,13 +12737,6 @@ export interface paths {
                 };
                 /** @description User not found in this wallet */
                 404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Cannot change active status of the wallet owner */
-                409: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -11782,12 +12772,12 @@ export interface paths {
          *     The user record is preserved but the user loses access to the wallet.
          *
          *     **Rules:**
-         *     - Only the wallet **owner** can deactivate users
+         *     - Only the wallet **owner** or an **admin** can deactivate users
          *     - Cannot deactivate the wallet owner themselves
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: Owner only
+         *     **Access Control**: Owner or admin of the wallet; wallet KYC must be APPROVED
          *
          */
         post: {
@@ -11819,7 +12809,14 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Only the wallet owner can deactivate users */
+                /** @description Target is the wallet owner (`CONFLICT`) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Caller is not owner/admin of the wallet, or wallet KYC not approved */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -11828,13 +12825,6 @@ export interface paths {
                 };
                 /** @description User not found in this wallet */
                 404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Cannot change active status of the wallet owner */
-                409: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -11904,7 +12894,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Invalid query parameter (offset/limit/is_completed/role) */
+                /** @description Invalid query parameter (non-integer offset/limit, unknown role); any value other than `true`/`1` for `is_completed`/`is_expired` is read as `false` */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -12214,7 +13204,7 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
-         * @description Order type identifier. Must be one of the active values from the `order_types` table. Examples: `EXCHANGE_OMNI` (omnibus exchange), `L2F_SWIFT_OFFRAMP` (SWIFT offramp), `OMNIBUS_CRYPTO_TRANSFER` (crypto withdrawal). Legacy `DEPOSIT_*`, `WITHDRAWAL_*` and `AUTO_CONVERT_CRYPTO` are intentionally excluded.
+         * @description Order type identifier. Must be one of the active values from the `order_types` table. Examples: `EXCHANGE_OMNI` (omnibus exchange), `BRL_WIRE_OFFRAMP` (wire offramp), `OMNIBUS_CRYPTO_TRANSFER` (crypto withdrawal). `L2F_*` ids are historical (rail retired) and cannot be used to create orders. Legacy `DEPOSIT_*`, `WITHDRAWAL_*` and `AUTO_CONVERT_CRYPTO` are intentionally excluded.
          * @example EXCHANGE_OMNI
          * @enum {string}
          */
@@ -12280,9 +13270,13 @@ export interface components {
         ErrorResponse: {
             /** @example false */
             success?: boolean;
+            /** @description Request correlation id — quote it in support requests */
+            correlationId?: string;
             error?: {
                 code?: string;
                 message?: string;
+                /** @description Structured payload (validation issues, missing fields) when the error carries one */
+                details?: Record<string, never> | null;
             };
         };
         /** @description Counterparty account (beneficiary). Wallet-scoped. */
@@ -12316,7 +13310,7 @@ export interface components {
             /** @description Active destinations belonging to this account. */
             destinations: components["schemas"]["CounterpartyDestination"][];
         };
-        /** @description Bank / beneficiary postal address. */
+        /** @description Registered postal address of the BANK (not the beneficiary). On create it is replaced atomically by the bank-directory address when the submitted bank code resolves to a complete one; otherwise the submitted address is kept. */
         CounterpartyBankingAddress: {
             city?: string | null;
             postcode?: string | null;
@@ -12393,7 +13387,7 @@ export interface components {
              * @description Destination / payment rail type
              * @enum {string}
              */
-            type: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
+            type: "ACH" | "RTP" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
             /** @description User-friendly alias */
             nickname?: string | null;
             /** Format: date-time */
@@ -12643,8 +13637,17 @@ export interface components {
             vendor_card_id?: string;
             /** Format: uuid */
             cardholder_id?: string | null;
-            /** @description Cardholder record, or null */
-            cardholder?: components["schemas"]["IssuingCardholder"] | null;
+            /** @description Cardholder summary, or null */
+            cardholder?: {
+                /** Format: uuid */
+                id?: string;
+                first_name?: string | null;
+                last_name?: string | null;
+                email?: string | null;
+                phone?: string | null;
+                birth_date?: string | null;
+                nationality?: string | null;
+            } | null;
             /** @description user_data.id the card is assigned to; omitted (absent) when the card is not assigned to a member */
             user_data_id?: number;
             /** @description Embedded sub-account summary, or null when no sub-account is linked. Present on the normal (vendor-enriched) response; omitted only in the degraded local-only error mode. */
@@ -12768,8 +13771,6 @@ export interface components {
             /** @description Units of billing currency per unit of transaction currency, so `transaction_amount * conversion_rate ≈ billing_amount`. 1 when the currencies match. */
             conversion_rate?: number;
             failure_reason?: string;
-            adjustment_type?: string | null;
-            review_status?: string | null;
             has_receipt?: boolean;
             merchant?: components["schemas"]["TransactionMerchant"];
             /** Format: date-time */
@@ -12959,16 +13960,234 @@ export interface components {
             /** @description Error code for programmatic handling */
             code?: string;
         };
-        /** @description Virtual bank account */
-        VirtualAccount: {
+        /** @description Full currency object embedded on virtual-account reads (from the `crypto` table). */
+        VirtualAccountCurrency: components["schemas"]["CurrencyDetails"] & {
+            is_crypto?: boolean;
+            enabled?: boolean;
+            /** @description Currency type discriminator */
+            type?: string;
+            meta?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        /** @description Compact currency reference joined onto program reads (no `decimal`). */
+        CurrencySummary: {
+            /** Format: uuid */
+            uuid?: string;
+            name?: string;
+            symbol?: string;
+            icon?: string | null;
+            type?: string;
+        };
+        /** @description KYC rail attached to a virtual-account program. Program reads embed the full rail; rails embedded inside virtual-account reads omit `is_deposit_enabled` (internal toggle). */
+        KycRail: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+            code?: string | null;
+            vendor_code?: string | null;
+            /** Format: uuid */
+            integration_vendors_id?: string | null;
+            type?: string;
+            /** Format: uuid */
+            tenant_id?: string;
+            /** Format: uuid */
+            countries_group_id?: string | null;
+            is_active?: boolean;
+            is_manual?: boolean;
+            is_submit_available?: boolean;
+            /** @description Present on program reads only — stripped from rails embedded in virtual-account responses */
+            is_deposit_enabled?: boolean;
+        };
+        /** @description Raw virtual-account program row. */
+        VirtualAccountProgramBase: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+            description?: string | null;
+            /**
+             * @description Program listings return ACTIVE programs only; the by-id read is not status-filtered
+             * @enum {string}
+             */
+            status?: "DRAFT" | "ACTIVE" | "ARCHIVED";
+            icon?: string | null;
+            code?: string | null;
+            /** @description Vendor-side program identifier */
+            vendor_id?: string | null;
+            /** Format: uuid */
+            tenant_id?: string;
+            /** Format: uuid */
+            account_currency_id?: string;
+            /** Format: uuid */
+            destination_currency_id?: string;
+            /** Format: uuid */
+            kyc_rails_id?: string;
+            /** @description Consent text shown before opening an account on this program */
+            consent_text?: string | null;
+            /** Format: uuid */
+            integration_vendors_id?: string;
+            is_hidden?: boolean;
+        };
+        /** @description Program as returned by the program reads (list and by-id): the raw row hydrated with vendor, currency, order-type and KYC-rail joins. */
+        VirtualAccountProgram: components["schemas"]["VirtualAccountProgramBase"] & {
+            integration_vendor?: {
+                /** Format: uuid */
+                id?: string;
+                name?: string;
+                code?: string;
+                type?: string;
+            } | null;
+            account_currency_details?: components["schemas"]["CurrencySummary"] | null;
+            destination_currency_details?: components["schemas"]["CurrencySummary"] | null;
+            /** @description Order types enabled on the program */
+            virtual_accounts_programs_order_types?: {
+                /** Format: uuid */
+                order_type_id?: string;
+                order_type?: {
+                    /** Format: uuid */
+                    id?: string;
+                    description?: string | null;
+                } | null;
+            }[];
+            kyc_rails?: components["schemas"]["KycRail"] | null;
+        };
+        /** @description Fields shared by every virtual-account read shape. */
+        VirtualAccountBase: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: uuid */
+            wallet_id?: string;
+            /** Format: uuid */
+            va_programs_id?: string;
+            /**
+             * @description PENDING — awaiting upstream provisioning (re-post create to poll); FAILED — rejected upstream, the program can be re-opened
+             * @enum {string}
+             */
+            status?: "ACTIVE" | "CANCELED" | "FROZEN" | "INACTIVE" | "CLOSED" | "BLOCKED" | "PENDING" | "FAILED";
+            /** @description Settlement destination address (when the program settles to crypto) */
+            destination_address?: string | null;
+            /** Format: uuid */
+            integration_vendor_id?: string;
+            vendor_account_id?: string;
+            /** @description Customer name the account is held under */
+            customer_name?: string | null;
+            /** @description Bank requisites summary derived from deposit_instructions. Empty object when the account has no instructions; null when deposits are disabled on the program's KYC rail. */
+            account_details?: {
+                ach?: {
+                    accountNumber?: string;
+                    routingNumber?: string;
+                } | null;
+                wire?: {
+                    accountNumber?: string;
+                    routingNumber?: string;
+                } | null;
+                swift?: {
+                    swiftCode?: string;
+                    accountNumber?: string;
+                } | null;
+                sepa?: {
+                    iban?: string;
+                    swiftCode?: string;
+                } | null;
+                ukPayments?: {
+                    accountNumber?: string;
+                    sortCode?: string;
+                } | null;
+                swiftCode?: string | null;
+                bankName?: string | null;
+                bankAddress?: string | null;
+                beneficiary?: {
+                    name?: string;
+                    address?: string | null;
+                } | null;
+            } | null;
+            /** @description Deposit requisites (source of truth). Emptied to [] (never null) when deposits are disabled on the program's KYC rail. */
+            deposit_instructions?: {
+                [key: string]: unknown;
+            }[] | null;
+            meta?: Record<string, never> | null;
+        };
+        /** @description Virtual bank account as returned by the list read. Currencies come embedded as full objects; the raw uuids are exposed as `account_currency_id` / `destination_currency_id`. Only ACTIVE accounts are listed. */
+        VirtualAccount: components["schemas"]["VirtualAccountBase"] & {
+            /** @description Account currency as a full currency object (list read only — the single read returns a uuid string here) */
+            account_currency?: components["schemas"]["VirtualAccountCurrency"];
+            /** @description Destination currency as a full currency object (list read only — the single read returns a uuid string here) */
+            destination_currency?: components["schemas"]["VirtualAccountCurrency"];
+            /** Format: uuid */
+            account_currency_id?: string;
+            /** Format: uuid */
+            destination_currency_id?: string;
+            /** @description Owning program: the raw row plus its order types and KYC rail (rail without `is_deposit_enabled`) */
+            virtual_accounts_program?: components["schemas"]["VirtualAccountProgramBase"] & {
+                order_types?: {
+                    /** Format: uuid */
+                    order_type_id?: string;
+                }[];
+                kyc_rails?: components["schemas"]["KycRail"] | null;
+            };
+        };
+        /** @description Virtual account as returned by the single-account read (also by sync, which omits `crypto_deposit_details`). Superset of the stored row: currencies stay uuid strings, hydrated objects arrive in `account_currency_details` / `destination_currency_details`. */
+        VirtualAccountDetail: components["schemas"]["VirtualAccountBase"] & {
+            /** Format: uuid */
+            account_currency?: string;
+            /** Format: uuid */
+            destination_currency?: string;
+            /** Format: uuid */
+            account_currency_id?: string;
+            /** Format: uuid */
+            destination_currency_id?: string;
+            account_currency_details?: components["schemas"]["VirtualAccountCurrency"] | null;
+            destination_currency_details?: components["schemas"]["VirtualAccountCurrency"] | null;
+            /** @description Always 0 — a virtual account carries no balance of its own */
+            balance?: number;
+            /** @description Always 0 — a virtual account carries no balance of its own */
+            total_balance?: number;
+            /** @description Stablecoin deposit addresses resolved from the account meta (single-account read only; empty array when none) */
+            crypto_deposit_details?: {
+                /** Format: uuid */
+                currency_id?: string;
+                deposit_address?: string;
+                chain_id?: number;
+            }[];
+            /** @description Order type ids enabled on the owning program */
+            order_types?: string[];
+            /** @description Owning program: the raw row plus its order types (no rail embed on this read) */
+            virtual_accounts_program?: components["schemas"]["VirtualAccountProgramBase"] & {
+                order_types?: {
+                    /** Format: uuid */
+                    order_type_id?: string;
+                }[];
+            };
+        };
+        /** @description Create response shape: the stored account row only. Currencies are uuid strings, the hydrated fields of the list/single reads are absent, and `virtual_accounts_program` carries just the program's KYC rail reference. */
+        VirtualAccountCreated: components["schemas"]["VirtualAccountBase"] & {
+            /** Format: uuid */
+            account_currency?: string;
+            /** Format: uuid */
+            destination_currency?: string;
+            virtual_accounts_program?: {
+                kyc_rails?: {
+                    /** Format: uuid */
+                    id?: string;
+                    is_active?: boolean;
+                } | null;
+            };
+        };
+        /** @description Virtual account as embedded in order responses: the stored row hydrated with currency and vendor details. */
+        OrderVirtualAccount: {
             /** Format: uuid */
             id?: string;
             /** Format: uuid */
             wallet_id?: string;
             /** Format: uuid */
             va_programs_id?: string;
-            /** @enum {string} */
-            status?: "ACTIVE" | "INACTIVE" | "PENDING" | "CANCELED";
+            /**
+             * @description PENDING — awaiting upstream provisioning (re-post create to poll); FAILED — rejected upstream, the program can be re-opened
+             * @enum {string}
+             */
+            status?: "ACTIVE" | "CANCELED" | "FROZEN" | "INACTIVE" | "CLOSED" | "BLOCKED" | "PENDING" | "FAILED";
             /** Format: uuid */
             account_currency?: string;
             /** Format: uuid */
@@ -12977,19 +14196,19 @@ export interface components {
             destination_address?: string | null;
             /** Format: uuid */
             integration_vendor_id?: string;
-            vendor_account_id?: string | null;
+            vendor_account_id?: string;
             /** @description Customer name the account is held under */
             customer_name?: string | null;
-            /** @description Bank account details for deposits, derived from deposit_instructions. Returned null when deposits are disabled for the account. */
+            /** @description Bank account details for deposits, derived from deposit_instructions. Returned null when deposits are disabled on the program's KYC rail. */
             account_details?: Record<string, never> | null;
-            /** @description Deposit requisites (source of truth). Returned null when deposits are disabled for the account. */
-            deposit_instructions?: Record<string, never> | null;
+            /** @description Deposit requisites (source of truth). Emptied to [] (never null) when deposits are disabled on the program's KYC rail. */
+            deposit_instructions?: Record<string, never>[];
             meta?: Record<string, never> | null;
-            /** @description Account currency details — present on hydrated reads (e.g. embedded in a single-order response) */
+            /** @description Account currency details */
             account_currency_details?: components["schemas"]["CurrencyDetails"] | null;
-            /** @description Destination currency details — present on hydrated reads (e.g. embedded in a single-order response) */
+            /** @description Destination currency details */
             destination_currency_details?: components["schemas"]["CurrencyDetails"] | null;
-            /** @description Integration vendor details — present on hydrated reads (e.g. embedded in a single-order response) */
+            /** @description Integration vendor details */
             integration_vendor?: {
                 /** Format: uuid */
                 id?: string;
@@ -12999,21 +14218,6 @@ export interface components {
             } | null;
             /** Format: date-time */
             created_at?: string;
-        };
-        /** @description Virtual account program configuration */
-        VirtualAccountProgram: {
-            /** Format: uuid */
-            id?: string;
-            name?: string;
-            description?: string | null;
-            /** @enum {string} */
-            status?: "ACTIVE" | "INACTIVE";
-            icon?: string | null;
-            code?: string | null;
-            /** Format: uuid */
-            account_currency_id?: string;
-            /** Format: uuid */
-            destination_currency_id?: string;
         };
         /** @description Currency subset joined onto order and virtual-account reads (from the `crypto` table). */
         CurrencyDetails: {
@@ -13025,7 +14229,7 @@ export interface components {
             /** @description Number of minor-unit decimals */
             decimal: number;
         };
-        /** @description Public order metadata. The stored `meta` JSONB is reduced server-side to a fixed allowlist of public keys — workflow/provider internals never appear. Every field is optional: presence depends on the order type (crypto transfer, fiat off-ramp, exchange, internal transfer, card top-up, deposit). */
+        /** @description Public order metadata. List and single-read responses reduce the stored `meta` JSONB to a fixed allowlist of public keys; create/approve/cancel responses return the stored meta minus scheduler-internal keys. Every field is optional: presence depends on the order type (crypto transfer, fiat off-ramp, exchange, internal transfer, card top-up, deposit). */
         OrderMeta: {
             /** @description Legacy idempotency key — null on orders created by the current flow */
             request_id?: string | null;
@@ -13215,7 +14419,7 @@ export interface components {
             /** @description Destination currency details (resolved from `to_uuid`) */
             to_currency?: components["schemas"]["CurrencyDetails"];
             /** @description Virtual account referenced by the order (fiat off-ramp/on-ramp), hydrated with currency and vendor details. Absent/null when the order has no `meta.virtual_account_id`. */
-            virtual_account?: components["schemas"]["VirtualAccount"] | null;
+            virtual_account?: components["schemas"]["OrderVirtualAccount"] | null;
             /** @description Receiver of the order. Present when the order has a `meta.counterparty_destination_id`; absent otherwise. */
             counterparty_destination?: components["schemas"]["OrderCounterpartyDestination"] | null;
             /** @description Documents attached to the order; empty array when none (or when document loading failed). Returned by GET /frontend/orders/id/{order_id} only; absent from the by-uuid read. */
@@ -13342,7 +14546,7 @@ export interface components {
             /** @description Optional supporting documents persisted with the order. */
             documents?: components["schemas"]["OrderDocumentInput"][];
         };
-        FrontendL2FOrderRequest: {
+        FrontendFiatWithdrawalRequest: {
             /**
              * Format: uuid
              * @description Source wallet UUID
@@ -13505,12 +14709,108 @@ export interface components {
             /** Format: uuid */
             wallet_id?: string;
         };
+        Invoice: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            wallet_id?: string;
+            /**
+             * Format: uuid
+             * @description Counterparty account the invoice is addressed to
+             */
+            counterparty_account_id?: string | null;
+            /** @description Unique per wallet; user-supplied or generated as <prefix>-<n>, where the prefix is the first two vowels of the tenant name (INV fallback) */
+            invoice_number?: string;
+            /**
+             * @description OVERDUE is derived — a sent or partially paid invoice past its due date
+             * @enum {string}
+             */
+            status?: "DRAFT" | "SENT" | "PARTIALLY_PAID" | "PAID" | "OVERDUE";
+            /** Format: uuid */
+            currency_id?: string;
+            /** @description Gross (net item amounts + tax) */
+            total_amount?: number;
+            /** @description Sum of the linked payments */
+            paid_amount?: number;
+            /** Format: date */
+            due_date?: string | null;
+            /** Format: date-time */
+            sent_at?: string | null;
+            /** @description Recipient snapshot taken when the invoice was sent */
+            recipient_name?: string | null;
+            recipient_email?: string | null;
+            description?: string | null;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
+        };
+        InvoiceItem: {
+            /** Format: uuid */
+            id?: string;
+            /** @description Zero-based display order */
+            position?: number;
+            name?: string;
+            description?: string | null;
+            quantity?: number;
+            unit_price?: number;
+            /** @description Sales tax percent; null = no tax */
+            tax_rate?: number | null;
+            /** @description Net line amount (quantity x unit_price, before tax) */
+            amount?: number;
+            /** @description amount x tax_rate / 100; 0 without tax */
+            tax_amount?: number;
+            /** Format: date-time */
+            created_at?: string;
+        };
+        InvoicePayment: {
+            /** Format: uuid */
+            id?: string;
+            /**
+             * Format: uuid
+             * @description Linked incoming order
+             */
+            order_id?: string;
+            /** @description Full credited amount of the linked order */
+            amount?: number;
+            /** Format: date-time */
+            created_at?: string;
+        };
+        InvoiceItemInput: {
+            name: string;
+            description?: string;
+            quantity: number;
+            unit_price: number;
+            /** @description Optional sales tax percent */
+            tax_rate?: number;
+        };
+        MassPayoutDocument: {
+            /**
+             * Format: uri
+             * @description Public http(s) link to the uploaded file (the file itself is uploaded separately)
+             */
+            url: string;
+            /**
+             * @description Kind of the attachment; INVOICE satisfies the invoice rule for large payouts
+             * @enum {string}
+             */
+            type: "INVOICE" | "DOCUMENT";
+            description?: string;
+        };
+        MassPayoutCurrencyTotal: {
+            /** Format: uuid */
+            currency_id?: string;
+            amount?: number;
+        };
         MassPayout: {
             /** Format: uuid */
             id?: string;
             /** Format: uuid */
             wallet_id?: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Source currency the batch is funded in
+             */
             currency_id?: string;
             /**
              * Format: uuid
@@ -13518,12 +14818,30 @@ export interface components {
              */
             virtual_account_id?: string | null;
             name?: string;
-            /** @enum {string} */
-            status?: "DRAFT" | "PENDING_APPROVAL" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELED";
+            /**
+             * @description SCHEDULED = approved with a future send date; execution starts automatically at that moment
+             * @enum {string}
+             */
+            status?: "DRAFT" | "PENDING_APPROVAL" | "SCHEDULED" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELED";
+            /**
+             * Format: date-time
+             * @description Requested execution time; null means the batch executes right after approval
+             */
+            scheduled_at?: string | null;
+            /**
+             * Format: date-time
+             * @description Set when a stop was requested for a running batch; payments not yet started will be cancelled
+             */
+            cancel_requested_at?: string | null;
             total_items?: number;
+            /** @description Sum of payout amounts payable in the batch source currency (cross-currency payouts are listed in totals_by_currency instead) */
             total_amount?: number;
+            /** @description Exact recipient totals per payout currency */
+            totals_by_currency?: components["schemas"]["MassPayoutCurrencyTotal"][];
             completed_count?: number;
             failed_count?: number;
+            /** @description Payments cancelled before being attempted (batch cancelled or stopped) */
+            cancelled_count?: number;
             /**
              * Format: uuid
              * @description User id of the wallet member who approved the batch; null until approved
@@ -13542,9 +14860,21 @@ export interface components {
             id?: string;
             /** Format: uuid */
             destination_id?: string;
+            /** @description The amount the recipient receives, in the item's payout currency */
             amount?: number;
-            /** @enum {string} */
-            status?: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+            /**
+             * Format: uuid
+             * @description Payout currency of this item; null means the batch source currency
+             */
+            to_currency_id?: string | null;
+            /** @description Payment reference shown on the created order; falls back to the batch name */
+            reference?: string | null;
+            documents?: components["schemas"]["MassPayoutDocument"][];
+            /**
+             * @description CANCELED = never attempted (the batch was cancelled or stopped before this payment)
+             * @enum {string}
+             */
+            status?: "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELED";
             /**
              * Format: uuid
              * @description The regular order created for this item at execution
@@ -13563,7 +14893,55 @@ export interface components {
              * @description Existing counterparty destination of the source wallet
              */
             destination_id: string;
+            /** @description The amount the recipient receives, in the payout currency of this row */
             amount: number;
+            /**
+             * Format: uuid
+             * @description Payout currency of this row; omit for the batch source currency. A differing value makes the payout a cross-currency one (the debit is converted at execution time)
+             */
+            to_currency_id?: string;
+            /** @description Optional payment reference for this row */
+            reference?: string;
+            /** @description Supporting documents; an INVOICE attachment is required for rows at or above the invoice threshold */
+            documents?: components["schemas"]["MassPayoutDocument"][];
+        };
+        MassPayoutTemplateItemInput: {
+            /** Format: uuid */
+            destination_id: string;
+            amount: number;
+            /** Format: uuid */
+            to_currency_id?: string;
+            reference?: string;
+        };
+        MassPayoutTemplateItem: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            destination_id?: string;
+            amount?: number;
+            /** Format: uuid */
+            to_currency_id?: string | null;
+            reference?: string | null;
+            position?: number;
+        };
+        MassPayoutTemplate: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            wallet_id?: string;
+            name?: string;
+            /** Format: uuid */
+            currency_id?: string;
+            /** Format: uuid */
+            virtual_account_id?: string | null;
+            total_items?: number;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
+        };
+        MassPayoutTemplateWithItems: components["schemas"]["MassPayoutTemplate"] & {
+            items?: components["schemas"]["MassPayoutTemplateItem"][];
         };
         NotificationView: {
             /** Format: uuid */
@@ -13581,7 +14959,7 @@ export interface components {
         };
         NotificationPreference: {
             /** @enum {string} */
-            channel: "IN_APP" | "PUSH" | "EMAIL";
+            channel: "IN_APP" | "PUSH" | "EMAIL" | "TELEGRAM";
             enabled: boolean;
         };
         NotificationCategoryPreference: {
@@ -13599,9 +14977,9 @@ export interface components {
             content: {
                 "application/json": {
                     error?: {
-                        /** @example AUTHENTICATION_REQUIRED */
+                        /** @example UNAUTHORIZED */
                         code?: string;
-                        /** @example Please login to continue */
+                        /** @example Authorization header is missing */
                         message?: string;
                     };
                 };
@@ -13646,9 +15024,15 @@ export interface components {
          * @example e04c0c85-b031-47d7-8541-207b4e83d91a
          */
         TenantId: string;
+        /** @description Wallet the invoices belong to */
+        InvoiceWalletId: string;
+        InvoiceId: string;
+        /** @description Id of the linked payment (from the invoice details `payments` list) */
+        InvoicePaymentId: string;
         /** @description Source wallet the batches belong to */
         MassPayoutWalletId: string;
         MassPayoutId: string;
+        MassPayoutTemplateId: string;
     };
     requestBodies: never;
     headers: never;

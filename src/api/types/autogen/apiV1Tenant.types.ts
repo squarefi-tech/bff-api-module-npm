@@ -2488,7 +2488,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error (insufficient balance, virtual account missing, etc.) */
+                /** @description Validation error — invalid body, pair disabled by the exchange config, or calculated amount too small. Balance is checked only at approve. */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -3405,8 +3405,10 @@ export interface paths {
          *     debits the funds (transaction written as `complete`) and triggers the
          *     order execution pipeline. Exchange orders (EXCHANGE_OMNI) and internal
          *     transfers (TRANSFER_INTERNAL / OMNIBUS_INTERNAL_TRANSFER) settle
-         *     synchronously and land in COMPLETE. An insufficient balance fails the
-         *     order (FAILED). Only orders with status NEW can be approved. Orders
+         *     synchronously and land in COMPLETE. An insufficient balance answers
+         *     400 `INSUFFICIENT_FUNDS` and releases the order back to NEW; FAILED is
+         *     reached only when a step after the debit fails. Only orders with
+         *     status NEW can be approved. Orders
          *     created with `scheduled_at` move to EXPECTED instead — no funds are
          *     debited until execution at the requested time.
          *
@@ -3423,7 +3425,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Order approved and processing started */
+                /** @description Order approved — PROCESSING for workflow rails, COMPLETE for exchange / internal transfers, EXPECTED for scheduled orders */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -3433,10 +3435,22 @@ export interface paths {
                             /** @example true */
                             success?: boolean;
                             data?: components["schemas"]["TenantOrder"];
-                            /** @example Order approved and processing started */
-                            message?: string;
                         };
                     };
+                };
+                /** @description Insufficient funds (`INSUFFICIENT_FUNDS` — the order is released back to NEW) or validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Order does not belong to the tenant */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
                 /** @description Order not found */
                 404: {
@@ -3445,7 +3459,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Invalid status transition */
+                /** @description Order is not in an approvable state (`INVALID_STATE`), or another lifecycle call holds the order lock (`OPERATION_IN_PROGRESS`) */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -3512,10 +3526,15 @@ export interface paths {
                             /** @example true */
                             success?: boolean;
                             data?: components["schemas"]["TenantOrder"];
-                            /** @example Order canceled successfully */
-                            message?: string;
                         };
                     };
+                };
+                /** @description Order does not belong to the tenant */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
                 /** @description Order not found */
                 404: {
@@ -3524,7 +3543,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Invalid status transition */
+                /** @description Order is not in a cancelable state (`INVALID_STATE`), or another lifecycle call holds the order lock (`OPERATION_IN_PROGRESS`) */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -3606,6 +3625,78 @@ export interface paths {
                 };
             };
         };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/orders/{order_id}/confirmation-pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download payment confirmation (PDF)
+         * @description Operation-level proof that ONE payment was executed. One format serves both directions — on a deposit the payer is the external sender and the beneficiary is the customer's account, on a withdrawal the roles swap — and both payment kinds. A bank transfer is documented with payer and beneficiary requisites, amount in digits and in words, fee and rail; an on-chain transfer with both wallet addresses, the network, the token contract, gas paid and the transaction hash plus the explorer address where it can be verified. Carries no balances.
+         *
+         *     Only settled payments between two identifiable parties qualify: card top-ups, exchanges, book transfers between wallets and payments that have not reached COMPLETE are refused with 409 rather than documented, since the recipient reads this document as proof the money moved.
+         *
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Order ID or order UUID */
+                    order_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description PDF document */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/pdf": string;
+                    };
+                };
+                /** @description Order not found (also returned when the id exists in another tenant — no info leak) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Order is not an executed payment between two identifiable parties */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -6157,6 +6248,14 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Missing/invalid fields, or a `user_data_id` precondition not met (user not verified, no KYC applicant, or the applicant is unknown to the KYC provider). Code `INVALID_REQUEST`; the message names the failed precondition.
+                 *      */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description Vendor or sub-account not found */
                 404: {
                     headers: {
@@ -6167,6 +6266,14 @@ export interface paths {
                 /** @description Cardholder with this email already exists in this wallet + issuing_program. `error.details.cardholder_id` names the conflicting cardholder when it could be resolved.
                  *      */
                 409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description The KYC provider failed while the dossier was being pulled for `user_data_id` (code `EXTERNAL_SERVICE_ERROR`). Retry later; the draft was not created.
+                 *      */
+                502: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -7791,18 +7898,28 @@ export interface components {
             /** @description Per transaction amount spent */
             per_transaction_spent?: number;
         };
-        /** @description Sensitive card data */
+        /** @description Sensitive card data, live-fetched from the vendor on every call and never persisted. */
         CardSensitiveData: {
-            /** @description Full card number */
-            card_number?: string;
-            /** @description Card security code */
-            cvv?: string;
-            /** @description Card expiration month (MM) */
-            expiry_month?: string;
-            /** @description Card expiration year (YYYY) */
-            expiry_year?: string;
-            /** @description Card PIN (if applicable) */
-            pin?: string;
+            /**
+             * @description Full card number
+             * @example 4111111111111111
+             */
+            card_number: string;
+            /**
+             * @description Card expiration date, `MM/YY`
+             * @example 07/29
+             */
+            expiry_date: string;
+            /**
+             * @description Card security code
+             * @example 123
+             */
+            cvv: string;
+            /**
+             * @description 3-D Secure password where the vendor exposes one (Wallester); `null` otherwise.
+             * @example null
+             */
+            security_code: string | null;
         };
         /** @description Card transaction */
         IssuingTransaction: {
@@ -8535,7 +8652,7 @@ export interface components {
             };
         };
         /**
-         * @description Order type identifier. Must be one of the active values from the `order_types` table. Examples: `EXCHANGE_OMNI` (omnibus exchange), `L2F_SWIFT_OFFRAMP` (SWIFT offramp), `OMNIBUS_CRYPTO_TRANSFER` (crypto withdrawal). Legacy `DEPOSIT_*`, `WITHDRAWAL_*` and `AUTO_CONVERT_CRYPTO` are intentionally excluded.
+         * @description Order type identifier. Must be one of the active values from the `order_types` table. Examples: `EXCHANGE_OMNI` (omnibus exchange), `BRL_WIRE_OFFRAMP` (wire offramp), `OMNIBUS_CRYPTO_TRANSFER` (crypto withdrawal). `L2F_*` ids are historical (rail retired) and cannot be used to create orders. Legacy `DEPOSIT_*`, `WITHDRAWAL_*` and `AUTO_CONVERT_CRYPTO` are intentionally excluded.
          * @example EXCHANGE_OMNI
          * @enum {string}
          */
@@ -8623,7 +8740,7 @@ export interface components {
             virtual_account_id: string;
             /**
              * Format: uuid
-             * @description Bank counterparty destination UUID created via POST /api/counterparty/destinations. The destination type must match the rail (WIRE/ACH/SEPA/SWIFT/CHAPS/FPS).
+             * @description Bank counterparty destination UUID created via POST /api/counterparty/destinations. The destination type must match the rail (FEDWIRE for wire, ACH, SEPA, SWIFT, CHAPS, FPS).
              */
             counterparty_destination_id: string;
             /** @description Free-form reference visible in order/transaction listings */
@@ -8672,7 +8789,7 @@ export interface components {
             amount_to?: number | null;
             order_type?: string;
             /** @enum {string} */
-            status?: "NEW" | "EXPECTED" | "PROCESSING" | "COMPLETE" | "FAILED" | "CANCELED" | "REFUNDED";
+            status?: "NEW" | "PENDING" | "EXPECTED" | "PROCESSING" | "COMPLETE" | "FAILED" | "CANCELED" | "REFUNDED";
             /** Format: uuid */
             sub_account_id?: string | null;
             info?: string | null;
