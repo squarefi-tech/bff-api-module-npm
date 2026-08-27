@@ -6700,7 +6700,10 @@ export interface paths {
             parameters: {
                 query?: {
                     status?: "DRAFT" | "PENDING_APPROVAL" | "SCHEDULED" | "PROCESSING" | "COMPLETED" | "FAILED" | "CANCELED";
-                    /** @description Case-insensitive substring match against the batch name */
+                    /** @description Search box of the batch list: a case-insensitive PARTIAL match
+                     *     against the batch name, so a fragment finds it. LIKE metacharacters
+                     *     in the term are matched literally.
+                     *      */
                     name?: string;
                     /** @description Only batches created at or after this moment */
                     date_from?: string;
@@ -7177,9 +7180,18 @@ export interface paths {
          *     standard order flow, funds are debited per order). The estimated total
          *     debit is checked against the wallet balance first — a batch that
          *     cannot cover all payouts is refused instead of paying only part of the
-         *     list. Requires an administrative wallet role. On Clerk-authenticated
-         *     tenants a second factor verified within the last 10 minutes is also
-         *     required — a stale one is rejected with
+         *     list. Requires an administrative wallet role.
+         *
+         *     **Second factor, per action and mandatory.** Request an OTP
+         *     verification for THIS batch id and have the user complete it before
+         *     calling approve — the endpoint checks that verification and refuses
+         *     unless it came back APPROVED. Releasing a whole batch of payments is
+         *     verified exactly like approving a single order. The check runs before
+         *     anything is claimed or estimated, so a failed one leaves the batch
+         *     untouched and approve can simply be retried.
+         *
+         *     On Clerk-authenticated tenants a second factor verified within the last
+         *     10 minutes is required on top of that — a stale one is rejected with
          *     `TWO_FACTOR_REVERIFICATION_REQUIRED` (Supabase-authenticated tenants
          *     have no step-up check). Execution continues past failed items;
          *     progress is visible through the batch counters.
@@ -7220,8 +7232,20 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description Caller lacks an administrative wallet role, or (Clerk tenants) the second-factor verification is stale */
+                /** @description Caller lacks an administrative wallet role, the OTP verification for
+                 *     this batch is not APPROVED (`VERIFICATION_NOT_APPROVED`), or (Clerk
+                 *     tenants) the second-factor verification is stale.
+                 *      */
                 403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Batch not found, or no OTP verification was requested for it (`REQUEST_ID_NOT_FOUND`) */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -9118,7 +9142,11 @@ export interface paths {
                     limit?: number;
                     sort_by?: string;
                     sort_order?: "asc" | "desc";
-                    /** @description JSON-encoded filters */
+                    /** @description JSON-encoded array of filters, e.g. `[{"status":"COMPLETE"}]`.
+                     *     Besides order columns it accepts `mass_payout_id` (uuid), which narrows the
+                     *     result to the orders of one mass payout batch — the same batch reported by
+                     *     the `mass_payout_id` field of each order. A non-uuid value is rejected with 400.
+                     *      */
                     filters?: string;
                     date_from?: string;
                     date_to?: string;
@@ -9185,7 +9213,11 @@ export interface paths {
                 query?: {
                     date_from?: string;
                     date_to?: string;
-                    /** @description JSON-encoded filters */
+                    /** @description JSON-encoded array of filters, e.g. `[{"status":"COMPLETE"}]`.
+                     *     Besides order columns it accepts `mass_payout_id` (uuid), which narrows the
+                     *     result to the orders of one mass payout batch — the same batch reported by
+                     *     the `mass_payout_id` field of each order. A non-uuid value is rejected with 400.
+                     *      */
                     filters?: string;
                     /** @description If `true`, includes dust orders (amount below render threshold for either currency). Defaults to `false` — dust orders are hidden. */
                     show_low_balance?: "true" | "false";
@@ -14403,6 +14435,13 @@ export interface components {
             /** @description Computed dust flag — amount below the render threshold for either currency. Returned by the list endpoint (GET /frontend/orders/wallet/{wallet_uuid}); absent from single-order reads. */
             is_threshold_amount?: boolean;
             meta?: components["schemas"]["OrderMeta"];
+            /** @description Batch this order was created by, when it was sent as part of a mass payout; null for a standalone order. Filter the list by it with `filters=[{"mass_payout_id":"<uuid>"}]`. */
+            mass_payout?: {
+                /** Format: uuid */
+                id?: string;
+                /** @description Batch name — null only when the batch can no longer be resolved. */
+                name?: string | null;
+            } | null;
             /**
              * Format: date-time
              * @description Requested execution time for scheduled payments (status EXPECTED); null for immediate orders
@@ -14822,9 +14861,17 @@ export interface components {
             currency_id?: string;
             /**
              * Format: uuid
-             * @description Source virtual account for banking payouts (required only when the batch contains banking recipients)
+             * @description Source virtual account, required for a banking batch — its
+             *     methods are what such a batch sends through.
+             *
+             *     A batch sends ONE way only: internal, crypto or banking, never a
+             *     mix. The first recipient by upload position sets the kind and the
+             *     rest must match it; a recipient of another kind is reported as a
+             *     problem by preview and blocks submit/approve.
+             *
              */
             virtual_account_id?: string | null;
+            /** @description Batch name — required, free-form and NOT unique. Two batches of one wallet may share a name. */
             name?: string;
             /**
              * @description SCHEDULED = approved with a future send date; execution starts automatically at that moment
@@ -14905,7 +14952,13 @@ export interface components {
             amount: number;
             /**
              * Format: uuid
-             * @description Payout currency of this row; omit for the batch source currency. A differing value makes the payout a cross-currency one (the debit is converted at execution time)
+             * @description Payout currency of this row; omit for the batch source currency.
+             *     A differing value makes the payout a cross-currency one (the debit
+             *     is converted at execution time) and is accepted on banking rows
+             *     only — their off-ramp settles in the target currency. Crypto and
+             *     internal rows have no exchange leg, so they must stay in the batch
+             *     source currency.
+             *
              */
             to_currency_id?: string;
             /** @description Optional payment reference for this row */
@@ -14913,10 +14966,19 @@ export interface components {
             /** @description Supporting documents; an INVOICE attachment is required for rows at or above the invoice threshold */
             documents?: components["schemas"]["MassPayoutDocument"][];
         };
+        /** @description A template row has no documents field: an invoice belongs to one
+         *     concrete payment, never to the reusable recipient list. Attach
+         *     documents to the rows of a batch instead.
+         *      */
         MassPayoutTemplateItemInput: {
             /** Format: uuid */
             destination_id: string;
-            amount: number;
+            /** @description Optional in a template: omit it (or send null) to save a recipient
+             *     list whose amounts are filled in later. When present it must be
+             *     positive. A batch created from the template still requires an
+             *     amount on every row.
+             *      */
+            amount?: number | null;
             /** Format: uuid */
             to_currency_id?: string;
             reference?: string;
@@ -14926,7 +14988,8 @@ export interface components {
             id?: string;
             /** Format: uuid */
             destination_id?: string;
-            amount?: number;
+            /** @description Null when the template row has no amount yet. */
+            amount?: number | null;
             /** Format: uuid */
             to_currency_id?: string | null;
             reference?: string | null;

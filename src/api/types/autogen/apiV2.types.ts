@@ -314,6 +314,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/storage/order-documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload an order / mass payout document
+         * @description Uploads a document attachment for an order or a mass payout into the dedicated bucket (separate from KYC files) and returns a URL suitable for documents[].url when creating the order / mass payout.
+         */
+        post: operations["StorageController_uploadOrderDocument"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/storage/{type}/{folder_id}/{file_id}": {
         parameters: {
             query?: never;
@@ -1977,6 +1997,18 @@ export interface components {
             default: string;
             supported: string[];
         };
+        SystemMassPayoutsConfigDto: {
+            /** @description Whether mass payouts are available to this tenant. When false, every mass payout endpoint answers as if the feature did not exist. */
+            enabled: boolean;
+            /** @description Recipient rows one batch may carry. Exceeding it is rejected on create/update. */
+            max_items: number;
+            /** @description Rows one template may carry — a template is materialized into a batch, so it shares the batch cap. */
+            max_template_items: number;
+            /** @description Templates one wallet may keep. */
+            max_templates_per_wallet: number;
+            /** @description Supporting documents allowed per recipient row of a batch (template rows carry none). */
+            max_item_documents: number;
+        };
         SystemConfigDto: {
             tenant_id: string;
             app_url: string | null;
@@ -2003,6 +2035,7 @@ export interface components {
             /** @enum {string} */
             auth_provider: "supabase" | "clerk";
             base_currency: string;
+            mass_payouts: components["schemas"]["SystemMassPayoutsConfigDto"];
         };
         SystemChainsResponseDto: {
             total: number;
@@ -2815,12 +2848,48 @@ export interface operations {
             };
         };
     };
+    StorageController_uploadOrderDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * Format: binary
+                     * @description Allowed types: PDF, JPEG, PNG. Max size: 20 MB.
+                     */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageUploadFileResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     StorageController_getFile: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                type: "kyc" | "logo";
+                type: "kyc" | "logo" | "order-documents";
                 folder_id: string;
                 file_id: string;
             };

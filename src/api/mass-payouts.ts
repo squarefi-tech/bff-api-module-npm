@@ -10,6 +10,11 @@ import { API } from './types/types';
  *
  * `list` / `items` filter by a single status value (not an array), so they need none of the
  * comma-joining the issuing list endpoints do.
+ *
+ * Two limits live outside this client. The recipient caps are per-tenant and come from
+ * `tenants.config.get()` under `mass_payouts` (`API.MassPayouts.Config`) — never hardcode them.
+ * The batch a payment belongs to is read off the order (`mass_payout`), and a feed is narrowed to
+ * one batch with the `mass_payout_id` order-list filter, not from here.
  */
 export const massPayouts = {
   list: ({ wallet_id, ...params }: API.MassPayouts.List.Request): Promise<API.MassPayouts.List.Response> =>
@@ -36,6 +41,11 @@ export const massPayouts = {
     apiClientV1Frontend.postRequest<API.MassPayouts.Submit.Response>(
       `/frontend/mass-payouts/${wallet_id}/${id}/submit`,
     ),
+  // Second factor is mandatory and per-batch: run the `totp.otp_verification` flow with the batch
+  // id as `request_id` and let the user complete it BEFORE calling this, or approve answers 403
+  // `VERIFICATION_NOT_APPROVED` (404 `REQUEST_ID_NOT_FOUND` when none was ever requested). The
+  // check runs before anything is claimed, so a refusal leaves the batch untouched and approve can
+  // simply be retried. Clerk tenants additionally need a step-up verified within the last 10 min.
   approve: ({ wallet_id, id }: API.MassPayouts.Approve.Request): Promise<API.MassPayouts.Approve.Response> =>
     apiClientV1Frontend.postRequest<API.MassPayouts.Approve.Response>(
       `/frontend/mass-payouts/${wallet_id}/${id}/approve`,

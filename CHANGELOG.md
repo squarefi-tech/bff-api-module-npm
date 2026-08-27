@@ -7,7 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **The batch a payment came from is now readable, and a feed can be narrowed to it (SFI-2283 #1).** An order carries `mass_payout: { id, name } | null` — populated when the payment was sent as part of a batch, `null` for a standalone one — so a transaction can show which batch released it without a second lookup. `API.MassPayouts.OrderMassPayoutRef` names that shape. The matching server-side filter is typed as `API.Orders.V2.List.ByWallet.OrderListMassPayoutFilter` (`{ mass_payout_id: string }`) and joins the `OrderListFilter` union, so `orders.v2.list.byWallet`, `orders.frontend.list.byWallet` and both CSV variants accept it. It takes a single uuid, not an array — a non-uuid is refused with 400. Previously neither direction existed: the batch knew its payments and the payment knew nothing, and a paginated server-side feed cannot be filtered on a field that is not there.
+- **`API.MassPayouts.Config` — the tenant's own mass payout limits (SFI-2283 #3).** `tenants.config.get()` now reports `mass_payouts`: `enabled`, `max_items` (rows per batch), `max_template_items`, `max_templates_per_wallet` and `max_item_documents`. Read them instead of hardcoding a recipient cap — the limits are per-tenant, so a whitelabel deployment has its own, and until now the only way to learn one was to trip a 400.
+- **`storage.orderDocuments` — the upload that mass payout attachments were missing.** `POST /storage/order-documents` takes a PDF/JPEG/PNG up to 20 MB into a bucket separate from KYC and returns the path to pass as `documents[].url` on an order or a mass payout row. The payout schemas have always carried a link and never the bytes, and no method existed to produce that link, so the invoice rule for large rows could not be satisfied through this client at all. `storage.orderDocuments.getFileById` reads one back — `GET /storage/{type}/{folder_id}/{file_id}` accepts the new `order-documents` type alongside `kyc` and `logo`.
+
+### Changed
+
+- **Template rows may now be saved without an amount (SFI-2283 #4).** `MassPayoutTemplateItemInput.amount` is optional and nullable, so a reusable recipient list can be stored with the amounts filled in later — the wizard's "Skip – add later" step. When present it must still be positive, and a batch built from the template still requires an amount on every row. `MassPayoutTemplateItem.amount` is correspondingly `number | null`. This is a widening for consumers that read a template row: the value may be `null` now.
+- **`massPayouts.approve` requires a completed second factor, per batch.** Run the `totp.otp_verification` flow with the batch id as `request_id` and let the user finish it before calling approve; otherwise the endpoint answers 403 `VERIFICATION_NOT_APPROVED`, or 404 `REQUEST_ID_NOT_FOUND` if none was ever requested. Releasing a batch is now verified exactly like approving a single order. The check runs before anything is claimed or estimated, so a refusal leaves the batch untouched and approve can simply be retried. The method signature is unchanged — the requirement is a call-order one, documented on the method.
+- **A batch sends one way only.** The regenerated spec states the rule the API already enforced: internal, crypto or banking, never a mix. The first recipient by upload position sets the kind and the rest must match; a recipient of another kind is reported by `preview` as a problem and blocks submit and approve. Cross-currency (`to_currency_id` differing from the batch source currency) is likewise accepted on banking rows only — those settle through an off-ramp in the target currency, while crypto and internal rows have no exchange leg and must stay in the batch source currency (SFI-2283 #2).
+- **Regenerated all OpenAPI types from the dev specs.** Besides the mass payout work this pulls in the order `mass_payout` field on the external and tenant specs too, and the widened `filters` documentation on every order-list endpoint.
+
 ## [1.36.53] - 2026-08-26
+
+### Added
+
+- **The fee some vendors charge inside a card operation is now typed.** Interlace and others bill the fee within the operation rather than as its own `FEE` row, which makes `billing_amount` the principal only. `TransactionItem` gains `fee` (in billing currency, `0` for vendors that bill separately), `fee_details` (the vendor's itemisation, as the new `TransactionFee`) and `conversion_rate`, all optional because older backends omit them. `total_amount` — already on the type but undocumented — is the figure to render as the transaction's amount.
+- **`min_topup` on the issuing program.** The per-program minimum top-up (`issuing_programs.min_topup`) is compared against the amount credited to the card after fees and conversion, and a deposit below it is refused with 400 `TOPUP_BELOW_MINIMUM`. `0` means no minimum, and the initial top-up at issuance is exempt. Optional on the type: a program served by a backend predating the migration omits it. Consumers had been reaching the field through a local cast.
 
 ## [1.36.52] - 2026-08-26
 
