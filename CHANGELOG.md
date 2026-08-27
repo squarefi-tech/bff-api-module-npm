@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.54] - 2026-08-27
+
 ### Added
 
 - **The batch a payment came from is now readable, and a feed can be narrowed to it (SFI-2283 #1).** An order carries `mass_payout: { id, name } | null` — populated when the payment was sent as part of a batch, `null` for a standalone one — so a transaction can show which batch released it without a second lookup. `API.MassPayouts.OrderMassPayoutRef` names that shape. The matching server-side filter is typed as `API.Orders.V2.List.ByWallet.OrderListMassPayoutFilter` (`{ mass_payout_id: string }`) and joins the `OrderListFilter` union, so `orders.v2.list.byWallet`, `orders.frontend.list.byWallet` and both CSV variants accept it. It takes a single uuid, not an array — a non-uuid is refused with 400. Previously neither direction existed: the batch knew its payments and the payment knew nothing, and a paginated server-side feed cannot be filtered on a field that is not there.
