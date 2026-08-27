@@ -4855,7 +4855,11 @@ export interface paths {
                     limit?: number;
                     sort_by?: string;
                     sort_order?: "asc" | "desc";
-                    /** @description JSON-encoded filters */
+                    /** @description JSON-encoded array of filters, e.g. `[{"status":"COMPLETE"}]`.
+                     *     Besides order columns it accepts `mass_payout_id` (uuid), which narrows the
+                     *     result to the orders of one mass payout batch — the same batch reported by
+                     *     the `mass_payout_id` field of each order. A non-uuid value is rejected with 400.
+                     *      */
                     filters?: string;
                     date_from?: string;
                     date_to?: string;
@@ -8142,6 +8146,12 @@ export interface components {
             sub_account_id?: string | null;
             info?: string | null;
             meta?: components["schemas"]["OrderMeta"];
+            /** @description Batch this order was created by, when it was sent as part of a mass payout; null for a standalone order. Filter the list by it with `filters=[{"mass_payout_id":"<uuid>"}]`. */
+            mass_payout?: {
+                /** Format: uuid */
+                id?: string;
+                name?: string | null;
+            } | null;
             /**
              * Format: date-time
              * @description Requested execution time for scheduled payments (status EXPECTED); null for immediate orders

@@ -907,8 +907,7 @@ export namespace API {
       type CardUnfreezeRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/unfreeze'];
       type CardLimitsRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/limits'];
       type CardTransactionsRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/transactions'];
-      type SubAccountTransactionsRoot =
-        pathsV1Frontend['/frontend/issuing/sub-accounts/{sub_account_id}/transactions'];
+      type SubAccountTransactionsRoot = pathsV1Frontend['/frontend/issuing/sub-accounts/{sub_account_id}/transactions'];
       type CardDepositRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/deposit'];
       type CardWithdrawRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/withdraw'];
       type SubAccountDepositRoot = pathsV1Frontend['/frontend/issuing/sub-accounts/{sub_account_id}/deposit'];
@@ -963,8 +962,7 @@ export namespace API {
           export type Request = {
             sub_account_id: string;
           } & NonNullable<SubAccountTransactionsRoot['get']['parameters']['query']>;
-          export type Response =
-            SubAccountTransactionsRoot['get']['responses']['200']['content']['application/json'];
+          export type Response = SubAccountTransactionsRoot['get']['responses']['200']['content']['application/json'];
           export type Transaction = NonNullable<Response['data']>[number];
         }
 
@@ -1865,6 +1863,19 @@ export namespace API {
     export type MassPayoutTemplateWithItems = componentsV1Frontend['schemas']['MassPayoutTemplateWithItems'];
 
     /**
+     * The tenant's own mass payout limits and feature flag, delivered by `tenants.config.get()`
+     * under `mass_payouts`. Read them rather than hardcoding a recipient cap — every whitelabel
+     * tenant carries its own, and the only other way to learn one is to trip a 400.
+     */
+    export type Config = components['schemas']['SystemMassPayoutsConfigDto'];
+
+    /**
+     * Batch an order came from, as reported on the order itself — `null` for a standalone order.
+     * Filter a feed down to one batch with the `mass_payout_id` order-list filter.
+     */
+    export type OrderMassPayoutRef = componentsV1Frontend['schemas']['Order']['mass_payout'];
+
+    /**
      * Status unions read off the schemas rather than re-declared, so a spec change lands here
      * automatically. `SCHEDULED` = approved with a future send date; `CANCELED` on an item means
      * it was never attempted.
@@ -2749,9 +2760,19 @@ export namespace API {
           export type OrderListOrderTypeFilter = Record<'order_type', OrderType[] | OrderType>;
           export type OrderListFromUuidFilter = Record<'from_uuid', string[] | string>;
           export type OrderListToUuidFilter = Record<'to_uuid', string[] | string>;
+          /**
+           * Narrows the feed to the orders of one mass payout batch — the batch each order
+           * reports back in `mass_payout`. A single uuid only (not an array); a non-uuid value
+           * is refused with 400.
+           */
+          export type OrderListMassPayoutFilter = Record<'mass_payout_id', string>;
 
           export type OrderListFilter =
-            OrderListStatusFilter | OrderListOrderTypeFilter | OrderListFromUuidFilter | OrderListToUuidFilter;
+            | OrderListStatusFilter
+            | OrderListOrderTypeFilter
+            | OrderListFromUuidFilter
+            | OrderListToUuidFilter
+            | OrderListMassPayoutFilter;
           export interface Request {
             wallet_uuid: string;
             offset?: number;
@@ -3845,6 +3866,26 @@ export namespace API {
         };
         export type Response =
           operations['StorageController_getFileUrl']['responses']['200']['content']['application/octet-stream'];
+      }
+
+      export namespace GetFileById {
+        export interface Request {
+          folderId: string;
+          fileId: string;
+        }
+        export type Response =
+          operations['StorageController_getFile']['responses']['200']['content']['application/octet-stream'];
+      }
+    }
+
+    /**
+     * Attachments for orders and mass payouts, in a bucket of their own (not the KYC one). The
+     * uploaded file's link is what `documents[].url` expects on an order or a mass payout row.
+     */
+    export namespace OrderDocuments {
+      export namespace Upload {
+        export type Response =
+          operations['StorageController_uploadOrderDocument']['responses']['201']['content']['application/json'];
       }
 
       export namespace GetFileById {

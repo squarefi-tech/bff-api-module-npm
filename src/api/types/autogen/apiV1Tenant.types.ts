@@ -8795,6 +8795,12 @@ export interface components {
             info?: string | null;
             /** @description Filtered to META_ALLOWED_FIELDS */
             meta?: Record<string, never> | null;
+            /** @description Batch this order was created by, when it was sent as part of a mass payout; null for a standalone order. Filter the list by it with `filters=[{"mass_payout_id":"<uuid>"}]`. */
+            mass_payout?: {
+                /** Format: uuid */
+                id?: string;
+                name?: string | null;
+            } | null;
             /**
              * Format: date-time
              * @description Requested execution time for scheduled payments (status EXPECTED); null for immediate orders
