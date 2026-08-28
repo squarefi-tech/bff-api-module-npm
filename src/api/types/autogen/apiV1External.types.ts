@@ -7380,6 +7380,8 @@ export interface components {
              * @description Associated issuing program ID
              */
             issuing_program_id?: string;
+            /** @description Cards issued to this person (every status, canceled included), including cards on sibling per-vendor rows of the same person. Always present on list/get/PATCH; 0 when none. */
+            cards_count?: number;
             address?: components["schemas"]["CardholderAddress"];
         };
         /** @description An uploaded KYC file, addressable before it is attached to a cardholder */

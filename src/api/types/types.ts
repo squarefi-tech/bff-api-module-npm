@@ -122,6 +122,28 @@ export namespace API {
   }
 
   export namespace Cards {
+    /**
+     * How a card is painted: the artwork of the issuing program it belongs to.
+     *
+     * Normalized by the BFF on every read, so each field is either absent or
+     * usable — the abandoned shapes the `card_design` column still holds
+     * (`style.color`, `front_img`/`back_img`, a double-encoded JSON string)
+     * never reach a client. `null` means the program has no design and the app
+     * paints its own built-in artwork instead.
+     *
+     * One artwork covers both themes: a card face is a printed object, not a UI
+     * surface, so it does not restyle when the app does.
+     */
+    export interface CardDesign {
+      version: 1;
+      cover?: {
+        /** Absolute https URL of the artwork, authored at 636×400 (2× the card). */
+        image_url?: string;
+      };
+      /** Hex colour for every text on the card face (balance, nickname, PAN). */
+      text_color?: string;
+    }
+
     export namespace Config {
       export type IssuingProgramOrderType = {
         id: string;
@@ -162,6 +184,12 @@ export namespace API {
          */
         min_topup?: number;
         status?: IssuingProgramStatus | string;
+        /**
+         * The program's artwork. Present on DETAILED program responses only;
+         * `null` when the program has none. Cards carry their own copy
+         * (`IssuingCardListItem.card_design`) — read that when painting a card.
+         */
+        card_design?: API.Cards.CardDesign | null;
       }
     }
     export interface User {
@@ -241,6 +269,13 @@ export namespace API {
       type: CardType | string;
       form_factor: CardFormFactor | string;
       tokenizable: boolean;
+      /**
+       * This card's artwork, copied from its issuing program. Served WITH the
+       * card on purpose: joining against the program catalogue client-side
+       * costs a second request AND makes the card visibly swap artwork once
+       * that lands. `null` = no design, paint the app's built-in one.
+       */
+      card_design?: API.Cards.CardDesign | null;
     }
 
     export interface IssuingCardDetailItem {
@@ -258,6 +293,8 @@ export namespace API {
       tokenizable: boolean;
       issuing_programs: API.Cards.Config.Program;
       limits?: API.Cards.Limits.Limits;
+      /** This card's artwork; see `IssuingCardListItem.card_design`. */
+      card_design?: API.Cards.CardDesign | null;
     }
 
     export interface SubAccountCardListItem {

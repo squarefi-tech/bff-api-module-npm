@@ -4603,8 +4603,8 @@ export interface paths {
                                 code?: string | null;
                                 /** @description Initial topup amount */
                                 initial_topup?: number | null;
-                                /** @description Card design configuration */
-                                card_design?: Record<string, never> | null;
+                                /** @description Card artwork for this program; null = use the app's built-in design */
+                                card_design?: components["schemas"]["CardDesign"] | null;
                                 /** @description Legal consent text for card creation */
                                 consent_text?: string | null;
                                 /** @description One-time card issuing fee */
@@ -4703,7 +4703,8 @@ export interface paths {
                                 icon?: string | null;
                                 code?: string | null;
                                 initial_topup?: number | null;
-                                card_design?: Record<string, never> | null;
+                                /** @description Card artwork for this program; null = use the app's built-in design */
+                                card_design?: components["schemas"]["CardDesign"] | null;
                                 consent_text?: string | null;
                                 card_issuing_fee?: number | null;
                                 card_monthly_fee?: number | null;
@@ -13534,6 +13535,27 @@ export interface components {
             /** Format: date-time */
             created_at: string;
         };
+        /** @description How a card issued on this program is painted. Normalized on read, so every field here is either absent or usable — the abandoned shapes still in the column (`style.color`, `front_img`/`back_img`, a double-encoded JSON string) never reach a client. `null` means the program has no design: fall back to the app's built-in artwork. */
+        CardDesign: {
+            /**
+             * @description Contract version.
+             * @enum {integer}
+             */
+            version: 1;
+            /** @description The card face. One artwork for both themes — a card is a printed object, it does not restyle when the app does. */
+            cover?: {
+                /**
+                 * Format: uri
+                 * @description Absolute https URL of the artwork, authored at 2x of 318×200 (636×400).
+                 */
+                image_url?: string;
+            };
+            /**
+             * @description Hex colour for every text on the card (balance, nickname, masked PAN). Set it when the artwork needs contrast the app-wide card text colour does not give.
+             * @example #ffffff
+             */
+            text_color?: string;
+        };
         /** @description Issuing program configuration (`issuing_programs` row). When joined it also carries nested `order_types`, `kyc_rails` and `integration_vendors` (hence additionalProperties). */
         IssuingProgram: {
             /** Format: uuid */
@@ -13584,9 +13606,7 @@ export interface components {
             initial_topup?: number | null;
             /** @description Minimum top-up amount in program currency, compared against the credited amount (0 = no minimum) */
             min_topup?: number;
-            card_design?: {
-                [key: string]: unknown;
-            } | null;
+            card_design?: components["schemas"]["CardDesign"] | null;
             /** Format: uuid */
             kyc_rails_id?: string | null;
             /** Format: uuid */
@@ -13693,6 +13713,8 @@ export interface components {
             /** @description Embedded sub-account summary, or null when no sub-account is linked. Present on the normal (vendor-enriched) response; omitted only in the degraded local-only error mode. */
             sub_account: components["schemas"]["IssuingCardSubAccount"] | null;
             limits?: components["schemas"]["IssuingCardLimits"] | null;
+            /** @description This card's artwork, copied from its issuing program so a client needs no second request to paint the card. `null` = the program has no design, use the app's built-in artwork. */
+            card_design?: components["schemas"]["CardDesign"] | null;
             /** Format: date-time */
             created_at?: string;
             /** Format: date-time */
@@ -13882,6 +13904,8 @@ export interface components {
              * @description CORE user this cardholder is linked to (user_data provisioning mode); null for manually-created cardholders.
              */
             user_data_uuid?: string | null;
+            /** @description Cards issued to this person (every status, canceled included), including cards on sibling per-vendor rows of the same person. Always present on list/get/PATCH; 0 when none. */
+            cards_count?: number;
             vendor_id?: string | null;
             vendor_name?: string | null;
             vendor_type?: string | null;
