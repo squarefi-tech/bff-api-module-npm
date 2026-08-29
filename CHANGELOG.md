@@ -7,7 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`/frontend/wallets/active` — the per-user active wallet, now in the generated frontend types.** `GET` answers `{ wallet_id: string | null }`: the wallet the caller picked in Settings (the membership flagged `wallets_users.is_selected`) while it is still reachable, otherwise the pre-existing default — the `is_main` wallet, else the oldest one. `null` means the user reaches no wallet at all. `PUT` takes `{ wallet_id }` and stores the choice on the caller's own membership row, so it follows the account instead of the device and selecting a shared wallet leaves its owner untouched. Any wallet the caller is an active member of qualifies; ownership is not required. The endpoints are newer than the last generated spec, so a consumer that wanted them had to hand-write the path entry.
+
+### Changed
+
+- **The type generator can authenticate against protected specs.** CORE now serves the dev/staging OpenAPI documents behind HTTP Basic auth, which made `npm run update:types` — and the husky pre-commit hook that runs it — fail with a bare 401. Set `API_DOCS_AUTH_USER` / `API_DOCS_AUTH_PASSWORD` (see `.env.example`) and the fetch sends an `Authorization` header; leave them unset for the public production docs. Credentials cannot be carried in the URL — `fetch` rejects a URL that includes them — hence the separate pair.
+- **Regenerated every spec from dev.** Beyond the wallet endpoint the only movement is in the legacy spec, which no longer documents the `AuthResponse` and `User` component schemas. No client method referenced them.
+
 ## [1.36.55] - 2026-08-28
+
+### Added
+
+- **`card_design` — the card artwork, typed.** `issuing_programs.card_design` had a contract but was left an open record: `{ version: 1; cover?: { image_url?: string }; text_color?: string }`. One artwork serves both themes — a card face is a printed object — and the field rides on issuing programs and on the cards issued from them, so a client can render the real face instead of a placeholder.
 
 ## [1.36.54] - 2026-08-27
 

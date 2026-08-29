@@ -67,11 +67,7 @@ const resolveRef = (ref: string, root: unknown): unknown => {
 const ensurePath = (root: Record<string, unknown>, segments: string[]): Record<string, unknown> => {
   let cur: Record<string, unknown> = root;
   for (const segment of segments) {
-    if (
-      !cur[segment] ||
-      typeof cur[segment] !== 'object' ||
-      Array.isArray(cur[segment])
-    ) {
+    if (!cur[segment] || typeof cur[segment] !== 'object' || Array.isArray(cur[segment])) {
       cur[segment] = {};
     }
     cur = cur[segment] as Record<string, unknown>;
@@ -97,10 +93,28 @@ const patchBrokenRefs = (spec: Record<string, unknown>): number => {
   return patched;
 };
 
+/**
+ * Non-production stands publish specs that are still raw, so CORE puts them
+ * behind HTTP Basic auth (`DOCS_AUTH_USER` / `DOCS_AUTH_PASSWORD` there).
+ * Credentials cannot ride in the URL — fetch rejects a URL that carries them —
+ * so they come from the environment and become an Authorization header.
+ * Unset means no header: production docs are public.
+ */
+const docsAuthHeaders = (): Record<string, string> => {
+  const user = process.env.API_DOCS_AUTH_USER;
+  const password = process.env.API_DOCS_AUTH_PASSWORD;
+  if (!user || !password) return {};
+
+  const encoded = Buffer.from(`${user}:${password}`).toString('base64');
+  return { Authorization: `Basic ${encoded}` };
+};
+
 const fetchSpec = async (url: string): Promise<string> => {
-  const res = await fetch(url);
+  const res = await fetch(url, { headers: docsAuthHeaders() });
   if (!res.ok) {
-    throw new Error(`Failed to fetch ${url}: ${res.status} ${res.statusText}`);
+    const hint =
+      res.status === 401 ? ' — the docs are behind Basic auth, set API_DOCS_AUTH_USER / API_DOCS_AUTH_PASSWORD' : '';
+    throw new Error(`Failed to fetch ${url}: ${res.status} ${res.statusText}${hint}`);
   }
   return res.text();
 };
@@ -137,10 +151,7 @@ const generateDocs = async (apiDoc: ApiDocsData) => {
   }
 
   try {
-    const { stdout, stderr } = await execAsync(
-      `npx openapi-typescript "${inputArg}"`,
-      { maxBuffer: 50 * 1024 * 1024 },
-    );
+    const { stdout, stderr } = await execAsync(`npx openapi-typescript "${inputArg}"`, { maxBuffer: 50 * 1024 * 1024 });
     if (stderr) {
       console.error(`[${apiDoc.name}] stderr: ${stderr}`);
     }
@@ -155,9 +166,7 @@ const generateDocs = async (apiDoc: ApiDocsData) => {
 
 const run = async () => {
   const results = await Promise.allSettled(apiDocsData.map(generateDocs));
-  const failures = results
-    .map((r, i) => ({ r, name: apiDocsData[i].name }))
-    .filter(({ r }) => r.status === 'rejected');
+  const failures = results.map((r, i) => ({ r, name: apiDocsData[i].name })).filter(({ r }) => r.status === 'rejected');
   if (failures.length > 0) {
     for (const { r, name } of failures) {
       console.error(`[${name}] failed:`, (r as PromiseRejectedResult).reason);

@@ -10761,6 +10761,126 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/frontend/wallets/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Active wallet of the caller
+         * @description The wallet the app should open for the authenticated user.
+         *
+         *     Resolution order:
+         *     1. the wallet the user picked in Settings — the membership flagged
+         *        `wallets_users.is_selected`, while it is still active and the
+         *        wallet is not deleted;
+         *     2. otherwise the default kept for users who never picked one — the
+         *        `is_main` wallet, else the oldest one.
+         *
+         *     The selection cannot outlive the access it rides on: the flag sits on
+         *     the membership row, so revoking membership drops it. A deleted wallet
+         *     or a deactivated membership falls back to the default.
+         *
+         *     **Authentication**: Bearer token with x-tenant-id header required
+         *
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Resolved active wallet id (`null` when the user reaches no wallet). */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /** Format: uuid */
+                                wallet_id?: string | null;
+                            };
+                        };
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+            };
+        };
+        /**
+         * Select the active wallet
+         * @description Stores the caller's active-wallet choice on their own `wallets_users`
+         *     row (`is_selected`), so it follows the account instead of the device.
+         *     At most one such row exists per user — the DB enforces it.
+         *
+         *     The choice is per user, not per wallet: selecting a wallet shared with
+         *     the caller changes nothing for its owner or for the other members.
+         *     Any wallet the caller is an **active member** of may be selected —
+         *     ownership is not required.
+         *
+         *     **Authentication**: Bearer token with x-tenant-id header required
+         *
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        wallet_id: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Selection stored. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            /** @example Active wallet updated successfully */
+                            message?: string;
+                            data?: {
+                                /** Format: uuid */
+                                wallet_id?: string;
+                            };
+                        };
+                    };
+                };
+                /** @description wallet_id missing or blank */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["ForbiddenError"];
+                404: components["responses"]["NotFoundError"];
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/frontend/wallets/accept-invite": {
         parameters: {
             query?: never;

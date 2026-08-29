@@ -7529,60 +7529,6 @@ export interface components {
                 mon_min_usd?: number;
             } | null;
         };
-        AuthResponse: {
-            /** @description JWT access token */
-            access_token?: string;
-            /**
-             * @description Token type (bearer)
-             * @enum {string}
-             */
-            token_type?: "bearer";
-            /** @description Seconds until token expiration */
-            expires_in?: number;
-            /** @description Token expiration timestamp */
-            expires_at?: number;
-            /** @description Refresh token for obtaining new access token */
-            refresh_token?: string;
-            user?: components["schemas"]["User"];
-        };
-        User: {
-            /** @description User's unique identifier */
-            id?: string;
-            /** @description Audience for the token */
-            aud?: string;
-            /** @description User's role */
-            role?: string;
-            /** @description User's email address */
-            email?: string;
-            /**
-             * Format: date-time
-             * @description When email was confirmed
-             */
-            email_confirmed_at?: string;
-            /** @description User's phone number */
-            phone?: string;
-            /**
-             * Format: date-time
-             * @description When user was confirmed
-             */
-            confirmed_at?: string;
-            /**
-             * Format: date-time
-             * @description When recovery email was sent
-             */
-            recovery_sent_at?: string;
-            /**
-             * Format: date-time
-             * @description Last sign in timestamp
-             */
-            last_sign_in_at?: string;
-            identities?: Record<string, never>[];
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            is_anonymous?: boolean;
-        };
         SubAccount: {
             /**
              * @description Unique identifier for the sub-account
@@ -8366,6 +8312,7 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        User: unknown;
         Wallet: unknown;
         WalletDetailed: unknown;
         CryptoAddress: unknown;
