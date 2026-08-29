@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.56] - 2026-08-29
+
 ### Added
 
 - **`/frontend/wallets/active` — the per-user active wallet, now in the generated frontend types.** `GET` answers `{ wallet_id: string | null }`: the wallet the caller picked in Settings (the membership flagged `wallets_users.is_selected`) while it is still reachable, otherwise the pre-existing default — the `is_main` wallet, else the oldest one. `null` means the user reaches no wallet at all. `PUT` takes `{ wallet_id }` and stores the choice on the caller's own membership row, so it follows the account instead of the device and selecting a shared wallet leaves its owner untouched. Any wallet the caller is an active member of qualifies; ownership is not required. The endpoints are newer than the last generated spec, so a consumer that wanted them had to hand-write the path entry.
