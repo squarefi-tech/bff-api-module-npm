@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`include=destinations` on the counterparty account listing, in the generated frontend types.** `GET /frontend/counterparty/accounts/wallet/{wallet_id}` now accepts `include: "destinations"` and embeds each account's active destinations in the list rows. A screen that needs the payment details of every counterparty at once — the mass-payout "Select recipients" step, where each row reads "company - available methods" and the Method filter is built from the same data — had no way to ask for them: ownership is not on the destination list response, so the only route was one `GET /frontend/counterparty/destinations/wallet/{wallet_id}` per account, and the filter had to stay disabled until the last one returned. Omit the flag and the response is unchanged. With it, every row carries a `destinations` array that is empty when the account has none, so "no payment details" stays distinguishable from "not loaded". Pagination keeps counting accounts, and the flag combines with `search` / `type` / `sort_by` / `sort_order`. The rows are typed as `CounterpartyAccount | CounterpartyAccountWithDestinations` — the existing get-by-id schema is reused, no new one was added.
+- **Counterparty destinations now name their owner.** `CounterpartyDestination` gains a required `counterparty_account_id` and an embedded `counterparty_account` (the new `CounterpartyAccountRef` schema — id, name, type, wallet_id, nickname, email, phone — present on list and get-by-id reads, absent on create/update). The same pair lands on the external and tenant specs. Reading a destination no longer requires a second call to learn which counterparty it belongs to.
+- **`destinations_count`, `wallet_id` and `updated_at` on `CounterpartyAccount`.** `destinations_count` is documented as list-response-only; `updated_at` also appears on `CounterpartyDestination`.
+
+### Changed
+
+- **Regenerated the frontend, external and tenant specs from dev.** The legacy and v2 specs are unchanged. Besides the counterparty work, the external and tenant specs drop the optional `id` from their `BankingData`, `CryptoData` and `BankingAddress` schemas; no `API.*` type derives from those three, so the public surface is unaffected. The frontend counterparty schemas never carried that field.
+
 ## [1.36.56] - 2026-08-29
 
 ### Added

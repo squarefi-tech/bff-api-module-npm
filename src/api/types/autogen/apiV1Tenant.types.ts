@@ -8439,8 +8439,6 @@ export interface components {
             destinations_count?: number;
         };
         BankingData: {
-            /** Format: uuid */
-            id?: string;
             account_number?: string | null;
             routing_number?: string | null;
             bank_name: string | null;
@@ -8450,8 +8448,6 @@ export interface components {
             sort_code?: string | null;
             note?: string | null;
             address?: {
-                /** Format: uuid */
-                id?: string;
                 country_id?: number | null;
                 city?: string | null;
                 postcode?: string | null;
@@ -8463,8 +8459,6 @@ export interface components {
             created_at: string;
         } | null;
         CryptoData: {
-            /** Format: uuid */
-            id?: string;
             address: string;
             /** Format: uuid */
             currency_id?: string;
@@ -8506,7 +8500,21 @@ export interface components {
             banking_data?: components["schemas"]["BankingData"];
             crypto_data?: components["schemas"]["CryptoData"];
             internal_data?: components["schemas"]["CounterpartyInternalData"];
+            counterparty_account?: components["schemas"]["CounterpartyAccountRef"];
         };
+        /** @description Owning counterparty account, embedded on destination reads; absent on create/update. */
+        CounterpartyAccountRef: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            type: "BUSINESS" | "INDIVIDUAL";
+            /** Format: uuid */
+            wallet_id?: string | null;
+            nickname?: string | null;
+            email?: string | null;
+            phone?: string | null;
+        } | null;
         AdminApiKey: {
             /** Format: uuid */
             id?: string;
