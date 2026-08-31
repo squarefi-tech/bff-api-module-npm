@@ -51,6 +51,29 @@ export const counterparties = {
 
     return { total: res.pagination?.total ?? res.data.length, data: res.data };
   },
+  // Тот же роут, что getAll, но с include=destinations: бэкенд вкладывает активные реквизиты
+  // в строки листинга, и экран узнаёт состав реквизитов всех контрагентов одним запросом вместо
+  // одного запроса на контрагента. Флаг проставляется здесь и снаружи не принимается — иначе
+  // вызов с ним вернул бы реквизиты в рантайме, а тип листинга остался бы без них.
+  // destinations читаем строго, как в getById: подстановка [] на отсутствующий ключ выдала бы
+  // «реквизитов нет» для всех контрагентов сразу и скрыла бы бэкенд, не поддержавший флаг.
+  getAllWithDestinations: async ({
+    wallet_id,
+    ...params
+  }: API.Counterparties.ListWithDestinations.Request): Promise<API.Counterparties.ListWithDestinations.Response> => {
+    const res = await apiClientV1Frontend.getRequest<Envelope<FrontendAccountWithDestinations[]>>(
+      `/frontend/counterparty/accounts/wallet/${wallet_id}`,
+      { params: { ...params, include: 'destinations' } },
+    );
+
+    return {
+      total: res.pagination?.total ?? res.data.length,
+      data: res.data.map(({ destinations, ...account }) => ({
+        ...account,
+        destinations: destinations.map(mapDestination),
+      })),
+    };
+  },
   getById: async ({
     counterparty_account_id,
   }: API.Counterparties.GetById.Request): Promise<API.Counterparties.GetById.Response> => {
