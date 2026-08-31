@@ -698,16 +698,34 @@ export namespace API {
       export type Response = CounterpartyWithDestinations;
     }
 
+    // Флаг include=destinations меняет форму ответа, поэтому он не параметр листинга, а отдельный
+    // метод: getAllWithDestinations. Пропусти его сюда — и вызов с флагом вернул бы реквизиты
+    // в рантайме, а тип остался бы без них. Omit снимает его с обычного листинга.
     export namespace List {
-      export type Request =
+      export type Request = Omit<
         pathsV1Frontend['/frontend/counterparty/accounts/wallet/{wallet_id}']['get']['parameters']['path'] &
           NonNullable<
             pathsV1Frontend['/frontend/counterparty/accounts/wallet/{wallet_id}']['get']['parameters']['query']
-          >;
+          >,
+        'include'
+      >;
 
       export type Response = {
         total: number;
         data: Counterparty[];
+      };
+    }
+
+    // Тот же роут с include=destinations. Строка — CounterpartyWithDestinations, та же схема, что
+    // отдаёт get-by-id: destinations всегда массив, пустой у контрагента без реквизитов, так что
+    // «реквизитов нет» отличается от «не запрашивали» (там свойства нет вовсе). Пагинация и
+    // search / type / sort_by / sort_order работают как в обычном листинге.
+    export namespace ListWithDestinations {
+      export type Request = List.Request;
+
+      export type Response = {
+        total: number;
+        data: CounterpartyWithDestinations[];
       };
     }
 

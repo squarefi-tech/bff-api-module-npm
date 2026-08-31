@@ -1065,6 +1065,8 @@ export interface paths {
                     sort_by?: "created_at" | "type" | "name" | "nickname" | "email" | "phone";
                     /** @description Sort direction (defaults to ASC). Ignored without `sort_by`. */
                     sort_order?: "ASC" | "DESC";
+                    /** @description Embed each account's active destinations in the list rows. Omit it and the response is unchanged. With `destinations` every row carries a `destinations` array — empty when the account has none, so "no payment details" is distinguishable from "not loaded". Pagination keeps counting accounts, and the embed combines with `search` / `type` / `sort_by` / `sort_order`. */
+                    include?: "destinations";
                 };
                 header?: never;
                 path: {
@@ -1074,7 +1076,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Accounts list */
+                /** @description Accounts list. Rows carry their destinations only when `include=destinations` was requested. */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -1083,7 +1085,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success: boolean;
-                            data: components["schemas"]["CounterpartyAccount"][];
+                            data: (components["schemas"]["CounterpartyAccount"] | components["schemas"]["CounterpartyAccountWithDestinations"])[];
                             pagination?: components["schemas"]["PaginationResponse"];
                         };
                     };
@@ -13442,6 +13444,11 @@ export interface components {
         CounterpartyAccount: {
             /** Format: uuid */
             id: string;
+            /**
+             * Format: uuid
+             * @description Wallet the counterparty belongs to
+             */
+            wallet_id?: string | null;
             /** @description Account holder name */
             name: string;
             /** @enum {string} */
@@ -13461,9 +13468,26 @@ export interface components {
              * @default false
              */
             has_internal_destination: boolean;
+            /** @description Number of active destinations. Present on the list response only. */
+            destinations_count?: number;
             /** Format: date-time */
             created_at: string;
+            /** Format: date-time */
+            updated_at?: string;
         };
+        /** @description Owning counterparty account, embedded on destination reads. */
+        CounterpartyAccountRef: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            type: "BUSINESS" | "INDIVIDUAL";
+            /** Format: uuid */
+            wallet_id?: string | null;
+            nickname?: string | null;
+            email?: string | null;
+            phone?: string | null;
+        } | null;
         /** @description A counterparty account with its embedded active destinations (returned by GET account by id). */
         CounterpartyAccountWithDestinations: components["schemas"]["CounterpartyAccount"] & {
             /** @description Active destinations belonging to this account. */
@@ -13543,6 +13567,11 @@ export interface components {
             /** Format: uuid */
             id: string;
             /**
+             * Format: uuid
+             * @description Owning counterparty account
+             */
+            counterparty_account_id: string;
+            /**
              * @description Destination / payment rail type
              * @enum {string}
              */
@@ -13551,9 +13580,13 @@ export interface components {
             nickname?: string | null;
             /** Format: date-time */
             created_at: string;
+            /** Format: date-time */
+            updated_at?: string;
             banking_data?: components["schemas"]["CounterpartyBankingData"] | null;
             crypto_data?: components["schemas"]["CounterpartyCryptoData"] | null;
             internal_data?: components["schemas"]["CounterpartyInternalData"] | null;
+            /** @description Embedded on the list and get-by-id reads; absent on create/update. */
+            counterparty_account?: components["schemas"]["CounterpartyAccountRef"] | null;
         };
         /** @description Whether an instant internal transfer is available for a counterparty destination. Two states: available (available=true, target_wallet_id set) and not available (available=false, target_wallet_id=null). Any recipient that cannot receive an instant internal transfer is uniformly reported as not available — the check does not disclose the reason. */
         InternalTransferAvailability: {

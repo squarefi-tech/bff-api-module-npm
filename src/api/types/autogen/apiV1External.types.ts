@@ -7660,8 +7660,6 @@ export interface components {
         };
         /** @description Bank/beneficiary postal address */
         BankingAddress: {
-            /** Format: uuid */
-            id?: string;
             /** @description Country ID reference */
             country_id?: number | null;
             city?: string | null;
@@ -7672,8 +7670,6 @@ export interface components {
         } | null;
         /** @description Banking destination details (for SWIFT, SEPA, ACH, Wire, etc.) */
         BankingData: {
-            /** Format: uuid */
-            id?: string;
             /** @description Bank account number */
             account_number?: string | null;
             /** @description Routing/sort code */
@@ -7706,8 +7702,6 @@ export interface components {
         };
         /** @description Crypto destination details (for CRYPTO_EXTERNAL, CRYPTO_INTERNAL) */
         CryptoData: {
-            /** Format: uuid */
-            id?: string;
             /** @description Blockchain address */
             address: string;
             /**
@@ -7765,7 +7759,21 @@ export interface components {
             banking_data?: components["schemas"]["BankingData"];
             crypto_data?: components["schemas"]["CryptoData"];
             internal_data?: components["schemas"]["CounterpartyInternalData"];
+            counterparty_account?: components["schemas"]["CounterpartyAccountRef"];
         };
+        /** @description Owning counterparty account, embedded on destination reads; absent on create/update. */
+        CounterpartyAccountRef: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @enum {string} */
+            type: "BUSINESS" | "INDIVIDUAL";
+            /** Format: uuid */
+            wallet_id?: string | null;
+            nickname?: string | null;
+            email?: string | null;
+            phone?: string | null;
+        } | null;
         ApiSuccessResponse: {
             /** @example true */
             success: boolean;
