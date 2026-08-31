@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.57] - 2026-08-31
+
 ### Added
 
 - **`include=destinations` on the counterparty account listing, in the generated frontend types.** `GET /frontend/counterparty/accounts/wallet/{wallet_id}` now accepts `include: "destinations"` and embeds each account's active destinations in the list rows. A screen that needs the payment details of every counterparty at once — the mass-payout "Select recipients" step, where each row reads "company - available methods" and the Method filter is built from the same data — had no way to ask for them: ownership is not on the destination list response, so the only route was one `GET /frontend/counterparty/destinations/wallet/{wallet_id}` per account, and the filter had to stay disabled until the last one returned. Omit the flag and the response is unchanged. With it, every row carries a `destinations` array that is empty when the account has none, so "no payment details" stays distinguishable from "not loaded". Pagination keeps counting accounts, and the flag combines with `search` / `type` / `sort_by` / `sort_order`. The rows are typed as `CounterpartyAccount | CounterpartyAccountWithDestinations` — the existing get-by-id schema is reused, no new one was added.
