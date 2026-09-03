@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.58] - 2026-09-03
+
 ### Added
 
 - **The batch page's two missing pieces are in the contract now (SFI-2334).** A row of a mass payout (`MassPayoutItem`) gains `destination` — the address-book `CounterpartyDestination` it pays, with its owning `counterparty_account` embedded and the raw `banking_data` / `crypto_data` / `internal_data` the address book itself returns, formatted by nobody. The single-batch read gains `processing_count` (payments not yet finished) and `method_breakdown[]` — one `{ destination_type, total, completed, failed, cancelled }` per destination type present in the batch, counted over the whole batch and unaffected by how the item list is paged or filtered. A batch details page needed both and could get neither: to put a name next to three rows it read the wallet's entire address book, and to draw the per-rail progress bars it walked every row of the batch, both repeated every 10 seconds while the batch executed. No new paths — the two existing reads answer with more.
