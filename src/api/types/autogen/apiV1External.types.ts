@@ -6526,6 +6526,15 @@ export interface paths {
                         "application/json": components["schemas"]["ApiErrorResponse"];
                     };
                 };
+                /** @description KYC rail gate failed (KYC-enabled tenants) — `RAIL_NOT_CONFIGURED`, `RAIL_NOT_ENABLED`, `DEPOSITS_DISABLED`, `WALLET_RAIL_NOT_ONBOARDED` or `WALLET_RAIL_NOT_APPROVED`: the program's rail must be enabled and the wallet APPROVED on it */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
                 /** @description Server error */
                 500: {
                     headers: {

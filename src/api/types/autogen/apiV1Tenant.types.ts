@@ -4983,6 +4983,11 @@ export interface paths {
         /**
          * Create virtual account
          * @description Create a virtual account for a specific wallet. Tenant API can create VA for any user. Supports force_create to bypass existing VA check.
+         *
+         *     On KYC-enabled tenants the program's KYC rail gate applies exactly as on the client API — the rail must be enabled
+         *     (`kyc_rails.is_active`, `is_deposit_enabled`) and the wallet must be APPROVED on it (`wallet_kyc_rails`); otherwise 422 with
+         *     `RAIL_NOT_ENABLED`, `DEPOSITS_DISABLED`, `WALLET_RAIL_NOT_ONBOARDED` or `WALLET_RAIL_NOT_APPROVED`. `force_create` never bypasses it.
+         *
          */
         post: {
             parameters: {
@@ -5051,6 +5056,13 @@ export interface paths {
                 };
                 /** @description Virtual account already exists */
                 409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description KYC rail gate — rail disabled, deposits disabled, or wallet not APPROVED on the program's rail */
+                422: {
                     headers: {
                         [name: string]: unknown;
                     };

@@ -1640,224 +1640,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/issuing/cards/prepaid": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create a new prepaid card
-         * @deprecated
-         * @description **Deprecated.** Use `POST /frontend/issuing/cards` (unified, routes by the program's
-         *     `sub_account_type`) instead — it carries the same fee/top-up handling.
-         *
-         *     Creates a new prepaid card for the user. Initial topup amount is determined by user group settings.
-         *
-         *     **Cardholder is required**: Every card must be associated with a cardholder.
-         *     Create a cardholder first, then pass the `cardholder_id` here.
-         *
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /** @description Card nickname */
-                        nick_name: string;
-                        /**
-                         * Format: uuid
-                         * @description Issuing program ID
-                         */
-                        program_id: string;
-                        /**
-                         * Format: uuid
-                         * @description Wallet ID
-                         */
-                        wallet_id: string;
-                        /**
-                         * Format: uuid
-                         * @description ID of the cardholder to associate with this card. **Required.**
-                         *
-                         */
-                        cardholder_id: string;
-                        /**
-                         * Format: uuid
-                         * @description Currency ID for card fees (required if program has issuing fee or initial topup)
-                         */
-                        currency_id?: string;
-                        /**
-                         * @deprecated
-                         * @description **Deprecated.** Use `cardholder_id` instead.
-                         */
-                        email?: string;
-                        /**
-                         * @deprecated
-                         * @description **Deprecated.** Use `cardholder_id` instead.
-                         */
-                        vendor_user_id?: string;
-                        /** @description User data ID (optional) */
-                        user_data_id?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Prepaid card created successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            card_id?: string;
-                            /** @enum {string} */
-                            status?: "ACTIVE";
-                        };
-                    };
-                };
-                /** @description Bad Request - missing required fields or validation error */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/issuing/cards/balance": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create a new balance card
-         * @deprecated
-         * @description **Deprecated.** Use `POST /frontend/issuing/cards` (unified, routes by the program's
-         *     `sub_account_type`) instead — it carries the same fee/top-up handling.
-         *
-         *     Creates a new card linked to an existing balance account for the user. Card fees and initial topup are determined by user group settings.
-         *
-         *     **Cardholder is required**: Every card must be associated with a cardholder.
-         *     Create a cardholder first, then pass the `cardholder_id` here.
-         *
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /** @description Card nickname */
-                        nick_name: string;
-                        /**
-                         * Format: uuid
-                         * @description Issuing program ID
-                         */
-                        program_id: string;
-                        /**
-                         * Format: uuid
-                         * @description Wallet ID
-                         */
-                        wallet_id: string;
-                        /**
-                         * Format: uuid
-                         * @description Fiat account (sub-account) ID to link the card to
-                         */
-                        fiat_account_id: string;
-                        /**
-                         * Format: uuid
-                         * @description ID of the cardholder to associate with this card. **Required.**
-                         *
-                         */
-                        cardholder_id: string;
-                        /**
-                         * Format: uuid
-                         * @description Currency ID for card fees (required if program has issuing fee)
-                         */
-                        currency_id?: string;
-                        /**
-                         * @deprecated
-                         * @description **Deprecated.** Use `cardholder_id` instead.
-                         */
-                        vendor_user_id?: string;
-                        /** @description User data ID (optional) */
-                        user_data_id?: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Balance card created successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            card_id?: string;
-                            /** @enum {string} */
-                            status?: "ACTIVE";
-                        };
-                    };
-                };
-                /** @description Bad Request - missing required fields, validation error, or cards limit reached */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-                /** @description Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Error"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/issuing/cards/{card_id}/freeze": {
         parameters: {
             query?: never;
@@ -2548,7 +2330,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description Forbidden - KYC not approved for this wallet */
+                /** @description Forbidden - KYC not approved for this wallet, or (KYC-enabled tenants) the wallet is not APPROVED on the program's KYC rail / the rail is disabled — `code` carries WALLET_RAIL_NOT_ONBOARDED, WALLET_RAIL_NOT_APPROVED, RAIL_NOT_ENABLED or RAIL_NOT_CONFIGURED */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -3944,6 +3726,12 @@ export interface paths {
                          * @example 123e4567-e89b-12d3-a456-426614174000
                          */
                         card_id?: string;
+                        /**
+                         * Format: uuid
+                         * @description Optional client-generated UUID for idempotency. Retrying with the same reference_id returns the original order instead of debiting the wallet again.
+                         * @example 3f0b8f61-52a4-4f0e-9f0d-2f6f4f1b9a11
+                         */
+                        reference_id?: string;
                     };
                 };
             };
@@ -3979,119 +3767,6 @@ export interface paths {
                                 transaction_amount?: number;
                                 billing_currency?: string;
                                 transaction_currency?: string;
-                            };
-                            id?: string;
-                        };
-                    };
-                };
-                /** @description Bad request - validation error */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error?: string;
-                        };
-                    };
-                };
-                /** @description Server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            error?: string;
-                        };
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/orders/TRANSFER_CARD_PREPAID": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create a wholesale card deposit order
-         * @description Transfer funds from crypto to a wholesale card vendor
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /**
-                         * @description Amount to transfer
-                         * @example 100
-                         */
-                        amount: number;
-                        /**
-                         * @description Source wallet UUID
-                         * @example 8205c701-cd41-4929-910f-fccbb949729a
-                         */
-                        wallet_uuid: string;
-                        /**
-                         * @description UUID of cryptocurrency from currency table to withdraw from
-                         * @example c6d0c728-2624-403d-8e42-0c3f8b1e5e41
-                         */
-                        from_uuid: string;
-                        /**
-                         * @description Card ID
-                         * @example 509eca03-bc0d-4a38-b7dc-d136d2bdaa43
-                         */
-                        card_id: string;
-                    };
-                };
-            };
-            responses: {
-                /** @description Order successfully created */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** Format: date-time */
-                            created_at?: string;
-                            order_uuid?: string;
-                            wallet_uuid?: string;
-                            from_uuid?: string;
-                            to_uuid?: string;
-                            amount_from?: number;
-                            /** @example TRANSFER_CARD_PREPAID */
-                            order_type?: string;
-                            /** @enum {string} */
-                            status?: "PENDING" | "COMPLETE" | "FAILED";
-                            amount_to?: number;
-                            info?: string;
-                            meta?: {
-                                fee?: number;
-                                order_uuid?: string;
-                                fee_currency?: string;
-                                exchange_rate?: number;
-                                billing_amount?: number;
-                                vendor_id?: string;
-                                transaction_amount?: number;
-                                billing_currency?: string;
-                                transaction_currency?: string;
-                                network_fee?: number;
                             };
                             id?: string;
                         };
@@ -7099,6 +6774,23 @@ export interface paths {
                                 /** @example ETHEREUM */
                                 destination_chain?: string;
                             };
+                        };
+                    };
+                };
+                /** @description KYC rail gate (KYC-enabled tenants) — the program's rail is disabled, deposits are disabled, or the wallet is not APPROVED on that rail */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example This wallet is not onboarded on this rail yet. */
+                            error?: string;
+                            /**
+                             * @example WALLET_RAIL_NOT_ONBOARDED
+                             * @enum {string}
+                             */
+                            code?: "RAIL_NOT_CONFIGURED" | "RAIL_NOT_ENABLED" | "DEPOSITS_DISABLED" | "WALLET_RAIL_NOT_ONBOARDED" | "WALLET_RAIL_NOT_APPROVED" | "RAIL_GATE_CHECK_FAILED";
                         };
                     };
                 };
