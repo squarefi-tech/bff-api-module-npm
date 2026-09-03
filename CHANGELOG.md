@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **The batch page's two missing pieces are in the contract now (SFI-2334).** A row of a mass payout (`MassPayoutItem`) gains `destination` — the address-book `CounterpartyDestination` it pays, with its owning `counterparty_account` embedded and the raw `banking_data` / `crypto_data` / `internal_data` the address book itself returns, formatted by nobody. The single-batch read gains `processing_count` (payments not yet finished) and `method_breakdown[]` — one `{ destination_type, total, completed, failed, cancelled }` per destination type present in the batch, counted over the whole batch and unaffected by how the item list is paged or filtered. A batch details page needed both and could get neither: to put a name next to three rows it read the wallet's entire address book, and to draw the per-rail progress bars it walked every row of the batch, both repeated every 10 seconds while the batch executed. No new paths — the two existing reads answer with more.
+- **`API.MassPayouts.MassPayoutDetail` and `API.MassPayouts.MassPayoutMethodBreakdown`** name the new schemas. `GetById.Response` already resolved to the detail shape through the spec; the aliases give a consumer a name to type the progress bars against. The recipient of a row is reachable as `MassPayoutItem['destination']`.
+- **`is_threshold_amount` on `Transaction`** — the computed dust flag (amount below the render threshold for the currency), matching the one already on `Order`. Hidden from the list unless `show_low_balance=true`.
+- **`is_deleted` on a wallet member** (`GET /frontend/wallets/{wallet_id}/users`). A member who deleted their account keeps their row and role but has no access and receives no notifications, so a team list can mark them instead of showing a live-looking seat.
+- **`DELETE /user/account` in the v2 spec** (204 / 401). Generated types only — no client method wraps it yet.
+- **The KYC rail gate on virtual account creation is documented** (frontend, tenant and external specs): 422 with `RAIL_NOT_CONFIGURED`, `RAIL_NOT_ENABLED`, `DEPOSITS_DISABLED`, `WALLET_RAIL_NOT_ONBOARDED`, `WALLET_RAIL_NOT_APPROVED` or `RAIL_GATE_CHECK_FAILED`. On the tenant route `force_create` does not bypass it.
+
+### Changed
+
+- **`GET /frontend/mass-payouts/{wallet_id}/{id}` answers `MassPayoutDetail`**, the base `MassPayout` plus the two new counters. The list read and every mutation — `create`, `update`, `submit`, `approve`, `cancel` — still answer with the plain `MassPayout`, so a page that wants the breakdown after approving a batch has to re-read it. `API.MassPayouts.GetById.Response` widened on its own; nothing in the client changed.
+- **A row's `destination` comes unconditionally.** The spec grew no `include` parameter, so every caller of `…/{id}/items` now receives the joined destination — including the full-list fetch behind "Save as a template". Additive for a reader, but the response is larger than it was and there is no way to opt out. `massPayouts.items` is unchanged.
+- **`Order` declares what it actually always sends.** `id`, `order_uuid`, `wallet_uuid`, `from_uuid`, `to_uuid`, `amount_from`, `amount_to`, `order_type`, `status`, `created_at`, `updated_at` and `meta` are required rather than optional; the nullable ones (`amount_to`, `updated_at`, `meta`) are present-and-`null`, not absent. Reading an order gets easier — those fields no longer widen to `undefined`. Building one does not: a fixture or mock typed as `API.Orders.*` must now carry them.
+- **`OrderMeta.originator` is a real schema.** The sender of an inbound or internal-transfer order was an open record with its keys described in prose; it is now `OrderOriginator` — `profile`, `account_information`, `wallet_information`, `reference`, `memo`, each spelled out. A consumer that reached into it through a cast can drop the cast.
+- **Virtual account requisites are typed.** `account_details` and `deposit_instructions` were `Record<string, never>` — a shape that says "object with no keys" and forces a cast to read anything. They are now `VirtualAccountAccountDetails` (per-rail requisites derived from the instructions) and `DepositInstruction[]` (one entry per rail, discriminated by `instruction_type`: `ACH | FEDWIRE | SWIFT | SEPA_CT | CHAPS | FPS`). `meta` stays deliberately opaque but is at least indexable.
+- **404 `DESTINATION_NOT_FOUND` is documented on the batch and template writes.** A `destination_id` belonging to another wallet, or an unknown one, is refused with the offending ids in `details.destination_ids`; the two cases are deliberately not distinguished.
+- **Regenerated every spec from dev.** The frontend spec also spells out that a batch's source currency must be an on-chain asset when the batch pays crypto recipients — a fiat source currency cannot fund them, and preview reports such a row as a problem.
+
+### Removed
+
+- **The deprecated legacy card-issuing routes are gone from the spec**: `/issuing/cards/prepaid`, `/issuing/cards/balance` and `/orders/TRANSFER_CARD_PREPAID`. `issuing.cards.create.standAloneCard.balance` and `issuing.cards.create.subAccountCard` still POST to `/issuing/cards/balance` — they are typed by hand, so this does not surface as a type error — and both have been `@deprecated` since SFI-2129 in favour of `frontend.issuing.cards.create`. Treat them as dead on any backend serving the current spec.
+
 ## [1.36.57] - 2026-08-31
 
 ### Added
@@ -1233,7 +1256,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Version bump for latest changes
+- Split the virtual account read shapes: `VirtualAccount` became `VirtualAccountListItem`, and the new `VirtualAccountDetailItem` (balances, `account_details`, `crypto_deposit_details`, the joined currencies and program) types the get-by-id and create responses, which return more than a list row does. The entry under 1.26.10 describes the same commit — it shipped here.
 
 ## [1.26.10] - 2025-10-03
 
@@ -1736,7 +1759,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Version bump for latest changes
+- `orders.v2.create.byOrderType.TBD_SWIFT_WITHDRAWAL` with its request and response types — a placeholder order type wired to `POST /v2/orders/TBD_SWIFT_WITHDRAWAL`, marked in the source as a mock. The entry under 1.21.3 describes the same commit — it shipped here.
 
 ## [1.21.1] - 2025-06-17
 

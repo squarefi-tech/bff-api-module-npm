@@ -6539,6 +6539,15 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
+                /** @description A recipient is not in the wallet's address book (DESTINATION_NOT_FOUND, details.destination_ids) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -6633,7 +6642,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Template not found */
+                /** @description Template not found, or a recipient is not in the wallet's address book (DESTINATION_NOT_FOUND, details.destination_ids) */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -6773,7 +6782,14 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        /** Format: uuid */
+                        /**
+                         * Format: uuid
+                         * @description Batch source currency. Crypto recipients are paid with it
+                         *     on-chain, so it must be an on-chain asset; a fiat source
+                         *     currency cannot fund crypto recipients. Preview reports such
+                         *     a row as a problem and submit/approve refuse the batch.
+                         *
+                         */
                         currency_id: string;
                         /** Format: uuid */
                         virtual_account_id?: string;
@@ -6819,6 +6835,15 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
+                /** @description A recipient is not in the wallet's address book (DESTINATION_NOT_FOUND, details.destination_ids) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
                 /** @description Rate limit exceeded */
                 429: {
                     headers: {
@@ -6857,7 +6882,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Batch details with progress counters and totals */
+                /** @description Batch details with progress counters and totals, plus the in-flight count and the per-destination-type breakdown (whole batch, independent of the item list paging) */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -6866,7 +6891,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            data?: components["schemas"]["MassPayout"];
+                            data?: components["schemas"]["MassPayoutDetail"];
                         };
                     };
                 };
@@ -6922,6 +6947,15 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Mass payout not found, or a recipient is not in the wallet's address book (DESTINATION_NOT_FOUND, details.destination_ids) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
                 /** @description Batch is not editable anymore (already submitted) */
                 409: {
                     headers: {
@@ -6949,7 +6983,7 @@ export interface paths {
         };
         /**
          * List items of a mass payout
-         * @description Items in upload order, paginated with limit/offset like the batch list. The optional status filter narrows the tracker view (e.g. failed rows only).
+         * @description Items in upload order, paginated with limit/offset like the batch list. The optional status filter narrows the tracker view (e.g. failed rows only). Every row carries the address-book destination it pays (with its owning account), joined in the same query — a batch page needs no address-book lookups.
          */
         get: {
             parameters: {
@@ -10311,7 +10345,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description Rail pre-check failed — `VENDOR_NOT_CONFIGURED`, `RAIL_NOT_CONFIGURED`, `DEPOSITS_DISABLED`, `WALLET_RAIL_NOT_ONBOARDED` or `WALLET_RAIL_NOT_APPROVED` */
+                /** @description KYC rail gate failed (KYC-enabled tenants, demo programs included) — `VENDOR_NOT_CONFIGURED`, `RAIL_NOT_CONFIGURED`, `RAIL_NOT_ENABLED`, `DEPOSITS_DISABLED`, `WALLET_RAIL_NOT_ONBOARDED`, `WALLET_RAIL_NOT_APPROVED` or `RAIL_GATE_CHECK_FAILED` */
                 422: {
                     headers: {
                         [name: string]: unknown;
@@ -12538,6 +12572,10 @@ export interface paths {
                                      * @enum {string}
                                      */
                                     identity_verification_status?: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
+                                    /** @description The member deleted their account. They keep their row and role in the
+                                     *     team, but have no access and receive no notifications.
+                                     *      */
+                                    is_deleted?: boolean;
                                 };
                             }[];
                             pagination?: components["schemas"]["PaginationResponse"];
@@ -14268,6 +14306,73 @@ export interface components {
             }[];
             kyc_rails?: components["schemas"]["KycRail"] | null;
         };
+        /** @description Bank requisites of a virtual account, grouped per rail. Derived from `deposit_instructions` — a rail key is present only when the account carries an instruction for it, and an account with no instructions serializes as `{}`. */
+        VirtualAccountAccountDetails: {
+            ach?: {
+                accountNumber?: string;
+                routingNumber?: string;
+            } | null;
+            wire?: {
+                accountNumber?: string;
+                routingNumber?: string;
+            } | null;
+            swift?: {
+                swiftCode?: string;
+                accountNumber?: string;
+            } | null;
+            sepa?: {
+                iban?: string;
+                swiftCode?: string;
+            } | null;
+            ukPayments?: {
+                accountNumber?: string;
+                sortCode?: string;
+            } | null;
+            swiftCode?: string | null;
+            bankName?: string | null;
+            bankAddress?: string | null;
+            beneficiary?: {
+                name?: string;
+                address?: string | null;
+            } | null;
+        };
+        /** @description Postal address carried by a deposit instruction. Note `country_code` — the originator address block spells the same idea `country`. */
+        DepositInstructionAddress: {
+            address_line1?: string | null;
+            address_line2?: string | null;
+            city?: string | null;
+            state?: string | null;
+            postal_code?: string | null;
+            /** @description ISO country code */
+            country_code?: string | null;
+        };
+        /** @description One way to fund a virtual account: the requisites of a single payment rail. An account issues one instruction per rail its program enables, so the same bank details may appear twice under different `instruction_type` values. Only `instruction_type` is guaranteed — which identifiers a rail carries differs (an IBAN rail has no routing number, a US rail has no IBAN). An element may carry further keys that are provider bookkeeping rather than payment requisites — they are not part of this contract. */
+        DepositInstruction: {
+            /**
+             * @description Rail discriminator. Uppercase; a new provider rail is added to this list when it ships.
+             * @enum {string}
+             */
+            instruction_type: "ACH" | "FEDWIRE" | "SWIFT" | "SEPA_CT" | "CHAPS" | "FPS";
+            /** @description Domestic account number (some IBAN-only rails repeat the IBAN here) */
+            account_number?: string | null;
+            /** @description ABA / sort-code style routing number */
+            account_routing_number?: string | null;
+            iban?: string | null;
+            swift_bic?: string | null;
+            sort_code?: string | null;
+            /** @description Receiving bank */
+            institution_name?: string | null;
+            institution_address?: components["schemas"]["DepositInstructionAddress"] | null;
+            intermediary_institution_name?: string | null;
+            intermediary_institution_swift_bic?: string | null;
+            /** @description Beneficiary the payment must be addressed to */
+            account_holder_name?: string | null;
+            account_holder_address?: components["schemas"]["DepositInstructionAddress"] | null;
+            /** @description Reference the payer must quote, when the rail requires one */
+            memo?: string | null;
+        } & {
+            [key: string]: unknown;
+        };
         /** @description Fields shared by every virtual-account read shape. */
         VirtualAccountBase: {
             /** Format: uuid */
@@ -14291,40 +14396,13 @@ export interface components {
             /** @description Customer name the account is held under */
             customer_name?: string | null;
             /** @description Bank requisites summary derived from deposit_instructions. Empty object when the account has no instructions; null when deposits are disabled on the program's KYC rail. */
-            account_details?: {
-                ach?: {
-                    accountNumber?: string;
-                    routingNumber?: string;
-                } | null;
-                wire?: {
-                    accountNumber?: string;
-                    routingNumber?: string;
-                } | null;
-                swift?: {
-                    swiftCode?: string;
-                    accountNumber?: string;
-                } | null;
-                sepa?: {
-                    iban?: string;
-                    swiftCode?: string;
-                } | null;
-                ukPayments?: {
-                    accountNumber?: string;
-                    sortCode?: string;
-                } | null;
-                swiftCode?: string | null;
-                bankName?: string | null;
-                bankAddress?: string | null;
-                beneficiary?: {
-                    name?: string;
-                    address?: string | null;
-                } | null;
-            } | null;
+            account_details?: components["schemas"]["VirtualAccountAccountDetails"] | null;
             /** @description Deposit requisites (source of truth). Emptied to [] (never null) when deposits are disabled on the program's KYC rail. */
-            deposit_instructions?: {
+            deposit_instructions?: components["schemas"]["DepositInstruction"][] | null;
+            /** @description Provider bookkeeping for the account. Deliberately left opaque — the keys are per-vendor internals, not a contract to code against. */
+            meta?: {
                 [key: string]: unknown;
-            }[] | null;
-            meta?: Record<string, never> | null;
+            } | null;
         };
         /** @description Virtual bank account as returned by the list read. Currencies come embedded as full objects; the raw uuids are exposed as `account_currency_id` / `destination_currency_id`. Only ACTIVE accounts are listed. */
         VirtualAccount: components["schemas"]["VirtualAccountBase"] & {
@@ -14417,10 +14495,13 @@ export interface components {
             /** @description Customer name the account is held under */
             customer_name?: string | null;
             /** @description Bank account details for deposits, derived from deposit_instructions. Returned null when deposits are disabled on the program's KYC rail. */
-            account_details?: Record<string, never> | null;
+            account_details?: components["schemas"]["VirtualAccountAccountDetails"] | null;
             /** @description Deposit requisites (source of truth). Emptied to [] (never null) when deposits are disabled on the program's KYC rail. */
-            deposit_instructions?: Record<string, never>[];
-            meta?: Record<string, never> | null;
+            deposit_instructions?: components["schemas"]["DepositInstruction"][];
+            /** @description Provider bookkeeping for the account. Deliberately left opaque — the keys are per-vendor internals, not a contract to code against. */
+            meta?: {
+                [key: string]: unknown;
+            } | null;
             /** @description Account currency details */
             account_currency_details?: components["schemas"]["CurrencyDetails"] | null;
             /** @description Destination currency details */
@@ -14445,6 +14526,61 @@ export interface components {
             icon?: string | null;
             /** @description Number of minor-unit decimals */
             decimal: number;
+        };
+        /** @description Postal address of the sender, as the rail reported it. */
+        OrderOriginatorAddress: {
+            address_line1?: string | null;
+            address_line2?: string | null;
+            city?: string | null;
+            state?: string | null;
+            postal_code?: string | null;
+            /** @description ISO country code */
+            country?: string | null;
+        };
+        /** @description Who sent the money. `name` is the only key every rail supplies. */
+        OrderOriginatorProfile: {
+            /** @description Sender name as reported by the rail (rails may truncate it) */
+            name: string;
+            /**
+             * @description Kind of sender. Present on internal transfers, where it comes from the sending wallet's KYC entity — `unknown` when the wallet has none. Bank rails do not report it.
+             * @enum {string}
+             */
+            type?: "individual" | "business" | "universal" | "unknown";
+            address?: components["schemas"]["OrderOriginatorAddress"] | null;
+        };
+        /** @description Bank identifiers of the sending account. Normalized on read: rails disagree about which slot an IBAN or a BIC belongs in, so a value is filed by its shape rather than by the slot it was stored in. The block is all-or-nothing — when it is present every key below is present too, with an empty string standing for "not supplied" (so `swift_bic: ''` means unknown, not "no BIC exists"). */
+        OrderOriginatorAccountInformation: {
+            /** @description Domestic account number. Empty when the stored value turned out to be an IBAN — read `iban` then. */
+            account_number: string;
+            /** @description ABA-style routing number. Empty when the stored value turned out to be a BIC — read `swift_bic` then. */
+            routing_number: string;
+            iban: string;
+            swift_bic: string;
+            sort_code: string;
+            currency_code: string;
+            /** @description Sending bank. Empty when the rail merely echoed the sender name here. */
+            institution_name: string;
+            intermediary_institution_name: string;
+        };
+        /** @description Crypto counterpart of `account_information`: present on internal (on-platform) transfers, where the sender is a wallet rather than a bank account. */
+        OrderOriginatorWalletInformation: {
+            /**
+             * Format: uuid
+             * @description Sending wallet
+             */
+            wallet_uuid: string;
+            wallet_name?: string | null;
+            crypto_address?: string | null;
+        };
+        /** @description Sender of an inbound order, normalized to one shape across every rail (bank deposits, on-ramps, internal transfers). Rendered from an allowlist, so no key beyond the five below is ever returned; which of them appear depends on the rail — a bank deposit carries `profile` + `account_information`, an internal transfer carries `profile` + `wallet_information`. Surfaced in the transaction panel (Sender, Account number, SWIFT / BIC, Bank name, Routing number) and in the PDF statement. */
+        OrderOriginator: {
+            profile?: components["schemas"]["OrderOriginatorProfile"];
+            account_information?: components["schemas"]["OrderOriginatorAccountInformation"];
+            wallet_information?: components["schemas"]["OrderOriginatorWalletInformation"];
+            /** @description Payment reference quoted by the sender */
+            reference?: string | null;
+            /** @description Free-text memo carried by the rail */
+            memo?: string | null;
         };
         /** @description Public order metadata. List and single-read responses reduce the stored `meta` JSONB to a fixed allowlist of public keys; create/approve/cancel responses return the stored meta minus scheduler-internal keys. Every field is optional: presence depends on the order type (crypto transfer, fiat off-ramp, exchange, internal transfer, card top-up, deposit). */
         OrderMeta: {
@@ -14517,10 +14653,8 @@ export interface components {
              * @description Card sub-account (card top-up orders)
              */
             sub_account_id?: string | null;
-            /** @description Sender details on inbound (deposit) orders, normalized to one canonical shape across rails. Keys: `profile` (sender identity), `account_information` (bank identifiers: account_number, routing_number, iban, swift_bic, sort_code, currency_code, institution_name, intermediary_institution_name), `wallet_information` (crypto counterpart on internal transfers), `reference`, `memo`. */
-            originator?: {
-                [key: string]: unknown;
-            } | null;
+            /** @description Sender details on inbound (deposit) and internal-transfer orders. */
+            originator?: components["schemas"]["OrderOriginator"] | null;
             /** @description Card authorizations: card id */
             card_id?: string | null;
             /** @description Card authorizations: merchant name */
@@ -14542,25 +14676,28 @@ export interface components {
             /** Format: date-time */
             completed_at?: string | null;
         };
-        /** @description Order record */
+        /** @description Order record. The `required` list below is what every order response carries, on every route that returns an order. `required` is about presence, not about value: a field marked both required and nullable is always in the payload and may be `null`. Everything outside that list is genuinely conditional — `is_threshold_amount` comes with the list read, `mass_payout` with the list and single reads, and the fee / compliance fields are absent from the create, approve, cancel and comment responses. */
         Order: {
             /** Format: uuid */
-            id?: string;
+            id: string;
             /** Format: uuid */
-            order_uuid?: string;
+            order_uuid: string;
             /** Format: uuid */
             request_id?: string | null;
             /** Format: uuid */
-            wallet_uuid?: string;
+            wallet_uuid: string;
             /** Format: uuid */
-            from_uuid?: string;
+            from_uuid: string;
             /** Format: uuid */
-            to_uuid?: string;
-            amount_from?: number;
-            amount_to?: number | null;
-            order_type?: string;
-            /** @enum {string} */
-            status?: "NEW" | "PENDING" | "EXPECTED" | "PROCESSING" | "COMPLETE" | "FAILED" | "CANCELED" | "REFUNDED";
+            to_uuid: string;
+            amount_from: number;
+            amount_to: number | null;
+            order_type: string;
+            /**
+             * @description Complete set for these routes — a failure is always `FAILED`, there is no second failure status. `EXPECTED` is a scheduled payment waiting for its `scheduled_at`; `REFUNDED` is a failed order whose funds were paid back, as opposed to `CANCELED`, where nothing ever moved.
+             * @enum {string}
+             */
+            status: "NEW" | "PENDING" | "EXPECTED" | "PROCESSING" | "COMPLETE" | "FAILED" | "CANCELED" | "REFUNDED";
             /**
              * @description Compliance (transaction monitoring) state. Orthogonal to `status`: a `held` order is still PENDING and nothing has been credited — it resolves to COMPLETE or FAILED once the review finishes. `null` means the order was never subject to a compliance hold.
              * @enum {string|null}
@@ -14611,7 +14748,8 @@ export interface components {
             sig_key_version?: string | null;
             /** @description Computed dust flag — amount below the render threshold for either currency. Returned by the list endpoint (GET /frontend/orders/wallet/{wallet_uuid}); absent from single-order reads. */
             is_threshold_amount?: boolean;
-            meta?: components["schemas"]["OrderMeta"];
+            /** @description Always present; `null` for an order that carries no metadata at all. */
+            meta: components["schemas"]["OrderMeta"] | null;
             /** @description Batch this order was created by, when it was sent as part of a mass payout; null for a standalone order. Filter the list by it with `filters=[{"mass_payout_id":"<uuid>"}]`. */
             mass_payout?: {
                 /** Format: uuid */
@@ -14625,9 +14763,9 @@ export interface components {
              */
             scheduled_at?: string | null;
             /** Format: date-time */
-            created_at?: string;
+            created_at: string;
             /** Format: date-time */
-            updated_at?: string | null;
+            updated_at: string | null;
         };
         /** @description Single-order read shape (GET /orders/id/{order_id} and GET /orders/uuid/{order_uuid}) — the base Order plus context objects hydrated from its `meta` references. */
         OrderDetail: components["schemas"]["Order"] & {
@@ -14914,6 +15052,8 @@ export interface components {
             record_type: string;
             /** Format: uuid */
             wallet_id: string;
+            /** @description Computed dust flag — amount below the render threshold for the currency. Hidden from the list unless `show_low_balance=true`. */
+            is_threshold_amount?: boolean;
             currency: components["schemas"]["Currency"];
             meta: components["schemas"]["TransactionMeta"];
         };
@@ -15033,7 +15173,10 @@ export interface components {
             wallet_id?: string;
             /**
              * Format: uuid
-             * @description Source currency the batch is funded in
+             * @description Source currency the batch is funded in. Crypto recipients are
+             *     paid with it on-chain, so it must be an on-chain asset; a fiat
+             *     source currency cannot fund crypto recipients.
+             *
              */
             currency_id?: string;
             /**
@@ -15118,11 +15261,32 @@ export interface components {
             created_at?: string;
             /** Format: date-time */
             processed_at?: string | null;
+            /** @description The address-book destination this row pays, with its owning account under counterparty_account — the same shape the counterparty endpoints return, raw data (no formatting). Always present; a destination deleted from the address book after the batch was made is still returned. Null only if the destination row no longer exists at all. */
+            destination?: components["schemas"]["CounterpartyDestination"] | null;
+        };
+        /** @description Progress of the batch for one destination type. total minus completed, failed and cancelled is what is still in flight for that type. */
+        MassPayoutMethodBreakdown: {
+            /**
+             * @description Type of the destinations the rows pay (CounterpartyDestination.type)
+             * @enum {string}
+             */
+            destination_type: "ACH" | "RTP" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
+            total: number;
+            completed: number;
+            failed: number;
+            cancelled: number;
+        };
+        /** @description The batch as returned by the single-batch read: the MassPayout fields plus the progress cuts a tracker page draws from. Both are computed over the whole batch and never depend on how the item list is paged or filtered. */
+        MassPayoutDetail: components["schemas"]["MassPayout"] & {
+            /** @description Payments not yet finished: total_items minus completed_count, failed_count and cancelled_count */
+            processing_count: number;
+            /** @description Progress per destination type: one entry per type present in the batch (a type without rows is not listed), in order of first appearance; the totals add up to total_items */
+            method_breakdown: components["schemas"]["MassPayoutMethodBreakdown"][];
         };
         MassPayoutItemInput: {
             /**
              * Format: uuid
-             * @description Existing counterparty destination of the source wallet
+             * @description Counterparty destination from the source wallet's own address book. A destination of another wallet, or an unknown id, is refused with 404 DESTINATION_NOT_FOUND (details.destination_ids lists the offending ids); the two cases are deliberately not distinguished.
              */
             destination_id: string;
             /** @description The amount the recipient receives, in the payout currency of this row */
@@ -15148,7 +15312,10 @@ export interface components {
          *     documents to the rows of a batch instead.
          *      */
         MassPayoutTemplateItemInput: {
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Counterparty destination from the wallet's own address book; a destination of another wallet, or an unknown id, is refused with 404 DESTINATION_NOT_FOUND
+             */
             destination_id: string;
             /** @description Optional in a template: omit it (or send null) to save a recipient
              *     list whose amounts are filled in later. When present it must be

@@ -1904,6 +1904,16 @@ export namespace API {
 
     /** The batch itself: progress counters, totals and the approval/schedule state. */
     export type MassPayout = componentsV1Frontend['schemas']['MassPayout'];
+    /**
+     * The batch as the single read returns it (`getById`) — the base `MassPayout` plus the two
+     * progress cuts a tracker page draws from. Both are computed over the whole batch and ignore
+     * how the item list is paged or filtered. The list read and every mutation still answer with
+     * the plain `MassPayout`, so a page that needs the breakdown after `approve` / `cancel` must
+     * re-read the batch.
+     */
+    export type MassPayoutDetail = componentsV1Frontend['schemas']['MassPayoutDetail'];
+    /** Progress of the batch for one destination type; `total` minus the three counters is in flight. */
+    export type MassPayoutMethodBreakdown = componentsV1Frontend['schemas']['MassPayoutMethodBreakdown'];
     /** A stored recipient row, with its own status and the order created for it at execution. */
     export type MassPayoutItem = componentsV1Frontend['schemas']['MassPayoutItem'];
     /** A recipient row as written on create/update. */
