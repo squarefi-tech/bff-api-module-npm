@@ -1,6 +1,6 @@
 # Squarefi BFF API SDK
 
-A fully-typed TypeScript / JavaScript SDK for effortless interaction with the Squarefi **Back-For-Front** (BFF) API.
+A fully-typed TypeScript / JavaScript SDK for effortless interaction with the Squarefi **Back-For-Front** (BFF) API
 
 ---
 
