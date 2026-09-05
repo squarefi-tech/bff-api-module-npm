@@ -3153,13 +3153,8 @@ export namespace API {
       export namespace Comment {
         export type Request = {
           order_id: string;
-          wallet_id: string;
-          comment?: string | null;
-        };
-        export type Response = {
-          success: boolean;
-          data: API.Orders.V2.List.ByWallet.OrderItem;
-        };
+        } & pathsV1Frontend['/frontend/orders/{order_id}/comment']['put']['requestBody']['content']['application/json'];
+        export type Response = OrderEnvelope;
       }
 
       export namespace Calc {

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`orders.frontend.setComment` answers the shape the endpoint actually sends.** `API.Orders.Frontend.Comment.Response` was written by hand as `{ success: boolean; data: API.Orders.V2.List.ByWallet.OrderItem }` — the legacy v2 order row, under a required `data`. `PUT /frontend/orders/{order_id}/comment` answers with the frontend order and marks the payload optional: `{ success?: boolean; data?: Order }`. The namespace now reuses `API.Orders.Frontend.OrderEnvelope`, the same envelope `create.*`, `approve` and `cancel` already answer with, so the saved `comment` arrives alongside its audit metadata (`comment_updated_by`, `comment_updated_at`) with no cast. Comment was the last order response in the frontend namespace still described through v2; only `List.ByWallet` / `List.Csv` still reference v2, for `filters`, which is the deliberate typed-array-serialized-to-a-JSON-string wrapper and not a divergence.
+- **`API.Orders.Frontend.Comment.Request` derives its body from the spec** — `{ order_id: string }`, the path parameter, intersected with the endpoint's generated `requestBody`, the way `approve` and `cancel` are typed. The shape it resolves to today is identical to the hand-written one, so no call site changes; a field added to the body upstream now arrives with `npm run update:types` instead of needing a hand edit.
+
+### Changed
+
+- **BREAKING for readers of `setComment`'s response.** `data` is optional now, so `response.data.comment` no longer compiles — it needs `response.data?.comment` or a guard. The row itself is the frontend `Order` rather than the v2 `OrderItem`: no field is lost (every v2 field is present, plus twenty more — `fee`, `exchange_rate`, `network_fee`, the `compliance_*` set, `scheduled_at`, `mass_payout` among them), but three shared fields loosen. `amount_to` widens from `number` to `number | null` and `meta` from `OrderMeta` to the frontend `OrderMeta | null`, so both need a null check; `status` swaps the v2 union's `ERROR` for `EXPECTED` and `REFUNDED`, which an exhaustive `switch` will notice. Same nature as SFI-2298 — a description that had drifted from what the endpoint returns — but on the hand-written wrapper, which the generator never overwrites, rather than the generated types.
+
 ## [1.36.58] - 2026-09-03
 
 ### Added
