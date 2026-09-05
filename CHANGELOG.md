@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.59] - 2026-09-05
+
 ### Fixed
 
 - **`orders.frontend.setComment` answers the shape the endpoint actually sends.** `API.Orders.Frontend.Comment.Response` was written by hand as `{ success: boolean; data: API.Orders.V2.List.ByWallet.OrderItem }` — the legacy v2 order row, under a required `data`. `PUT /frontend/orders/{order_id}/comment` answers with the frontend order and marks the payload optional: `{ success?: boolean; data?: Order }`. The namespace now reuses `API.Orders.Frontend.OrderEnvelope`, the same envelope `create.*`, `approve` and `cancel` already answer with, so the saved `comment` arrives alongside its audit metadata (`comment_updated_by`, `comment_updated_at`) with no cast. Comment was the last order response in the frontend namespace still described through v2; only `List.ByWallet` / `List.Csv` still reference v2, for `filters`, which is the deliberate typed-array-serialized-to-a-JSON-string wrapper and not a divergence.
