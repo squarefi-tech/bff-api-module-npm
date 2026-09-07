@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.60] - 2026-09-07
+
 ### Added
 
 - **Banking destinations carry an optional beneficiary address (SFI-2363).** `CounterpartyBankingData` gains `beneficiary_address` — the recipient's own postal address, same `CounterpartyBankingAddress` shape as the bank address — in every destination read, and `API.Counterparties.Destination.Create.Request['external_banking_data']` accepts it on create. Unlike `address` (the BANK's address, overwritten from the bank directory on enrichment), the beneficiary address is user-owned: never enriched, exempt from the bank-country check, and payouts use it in place of the bank address when present. Absent → `null`, and payouts fall back to the bank address exactly as before, so nothing changes for existing destinations. Regenerated from the deployed dev spec (base_backend#1334).
