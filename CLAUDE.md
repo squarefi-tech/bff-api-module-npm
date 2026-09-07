@@ -47,7 +47,7 @@ When in doubt, add the entry.
 ## Coding rules
 
 - **Public API is the source of truth for consumers.** Treat anything exported from [src/index.ts](src/index.ts) (re-exports of `api/`, `constants.ts`, `hooks/`) as a versioned surface — renames and signature changes need a changelog entry and, ideally, a minor bump (or major if breaking).
-- **Do not hand-edit generated OpenAPI types.** Files under `src/api/types/` (or wherever `openapi-typescript` writes) come from `npm run update:types`. If types are wrong, fix the upstream spec or the generator script, not the output.
+- **Do not hand-edit generated OpenAPI types — and NEVER commit or push a hand-edit.** Files under `src/api/types/autogen/` come from `npm run update:types` and only from it. A hand-edit is tolerable strictly as a **local, throwaway testing aid** (e.g. to typecheck dependent code before the backend spec is deployed) and must be reverted before staging anything; "pre-syncing" the autogen to a spec the API does not serve yet is forgery of the generated surface and is forbidden, however exactly it matches the upcoming spec. If the field is not in the deployed spec, the SDK waits for the deploy and regenerates (SFI-2363 precedent, 2026-09-07). If types are wrong, fix the upstream spec or the generator script, not the output.
 - **Module resolution is `bundler`.** Imports may rely on bare directory paths — do not "fix" them to Node-ESM-compatible paths.
 - **Match existing style.** Prettier config is in `.prettierrc`; run `npx prettier --write` on any files you touch.
 - **No new top-level docs files** (`*.md`) unless the user asks. The repo already has `README.md`, `AGENTS.md`, `CHANGELOG.md`, plus a few `*_INSTRUCTIONS.md` / `*_SUMMARY.md` files — don't add more.
