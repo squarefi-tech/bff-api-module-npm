@@ -1239,7 +1239,10 @@ export interface paths {
         post?: never;
         /**
          * Cancel a card
-         * @description Cancels (permanently deactivates) a card by its ID
+         * @description Cancels (permanently deactivates) a card by its ID.
+         *
+         *     When this is the last live card on its sub-account, the sub-account's remaining balance is first returned to the wallet through the ordinary `WITHDRAW_CARD_SUBACCOUNT` withdrawal, and only then is the card closed; the response carries the outcome in `sweep`. The sweep is best effort and never blocks the close: when the program offers no withdrawal or the return fails, the card is closed anyway and `sweep.error` / `sweep.left_with_operator` say what stayed at the vendor.
+         *
          */
         delete: {
             parameters: {
@@ -1253,7 +1256,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Card successfully canceled */
+                /** @description Card successfully canceled; `sweep` reports what happened to the balance */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -7152,7 +7155,7 @@ export interface components {
          * @example EXCHANGE_OMNI
          * @enum {string}
          */
-        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE";
+        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE";
         /** @description Order type reference with optional product guardrails, associated KYC rails and tenant billing rates */
         OrderType: {
             /** @description Order type identifier (e.g. EXCHANGE, WITHDRAWAL_CRYPTO) */

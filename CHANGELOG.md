@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Banking destinations carry an optional beneficiary address (SFI-2363).** `CounterpartyBankingData` gains `beneficiary_address` — the recipient's own postal address, same `CounterpartyBankingAddress` shape as the bank address — in every destination read, and `API.Counterparties.Destination.Create.Request['external_banking_data']` accepts it on create. Unlike `address` (the BANK's address, overwritten from the bank directory on enrichment), the beneficiary address is user-owned: never enriched, exempt from the bank-country check, and payouts use it in place of the bank address when present. Absent → `null`, and payouts fall back to the bank address exactly as before, so nothing changes for existing destinations. Regenerated from the deployed dev spec (base_backend#1334).
+- **The same regen picked up the other spec changes deployed since 1.36.58:** the card-close response gains a `sweep` block (what happened to the sub-account balance before the close); exchange rates gain `base_rate` and `fx_spread` next to the spread-inclusive `rate`; the Reap Payments payout order types (`RPP_SWIFT_OFFRAMP`, `RPP_SEPA_OFFRAMP`, `RPP_FPS_OFFRAMP`, `RPP_ACH_OFFRAMP`) join `OrderTypeId`; wallet creation documents `chain_ids` as optional (a wallet can start with no addresses).
+
+### Changed
+
+- **User lookup no longer accepts `type: "id"`** — the generated lookup union is now `"uuid" | "email" | "phone" | "telegram"`, following the endpoint dropping numeric-id lookups upstream. Anyone passing `"id"` gets a compile error and should switch to `"uuid"`.
+
 ## [1.36.59] - 2026-09-05
 
 ### Fixed
