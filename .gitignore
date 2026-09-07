@@ -8,3 +8,5 @@ temp_types.ts
 test-storage.js
 test-storage.html
 .npmrc
+# a symlinked node_modules (worktree setups) is not matched by "node_modules/"
+node_modules

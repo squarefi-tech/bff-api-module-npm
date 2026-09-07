@@ -639,7 +639,15 @@ export namespace API {
           nickname?: string;
           external_banking_data?: Pick<
             List.DestinationListItemExternalBankingData,
-            'account_number' | 'routing_number' | 'bank_name' | 'swift_bic' | 'iban' | 'sort_code' | 'note' | 'address'
+            | 'account_number'
+            | 'routing_number'
+            | 'bank_name'
+            | 'swift_bic'
+            | 'iban'
+            | 'sort_code'
+            | 'note'
+            | 'address'
+            | 'beneficiary_address'
           >;
 
           external_crypto_data?: Pick<List.DestinationListItemExternalCryptoData, 'currency_id' | 'address' | 'memo'>;

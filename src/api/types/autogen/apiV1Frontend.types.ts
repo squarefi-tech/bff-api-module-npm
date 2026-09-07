@@ -1642,7 +1642,7 @@ export interface paths {
          * Create destination
          * @description counterparty_account_id in body. Caller must be owner or admin of the account's wallet and the wallet's KYC must be APPROVED; other members receive 403.
          *
-         *     **Banking types**: banking_data required
+         *     **Banking types**: banking_data required. `banking_data.address` (the bank address) is mandatory; `banking_data.beneficiary_address` (the recipient's own postal address, same shape) is optional — when present it must be complete (city, country_id, postcode, street1; state_id on US rails), is never overwritten by bank-directory enrichment, is exempt from the bank-country check, and payouts use it in place of the bank address.
          *     **Crypto types**: crypto_data required
          *     **Internal type**: internal_data required (target wallet on the same platform)
          *
@@ -1801,6 +1801,7 @@ export interface paths {
                     "application/json": {
                         name: string;
                         external_id?: string;
+                        /** @description Chain IDs to create addresses on. Omit or leave empty to create a wallet without addresses; the first address added later creates the custody-provider wallet. */
                         chains?: number[];
                     };
                 };
@@ -3025,6 +3026,8 @@ export interface paths {
          * Delete card
          * @description Closes the card at the vendor and sets its status to `CANCELED`. The record is retained (still listable), the action cannot be undone, and a second call answers 400 (`already deleted`).
          *
+         *     **Balance sweep**: when this is the last live card on its sub-account, the sub-account's remaining balance is first returned to the wallet through the ordinary `WITHDRAW_CARD_SUBACCOUNT` withdrawal (priced and ledgered like a manual one), and only then is the card closed. The response reports what happened in `sweep`. The sweep is best effort and never blocks the close: when the program offers no withdrawal or the return fails, the card is closed anyway and `sweep.error` / `sweep.left_with_operator` say what stayed at the vendor.
+         *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
          *     **Access Control**: Wallet owner or admin of the card's wallet
@@ -3053,6 +3056,23 @@ export interface paths {
                             success?: boolean;
                             /** @example Card deleted successfully */
                             message?: string;
+                            /** @description What happened to the sub-account balance before the close */
+                            sweep?: {
+                                /** @enum {string} */
+                                decision?: "sweep" | "skip_no_sub_account" | "skip_shared_sub_account" | "skip_empty" | "skip_not_client_money" | "skip_no_withdrawal_rail";
+                                sub_account_id?: string | null;
+                                /** @description Balance found on the sub-account before the close */
+                                available?: number;
+                                currency?: string | null;
+                                /** @description Amount actually returned to the wallet (0 when skipped or failed) */
+                                swept?: number;
+                                /** @description The WITHDRAW_CARD_SUBACCOUNT order that carried the return */
+                                order_uuid?: string | null;
+                                /** @description Why a due return did not happen; the card was closed regardless */
+                                error?: string | null;
+                                /** @description Balance the vendor returned to the operator instead of the client on this close (0 when none) */
+                                left_with_operator?: number;
+                            } | null;
                         };
                     };
                 };
@@ -9711,7 +9731,12 @@ export interface paths {
         };
         /**
          * Get exchange rates
-         * @description Returns exchange rates with tenant-specific fees applied.
+         * @description Returns exchange rates for the pairs enabled for the tenant.
+         *
+         *     `rate` is what the tenant trades at: the tenant FX spread is already
+         *     applied. `base_rate` carries the market rate it was derived from and
+         *     `fx_spread_percent` the percent taken off, so the spread can be shown
+         *     as a line of its own.
          *
          *     **Authentication**: Bearer token + x-tenant-id header
          *
@@ -10719,7 +10744,6 @@ export interface paths {
          *
          *     **Supported identifier types:**
          *     - `uuid` — user_data.uuid
-         *     - `id` — user_data.id (numeric)
          *     - `email` — user_data.email (case-insensitive)
          *     - `phone` — user_data.phone
          *     - `telegram` — `telegram_user.tg_id`, or a case-insensitive `username` match (leading `@` ignored)
@@ -10733,7 +10757,7 @@ export interface paths {
                     /** @description The search value */
                     identifier: string;
                     /** @description Type of identifier to search by */
-                    type: "uuid" | "id" | "email" | "phone" | "telegram";
+                    type: "uuid" | "email" | "phone" | "telegram";
                 };
                 header?: never;
                 path?: never;
@@ -13407,7 +13431,7 @@ export interface components {
          * @example EXCHANGE_OMNI
          * @enum {string}
          */
-        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE";
+        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE";
         OrderCalculation: {
             /**
              * Format: uuid
@@ -13430,10 +13454,20 @@ export interface components {
              */
             result_amount: number;
             /**
-             * @description Exchange rate applied (source → destination), 6 decimals.
+             * @description Exchange rate applied (source → destination), 6 decimals. Includes the tenant FX spread.
              * @example 0.985
              */
             rate: number;
+            /**
+             * @description Market rate before the tenant FX spread. Equal to `rate` when no spread applies.
+             * @example 1
+             */
+            base_rate: number;
+            /**
+             * @description Tenant FX spread already taken off `rate`, in whole percent.
+             * @example 1.5
+             */
+            fx_spread: number;
             /**
              * @description Total fees (comission + network_fee), in the source currency.
              * @example 1.5
@@ -13531,7 +13565,7 @@ export interface components {
             /** @description Active destinations belonging to this account. */
             destinations: components["schemas"]["CounterpartyDestination"][];
         };
-        /** @description Registered postal address of the BANK (not the beneficiary). On create it is replaced atomically by the bank-directory address when the submitted bank code resolves to a complete one; otherwise the submitted address is kept. */
+        /** @description Postal address of a banking destination — whose address it is (the bank vs the beneficiary) is defined by the property that carries it. */
         CounterpartyBankingAddress: {
             city?: string | null;
             postcode?: string | null;
@@ -13556,7 +13590,10 @@ export interface components {
             /** @description Sort code (6 digits, UK banking) */
             sort_code?: string | null;
             note?: string | null;
+            /** @description Registered postal address of the BANK (not the beneficiary). On create it is replaced atomically by the bank-directory address when the submitted bank code resolves to a complete one; otherwise the submitted address is kept. */
             address?: components["schemas"]["CounterpartyBankingAddress"] | null;
+            /** @description The beneficiary's (recipient's) own postal address. Optional on create; never touched by bank-directory enrichment and exempt from the bank-country check (the recipient may live outside the bank's country). Null → payouts use `address` (the bank address). */
+            beneficiary_address?: components["schemas"]["CounterpartyBankingAddress"] | null;
             /** Format: date-time */
             created_at: string;
         } | null;
