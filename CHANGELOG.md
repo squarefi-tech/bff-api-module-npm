@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.61] - 2026-09-15
+
 ### Added
 
 - **KYC by entity, not by wallet (SFI-1924 / SFI-2464).** The backend moved KYC from the wallet onto a standalone KYC entity, and until now only `kyc.entity.get` (`GET /kyc/{wallet_id}/entity`) was wrapped. `kyc.entity` gains the five entity routes, all on the v2 client:
