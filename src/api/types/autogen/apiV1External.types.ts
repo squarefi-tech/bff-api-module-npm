@@ -4704,6 +4704,8 @@ export interface paths {
         /**
          * Calculate order
          * @description Pre-calculates order amounts, fees and exchange rates without creating an order.
+         *     The quote is priced for the wallet bound to the API key; a `wallet_id` in the
+         *     query is ignored.
          *
          *     **Authentication**: x-api-key header required
          *
@@ -4717,6 +4719,9 @@ export interface paths {
                     to_currency_id: string;
                     /** @description If `true`, calculates inputs needed to receive the given amount. */
                     is_reverse?: "true" | "false";
+                    /** @description If `true` (default), the network fee is subtracted from `result_amount`. If `false`, the fee is added on top of `from_amount` and the recipient gets the full converted amount. Ignored for reverse calculations.
+                     *      */
+                    is_subtract?: "true" | "false";
                     /** @description Destination address (for crypto withdrawals; affects network fee estimation). */
                     to_address?: string;
                 };
@@ -4735,35 +4740,21 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            data?: {
-                                from_amount?: number;
-                                to_amount?: number;
-                                rate?: number;
-                                fee?: number;
-                                /** Format: uuid */
-                                fee_currency?: string;
-                                network_fee?: number | null;
-                                /** Format: uuid */
-                                network_fee_currency?: string | null;
-                                total_amount?: number;
-                                from_currency?: {
-                                    /** Format: uuid */
-                                    uuid?: string;
-                                    symbol?: string;
-                                    name?: string;
-                                };
-                                to_currency?: {
-                                    /** Format: uuid */
-                                    uuid?: string;
-                                    symbol?: string;
-                                    name?: string;
-                                };
-                            };
+                            data?: components["schemas"]["OrderCalculation"];
                         };
                     };
                 };
                 /** @description Invalid request (e.g. unknown `order_type`, missing required parameter, exchange rate not found) */
                 400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description The wallet's KYC status does not allow the operation (`KYC_REQUIREMENTS_NOT_MET`) */
+                403: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -7142,6 +7133,144 @@ export interface components {
          * @enum {string}
          */
         OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE" | "MONTHLY_FEE";
+        OrderCalculation: {
+            /**
+             * Format: uuid
+             * @description Source currency UUID.
+             */
+            from_currency: string;
+            /**
+             * Format: uuid
+             * @description Destination currency UUID.
+             */
+            to_currency: string;
+            /**
+             * @description Source currency symbol.
+             * @example USDT
+             */
+            from_symbol: string;
+            /**
+             * @description Destination currency symbol.
+             * @example USD
+             */
+            to_symbol: string;
+            /**
+             * @description Decimals the source-currency amounts are truncated to.
+             * @example 6
+             */
+            from_decimals: number;
+            /**
+             * @description Decimals the destination-currency amounts are truncated to.
+             * @example 2
+             */
+            to_decimals: number;
+            /**
+             * @description Amount to be spent in the source currency.
+             * @example 100
+             */
+            from_amount: number;
+            /**
+             * @description Amount to be received in the destination currency.
+             * @example 98.5
+             */
+            result_amount: number;
+            /**
+             * @description Amount converted before fees, in the destination currency.
+             * @example 100
+             */
+            net_amount: number;
+            /**
+             * @description Total fees (`comission` + `network_fee`), in the source currency.
+             * @example 1.5
+             */
+            fees: number;
+            /**
+             * @description Service commission excluding the network fee (wire name is intentionally `comission`).
+             * @example 1.5
+             */
+            comission: number;
+            /**
+             * Format: uuid
+             * @description Currency UUID `comission` is denominated in. Omitted by older engines — then it is the same currency on both sides.
+             */
+            commission_currency?: string;
+            /**
+             * @description Percentage part of the commission, in the commission currency.
+             * @example 1
+             */
+            percent_commission: number;
+            /**
+             * @description Fixed part of the commission, in the commission currency.
+             * @example 0.5
+             */
+            fixed_commission: number;
+            /**
+             * @description Markup applied, in whole percent.
+             * @example 1.5
+             */
+            base_markup: number;
+            /**
+             * @description Estimated blockchain network fee in the source currency (crypto withdrawals only, otherwise 0).
+             * @example 0
+             */
+            network_fee: number;
+            /**
+             * @description Network fee in the chain native currency (ETH, BNB, …), 18 decimals.
+             * @example 0
+             */
+            network_fee_native: number;
+            /**
+             * @description Network fee in USD, 8 decimals.
+             * @example 0
+             */
+            network_fee_usd: number;
+            /**
+             * @description Transaction fee. Always 0 for now.
+             * @example 0
+             */
+            transaction_fee: number;
+            /**
+             * @description Exchange rate applied (source → destination), 6 decimals. Includes the tenant FX spread.
+             * @example 0.985
+             */
+            rate: number;
+            /**
+             * @description Market rate before the tenant FX spread. Equal to `rate` when no spread applies.
+             * @example 1
+             */
+            base_rate: number;
+            /**
+             * @description Tenant FX spread already taken off `rate`, in whole percent.
+             * @example 1.5
+             */
+            fx_spread: number;
+            /**
+             * @description Percent markup of the applied tariff.
+             * @example 1.5
+             */
+            markup: number;
+            /**
+             * @description Fixed USD markup of the applied tariff.
+             * @example 0.5
+             */
+            markup_usd: number;
+            /**
+             * @description Percent markup on the network fee.
+             * @example 0
+             */
+            gas_markup: number;
+            /**
+             * @description Percent discount on the network fee.
+             * @example 0
+             */
+            gas_discount: number;
+            /** @description Whether the order type is an internal (on-platform) operation. */
+            is_internal: boolean;
+            /** @description Whether the operation is allowed for the caller with these inputs. */
+            allowed: boolean;
+            /** @description Calculation error text, `null` on success. */
+            error: string | null;
+        };
         /** @description Card object with all properties */
         IssuingCard: {
             /**
