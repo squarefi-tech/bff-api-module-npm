@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.64] - 2026-09-15
+
 ### Fixed
 
 - **Wallet address list typed as the backend actually answers (SFI-2470).** Regenerated from the corrected frontend spec (base_backend#1520 / #1521). Items of `wallets.addresses.getAll` (`API.Wallets.WalletChain.GetAll.Response['data']`) are now `CryptoAddressListItem`: `chain` is the embedded network object (`Chain`, read `chain.id` for the numeric chain ID) instead of a number, `id` is the numeric row ID, `uuid` is `string | null`, and `index_id` and `meta` are present. `getByChain` / `create` responses are now `CryptoAddress` — same row with `chain: number`, also gaining `id`, `index_id`, `meta` and a nullable `uuid`. The `chain` query filter of `getAll` is typed `number` (was `string`). Breaking at type level for code that treated list-item `chain` as a number or `uuid` as non-null.
