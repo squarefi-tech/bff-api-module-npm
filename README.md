@@ -210,7 +210,7 @@ const publicUrl = getPublicUrl(path);
 | **developer**       | Vendor & API key management                                         |
 | **exchange**        | Exchange rates per order type / currency                            |
 | **issuing**         | Virtual & physical cards, limits, controls, transactions            |
-| **kyc**             | Data collection init/resume, Sumsub flows, rails & form submission  |
+| **kyc**             | KYC entities & data collection, Sumsub flows, rails & forms         |
 | **list**            | Static system lists – currencies, chains, countries                 |
 | **orders**          | Create / calculate orders (including internal transfer)             |
 | **tenants**         | Tenant configuration                                                |

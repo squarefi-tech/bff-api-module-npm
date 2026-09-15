@@ -1155,7 +1155,9 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description Access denied */
+                /** @description Access denied, or (Clerk tenants) the second-factor verification is
+                 *     stale — `TWO_FACTOR_REVERIFICATION_REQUIRED`: re-verify and retry.
+                 *      */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -1256,7 +1258,9 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Access denied */
+                /** @description Access denied, or (Clerk tenants) the second-factor verification is
+                 *     stale — `TWO_FACTOR_REVERIFICATION_REQUIRED`: re-verify and retry.
+                 *      */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -1312,7 +1316,9 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Access denied */
+                /** @description Access denied, or (Clerk tenants) the second-factor verification is
+                 *     stale — `TWO_FACTOR_REVERIFICATION_REQUIRED`: re-verify and retry.
+                 *      */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -1478,7 +1484,9 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Access denied */
+                /** @description Access denied, or (Clerk tenants) the second-factor verification is
+                 *     stale — `TWO_FACTOR_REVERIFICATION_REQUIRED`: re-verify and retry.
+                 *      */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -1533,7 +1541,9 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Access denied */
+                /** @description Access denied, or (Clerk tenants) the second-factor verification is
+                 *     stale — `TWO_FACTOR_REVERIFICATION_REQUIRED`: re-verify and retry.
+                 *      */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -1704,7 +1714,9 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description Access denied */
+                /** @description Access denied, or (Clerk tenants) the second-factor verification is
+                 *     stale — `TWO_FACTOR_REVERIFICATION_REQUIRED`: re-verify and retry.
+                 *      */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -1783,7 +1795,7 @@ export interface paths {
         put?: never;
         /**
          * Create crypto wallet
-         * @description Creates a new crypto wallet (Utila wallet) for the platform wallet.
+         * @description Creates a new crypto wallet for the platform wallet.
          *     Optionally specify chains to create addresses immediately.
          *
          */
@@ -1950,7 +1962,7 @@ export interface paths {
         post?: never;
         /**
          * Delete crypto wallet
-         * @description Soft-deletes a crypto wallet and archives it in Utila.
+         * @description Soft-deletes a crypto wallet and archives it with the custody provider.
          *     The wallet is marked as deleted and all addresses are deactivated.
          *
          */
@@ -5038,7 +5050,7 @@ export interface paths {
                          */
                         gov_id_expiration_date?: string;
                         /**
-                         * @description Tax identifier of the cardholder, separate from the document number. Required by Interlace CONSUMER programs when nationality is USA, where it must be a valid SSN (9 digits or XXX-XX-XXXX).
+                         * @description Tax identifier of the cardholder, separate from the document number. Required by some CONSUMER programs when nationality is USA, where it must be a valid SSN (9 digits or XXX-XX-XXXX).
                          *
                          * @example 123-45-6789
                          */
@@ -5338,7 +5350,7 @@ export interface paths {
                         gov_id_issuance_date?: string;
                         /** Format: date */
                         gov_id_expiration_date?: string;
-                        /** @description Tax identifier (USA + Interlace CONSUMER: SSN, 9 digits or XXX-XX-XXXX) */
+                        /** @description Tax identifier (USA + CONSUMER programs that require it: SSN, 9 digits or XXX-XX-XXXX) */
                         tax_identification_number?: string;
                         address?: {
                             line1?: string;
@@ -8187,6 +8199,17 @@ export interface paths {
          *     `GET /frontend/counterparty/destinations/{id}/internal-transfer` to
          *     offer that option when the destination supports it.
          *
+         *     **Cross-currency send (optional).** A `to_currency_id` different from
+         *     `from_currency_id` converts on the way out, like the fiat offramps: the
+         *     wallet is debited in `from_currency_id`, the destination receives
+         *     `amount_to` in `to_currency_id` at the tenant's exchange rate for this
+         *     order type. The pair must be configured (`400 EXCHANGE_RATE_NOT_FOUND`),
+         *     `to_currency_id` must be on-chain (`400 INVALID_REQUEST`) and the
+         *     destination must be registered on the network of `to_currency_id`
+         *     (`400 DESTINATION_CHAIN_MISMATCH`). Preview with
+         *     `POST /frontend/orders/calc`. Omitted or equal `to_currency_id` is the
+         *     plain same-asset transfer.
+         *
          */
         post: {
             parameters: {
@@ -9510,6 +9533,14 @@ export interface paths {
          *     carry `request_id` (idempotency key); `scheduled_at` is ignored.
          *     Prefer `POST /frontend/orders/withdrawal/crypto`.
          *
+         *     A `to_currency_id` different from `from_currency_id` is a cross-currency
+         *     send under the same rules as the preferred endpoint (`400
+         *     EXCHANGE_RATE_NOT_FOUND` / `INVALID_REQUEST` / `DESTINATION_CHAIN_MISMATCH`).
+         *     This alias still downgrades a send to an address of a wallet on this
+         *     platform to an off-chain internal transfer, which moves one currency
+         *     only — such a request with a different `to_currency_id` is refused with
+         *     `400 INVALID_REQUEST` instead of silently delivering `from_currency_id`.
+         *
          */
         post: {
             parameters: {
@@ -10565,8 +10596,8 @@ export interface paths {
         put?: never;
         /**
          * Sync virtual account
-         * @description Refreshes the bank account details and deposit instructions from the vendor
-         *     (Brale / Delos / BCB) and updates the local record. Historical Rail.io
+         * @description Refreshes the bank account details and deposit instructions from the provider
+         *     serving the account and updates the local record. Historical Rail.io
          *     (RAIL-B / RAIL-C) accounts cannot be refreshed — their stored requisites are
          *     returned unchanged.
          *
@@ -10655,7 +10686,7 @@ export interface paths {
         /**
          * Get virtual account
          * @description Retrieves detailed information about a specific virtual account.
-         *     For accounts linked to a vendor (Brale / Delos / BCB) the requisites are refreshed
+         *     For accounts linked to a provider the requisites are refreshed
          *     from the vendor on read unless `skip_sync=true`; a failed refresh falls back to the
          *     cached data (still 200). Accounts without a vendor link and historical Rail.io
          *     accounts return the stored data.
@@ -12159,7 +12190,7 @@ export interface paths {
          *
          *     **Access Control**: Owner or admin of the wallet; wallet KYC must be APPROVED
          *
-         *     **Note**: New addresses are always provisioned via Utila. The legacy Processing (Accepta) provider was decommissioned; existing `processing` addresses remain readable.
+         *     **Note**: New addresses are always provisioned with `type: utila`. The legacy `processing` provider was decommissioned; existing `processing` addresses remain readable.
          *
          */
         post: {
@@ -12664,7 +12695,10 @@ export interface paths {
                          */
                         user_data_uuid: string;
                         /**
-                         * @description Role to assign to the user
+                         * @description Role to assign to the user. Must be one of the roles enabled for the tenant
+                         *     (tenant config `allowed_roles`); any other role is refused with
+                         *     400 `ROLE_NOT_ALLOWED_FOR_TENANT`.
+                         *
                          * @enum {string}
                          */
                         role: "auditor" | "user" | "admin";
@@ -12838,7 +12872,10 @@ export interface paths {
                 content: {
                     "application/json": {
                         /**
-                         * @description New role for the user
+                         * @description New role for the user. Must be one of the roles enabled for the tenant
+                         *     (tenant config `allowed_roles`); any other role is refused with
+                         *     400 `ROLE_NOT_ALLOWED_FOR_TENANT`.
+                         *
                          * @enum {string}
                          */
                         role: "auditor" | "user" | "admin";
@@ -13171,7 +13208,10 @@ export interface paths {
                          */
                         email: string;
                         /**
-                         * @description Role to assign on acceptance
+                         * @description Role to assign on acceptance. Must be one of the roles enabled for the tenant
+                         *     (tenant config `allowed_roles`); any other role is refused with
+                         *     400 `ROLE_NOT_ALLOWED_FOR_TENANT`.
+                         *
                          * @enum {string}
                          */
                         role: "auditor" | "user" | "admin";
@@ -13431,7 +13471,7 @@ export interface components {
          * @example EXCHANGE_OMNI
          * @enum {string}
          */
-        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE";
+        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE" | "MONTHLY_FEE";
         OrderCalculation: {
             /**
              * Format: uuid
@@ -13804,10 +13844,10 @@ export interface components {
             cardholder_requirements?: {
                 /** @enum {string} */
                 level?: "minimal" | "basic" | "declared" | "full";
-                /** @description Required field names; address fields are dotted (address.line1). Interlace CONSUMER also lists gov_id_issuance_date and gov_id_expiration_date (ISO YYYY-MM-DD). */
+                /** @description Required field names; address fields are dotted (address.line1). Some CONSUMER programs also list gov_id_issuance_date and gov_id_expiration_date (ISO YYYY-MM-DD). */
                 required?: string[];
                 required_documents?: ("gov_id_front" | "gov_id_back" | "selfie")[];
-                /** @description Human-readable constraints the field list cannot express. Interlace CONSUMER: if nationality is USA, tax_identification_number is required and must be a valid SSN. */
+                /** @description Human-readable constraints the field list cannot express — e.g. a CONSUMER program requiring tax_identification_number to be a valid SSN when nationality is USA. */
                 notes?: string[];
                 /** @description What each country changes, keyed by ISO 3166-1 alpha-3 with a `default` entry; empty when the vendor reviews nothing. These fields stay out of `required` because they only hold once the nationality or address country is known: read the rule for the nationality the user picked (required_by_nationality), the rule for the address country (required_by_address), and the rule for the country that issued the document (gov_id_types). */
                 country_rules?: {
@@ -14046,7 +14086,7 @@ export interface components {
             transaction_amount: number;
             /** @example USD */
             transaction_currency: string;
-            /** @description What actually left the card: `billing_amount` plus `fee` for a debit. Show this one when a fee sits inside the operation. */
+            /** @description What actually left the card: `billing_amount` plus `fee` for a debit, minus it for a credit, and 0 when `status` is `DECLINED` — a refusal moves no money, however much the vendor quoted for it. Show this one when a fee sits inside the operation. */
             total_amount?: number;
             /** @description Fee charged inside this operation, in billing currency. 0 for vendors that bill fees as their own transactions (those arrive as separate rows with `transaction_type: FEE`). */
             fee?: number;
@@ -14927,11 +14967,20 @@ export interface components {
              * @default false
              */
             is_reverse: boolean;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Currency debited from the wallet.
+             */
             from_currency_id: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Optional. Currency delivered on-chain to the destination. Omitted or equal to `from_currency_id`: a plain transfer of the same asset. Different: a cross-currency send — the wallet is debited in `from_currency_id`, the destination receives `amount_to` in `to_currency_id` at the tenant's `OMNIBUS_CRYPTO_TRANSFER` exchange rate (like the fiat offramps). Requires a configured pair (`400 EXCHANGE_RATE_NOT_FOUND`), an on-chain currency (`400 INVALID_REQUEST`) and a destination registered on the network of `to_currency_id` (`400 DESTINATION_CHAIN_MISMATCH`). Preview with `POST /frontend/orders/calc`.
+             */
             to_currency_id?: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description A `CRYPTO_EXTERNAL` counterparty destination. For a cross-currency send its address must be on the network of `to_currency_id`.
+             */
             counterparty_destination_id: string;
             /** Format: uuid */
             wallet_account_id?: string;
@@ -15399,7 +15448,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            type: "DEPOSIT_RECEIVED" | "TRANSFER_RECEIVED" | "ORDER_STATUS_CHANGED" | "KYC_STATUS_CHANGED" | "ANNOUNCEMENT" | "SYSTEM_MESSAGE";
+            type: "DEPOSIT_RECEIVED" | "TRANSFER_RECEIVED" | "ORDER_STATUS_CHANGED" | "KYC_STATUS_CHANGED" | "ANNOUNCEMENT" | "SYSTEM_MESSAGE" | "MASS_PAYOUT_STATUS_CHANGED" | "CARD_OTP";
             /** @description Structured fact snapshot; the client renders the presentation. Shape depends on `type`; evolution is additive-only. */
             payload: Record<string, never>;
             /** Format: uuid */
@@ -15411,12 +15460,12 @@ export interface components {
         };
         NotificationPreference: {
             /** @enum {string} */
-            channel: "IN_APP" | "PUSH" | "EMAIL" | "TELEGRAM";
+            channel: "IN_APP" | "PUSH" | "EMAIL" | "TELEGRAM" | "SMS";
             enabled: boolean;
         };
         NotificationCategoryPreference: {
             /** @enum {string} */
-            category: "TRANSACTIONS" | "COMPLIANCE" | "ANNOUNCEMENTS" | "SYSTEM";
+            category: "TRANSACTIONS" | "COMPLIANCE" | "ANNOUNCEMENTS" | "SYSTEM" | "SECURITY";
             enabled: boolean;
         };
     };

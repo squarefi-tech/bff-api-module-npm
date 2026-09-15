@@ -1110,7 +1110,7 @@ export interface paths {
         put?: never;
         /**
          * Create crypto wallet
-         * @description Creates a new crypto wallet (Utila wallet).
+         * @description Creates a new crypto wallet.
          *     Optionally specify chains to create addresses immediately.
          *
          */
@@ -1293,7 +1293,7 @@ export interface paths {
         post?: never;
         /**
          * Delete crypto wallet
-         * @description Soft-deletes a crypto wallet and archives it in Utila.
+         * @description Soft-deletes a crypto wallet and archives it with the custody provider.
          *     The wallet is marked as deleted and all addresses are deactivated.
          *
          */
@@ -1920,7 +1920,7 @@ export interface paths {
                          */
                         gov_id_expiration_date?: string;
                         /**
-                         * @description Tax identifier of the cardholder, separate from the document number. Required by Interlace CONSUMER programs when nationality is USA, where it must be a valid SSN (9 digits or XXX-XX-XXXX).
+                         * @description Tax identifier of the cardholder, separate from the document number. Required by some CONSUMER programs when nationality is USA, where it must be a valid SSN (9 digits or XXX-XX-XXXX).
                          *
                          * @example 123-45-6789
                          */
@@ -2228,7 +2228,7 @@ export interface paths {
                         gov_id_issuance_date?: string;
                         /** Format: date */
                         gov_id_expiration_date?: string;
-                        /** @description Tax identifier (USA + Interlace CONSUMER: SSN, 9 digits or XXX-XX-XXXX) */
+                        /** @description Tax identifier (USA + CONSUMER programs that require it: SSN, 9 digits or XXX-XX-XXXX) */
                         tax_identification_number?: string;
                         address?: {
                             line1?: string;
@@ -4860,7 +4860,13 @@ export interface paths {
                     limit?: number;
                     sort_by?: string;
                     sort_order?: "asc" | "desc";
-                    /** @description JSON-encoded array of filters, e.g. `[{"status":"COMPLETE"}]`.
+                    /** @description JSON-encoded array of filters, e.g. `[{"status":"COMPLETE"}]`. A value may be an
+                     *     array to match any of several values: `[{"status":["NEW","PROCESSING"]}]`.
+                     *     Filter by order type with `[{"order_type":"TRANSFER_INTERNAL"}]` — the names are
+                     *     the ones `GET /api/reference/order_types` returns.
+                     *     To find an order by the `reference` sent at creation, filter on that meta field:
+                     *     `[{"meta->>reference":"invoice-2026-04-001"}]` — this is how an order is recovered
+                     *     when the create response was lost.
                      *     Besides order columns it accepts `mass_payout_id` (uuid), which narrows the
                      *     result to the orders of one mass payout batch — the same batch reported by
                      *     the `mass_payout_id` field of each order. A non-uuid value is rejected with 400.
@@ -5186,6 +5192,16 @@ export interface paths {
                          */
                         is_reverse?: boolean;
                         /**
+                         * @description Optional. Free-form reference visible in order/transaction listings. Kept on the order, so it is also how you find the transfer again if the create response was lost: `GET /api/orders/list?filters=[{"meta->>reference":"<your reference>"}]`.
+                         * @example invoice-2026-04-001
+                         */
+                        reference?: string;
+                        /**
+                         * @description Optional. Internal note attached to the order.
+                         * @example Fee collected for order 550e8400-e29b-41d4-a716-446655440000
+                         */
+                        note?: string;
+                        /**
                          * Format: date-time
                          * @description Optional. Schedule the transfer for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically.
                          * @example 2026-07-20T12:00:00Z
@@ -5280,6 +5296,19 @@ export interface paths {
          *       created via `POST /api/counterparty/destinations`.
          *     - Sufficient balance in `from_currency_id` at approve time on the wallet
          *       bound to the API key.
+         *
+         *     **Cross-currency send (optional).** Pass a `to_currency_id` different
+         *     from `from_currency_id` to convert on the way out, exactly like the fiat
+         *     offramps: the wallet is debited `amount` in `from_currency_id`, and the
+         *     destination receives `amount_to` (also `meta.transaction_amount`) in
+         *     `to_currency_id` at the tenant's exchange rate for this order type.
+         *     Requirements: the pair must be configured for the tenant
+         *     (`400 EXCHANGE_RATE_NOT_FOUND`), `to_currency_id` must be an on-chain
+         *     currency (`400 INVALID_REQUEST`), and the destination address must be
+         *     registered on the network of `to_currency_id`
+         *     (`400 DESTINATION_CHAIN_MISMATCH`). Preview with `POST /api/orders/calc`.
+         *     Without `to_currency_id` (or with the same value) nothing changes: one
+         *     currency, one chain.
          *
          *     `wallet_id` is automatically resolved from the API key — do **not** pass it
          *     in the body.
@@ -7112,7 +7141,7 @@ export interface components {
          * @example EXCHANGE_OMNI
          * @enum {string}
          */
-        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE";
+        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE" | "MONTHLY_FEE";
         /** @description Card object with all properties */
         IssuingCard: {
             /**
@@ -7268,7 +7297,7 @@ export interface components {
              */
             cvv: string;
             /**
-             * @description 3-D Secure password where the vendor exposes one (Wallester); `null` otherwise.
+             * @description 3-D Secure password where the card program exposes one; `null` otherwise.
              * @example null
              */
             security_code: string | null;
@@ -7576,7 +7605,7 @@ export interface components {
                  */
                 level?: "minimal" | "basic" | "declared" | "full";
                 /**
-                 * @description Required field names; address fields are dotted (address.line1). Interlace CONSUMER also lists gov_id_issuance_date and gov_id_expiration_date (ISO YYYY-MM-DD).
+                 * @description Required field names; address fields are dotted (address.line1). Some CONSUMER programs also list gov_id_issuance_date and gov_id_expiration_date (ISO YYYY-MM-DD).
                  * @example [
                  *       "first_name",
                  *       "last_name",
@@ -7589,7 +7618,7 @@ export interface components {
                 required?: string[];
                 /** @description Documents that must be attached; empty below the full level */
                 required_documents?: ("gov_id_front" | "gov_id_back" | "selfie")[];
-                /** @description Human-readable constraints the field list cannot express. Interlace CONSUMER: if nationality is USA, tax_identification_number is required and must be a valid SSN. */
+                /** @description Human-readable constraints the field list cannot express — e.g. a CONSUMER program requiring tax_identification_number to be a valid SSN when nationality is USA. */
                 notes?: string[];
                 /** @description What each country changes, keyed by ISO 3166-1 alpha-3 with a `default` entry; empty when the vendor reviews nothing. These fields stay out of `required` because they only hold once the nationality or address country is known: read the rule for the nationality the user picked (required_by_nationality), the rule for the address country (required_by_address), and the rule for the country that issued the document (gov_id_types). */
                 country_rules?: {
@@ -8207,13 +8236,13 @@ export interface components {
             from_currency_id: string;
             /**
              * Format: uuid
-             * @description Optional. UUID of the destination currency. Defaults to `from_currency_id` when omitted (no on-chain conversion).
+             * @description Optional. UUID of the currency delivered on-chain to the destination. Omitted or equal to `from_currency_id`: a plain transfer of the same asset (unchanged behaviour). Different: a **cross-currency send** — the wallet is debited `amount` in `from_currency_id`, and the omnibus pays out `amount_to` (`meta.transaction_amount`) in `to_currency_id` at the tenant's exchange rate for `OMNIBUS_CRYPTO_TRANSFER`, the same way the fiat offramps convert. The pair must be configured for the tenant (`400 EXCHANGE_RATE_NOT_FOUND` otherwise), the currency must be on-chain (`400 INVALID_REQUEST`), and the counterparty destination must be registered on the same network as `to_currency_id` (`400 DESTINATION_CHAIN_MISMATCH`). Preview the rate and the delivered amount with `POST /api/orders/calc` using the same `from_currency_id` / `to_currency_id`.
              * @example 509eca03-bc0d-4a38-b7dc-d136d2bdaa43
              */
             to_currency_id?: string;
             /**
              * Format: uuid
-             * @description UUID of a `CRYPTO_EXTERNAL` counterparty destination previously created via `POST /api/counterparty/destinations`.
+             * @description UUID of a `CRYPTO_EXTERNAL` counterparty destination previously created via `POST /api/counterparty/destinations`. For a cross-currency send its address must sit on the network of `to_currency_id`.
              * @example b2f3d8c1-4a7e-4d22-9c5f-1e6a8d0b2a44
              */
             counterparty_destination_id: string;

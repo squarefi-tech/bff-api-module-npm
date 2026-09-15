@@ -2037,6 +2037,12 @@ export interface components {
              *       "business"
              *     ] */
             allowed_kyc_entity_types: ("individual" | "business" | "universal")[] | null;
+            /** @example [
+             *       "owner",
+             *       "admin",
+             *       "auditor"
+             *     ] */
+            allowed_roles: ("owner" | "admin" | "user" | "auditor")[];
             tg_bot_name: string | null;
             theme_switch: boolean;
             enable_exchange: boolean;
@@ -3845,6 +3851,8 @@ export interface operations {
             query?: {
                 /** @description Whether to prefill the provider verification with the current user data (email, phone, name). Defaults to true. */
                 prefill?: boolean;
+                /** @description Reuse the current user's approved user-level verification for this entity instead of collecting it again. Omit to take the per-type default: individual reuses it (the dossier is the user), business does not (reuse means "I am a UBO of this company" and is opt-in). Pass false to opt out, true to require it — an explicit true fails when the user-level verification is not approved, while the default silently falls back to a normal verification. Only honoured by providers that keep a reusable user-level verification. */
+                reuse_user_verification?: boolean;
             };
             header?: never;
             path: {
@@ -3861,6 +3869,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["InitKycDataCollectionResponseDto"];
                 };
+            };
+            /** @description reuse_user_verification requested for an entity type that supports no reuse */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Unauthorized */
             401: {
