@@ -1741,6 +1741,36 @@ export namespace API {
         export type Response =
           operations['KycEntitiesController_findOne']['responses']['200']['content']['application/json'];
       }
+
+      export namespace Create {
+        export type Request = operations['KycEntitiesController_create']['requestBody']['content']['application/json'];
+        export type Response =
+          operations['KycEntitiesController_create']['responses']['201']['content']['application/json'];
+      }
+
+      export namespace List {
+        export type Response =
+          operations['KycEntitiesController_findMy']['responses']['200']['content']['application/json'];
+      }
+
+      export namespace GetById {
+        export type Request = operations['KycEntitiesController_findById']['parameters']['path'];
+        export type Response =
+          operations['KycEntitiesController_findById']['responses']['200']['content']['application/json'];
+      }
+
+      export namespace Init {
+        export type Request = operations['KycEntitiesController_initDataCollection']['parameters']['path'] &
+          NonNullable<operations['KycEntitiesController_initDataCollection']['parameters']['query']>;
+        export type Response =
+          operations['KycEntitiesController_initDataCollection']['responses']['200']['content']['application/json'];
+      }
+
+      export namespace Resume {
+        export type Request = operations['KycEntitiesController_resumeDataCollection']['parameters']['path'];
+        export type Response =
+          operations['KycEntitiesController_resumeDataCollection']['responses']['200']['content']['application/json'];
+      }
     }
     export namespace Forms {
       export namespace FormField {

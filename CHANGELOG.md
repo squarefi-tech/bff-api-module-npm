@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **KYC by entity, not by wallet (SFI-1924 / SFI-2464).** The backend moved KYC from the wallet onto a standalone KYC entity, and until now only `kyc.entity.get` (`GET /kyc/{wallet_id}/entity`) was wrapped. `kyc.entity` gains the five entity routes, all on the v2 client:
+  - `create({ type })` — `POST /kyc/entities`, creates an `individual` / `business` / `universal` entity for the current user (answers 201 with the entity);
+  - `getAll()` — `GET /kyc/entities`, the current user's entities as a bare `KycEntityDto[]` (no `{ success, data }` envelope);
+  - `getById({ kyc_entity_id })` — `GET /kyc/entities/{kyc_entity_id}`;
+  - `init({ kyc_entity_id, prefill?, reuse_user_verification? })` — `POST /kyc/entities/{kyc_entity_id}/init`, starts provider data collection for the entity; the two flags go out as query parameters;
+  - `resume({ kyc_entity_id, verification_ref })` — `POST /kyc/entities/{kyc_entity_id}/resume/{verification_ref}`.
+    An entity id from `create` / `getAll` is what `wallets.create` already accepts as `kyc_entity_id`.
+- **`API.KYC.Entity.Create`, `List`, `GetById`, `Init`, `Resume`** type the new methods. Each is derived from the generated v2 operation (`KycEntitiesController_*`), like `Entity.Get`, so upstream changes arrive with `npm run update:types`. `Init.Request` is the path parameter intersected with the query, i.e. `{ kyc_entity_id: string; prefill?: boolean; reuse_user_verification?: boolean }`.
+- **`reuse_user_verification` on entity init** (regenerated v2 spec). Omitted, it takes the per-type default: an `individual` entity reuses the user's approved user-level verification, a `business` entity does not (reuse there means "I am a UBO of this company" and is opt-in). `false` opts out; `true` requires reuse and fails when the user-level verification is not approved, whereas the default silently falls back to a normal verification. Asking for reuse on an entity type that supports none answers `400`.
+
+### Deprecated
+
+- **`kyc.dataCollection.init` and `kyc.dataCollection.resume`** (`/kyc/init/{wallet_id}/{type}`, `/kyc/resume/{wallet_id}/{verification_ref}`) are wallet-keyed and now marked `@deprecated` in favour of `kyc.entity.init` / `kyc.entity.resume`. They still work and are not removed: wallets that have no KYC entity yet still go through the old init.
+
+### Changed
+
+- **The same regen picked up the other spec changes deployed since 1.36.60.** All additive; nothing previously valid stops compiling, but three enum widenings will be noticed by an exhaustive `switch` or a `Record<Union, …>` map:
+  - `SystemConfigDto` (`API.Tenant.Config`) gains a required `allowed_roles: ('owner' | 'admin' | 'user' | 'auditor')[]` — the roles enabled for the tenant. Adding a wallet member (`POST /frontend/wallets/{wallet_id}/users`) with a role outside it is refused with `400 ROLE_NOT_ALLOWED_FOR_TENANT`. Code that builds a `Config` literal by hand (mocks, fallbacks) must add the field.
+  - Frontend notifications: `NotificationView.type` adds `MASS_PAYOUT_STATUS_CHANGED` and `CARD_OTP`, `NotificationPreference.channel` adds `SMS`, `NotificationCategoryPreference.category` adds `SECURITY`.
+  - `OrderTypeId` adds `MONTHLY_FEE` in the frontend, tenant, external and legacy specs.
+  - Crypto withdrawals document an optional cross-currency send: a `to_currency_id` different from `from_currency_id` debits the wallet in `from_currency_id` and delivers `amount_to` in `to_currency_id` at the tenant's rate (`400 EXCHANGE_RATE_NOT_FOUND` / `INVALID_REQUEST` / `DESTINATION_CHAIN_MISMATCH` on a bad pair, currency or network). The frontend `FrontendCryptoTransferRequest` already had `to_currency_id`; the tenant `CryptoTransferRequest` and the legacy `POST /v2/orders/OMNIBUS_CRYPTO_TRANSFER` body gain it. The tenant and external internal-transfer bodies gain optional `reference` and `note`.
+  - Documentation only: frontend `403` responses mention `TWO_FACTOR_REVERIFICATION_REQUIRED` for Clerk tenants, and vendor names (Utila, Interlace, Wallester) are dropped from descriptions.
+
 ## [1.36.60] - 2026-09-07
 
 ### Added

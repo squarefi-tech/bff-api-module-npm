@@ -1195,7 +1195,7 @@ export interface paths {
         post?: never;
         /**
          * Delete crypto wallet
-         * @description Soft-deletes a crypto wallet and archives it in Utila.
+         * @description Soft-deletes a crypto wallet and archives it with the custody provider.
          *     The wallet is marked as deleted and all addresses are deactivated.
          *
          */
@@ -2579,6 +2579,10 @@ export interface paths {
                          * @default false
                          */
                         is_reverse?: boolean;
+                        /** @description Free-form reference visible in order/transaction listings */
+                        reference?: string;
+                        /** @description Internal note attached to the order */
+                        note?: string;
                         /**
                          * Format: date-time
                          * @description Optional. Schedule the transfer for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically.
@@ -2655,6 +2659,17 @@ export interface paths {
          *     order always goes on-chain, even if the destination address belongs to
          *     a wallet on this platform. Internal (off-chain) transfers are created
          *     only through the internal transfer endpoint.
+         *
+         *     **Cross-currency send (optional).** A `to_currency_id` different from
+         *     `from_currency_id` converts on the way out, like the fiat offramps: the
+         *     wallet is debited in `from_currency_id`, the destination receives
+         *     `amount_to` in `to_currency_id` at the tenant's exchange rate for this
+         *     order type. The pair must be configured (`400 EXCHANGE_RATE_NOT_FOUND`),
+         *     `to_currency_id` must be on-chain (`400 INVALID_REQUEST`) and the
+         *     destination must be registered on the network of `to_currency_id`
+         *     (`400 DESTINATION_CHAIN_MISMATCH`). Preview with
+         *     `POST /admin/orders/calc`. Omitted or equal `to_currency_id` is the
+         *     plain same-asset transfer.
          *
          */
         post: {
@@ -6214,7 +6229,7 @@ export interface paths {
                          */
                         gov_id_expiration_date?: string;
                         /**
-                         * @description Tax identifier of the cardholder, separate from the document number. Required by Interlace CONSUMER programs when nationality is USA, where it must be a valid SSN (9 digits or XXX-XX-XXXX).
+                         * @description Tax identifier of the cardholder, separate from the document number. Required by some CONSUMER programs when nationality is USA, where it must be a valid SSN (9 digits or XXX-XX-XXXX).
                          *
                          * @example 123-45-6789
                          */
@@ -6410,7 +6425,7 @@ export interface paths {
                         gov_id_issuance_date?: string;
                         /** Format: date */
                         gov_id_expiration_date?: string;
-                        /** @description Tax identifier (USA + Interlace CONSUMER: SSN, 9 digits or XXX-XX-XXXX) */
+                        /** @description Tax identifier (USA + CONSUMER programs that require it: SSN, 9 digits or XXX-XX-XXXX) */
                         tax_identification_number?: string;
                         address?: {
                             line1?: string;
@@ -7929,7 +7944,7 @@ export interface components {
              */
             cvv: string;
             /**
-             * @description 3-D Secure password where the vendor exposes one (Wallester); `null` otherwise.
+             * @description 3-D Secure password where the card program exposes one; `null` otherwise.
              * @example null
              */
             security_code: string | null;
@@ -8679,7 +8694,7 @@ export interface components {
          * @example EXCHANGE_OMNI
          * @enum {string}
          */
-        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE";
+        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE" | "MONTHLY_FEE";
         OrderType: {
             id?: components["schemas"]["OrderTypeId"];
             description?: string;
@@ -8733,9 +8748,20 @@ export interface components {
              * @default false
              */
             is_reverse: boolean;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Currency debited from the wallet.
+             */
             from_currency_id: string;
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description Optional. Currency delivered on-chain to the destination. Omitted or equal to `from_currency_id`: a plain transfer of the same asset. Different: a cross-currency send — the wallet is debited in `from_currency_id`, the destination receives `amount_to` in `to_currency_id` at the tenant's `OMNIBUS_CRYPTO_TRANSFER` exchange rate (like the fiat offramps). Requires a configured pair (`400 EXCHANGE_RATE_NOT_FOUND`), an on-chain currency (`400 INVALID_REQUEST`) and a destination registered on the network of `to_currency_id` (`400 DESTINATION_CHAIN_MISMATCH`). Preview with `POST /admin/orders/calc`.
+             */
+            to_currency_id?: string;
+            /**
+             * Format: uuid
+             * @description A `CRYPTO_EXTERNAL` counterparty destination. For a cross-currency send its address must be on the network of `to_currency_id`.
+             */
             counterparty_destination_id: string;
             /** @description Free-form reference visible in order/transaction listings */
             reference?: string;
