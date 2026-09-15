@@ -861,6 +861,13 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Wallet does not belong to tenant, or its KYC status does not allow the operation (`KYC_REQUIREMENTS_NOT_MET`) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description Wallet not found */
                 404: {
                     headers: {
@@ -938,6 +945,13 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Wallet does not belong to tenant, or its KYC status does not allow the operation (`KYC_REQUIREMENTS_NOT_MET`) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description Address for this chain already exists */
                 409: {
                     headers: {
@@ -947,201 +961,6 @@ export interface paths {
                 };
             };
         };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/crypto_wallets/{wallet_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List crypto wallets */
-        get: {
-            parameters: {
-                query?: {
-                    /** @description Filter by exact external_id */
-                    external_id?: string;
-                    /** @description Search by name (case-insensitive, partial match) */
-                    name?: string;
-                    /** @description Filter by status (default active) */
-                    status?: "active" | "inactive";
-                    /** @description Filter wallets created after this date (ISO 8601) */
-                    created_after?: string;
-                    /** @description Filter wallets created before this date (ISO 8601) */
-                    created_before?: string;
-                    offset?: number;
-                    limit?: number;
-                };
-                header?: never;
-                path: {
-                    wallet_id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Crypto wallets listed */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            success?: boolean;
-                            data?: components["schemas"]["CryptoWalletListItem"][];
-                            pagination?: components["schemas"]["PaginationResponse"];
-                        };
-                    };
-                };
-                /** @description Wallet does not belong to tenant */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        /** Create crypto wallet */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    wallet_id: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        name: string;
-                        external_id?: string;
-                        /** @description Chain IDs to create addresses on. Omit or leave empty to create a wallet without addresses; the first address added later creates the custody-provider wallet. */
-                        chains?: number[];
-                    };
-                };
-            };
-            responses: {
-                /** @description Crypto wallet created */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            success?: boolean;
-                            data?: components["schemas"]["CryptoWallet"];
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Invalid request (missing name, invalid chains) */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Wallet does not belong to tenant */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description external_id already exists for this tenant */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/admin/crypto_wallets/{wallet_id}/addresses": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List crypto wallet addresses */
-        get: {
-            parameters: {
-                query?: {
-                    /** @description Filter by chain ID */
-                    chain?: number;
-                    /** @description Filter by specific crypto wallet */
-                    crypto_wallet_id?: string;
-                    /** @description Search by address (case-insensitive, partial match) */
-                    address?: string;
-                    offset?: number;
-                    limit?: number;
-                };
-                header?: never;
-                path: {
-                    wallet_id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Addresses listed */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            success?: boolean;
-                            data?: components["schemas"]["CryptoWalletAddressListItem"][];
-                            pagination?: components["schemas"]["PaginationResponse"];
-                        };
-                    };
-                };
-                /** @description Wallet does not belong to tenant */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1180,51 +999,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Crypto wallet not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        /**
-         * Delete crypto wallet
-         * @description Soft-deletes a crypto wallet and archives it with the custody provider.
-         *     The wallet is marked as deleted and all addresses are deactivated.
-         *
-         */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    wallet_id: string;
-                    crypto_wallet_id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Crypto wallet soft-deleted */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            success?: boolean;
-                            data?: components["schemas"]["CryptoWalletDeleteResponse"];
-                            message?: string;
-                        };
-                    };
-                };
-                /** @description Wallet does not belong to tenant */
+                /** @description Wallet does not belong to tenant, or its KYC status does not allow the operation (`KYC_REQUIREMENTS_NOT_MET`) */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -1244,6 +1019,9 @@ export interface paths {
                 };
             };
         };
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1289,6 +1067,15 @@ export interface paths {
                             data?: components["schemas"]["CryptoWalletAddress"];
                             message?: string;
                         };
+                    };
+                };
+                /** @description Wallet does not belong to tenant, or its KYC status does not allow the operation (`KYC_REQUIREMENTS_NOT_MET`) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
                 /** @description Crypto wallet not found */
@@ -1470,7 +1257,8 @@ export interface paths {
                         business_name?: string;
                         business_type?: string;
                         business_description?: string;
-                        business_industry?: string;
+                        /** @description NAICS industry codes of the business (one or more) */
+                        business_industry?: string[];
                         website?: string;
                         /** Format: date */
                         formation_date?: string;
@@ -1676,7 +1464,8 @@ export interface paths {
                         business_name?: string;
                         business_type?: string;
                         business_description?: string;
-                        business_industry?: string;
+                        /** @description NAICS industry codes of the business (one or more) */
+                        business_industry?: string[];
                         website?: string;
                         /** Format: date */
                         formation_date?: string;
@@ -3192,8 +2981,8 @@ export interface paths {
             parameters: {
                 query: {
                     wallet_id: string;
-                    /** @description Filter by order type */
-                    order_type?: string;
+                    /** @description Order type the rates are resolved for */
+                    order_type: components["schemas"]["OrderTypeId"];
                 };
                 header?: never;
                 path?: never;
@@ -3206,7 +2995,22 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["IndividualRates"];
+                        };
+                    };
+                };
+                /** @description Missing `order_type`, or no tariff configured for it (`TENANT_FEE_NOT_CONFIGURED`) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -3231,6 +3035,24 @@ export interface paths {
                 query?: {
                     offset?: number;
                     limit?: number;
+                    /** @description Order column to sort by (e.g. created_at, status, order_type, amount_from, amount_to) */
+                    sort_by?: string;
+                    sort_order?: "asc" | "desc";
+                    /**
+                     * @description JSON-encoded array of filters, each element `{field: value}`. An array value means OR
+                     *     (`[{"status":["PENDING","PROCESSING"]}]`). A JSONB column is filtered by a key with the
+                     *     text operator, e.g. `[{"meta->>workflow_status":"PROCESSING"}]` or, to find an order by
+                     *     your own reference, `[{"meta->>reference":"invoice-2026-04-001"}]`. Besides order columns
+                     *     it accepts `mass_payout_id` (uuid), which narrows the result to the orders of one mass
+                     *     payout batch. Malformed JSON or a non-array value is rejected with 400.
+                     *
+                     * @example [{"status":"COMPLETE"}]
+                     */
+                    filters?: string;
+                    /** @description Orders created from this date (inclusive), ISO 8601 */
+                    date_from?: string;
+                    /** @description Orders created up to this date (inclusive), ISO 8601 */
+                    date_to?: string;
                     /** @description If `true`, includes dust orders (amount below render threshold for either currency). Defaults to `false` — dust orders are hidden. */
                     show_low_balance?: "true" | "false";
                 };
@@ -3254,6 +3076,15 @@ export interface paths {
                             data?: components["schemas"]["TenantOrder"][];
                             pagination?: components["schemas"]["PaginationResponse"];
                         };
+                    };
+                };
+                /** @description Invalid `filters` (not a JSON array) or non-uuid `mass_payout_id` */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
             };
@@ -3284,6 +3115,9 @@ export interface paths {
                     order_type: components["schemas"]["OrderTypeId"];
                     /** @description If `true`, calculates inputs needed to receive the given amount. */
                     is_reverse?: "true" | "false";
+                    /** @description If `true` (default), the network fee is subtracted from `result_amount`. If `false`, the fee is added on top of `from_amount` and the recipient gets the full converted amount. Ignored for reverse calculations.
+                     *      */
+                    is_subtract?: "true" | "false";
                     /** @description Destination address (for crypto withdrawals; affects network fee estimation). */
                     to_address?: string;
                 };
@@ -3302,35 +3136,21 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            data?: {
-                                from_amount?: number;
-                                to_amount?: number;
-                                rate?: number;
-                                fee?: number;
-                                /** Format: uuid */
-                                fee_currency?: string;
-                                network_fee?: number | null;
-                                /** Format: uuid */
-                                network_fee_currency?: string | null;
-                                total_amount?: number;
-                                from_currency?: {
-                                    /** Format: uuid */
-                                    uuid?: string;
-                                    symbol?: string;
-                                    name?: string;
-                                };
-                                to_currency?: {
-                                    /** Format: uuid */
-                                    uuid?: string;
-                                    symbol?: string;
-                                    name?: string;
-                                };
-                            };
+                            data?: components["schemas"]["OrderCalculation"];
                         };
                     };
                 };
                 /** @description Invalid request (e.g. unknown `order_type`, missing required parameter, exchange rate not found) */
                 400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Wallet does not belong to tenant, or its KYC status does not allow the operation (`KYC_REQUIREMENTS_NOT_MET`) */
+                403: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -5507,12 +5327,15 @@ export interface paths {
         /**
          * Get wallet balance
          * @description Returns raw balance records with crypto metadata.
-         *     Automatically filters out dust balances below render_threshold.
+         *     Dust balances below `render_threshold` are hidden unless `show_low_balance=true`.
          *
          */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    /** @description When false (default), dust balances below threshold are hidden */
+                    show_low_balance?: boolean;
+                };
                 header?: never;
                 path: {
                     wallet_id: string;
@@ -5530,7 +5353,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            /** @description Filtered by render_threshold; icon may be stripped from crypto.meta */
+                            /** @description Filtered by render_threshold unless show_low_balance=true; icon may be stripped from crypto.meta */
                             data?: {
                                 /** Format: uuid */
                                 crypto_id?: string;
@@ -5597,6 +5420,8 @@ export interface paths {
                     sort_order?: "ASC" | "DESC";
                     /** @description JSON string of filters (e.g., [{"status":"complete"}]) */
                     filters?: string;
+                    /** @description When false (default), dust transactions below threshold are hidden */
+                    show_low_balance?: boolean;
                 };
                 header?: never;
                 path: {
@@ -8584,7 +8409,8 @@ export interface components {
             business_name?: string | null;
             business_type?: string | null;
             business_description?: string | null;
-            business_industry?: string | null;
+            /** @description NAICS industry codes of the business (one or more). */
+            business_industry?: string[] | null;
             website?: string | null;
             /** Format: date-time */
             formation_date?: string | null;
@@ -8695,6 +8521,170 @@ export interface components {
          * @enum {string}
          */
         OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE" | "MONTHLY_FEE";
+        OrderCalculation: {
+            /**
+             * Format: uuid
+             * @description Source currency UUID.
+             */
+            from_currency: string;
+            /**
+             * Format: uuid
+             * @description Destination currency UUID.
+             */
+            to_currency: string;
+            /**
+             * @description Source currency symbol.
+             * @example USDT
+             */
+            from_symbol: string;
+            /**
+             * @description Destination currency symbol.
+             * @example USD
+             */
+            to_symbol: string;
+            /**
+             * @description Decimals the source-currency amounts are truncated to.
+             * @example 6
+             */
+            from_decimals: number;
+            /**
+             * @description Decimals the destination-currency amounts are truncated to.
+             * @example 2
+             */
+            to_decimals: number;
+            /**
+             * @description Amount to be spent in the source currency.
+             * @example 100
+             */
+            from_amount: number;
+            /**
+             * @description Amount to be received in the destination currency.
+             * @example 98.5
+             */
+            result_amount: number;
+            /**
+             * @description Amount converted before fees, in the destination currency.
+             * @example 100
+             */
+            net_amount: number;
+            /**
+             * @description Total fees (`comission` + `network_fee`), in the source currency.
+             * @example 1.5
+             */
+            fees: number;
+            /**
+             * @description Service commission excluding the network fee (wire name is intentionally `comission`).
+             * @example 1.5
+             */
+            comission: number;
+            /**
+             * Format: uuid
+             * @description Currency UUID `comission` is denominated in. Omitted by older engines — then it is the same currency on both sides.
+             */
+            commission_currency?: string;
+            /**
+             * @description Percentage part of the commission, in the commission currency.
+             * @example 1
+             */
+            percent_commission: number;
+            /**
+             * @description Fixed part of the commission, in the commission currency.
+             * @example 0.5
+             */
+            fixed_commission: number;
+            /**
+             * @description Markup applied, in whole percent.
+             * @example 1.5
+             */
+            base_markup: number;
+            /**
+             * @description Estimated blockchain network fee in the source currency (crypto withdrawals only, otherwise 0).
+             * @example 0
+             */
+            network_fee: number;
+            /**
+             * @description Network fee in the chain native currency (ETH, BNB, …), 18 decimals.
+             * @example 0
+             */
+            network_fee_native: number;
+            /**
+             * @description Network fee in USD, 8 decimals.
+             * @example 0
+             */
+            network_fee_usd: number;
+            /**
+             * @description Transaction fee. Always 0 for now.
+             * @example 0
+             */
+            transaction_fee: number;
+            /**
+             * @description Exchange rate applied (source → destination), 6 decimals. Includes the tenant FX spread.
+             * @example 0.985
+             */
+            rate: number;
+            /**
+             * @description Market rate before the tenant FX spread. Equal to `rate` when no spread applies.
+             * @example 1
+             */
+            base_rate: number;
+            /**
+             * @description Tenant FX spread already taken off `rate`, in whole percent.
+             * @example 1.5
+             */
+            fx_spread: number;
+            /**
+             * @description Percent markup of the applied tariff.
+             * @example 1.5
+             */
+            markup: number;
+            /**
+             * @description Fixed USD markup of the applied tariff.
+             * @example 0.5
+             */
+            markup_usd: number;
+            /**
+             * @description Percent markup on the network fee.
+             * @example 0
+             */
+            gas_markup: number;
+            /**
+             * @description Percent discount on the network fee.
+             * @example 0
+             */
+            gas_discount: number;
+            /** @description Whether the order type is an internal (on-platform) operation. */
+            is_internal: boolean;
+            /** @description Whether the operation is allowed for the caller with these inputs. */
+            allowed: boolean;
+            /** @description Calculation error text, `null` on success. */
+            error: string | null;
+        };
+        IndividualRates: {
+            /**
+             * @description Percent commission applied to the amount.
+             * @example 1.5
+             */
+            markup: number;
+            /**
+             * @description Fixed commission in USD.
+             * @example 0.5
+             */
+            markup_usd: number;
+            /**
+             * @description Percent markup on the network fee.
+             * @example 0
+             */
+            gas_markup: number;
+            /**
+             * @description Percent discount on the network fee.
+             * @example 0
+             */
+            gas_discount: number;
+            /** @description Order type the resolved tariff row belongs to. Absent for the zero-fee internal transfer. */
+            order_type?: string;
+        } & {
+            [key: string]: unknown;
+        };
         OrderType: {
             id?: components["schemas"]["OrderTypeId"];
             description?: string;
@@ -8875,13 +8865,13 @@ export interface components {
             destination_currency?: string;
             /** @description Whether deposits are enabled for this account, resolved from the account's KYC rail (virtual_accounts_programs.kyc_rails.is_deposit_enabled). When false, deposit_instructions is returned as an empty array on every surface (admin included) since admin routes are also consumed by BaaS API clients. */
             is_deposit_enabled?: boolean;
-            /** @description Bank deposit instructions grouped by instruction type (ACH, FEDWIRE, SWIFT). Returned as an empty array when is_deposit_enabled is false. */
+            /** @description Bank deposit instructions, one element per payment rail (ACH, FEDWIRE, SWIFT, SEPA_CT, CHAPS, FPS). Returned as an empty array when is_deposit_enabled is false. */
             deposit_instructions?: {
                 /**
-                 * @description Payment rail type
+                 * @description Payment rail type. Uppercase; a new provider rail is added to this list when it ships.
                  * @enum {string}
                  */
-                instruction_type?: "ACH" | "FEDWIRE" | "SWIFT";
+                instruction_type?: "ACH" | "FEDWIRE" | "SWIFT" | "SEPA_CT" | "CHAPS" | "FPS";
                 /**
                  * @description Unique memo/reference code for this deposit
                  * @example EE8EX7E

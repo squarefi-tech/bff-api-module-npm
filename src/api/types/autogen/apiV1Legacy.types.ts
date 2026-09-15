@@ -462,6 +462,8 @@ export interface paths {
                     sort_order?: "ASC" | "DESC";
                     /** @description JSON string of filters to apply. Example - [{"status":"complete"},{"type":"deposit"}] */
                     filters?: string;
+                    /** @description When false (default), dust transactions below threshold are hidden */
+                    show_low_balance?: boolean;
                 };
                 header?: never;
                 path: {
@@ -582,6 +584,8 @@ export interface paths {
                     from_date?: string;
                     /** @description Filter transactions up to this date (inclusive). Format - ISO 8601 (e.g., 2024-12-31T23:59:59Z) */
                     to_date?: string;
+                    /** @description When false (default), dust transactions below threshold are hidden */
+                    show_low_balance?: boolean;
                 };
                 header?: never;
                 path: {
@@ -640,6 +644,8 @@ export interface paths {
                     to_date?: string;
                     /** @description Optional access token for additional security */
                     access_token?: string;
+                    /** @description When false (default), dust transactions below threshold are hidden */
+                    show_low_balance?: boolean;
                 };
                 header?: never;
                 path: {
@@ -707,6 +713,8 @@ export interface paths {
                     to_date?: string;
                     /** @description Filter by specific currency UUID. If provided, generates statement only for this currency. */
                     crypto_id?: string;
+                    /** @description When false (default), dust transactions below threshold are hidden */
+                    show_low_balance?: boolean;
                     /**
                      * @deprecated
                      * @description [DEPRECATED] Ignored. Branding is derived from the wallet tenant. Sending this parameter triggers a `Deprecation: true` response header.
@@ -2957,9 +2965,9 @@ export interface paths {
          */
         get: {
             parameters: {
-                query?: {
-                    /** @description Order type (EXCHANGE, WITHDRAWAL_CRYPTO, etc) */
-                    order_type?: string;
+                query: {
+                    /** @description Order type the rates are resolved for */
+                    order_type: components["schemas"]["OrderTypeId"];
                 };
                 header?: never;
                 path?: never;
@@ -2967,18 +2975,13 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description User rates */
+                /** @description User rates (the rates object itself, without a `success`/`data` envelope) */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            rates?: {
-                                order_type?: string;
-                                rate?: number;
-                            }[];
-                        };
+                        "application/json": components["schemas"]["IndividualRates"];
                     };
                 };
                 /** @description Server error */
@@ -3170,21 +3173,13 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Order calculation details */
+                /** @description Order calculation details (the calculation object itself, without a `success`/`data` envelope) */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            exchange_rate?: number;
-                            result_amount?: number;
-                            commission?: number;
-                            commission_rate?: number;
-                            individual_rate?: number;
-                            network_fee?: number;
-                            net_amount?: number;
-                        };
+                        "application/json": components["schemas"]["OrderCalculation"];
                     };
                 };
                 /** @description Bad request */
@@ -4298,9 +4293,9 @@ export interface paths {
          */
         get: {
             parameters: {
-                query?: {
-                    /** @description Order type (EXCHANGE, WITHDRAWAL_CRYPTO, etc) */
-                    order_type?: string;
+                query: {
+                    /** @description Order type the rates are resolved for */
+                    order_type: components["schemas"]["OrderTypeId"];
                 };
                 header?: never;
                 path?: never;
@@ -4315,10 +4310,20 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            rates?: {
-                                order_type?: string;
-                                rate?: number;
-                            }[];
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["IndividualRates"];
+                        };
+                    };
+                };
+                /** @description Missing `order_type`, or no tariff configured for it (`TENANT_FEE_NOT_CONFIGURED`) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error?: string;
                         };
                     };
                 };
@@ -4855,7 +4860,8 @@ export interface paths {
          *     - Filter by status: `[{"status":"COMPLETE"}]`
          *     - Filter by order type: `[{"order_type":"EXCHANGE"}]`
          *     - Multiple filters: `[{"status":"PENDING"},{"order_type":"L2F_WIRE_OFFRAMP"}]`
-         *     - Filter by meta field: `[{"meta":{"workflow_status":"PROCESSING"}}]`
+         *     - Filter by meta field: `[{"meta->>workflow_status":"PROCESSING"}]`
+         *     - Find an order by your own reference: `[{"meta->>reference":"invoice-2026-04-001"}]`
          *
          */
         get: {
@@ -4879,12 +4885,13 @@ export interface paths {
                      *     - `order_type` - Order type (EXCHANGE, WITHDRAWAL_CRYPTO, L2F_WIRE_OFFRAMP, etc.)
                      *     - `from_uuid` - Source currency UUID
                      *     - `to_uuid` - Destination currency UUID
-                     *     - `meta` - Nested JSONB filters (e.g., {"meta":{"workflow_status":"PROCESSING"}})
+                     *     - `meta->>key` - JSONB meta field by key with the text operator (e.g., {"meta->>workflow_status":"PROCESSING"})
                      *
                      *     **Examples:**
                      *     - Single value: `[{"status":"COMPLETE"}]`
                      *     - Multiple values (OR): `[{"status":["PENDING","PROCESSING"]}]`
-                     *     - Nested JSONB: `[{"meta":{"workflow_status":"PROCESSING"}}]`
+                     *     - JSONB meta field: `[{"meta->>workflow_status":"PROCESSING"}]`
+                     *     - By your own reference: `[{"meta->>reference":"invoice-2026-04-001"}]`
                      *
                      * @example [{"status":"COMPLETE"}]
                      */
@@ -5236,13 +5243,9 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            exchange_rate?: number;
-                            result_amount?: number;
-                            commission?: number;
-                            commission_rate?: number;
-                            individual_rate?: number;
-                            network_fee?: number;
-                            net_amount?: number;
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["OrderCalculation"];
                         };
                     };
                 };
@@ -7169,6 +7172,170 @@ export interface components {
          * @enum {string}
          */
         OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE" | "MONTHLY_FEE";
+        OrderCalculation: {
+            /**
+             * Format: uuid
+             * @description Source currency UUID.
+             */
+            from_currency: string;
+            /**
+             * Format: uuid
+             * @description Destination currency UUID.
+             */
+            to_currency: string;
+            /**
+             * @description Source currency symbol.
+             * @example USDT
+             */
+            from_symbol: string;
+            /**
+             * @description Destination currency symbol.
+             * @example USD
+             */
+            to_symbol: string;
+            /**
+             * @description Decimals the source-currency amounts are truncated to.
+             * @example 6
+             */
+            from_decimals: number;
+            /**
+             * @description Decimals the destination-currency amounts are truncated to.
+             * @example 2
+             */
+            to_decimals: number;
+            /**
+             * @description Amount to be spent in the source currency.
+             * @example 100
+             */
+            from_amount: number;
+            /**
+             * @description Amount to be received in the destination currency.
+             * @example 98.5
+             */
+            result_amount: number;
+            /**
+             * @description Amount converted before fees, in the destination currency.
+             * @example 100
+             */
+            net_amount: number;
+            /**
+             * @description Total fees (`comission` + `network_fee`), in the source currency.
+             * @example 1.5
+             */
+            fees: number;
+            /**
+             * @description Service commission excluding the network fee (wire name is intentionally `comission`).
+             * @example 1.5
+             */
+            comission: number;
+            /**
+             * Format: uuid
+             * @description Currency UUID `comission` is denominated in. Omitted by older engines — then it is the same currency on both sides.
+             */
+            commission_currency?: string;
+            /**
+             * @description Percentage part of the commission, in the commission currency.
+             * @example 1
+             */
+            percent_commission: number;
+            /**
+             * @description Fixed part of the commission, in the commission currency.
+             * @example 0.5
+             */
+            fixed_commission: number;
+            /**
+             * @description Markup applied, in whole percent.
+             * @example 1.5
+             */
+            base_markup: number;
+            /**
+             * @description Estimated blockchain network fee in the source currency (crypto withdrawals only, otherwise 0).
+             * @example 0
+             */
+            network_fee: number;
+            /**
+             * @description Network fee in the chain native currency (ETH, BNB, …), 18 decimals.
+             * @example 0
+             */
+            network_fee_native: number;
+            /**
+             * @description Network fee in USD, 8 decimals.
+             * @example 0
+             */
+            network_fee_usd: number;
+            /**
+             * @description Transaction fee. Always 0 for now.
+             * @example 0
+             */
+            transaction_fee: number;
+            /**
+             * @description Exchange rate applied (source → destination), 6 decimals. Includes the tenant FX spread.
+             * @example 0.985
+             */
+            rate: number;
+            /**
+             * @description Market rate before the tenant FX spread. Equal to `rate` when no spread applies.
+             * @example 1
+             */
+            base_rate: number;
+            /**
+             * @description Tenant FX spread already taken off `rate`, in whole percent.
+             * @example 1.5
+             */
+            fx_spread: number;
+            /**
+             * @description Percent markup of the applied tariff.
+             * @example 1.5
+             */
+            markup: number;
+            /**
+             * @description Fixed USD markup of the applied tariff.
+             * @example 0.5
+             */
+            markup_usd: number;
+            /**
+             * @description Percent markup on the network fee.
+             * @example 0
+             */
+            gas_markup: number;
+            /**
+             * @description Percent discount on the network fee.
+             * @example 0
+             */
+            gas_discount: number;
+            /** @description Whether the order type is an internal (on-platform) operation. */
+            is_internal: boolean;
+            /** @description Whether the operation is allowed for the caller with these inputs. */
+            allowed: boolean;
+            /** @description Calculation error text, `null` on success. */
+            error: string | null;
+        };
+        IndividualRates: {
+            /**
+             * @description Percent commission applied to the amount.
+             * @example 1.5
+             */
+            markup: number;
+            /**
+             * @description Fixed commission in USD.
+             * @example 0.5
+             */
+            markup_usd: number;
+            /**
+             * @description Percent markup on the network fee.
+             * @example 0
+             */
+            gas_markup: number;
+            /**
+             * @description Percent discount on the network fee.
+             * @example 0
+             */
+            gas_discount: number;
+            /** @description Order type the resolved tariff row belongs to. Absent for the zero-fee internal transfer. */
+            order_type?: string;
+        } & {
+            [key: string]: unknown;
+        };
         /** @description Order type reference with optional product guardrails, associated KYC rails and tenant billing rates */
         OrderType: {
             /** @description Order type identifier (e.g. EXCHANGE, WITHDRAWAL_CRYPTO) */

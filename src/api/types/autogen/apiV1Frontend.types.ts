@@ -12014,7 +12014,16 @@ export interface paths {
         };
         /**
          * List crypto addresses
-         * @description Retrieves a list of crypto addresses associated with a wallet.
+         * @description Retrieves the crypto addresses of a wallet, newest first.
+         *
+         *     Every item embeds the full network object in `chain` (schema `Chain`) — read `chain.id`
+         *     for the numeric chain ID. The single-address endpoints
+         *     (`GET` / `POST /frontend/wallets/{wallet_id}/addresses/{chain}`) return the same row with
+         *     `chain` as that number instead. Match an address across endpoints by `uuid`.
+         *
+         *     Without `is_active` only active addresses are returned. Creation is idempotent per chain,
+         *     so a wallet normally holds one active address per chain; should several be active, the
+         *     first item with a given `chain.id` is the one `GET …/addresses/{chain}` returns for it.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -12024,9 +12033,9 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    /** @description Filter by blockchain (chain ID) */
-                    chain?: string;
-                    /** @description Filter by active status */
+                    /** @description Filter by numeric chain ID (`chain.id` of the items) */
+                    chain?: number;
+                    /** @description Filter by active status. Omitted → active addresses only. */
                     is_active?: boolean;
                     /** @description Number of items to skip */
                     offset?: number;
@@ -12051,22 +12060,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success: boolean;
-                            data: {
-                                /** Format: uuid */
-                                uuid: string;
-                                /** @description The blockchain address */
-                                address: string;
-                                /** @description Numeric chain ID */
-                                chain: number;
-                                /** Format: uuid */
-                                wallet_uuid: string;
-                                is_active: boolean;
-                                label: string | null;
-                                /** @enum {string} */
-                                type: "utila" | "processing";
-                                /** Format: date-time */
-                                created_at: string;
-                            }[];
+                            data: components["schemas"]["CryptoAddressListItem"][];
                             pagination: {
                                 offset: number;
                                 limit: number;
@@ -12109,9 +12103,14 @@ export interface paths {
         };
         /**
          * Get crypto address by chain
-         * @description Returns the single crypto address for the given wallet and chain.
+         * @description Returns the active crypto address of the wallet on the given chain.
          *     Useful when the caller already knows which chain they need and wants
          *     to avoid paginated list traversal.
+         *
+         *     `chain` in the response is the numeric chain ID — no network object is embedded
+         *     (unlike the items of `GET /frontend/wallets/{wallet_id}/addresses`). Should the wallet
+         *     hold several active addresses on the chain, the newest is returned — the same row the
+         *     list shows first for that `chain.id`.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -12141,20 +12140,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success: boolean;
-                            data: {
-                                /** Format: uuid */
-                                uuid: string;
-                                address: string;
-                                chain: number;
-                                /** Format: uuid */
-                                wallet_uuid: string;
-                                is_active: boolean;
-                                label: string | null;
-                                /** @enum {string} */
-                                type: "utila" | "processing";
-                                /** Format: date-time */
-                                created_at: string;
-                            };
+                            data: components["schemas"]["CryptoAddress"];
                         };
                     };
                 };
@@ -12184,7 +12170,11 @@ export interface paths {
         put?: never;
         /**
          * Create crypto address
-         * @description Creates a new crypto address for a specific blockchain.
+         * @description Creates a crypto address for a specific blockchain. Idempotent per chain: if the wallet
+         *     already holds an active address on that chain, that address is returned (the same row
+         *     `GET /frontend/wallets/{wallet_id}/addresses/{chain}` gives) and nothing is provisioned.
+         *
+         *     `chain` in the response is the numeric chain ID — no network object is embedded.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -12226,21 +12216,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success: boolean;
-                            data: {
-                                /** Format: uuid */
-                                uuid: string;
-                                /** @description The blockchain address */
-                                address: string;
-                                chain: number;
-                                /** Format: uuid */
-                                wallet_uuid: string;
-                                is_active: boolean;
-                                label: string | null;
-                                /** @enum {string} */
-                                type: "utila" | "processing";
-                                /** Format: date-time */
-                                created_at: string;
-                            };
+                            data: components["schemas"]["CryptoAddress"];
                             /** @example Crypto address created successfully */
                             message: string;
                         };
@@ -14274,6 +14250,84 @@ export interface components {
             is_active?: boolean;
             /** Format: date-time */
             created_at?: string;
+        };
+        /** @description Blockchain network as stored in the `chain` reference table. Embedded whole into every item of `GET /frontend/wallets/{wallet_id}/addresses`; `GET /frontend/reference/chains` returns the `id` / `name` / `symbol` / `enabled` subset of the same rows. Rely on those four fields — the rest is the raw reference row and is not a stable contract. */
+        Chain: {
+            /**
+             * @description Numeric chain ID — the value `chain` carries on the single-address endpoints and in the `{chain}` path parameter
+             * @example 1
+             */
+            id: number;
+            /** @example Tron */
+            name: string | null;
+            /** @example TRON */
+            symbol: string | null;
+            /** @description Whether new addresses can be created on this network */
+            enabled: boolean;
+            is_beta?: boolean | null;
+            is_testnet?: boolean | null;
+            /** @description Public RPC endpoint of the network */
+            rpc_url?: string | null;
+            /** @description Network identifier at the custody provider (e.g. `tron-mainnet`) */
+            utila_name?: string | null;
+            /** @description Gas units of a token transfer */
+            token_transfer_gas?: number | null;
+            /** @description Gas units of a native-coin transfer */
+            native_transfer_gas?: number | null;
+        };
+        /** @description Fields shared by every representation of a wallet crypto address (a `crypto_addresses` row). */
+        CryptoAddressBase: {
+            /**
+             * @description Numeric row ID. Identify an address across endpoints by `uuid`, not by this number.
+             * @example 2405
+             */
+            id: number;
+            /**
+             * Format: uuid
+             * @description Stable address identifier — the same value on the list and on the single-address endpoints. `null` only on a few legacy `processing` rows.
+             */
+            uuid: string | null;
+            /**
+             * @description The on-chain address
+             * @example TN3W4H6rK2ce4vX9YnFQhwKENnHjoxb3m9
+             */
+            address: string;
+            /**
+             * Format: uuid
+             * @description Owning wallet
+             */
+            wallet_uuid: string;
+            is_active: boolean;
+            /**
+             * @description Free-form label: the one passed on creation (clients send e.g. `default` or `VA`), otherwise `<chain name> Address`.
+             * @example default
+             */
+            label: string | null;
+            /** @description Derivation index of the legacy `processing` provider; always `null` for `utila` addresses */
+            index_id: number | null;
+            /**
+             * @description Provisioning provider. New addresses are always `utila`; `processing` rows are legacy and read-only.
+             * @enum {string}
+             */
+            type: "utila" | "processing";
+            /** @description Provider bookkeeping (network name, integration and address IDs at the custody provider). Not a stable contract. */
+            meta: {
+                [key: string]: unknown;
+            } | null;
+            /** Format: date-time */
+            created_at: string;
+        };
+        /** @description A single wallet crypto address as returned by `GET` and `POST /frontend/wallets/{wallet_id}/addresses/{chain}`. `chain` is the numeric chain ID; no network object is embedded. */
+        CryptoAddress: components["schemas"]["CryptoAddressBase"] & {
+            /**
+             * @description Numeric chain ID (see `GET /frontend/reference/chains`)
+             * @example 1
+             */
+            chain: number;
+        };
+        /** @description An item of `GET /frontend/wallets/{wallet_id}/addresses`. The same row as `CryptoAddress`, but `chain` is the embedded network object — read `chain.id` to get the numeric chain ID used everywhere else. */
+        CryptoAddressListItem: components["schemas"]["CryptoAddressBase"] & {
+            chain: components["schemas"]["Chain"];
         };
         CryptoWalletDeleteResponse: {
             /**

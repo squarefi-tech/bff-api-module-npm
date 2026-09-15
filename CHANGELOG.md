@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Wallet address list typed as the backend actually answers (SFI-2470).** Regenerated from the corrected frontend spec (base_backend#1520 / #1521). Items of `wallets.addresses.getAll` (`API.Wallets.WalletChain.GetAll.Response['data']`) are now `CryptoAddressListItem`: `chain` is the embedded network object (`Chain`, read `chain.id` for the numeric chain ID) instead of a number, `id` is the numeric row ID, `uuid` is `string | null`, and `index_id` and `meta` are present. `getByChain` / `create` responses are now `CryptoAddress` — same row with `chain: number`, also gaining `id`, `index_id`, `meta` and a nullable `uuid`. The `chain` query filter of `getAll` is typed `number` (was `string`). Breaking at type level for code that treated list-item `chain` as a number or `uuid` as non-null.
+
+### Changed
+
+- Regenerated V1 External / Legacy / Tenant types picked up unrelated upstream spec changes: order calculation responses now reference a shared `OrderCalculation` schema, Legacy individual rates reference `IndividualRates` and require `order_type`, and the Tenant spec no longer lists `/admin/crypto_wallets/{wallet_id}` and `/admin/crypto_wallets/{wallet_id}/addresses` (not wrapped by the SDK).
+
 ## [1.36.63] - 2026-09-15
 
 ## [1.36.62] - 2026-09-15
