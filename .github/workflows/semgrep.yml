@@ -1,0 +1,87 @@
+name: Semgrep SAST
+
+# Статический анализ безопасности (SOC-16). Semgrep OSS, бесплатный.
+# Пока проверка предупреждающая и мерж не блокирует — сначала отсеиваем шум,
+# после этого шаг сканирования станет обязательным.
+
+on:
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1" # еженедельно, понедельник 06:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: semgrep-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  semgrep:
+    name: Semgrep OSS
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Установка Semgrep
+        run: pip install --quiet semgrep
+
+      - name: Сканирование
+        continue-on-error: true
+        run: |
+          semgrep scan \
+            --config=p/security-audit \
+            --config=p/secrets \
+            --config=p/owasp-top-ten \
+            --metrics=off \
+            --json --output=semgrep.json \
+            --exclude=node_modules --exclude=dist --exclude=.next \
+            --exclude='*.min.js' --exclude=vendor
+
+      - name: Сводка
+        if: always()
+        run: |
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import collections, json, pathlib
+
+          path = pathlib.Path("semgrep.json")
+          if not path.exists():
+              print("## Semgrep\n\nСканирование не отработало — смотри лог предыдущего шага.")
+              raise SystemExit
+
+          results = json.loads(path.read_text()).get("results", [])
+          by_sev = collections.Counter(r["extra"].get("severity", "INFO") for r in results)
+
+          print(f"## Semgrep: находок — {len(results)}\n")
+          if results:
+              print("| Уровень | Находок |")
+              print("|---|---|")
+              for level in ("ERROR", "WARNING", "INFO"):
+                  if by_sev.get(level):
+                      print(f"| {level} | {by_sev[level]} |")
+              print("\n| Файл | Строка | Правило |")
+              print("|---|---|---|")
+              for r in results[:40]:
+                  rule = r["check_id"].split(".")[-1]
+                  print(f"| `{r['path']}` | {r['start']['line']} | {rule} |")
+              if len(results) > 40:
+                  print(f"\nПоказаны первые 40 из {len(results)}. Полный список — в артефакте `semgrep-findings`.")
+          else:
+              print("Находок нет.")
+          PY
+
+      - name: Артефакт с находками
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-findings
+          path: semgrep.json
+          if-no-files-found: ignore
+          retention-days: 30
