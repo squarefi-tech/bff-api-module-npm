@@ -2539,6 +2539,10 @@ export interface paths {
                     sub_account_type?: "prepaid" | "balance";
                     /** @description Filter cards by status.
                      *     Accepts a single value or a comma-separated list, e.g. `status=ACTIVE,CANCELED`.
+                     *
+                     *     Cards whose creation was refused — FAILED with no card behind them — are left
+                     *     out of the listing: they carry no number, no balance and nothing to act on.
+                     *     Pass `status=FAILED` to get them back.
                      *      */
                     status?: ("ACTIVE" | "INACTIVE" | "SUSPENDED" | "CANCELED")[];
                     /** @description Filter cards by last 4 digits of the card number (partial, case-insensitive match) */
