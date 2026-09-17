@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.65] - 2026-09-17
+
 ### Changed
 
 - **The wallet read by uuid is now a role-discriminated union (SFI-2487).** Regenerated from the deployed frontend spec (base_backend#1538 / #1541). `API.Wallets.Wallet.GetByUuid.Response['data']` is no longer one object type but `WalletDetails | WalletDetailsScopedUser`, told apart by the required `access_role`: `owner` / `admin` / `auditor` receive the full wallet, the scoped `user` role receives a shell-only one where `logo_url`, `balance`, `fiat_accounts`, `base_currency`, `fiat_total`, `crypto_total`, `pending_balance` and `total_amount` are **absent, not null**. The envelope itself is unchanged, so `Response['data']` and the fields shared by both shapes still compile; reading any of the eight role-gated fields now requires narrowing first (`if (data.access_role !== 'user')`, or the same check on `role`; `is_owner` is `boolean` on both shapes and does not narrow). This is a type-level break exactly where the old type promised data the `user` role never received.
