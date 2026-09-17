@@ -2697,6 +2697,10 @@ export interface paths {
                     sub_account_type?: "prepaid" | "balance";
                     /** @description Filter cards by status (matches issuing_cards.card_status).
                      *     Accepts a single value or a comma-separated list, e.g. `status=ACTIVE,FROZEN`.
+                     *
+                     *     Cards whose creation the vendor refused — FAILED with no card behind them —
+                     *     are left out of the listing: they carry no number, no balance and nothing the
+                     *     client can act on. Pass `status=FAILED` to get them back.
                      *      */
                     status?: ("ACTIVE" | "INACTIVE" | "FROZEN" | "CANCELED" | "CLOSED" | "BLOCKED" | "FAILED" | "PENDING")[];
                     /** @description Filter cards by last 4 digits of the card number (partial, case-insensitive match) */
@@ -11662,9 +11666,14 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: Any active wallet member. The scoped `user` role receives a shell-only
-         *     response (`uuid`, `name`, `display_name`, `tenant_id`, `kyc_info`, `created_at` + the role fields) —
-         *     `logo_url`, `balance`, `fiat_accounts` and the totals are omitted for that role.
+         *     **Access Control**: Any active wallet member. The response shape depends on the caller's role and
+         *     is told apart by `access_role`:
+         *     - `owner` / `admin` / `auditor` — the full wallet (`WalletDetails`): identity, KYC, `balance`,
+         *       `fiat_accounts`, `base_currency` and the totals.
+         *     - `user` — a shell-only wallet (`WalletDetailsScopedUser`): `uuid`, `id`, `name`, `display_name`,
+         *       `tenant_id`, `kyc_info`, `created_at` + the role fields. `logo_url`, `balance`, `fiat_accounts`,
+         *       `base_currency`, `fiat_total`, `crypto_total`, `pending_balance` and `total_amount` are absent
+         *       (not null) for that role — check `access_role` before reading them.
          *
          */
         get: {
@@ -11693,62 +11702,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success: boolean;
-                            data: {
-                                /** Format: uuid */
-                                uuid: string;
-                                name: string | null;
-                                /**
-                                 * @description Computed label — wallet name, else KYC-derived (business_name / first+last), else "New account". Always present.
-                                 * @example Acme LLC
-                                 */
-                                display_name?: string;
-                                logo_url: string | null;
-                                /** Format: uuid */
-                                tenant_id: string;
-                                /** Format: date-time */
-                                created_at: string;
-                                kyc_info: {
-                                    type: string;
-                                    status: string;
-                                    business_name: string | null;
-                                    first_name: string | null;
-                                    last_name: string | null;
-                                    email: string | null;
-                                    phone: string | null;
-                                } | null;
-                                /** @description Aggregated crypto balances */
-                                balance: {
-                                    symbol: string;
-                                    icon?: string | null;
-                                    name: string;
-                                    is_crypto: boolean;
-                                    decimal: number;
-                                    amount: number;
-                                    fiat_amount: number;
-                                    details: components["schemas"]["AggregatedBalanceDetails"][];
-                                }[];
-                                fiat_accounts: Record<string, never>[];
-                                /** @description User's base currency */
-                                base_currency: string | null;
-                                fiat_total: number;
-                                crypto_total: number;
-                                pending_balance: number;
-                                total_amount: number;
-                                /**
-                                 * @description Legacy alias of `access_role`. Always equals `access_role` when
-                                 *     present. Kept for backward compatibility — prefer `access_role`.
-                                 *     Only present when called via member access.
-                                 *
-                                 * @enum {string}
-                                 */
-                                role?: "owner" | "admin" | "user" | "auditor";
-                                /**
-                                 * @description User's role for this wallet (only present when called via member access)
-                                 * @enum {string}
-                                 */
-                                access_role?: "owner" | "admin" | "user" | "auditor";
-                                is_owner?: boolean;
-                            };
+                            data: components["schemas"]["WalletDetails"] | components["schemas"]["WalletDetailsScopedUser"];
                         };
                     };
                 };
@@ -15137,6 +15091,103 @@ export interface components {
             creator_user_data_id: string;
             /** Format: date-time */
             created_at: string;
+        };
+        /** @description KYC entity attached to the wallet. `null` when the wallet has no KYC entity yet. */
+        WalletKycInfo: {
+            type: string;
+            status: string;
+            business_name: string | null;
+            first_name: string | null;
+            last_name: string | null;
+            email: string | null;
+            phone: string | null;
+        };
+        /** @description One aggregated crypto balance of the wallet: every balance row sharing the same symbol is merged into a single entry, and `details[]` keeps the per-row breakdown. */
+        WalletBalanceEntry: {
+            symbol: string;
+            icon?: string | null;
+            name: string;
+            is_crypto: boolean;
+            decimal: number;
+            amount: number;
+            /** @description Amount converted to `base_currency` */
+            fiat_amount: number;
+            details: components["schemas"]["AggregatedBalanceDetails"][];
+        };
+        /** @description Full wallet read for the `owner`, `admin` and `auditor` roles: identity, KYC, aggregated balances, fiat accounts and the totals. The scoped `user` role never receives this shape — see `WalletDetailsScopedUser`; the two are told apart by `access_role`. */
+        WalletDetails: {
+            /** Format: uuid */
+            uuid: string;
+            /** @description Legacy wallet identifier. Address the wallet by `uuid`; `id` is informational only. */
+            id: string | null;
+            name: string | null;
+            /**
+             * @description Computed label — wallet name, else KYC-derived (business_name / first+last), else "New account". Always present.
+             * @example Acme LLC
+             */
+            display_name: string;
+            logo_url: string | null;
+            /** Format: uuid */
+            tenant_id: string;
+            /** Format: date-time */
+            created_at: string;
+            kyc_info: components["schemas"]["WalletKycInfo"] | null;
+            /** @description Aggregated crypto balances */
+            balance: components["schemas"]["WalletBalanceEntry"][];
+            fiat_accounts: {
+                [key: string]: unknown;
+            }[];
+            /** @description The caller's base currency; every `fiat_amount` and total is expressed in it. `null` when the caller has none. */
+            base_currency: string | null;
+            fiat_total: number;
+            crypto_total: number;
+            pending_balance: number;
+            total_amount: number;
+            /**
+             * @description The caller's role for this wallet. Never `user` on this shape. (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            access_role: "owner" | "admin" | "auditor";
+            /**
+             * @description Legacy alias of `access_role`. Always equals `access_role`. Kept for backward compatibility — prefer `access_role`.
+             * @enum {string}
+             */
+            role: "owner" | "admin" | "auditor";
+            /** @description `true` exactly when `access_role` is `owner`. */
+            is_owner: boolean;
+        };
+        /** @description Shell-only wallet read for the scoped `user` role: identity, KYC and display name. No main-account financials are ever included — `logo_url`, `balance`, `fiat_accounts`, `base_currency`, `fiat_total`, `crypto_total`, `pending_balance` and `total_amount` are absent, not null. Check `access_role` before reading balances. */
+        WalletDetailsScopedUser: {
+            /** Format: uuid */
+            uuid: string;
+            /** @description Legacy wallet identifier. Address the wallet by `uuid`; `id` is informational only. */
+            id: string | null;
+            name: string | null;
+            /**
+             * @description Computed label — wallet name, else KYC-derived (business_name / first+last), else "New account". Always present.
+             * @example Acme LLC
+             */
+            display_name: string;
+            /** Format: uuid */
+            tenant_id: string;
+            /** Format: date-time */
+            created_at: string;
+            kyc_info: components["schemas"]["WalletKycInfo"] | null;
+            /**
+             * @description Always `user` on this shape. (enum property replaced by openapi-typescript)
+             * @enum {string}
+             */
+            access_role: "user";
+            /**
+             * @description Legacy alias of `access_role`. Always equals `access_role`. Kept for backward compatibility — prefer `access_role`.
+             * @enum {string}
+             */
+            role: "user";
+            /**
+             * @description Always `false` on this shape.
+             * @example false
+             */
+            is_owner: boolean;
         };
         /** @description Unified currency record. `is_crypto: true` identifies a blockchain asset, `false` a fiat one. The joined `meta` JSONB blob carries currency-specific details (e.g. `chain_id`/contract for crypto, ISO code/country for fiat). */
         Currency: {

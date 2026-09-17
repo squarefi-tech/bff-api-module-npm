@@ -2010,6 +2010,12 @@ export interface components {
         MailingDataEntity: {
             readonly support_email?: string | null;
         };
+        AppLinksEntity: {
+            readonly terms_of_use_url?: string | null;
+            readonly privacy_policy_url?: string | null;
+            readonly fraud_and_security_url?: string | null;
+            readonly consumer_protection_url?: string | null;
+        };
         SupportedLocalesEntity: {
             default: string;
             supported: string[];
@@ -2052,6 +2058,7 @@ export interface components {
             readonly metrics_data?: components["schemas"]["MetricsDataEntity"] | null;
             readonly statement_branding?: components["schemas"]["StatementBrandingEntity"] | null;
             readonly mailing_data?: components["schemas"]["MailingDataEntity"] | null;
+            readonly app_links?: components["schemas"]["AppLinksEntity"] | null;
             /** @enum {string} */
             kyc_data_provider: "persona" | "sumsub";
             readonly supported_locales?: components["schemas"]["SupportedLocalesEntity"] | null;

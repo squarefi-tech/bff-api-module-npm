@@ -1122,7 +1122,9 @@ export interface paths {
                      *
                      *     Common filter fields:
                      *     - `last4`: Filter by last 4 digits of card (partial, case-insensitive match)
-                     *     - `card_status`: Filter by status (ACTIVE, INACTIVE, CANCELED)
+                     *     - `card_status`: Filter by status (ACTIVE, INACTIVE, CANCELED). Cards whose
+                     *       creation the vendor refused (FAILED with no card behind them) are left out
+                     *       of the listing unless you ask for them with `card_status=FAILED`.
                      *     - `fiat_account.type`: Filter by account type (prepaid, balance)
                      *     - `from_created_at`: Filter cards created on or after this date (ISO 8601 format)
                      *     - `to_created_at`: Filter cards created on or before this date (ISO 8601 format)

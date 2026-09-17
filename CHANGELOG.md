@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The wallet read by uuid is now a role-discriminated union (SFI-2487).** Regenerated from the deployed frontend spec (base_backend#1538 / #1541). `API.Wallets.Wallet.GetByUuid.Response['data']` is no longer one object type but `WalletDetails | WalletDetailsScopedUser`, told apart by the required `access_role`: `owner` / `admin` / `auditor` receive the full wallet, the scoped `user` role receives a shell-only one where `logo_url`, `balance`, `fiat_accounts`, `base_currency`, `fiat_total`, `crypto_total`, `pending_balance` and `total_amount` are **absent, not null**. The envelope itself is unchanged, so `Response['data']` and the fields shared by both shapes still compile; reading any of the eight role-gated fields now requires narrowing first (`if (data.access_role !== 'user')`, or `data.is_owner`). This is a type-level break exactly where the old type promised data the `user` role never received.
+- **`id` on the wallet read.** Both shapes now carry `id: string | null`, the legacy wallet identifier — informational only, keep addressing the wallet by `uuid`.
+- **`display_name`, `access_role`, `role` and `is_owner` are required** on both shapes (they were optional), and the role enums are narrowed per shape — `"owner" | "admin" | "auditor"` on the full wallet, `"user"` on the scoped one. An exhaustive `switch` over the old four-value union, or a hand-built wallet literal in a mock or fallback, will need updating. `fiat_accounts` entries widen from `Record<string, never>` to `{ [key: string]: unknown }`.
+- **The same regen picked up unrelated upstream spec changes.** All additive or documentation-only; nothing previously valid stops compiling:
+  - `SystemConfigDto` (`API.Tenant.Config`) gains an optional readonly `app_links` (`terms_of_use_url`, `privacy_policy_url`, `fraud_and_security_url`, `consumer_protection_url`, each `string | null`).
+  - Documentation only, no type change: the card listings in the frontend, external and legacy specs now state that cards whose creation the vendor refused (`FAILED` with no card behind them) are left out of the listing unless asked for explicitly with `status=FAILED` / `card_status=FAILED`. Worth knowing because it describes a runtime filtering behaviour the types cannot express.
+
 ## [1.36.64] - 2026-09-15
 
 ### Fixed
@@ -19,7 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.36.63] - 2026-09-15
 
+- No consumer-visible change. Release published by CI for a repository-only commit (Semgrep OSS SAST workflow, SOC-16); the package contents are identical to 1.36.62.
+
 ## [1.36.62] - 2026-09-15
+
+- No consumer-visible change. Release published by CI for a repository-only commit (Dependabot configuration, SOC-17); the package contents are identical to 1.36.61.
 
 ## [1.36.61] - 2026-09-15
 
