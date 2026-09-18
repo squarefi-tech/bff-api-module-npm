@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`created_at` on the KYC entity (SFI-2523 / SFI-2464).** Regenerated from the deployed v2 spec: `API.KYC.Entity.Entity` (`KycEntityDto`) now carries a required `created_at: string`, so a list from `kyc.entity.getAll()` can be ordered by creation without a second lookup. Required, not optional — code that builds a `KycEntityDto` literal by hand (mock, fixture, fallback) must add it.
+- **`purpose` and `purpose_other` on wallet creation (SFI-2523 / SFI-2464).** `wallets.create` (`API.Wallets.Wallet.Create.Request`) accepts an optional `purpose`, a closed enum of `payroll`, `client_or_project_funds`, `treasury_or_reserves`, `separate_by_team`, `separate_by_currency_or_region`, `other`, plus an optional `purpose_other: string | null` for free text. `purpose_other` is required when `purpose` is `other` and refused with any other code; over 255 characters or sent alongside another `purpose` it answers `400`. Both are write-once: the value is stored with the wallet, cannot be changed later, and **no endpoint returns it** — do not expect it back on any wallet read.
+- **`kyc_entity_id` on the wallet reads (SFI-2523 / SFI-2464).** The KYC entity a wallet was opened for is now in the schema where the runtime already returned it: on the list item of `wallets.getAll` (`API.Wallets.WalletsList.WalletsListItem`), on the `wallets.create` and `wallets.update` response data, and on both by-uuid shapes (`WalletDetails` and `WalletDetailsScopedUser`). Typed `string | null` and required — `null` for a wallet created without an entity. Group the wallet list by it to see which accounts an entity already has. Required, so hand-built wallet literals in mocks or fallbacks must add it.
+
+### Changed
+
+- **`kyc_info.type` and `kyc_info.status` are enums, not bare strings (SFI-2523 / SFI-2464).** The shared `WalletKycInfo` schema narrows `type` to `"individual" | "business" | "universal"` and `status` to the twelve real backend values — `APPROVED`, `DECLINED`, `PENDING`, `PROCESSING`, `HOLD`, `NEEDS_ATTENTION`, `DOUBLE`, `SOFT_REJECT`, `REJECT`, `UNVERIFIED`, `WAITING_ON_UBOS`, `WAITING_ON_REVIEW` — identical to the v2 KYC status enum. This is a **type-level break**: it reaches every wallet read that carries `kyc_info` (list, create, update, by-uuid), and assigning or comparing an arbitrary `string` there no longer compiles. A refusal is one of `DECLINED`, `REJECT` or `SOFT_REJECT`; only `APPROVED` (full access) and `HOLD` (read-only) open the wallet.
+- **`REJECTED` never existed.** The old `status` documentation named `REJECTED` as an example value while the backend has never sent it. It is gone from the contract, and code that compared against it now fails to compile instead of silently never matching — the real refusal values are the three above.
+
 ## [1.36.65] - 2026-09-17
 
 ### Changed

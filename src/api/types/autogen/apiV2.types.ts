@@ -1629,6 +1629,7 @@ export interface components {
         KycEntityDto: {
             id: string;
             user_data_uuid: string;
+            created_at: string;
             /** @enum {string} */
             type: "individual" | "business" | "universal";
             id_number?: string | null;

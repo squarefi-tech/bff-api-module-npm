@@ -11258,7 +11258,7 @@ export interface paths {
          *     Each wallet includes `access_role` (owner/admin/user/auditor) and `is_owner` boolean.
          *
          *     Wallets where the caller holds the scoped `user` role are returned as a reduced shell
-         *     (`uuid`, `name`, `display_name`, `tenant_id`, `kyc_info`, `created_at` + the role fields) — no `logo_url`.
+         *     (`uuid`, `name`, `display_name`, `tenant_id`, `kyc_entity_id`, `kyc_info`, `created_at` + the role fields) — no `logo_url`.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -11324,20 +11324,18 @@ export interface paths {
                                 access_role: "owner" | "admin" | "user" | "auditor";
                                 /** @description True if user is the wallet owner */
                                 is_owner: boolean;
+                                /**
+                                 * Format: uuid
+                                 * @description KYC entity the wallet was opened for (`GET /kyc/entities`) — group the
+                                 *     list by it to see which accounts an entity already has. `null` for a
+                                 *     wallet created without one.
+                                 *
+                                 */
+                                kyc_entity_id: string | null;
                                 /** @description KYC entity attached to the wallet (joined from `kyc_entity`).
                                  *     `null` when the wallet has no KYC entity yet.
                                  *      */
-                                kyc_info: {
-                                    /** @description KYC entity type (e.g. INDIVIDUAL, BUSINESS) */
-                                    type: string;
-                                    /** @description KYC verification status (e.g. UNVERIFIED, PENDING, APPROVED, REJECTED) */
-                                    status: string;
-                                    business_name: string | null;
-                                    first_name: string | null;
-                                    last_name: string | null;
-                                    email: string | null;
-                                    phone: string | null;
-                                } | null;
+                                kyc_info: components["schemas"]["WalletKycInfo"] | null;
                             }[];
                             pagination: {
                                 offset: number;
@@ -11374,6 +11372,10 @@ export interface paths {
          *       - `empty_name: false` or omitted (default) → a random placeholder name
          *         is generated (e.g., "Golden Vault 42").
          *       - `empty_name: true` → the wallet is created with `name: null`.
+         *     - **purpose** — what the account is opened for, one of the listed codes.
+         *       `other` needs a free-text **purpose_other**; any other code refuses it.
+         *       Stored once with the wallet: it cannot be changed later and no
+         *       endpoint returns it.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -11411,6 +11413,21 @@ export interface paths {
                          *
                          */
                         kyc_entity_id?: string;
+                        /**
+                         * @description What the account is opened for. Only the code travels — labels
+                         *     are the client's. Write-once and never returned.
+                         *
+                         * @example payroll
+                         * @enum {string}
+                         */
+                        purpose?: "payroll" | "client_or_project_funds" | "treasury_or_reserves" | "separate_by_team" | "separate_by_currency_or_region" | "other";
+                        /**
+                         * @description Free-text purpose. Required when `purpose` is `other`, refused
+                         *     with any other `purpose` (a blank value counts as absent).
+                         *
+                         * @example Contractor payouts
+                         */
+                        purpose_other?: string | null;
                     };
                 };
             };
@@ -11439,25 +11456,22 @@ export interface paths {
                                 tenant_id: string;
                                 /** Format: date-time */
                                 created_at: string;
+                                /**
+                                 * Format: uuid
+                                 * @description KYC entity the wallet was opened for. `null` for a wallet created without one.
+                                 */
+                                kyc_entity_id: string | null;
                                 /** @description Mirrors the GET-wallet shape. `null` when the wallet was created
                                  *     without `kyc_entity_id`; populated with the linked entity otherwise.
                                  *      */
-                                kyc_info: {
-                                    type: string;
-                                    status: string;
-                                    business_name: string | null;
-                                    first_name: string | null;
-                                    last_name: string | null;
-                                    email: string | null;
-                                    phone: string | null;
-                                } | null;
+                                kyc_info: components["schemas"]["WalletKycInfo"] | null;
                             };
                             /** @example Wallet created successfully */
                             message: string;
                         };
                     };
                 };
-                /** @description Bad request — invalid name, or `kyc_entity_id` is malformed / not an entity of the current user / belongs to another tenant */
+                /** @description Bad request — invalid name; `kyc_entity_id` is malformed / not an entity of the current user / belongs to another tenant; `purpose` is not a listed code; `purpose_other` is missing for `other`, longer than 255 characters or sent with another `purpose` */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -11671,7 +11685,7 @@ export interface paths {
          *     - `owner` / `admin` / `auditor` — the full wallet (`WalletDetails`): identity, KYC, `balance`,
          *       `fiat_accounts`, `base_currency` and the totals.
          *     - `user` — a shell-only wallet (`WalletDetailsScopedUser`): `uuid`, `id`, `name`, `display_name`,
-         *       `tenant_id`, `kyc_info`, `created_at` + the role fields. `logo_url`, `balance`, `fiat_accounts`,
+         *       `tenant_id`, `kyc_entity_id`, `kyc_info`, `created_at` + the role fields. `logo_url`, `balance`, `fiat_accounts`,
          *       `base_currency`, `fiat_total`, `crypto_total`, `pending_balance` and `total_amount` are absent
          *       (not null) for that role — check `access_role` before reading them.
          *
@@ -11789,18 +11803,15 @@ export interface paths {
                                 tenant_id: string;
                                 /** Format: date-time */
                                 created_at: string;
+                                /**
+                                 * Format: uuid
+                                 * @description KYC entity the wallet was opened for. `null` for a wallet created without one.
+                                 */
+                                kyc_entity_id: string | null;
                                 /** @description KYC entity attached to the wallet (joined from `kyc_entity`).
                                  *     `null` when the wallet has no KYC entity yet.
                                  *      */
-                                kyc_info: {
-                                    type: string;
-                                    status: string;
-                                    business_name: string | null;
-                                    first_name: string | null;
-                                    last_name: string | null;
-                                    email: string | null;
-                                    phone: string | null;
-                                } | null;
+                                kyc_info: components["schemas"]["WalletKycInfo"] | null;
                             };
                             /** @example Wallet updated successfully */
                             message: string;
@@ -15094,8 +15105,16 @@ export interface components {
         };
         /** @description KYC entity attached to the wallet. `null` when the wallet has no KYC entity yet. */
         WalletKycInfo: {
-            type: string;
-            status: string;
+            /**
+             * @description KYC entity type, lower-case.
+             * @enum {string}
+             */
+            type: "individual" | "business" | "universal";
+            /**
+             * @description KYC verification status. A refusal is one of three values: `DECLINED`, `REJECT` or `SOFT_REJECT`. Only `APPROVED` (full access) and `HOLD` (read-only) open the wallet.
+             * @enum {string}
+             */
+            status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
             business_name: string | null;
             first_name: string | null;
             last_name: string | null;
@@ -15131,6 +15150,11 @@ export interface components {
             tenant_id: string;
             /** Format: date-time */
             created_at: string;
+            /**
+             * Format: uuid
+             * @description KYC entity the wallet was opened for (`GET /kyc/entities`). `null` for a wallet created without one.
+             */
+            kyc_entity_id: string | null;
             kyc_info: components["schemas"]["WalletKycInfo"] | null;
             /** @description Aggregated crypto balances */
             balance: components["schemas"]["WalletBalanceEntry"][];
@@ -15172,6 +15196,11 @@ export interface components {
             tenant_id: string;
             /** Format: date-time */
             created_at: string;
+            /**
+             * Format: uuid
+             * @description KYC entity the wallet was opened for (`GET /kyc/entities`). `null` for a wallet created without one.
+             */
+            kyc_entity_id: string | null;
             kyc_info: components["schemas"]["WalletKycInfo"] | null;
             /**
              * @description Always `user` on this shape. (enum property replaced by openapi-typescript)
