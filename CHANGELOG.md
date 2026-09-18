@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.66] - 2026-09-18
+
 ### Added
 
 - **`created_at` on the KYC entity (SFI-2523 / SFI-2464).** Regenerated from the deployed v2 spec: `API.KYC.Entity.Entity` (`KycEntityDto`) now carries a required `created_at: string`, so a list from `kyc.entity.getAll()` can be ordered by creation without a second lookup. Required, not optional — code that builds a `KycEntityDto` literal by hand (mock, fixture, fallback) must add it.
