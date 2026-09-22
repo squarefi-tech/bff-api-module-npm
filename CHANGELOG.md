@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`is_reverse` on sub-account and card deposits (base_backend#1638 / #1639).** Regenerated from the deployed spec: `API.Issuing.SubAccounts.Deposit.Request` and `API.Issuing.Cards.Deposit.Request` (`frontend.issuing.subAccounts.deposit` / `frontend.issuing.cards.deposit`) accept an optional `is_reverse?: boolean`, and so do the same deposit bodies in the api and admin specs. When `true`, `amount` is what the sub-account is credited and the wallet is debited that amount converted back plus fees; omitted or `false`, `amount` is the wallet debit, as before. This is what lets a card top-up move off `orders.v2.create.byOrderType.RN_CARDS_OFFRAMP` / `orders.create.byOrderType.TRANSFER_CARD_SUBACCOUNT` without losing the "amount the card receives" input.
+- **The same regen picked up endpoints that are live on the dev stand only.** The generator reads the dev specs, and these are merged to the backend `dev` branch but not yet to `main`, so production answers `404` until they ship there. Types only — no client methods wrap them yet:
+  - AML address screening: `/frontend/aml/{wallet_id}/quote`, `/screenings`, `/screenings/{id}`, `/screenings/{id}/report`, the `Aml*` schemas, an optional `aml_supported` filter and item flag on the currency and chain references, and a required `aml_check: { enabled, price_usd }` on the v2 `SystemConfigDto` (`API.Tenant.Config`).
+  - Referrals: `/frontend/referrals/summary`, `/events`, `/payouts`, `/report`, `/report/telegram`, `/telegram-report` and the `Referral*` schemas.
+  - Requests for information: `/frontend/rfi/{wallet_id}`, `/{case_id}`, `/{case_id}/messages`, `/{case_id}/attachments/{attachment_id}` and the `Rfi*` schemas.
+
+### Changed
+
+- **Wider enums from the same regen.** `OrderTypeId` gains `REFERRAL_PAYOUT` (all v1 specs; dev stand only, as above), and the notification `type` gains `DEPOSIT_NOT_ACCEPTED`, `RFI_REQUESTED` and `RFI_RESOLVED`. Additive, but an exhaustive `switch` or a `Record<…>` keyed by either union stops compiling until the new members are handled. `aml_check` is required on `SystemConfigDto`, so a hand-built system config literal in a mock or fallback must add it.
+
 ## [1.36.66] - 2026-09-18
 
 ### Added

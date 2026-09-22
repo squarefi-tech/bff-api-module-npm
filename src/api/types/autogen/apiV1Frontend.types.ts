@@ -885,6 +885,310 @@ export interface paths {
         };
         trace?: never;
     };
+    "/frontend/aml/{wallet_id}/quote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Price of one address screening in the chosen paying currency
+         * @description What the "Pay and screen" modal shows: the tenant's price in USD, the
+         *     rate of the paying currency and the total that will leave the wallet.
+         *     Nothing is charged. With `currency_id`, `asset.supported` says whether
+         *     the token's network can be screened at all — when it cannot, show
+         *     that the check is unavailable and let the transfer proceed; a
+         *     screening is never a condition of sending.
+         *
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Balance the fee will be paid from (any wallet currency, crypto or fiat) */
+                    pay_from_currency_id: string;
+                    /** @description The token the address would be checked for — adds `asset.supported` to the answer */
+                    currency_id?: string;
+                };
+                header?: never;
+                path: {
+                    /** @description Wallet the screening belongs to (and is paid from) */
+                    wallet_id: components["parameters"]["AmlWalletId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The quote */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["AmlScreeningQuote"];
+                        };
+                    };
+                };
+                /** @description Validation error, or the fee cannot be priced in this currency (AML_FEE_NOT_PRICEABLE) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Feature not enabled for the tenant (AML_CHECK_NOT_ENABLED) or no access to the wallet */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/aml/{wallet_id}/screenings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Pay for and start an AML screening of a crypto address
+         * @description Charges the tenant's screening fee from `pay_from_currency_id` (an
+         *     `AML_CHECK` order) and hands the address to the analytics provider.
+         *     The answer is the screening in `PENDING`. Do not poll: subscribe to
+         *     the wallet's realtime channel and wait for the `data.changed` hint
+         *     with `entity: WALLET_AML_SCREENINGS`, then read
+         *     `GET /frontend/aml/{wallet_id}/screenings/{id}` for the verdict
+         *     (`COMPLETED` or `FAILED`). A failed screening refunds the fee in full.
+         *
+         *     Send an `Idempotency-Key` header to make a retry return the screening
+         *     the first call created instead of charging again.
+         *
+         *     One screening of an address (per wallet and token) runs at a time: a
+         *     second request while the first is still `PENDING` / `SCREENING`
+         *     answers `409 SCREENING_IN_PROGRESS` with `details.screening_id` of the
+         *     running one and charges nothing — wait on that screening instead. Once
+         *     it has finished the address can be screened (and paid for) again; a
+         *     screening stuck for more than 15 minutes stops blocking.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    "Idempotency-Key"?: string;
+                };
+                path: {
+                    /** @description Wallet the screening belongs to (and is paid from) */
+                    wallet_id: components["parameters"]["AmlWalletId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @example TAX544wj9oDmAqWLzuAnYLU9GfS8XncsJ9 */
+                        address: string;
+                        /**
+                         * Format: uuid
+                         * @description The token the address is checked for — decides the network (see `aml_supported` in the currency reference)
+                         */
+                        currency_id: string;
+                        /**
+                         * Format: uuid
+                         * @description Balance the fee is paid from
+                         */
+                        pay_from_currency_id: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Screening created and paid for */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["AmlScreening"];
+                        };
+                    };
+                };
+                /** @description Validation error, unsupported asset (AML_ASSET_NOT_SUPPORTED), insufficient funds (INSUFFICIENT_FUNDS) or a fee that cannot be priced (AML_FEE_NOT_PRICEABLE) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Feature not enabled (AML_CHECK_NOT_ENABLED), KYC not approved, or caller is not an admin of the wallet */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The address is already being screened for this wallet (SCREENING_IN_PROGRESS, `details.screening_id`), or the same request is still being processed (OPERATION_IN_PROGRESS) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/aml/{wallet_id}/screenings/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a screening and its verdict */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Wallet the screening belongs to (and is paid from) */
+                    wallet_id: components["parameters"]["AmlWalletId"];
+                    id: components["parameters"]["AmlScreeningId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The screening */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["AmlScreening"];
+                        };
+                    };
+                };
+                /** @description Not found in this wallet (SCREENING_NOT_FOUND) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/aml/{wallet_id}/screenings/{id}/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download the PDF report of a completed screening */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Wallet the screening belongs to (and is paid from) */
+                    wallet_id: components["parameters"]["AmlWalletId"];
+                    id: components["parameters"]["AmlScreeningId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The report as an attachment */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/pdf": string;
+                    };
+                };
+                /** @description Not found in this wallet (SCREENING_NOT_FOUND) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The screening has not completed (SCREENING_REPORT_NOT_READY) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/frontend/bank-data": {
         parameters: {
             query?: never;
@@ -3659,6 +3963,11 @@ export interface paths {
                          */
                         from_currency_id: string;
                         amount: number;
+                        /**
+                         * @description When true, `amount` is what the sub-account is credited; the wallet debit (conversion + fees) is derived from it.
+                         * @default false
+                         */
+                        is_reverse?: boolean;
                         note?: string;
                     };
                 };
@@ -4272,6 +4581,11 @@ export interface paths {
                          * @example 250
                          */
                         amount: number;
+                        /**
+                         * @description When true, `amount` is what the sub-account is credited; the wallet debit (conversion + fees) is derived from it.
+                         * @default false
+                         */
+                        is_reverse?: boolean;
                         /**
                          * @description Optional description for the deposit
                          * @example Top up sub-account
@@ -9642,6 +9956,8 @@ export interface paths {
                     type?: "token" | "native";
                     symbol?: string;
                     enabled_only?: boolean;
+                    /** @description Only tokens whose network the tenant's AML provider can screen addresses on */
+                    aml_supported?: boolean;
                     offset?: number;
                     limit?: number;
                 };
@@ -9651,7 +9967,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Currencies list retrieved successfully */
+                /** @description Currencies list retrieved successfully. Every item carries `aml_supported` — true when an address on this token's network can be screened (`POST /frontend/aml/{wallet_id}/screenings`); always false while AML screening is off for the tenant. */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -9879,6 +10195,8 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
+                    /** @description Only networks the tenant's AML provider can screen addresses on */
+                    aml_supported?: boolean;
                     offset?: number;
                     limit?: number;
                 };
@@ -9888,7 +10206,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Chains retrieved successfully */
+                /** @description Chains retrieved successfully. Every item carries `aml_supported`; always false while AML screening is off for the tenant. */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -10035,6 +10353,693 @@ export interface paths {
                     content?: never;
                 };
                 401: components["responses"]["UnauthorizedError"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/referrals/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The agent's referral summary
+         * @description The main referral screen in one call — the agent's code, this month's earnings and level, what waits for a payout, what was paid so far, the ladder and the program terms. A user without a referral code gets one here.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The summary. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["ReferralSummary"];
+                        };
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/referrals/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The agent's rewards of a month
+         * @description One row per rewarded order (and per reversal), newest first. Canceled rows are not listed. Without `period` the current month is served; a level change is visible as a change of `level_no` between rows.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description UTC month `YYYY-MM`; defaults to the current one. */
+                    period?: string;
+                    offset?: number;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description A page of rows; `meta.period` names the month served. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["ReferralEvent"][];
+                            pagination?: components["schemas"]["PaginationResponse"];
+                            meta?: {
+                                /** @example 2026-09 */
+                                period?: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid query (`VALIDATION_ERROR`). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/referrals/payouts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The agent's payouts
+         * @description One per closed month the agent was paid for (or is being paid for), newest month first.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    offset?: number;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description A page of payouts. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["ReferralPayout"][];
+                            pagination?: components["schemas"]["PaginationResponse"];
+                        };
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/referrals/report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download the monthly referral report (PDF)
+         * @description The month's summary, the breakdown by order type and the reward rows, on the tenant's branded sheet. Without `period` the last closed month is served — the one a payout is made for; the current month is served too, marked preliminary. Generated on the fly and streamed; nothing is persisted.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description UTC month `YYYY-MM`; defaults to the last closed month. */
+                    period?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description PDF file */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/pdf": string;
+                    };
+                };
+                /** @description Invalid query (`VALIDATION_ERROR`). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description More than 5 report requests (downloads and Telegram sends together) in a minute (`RATE_LIMIT_EXCEEDED`). */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/referrals/report/telegram": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send the monthly referral report to the user's Telegram
+         * @description The same PDF as `GET /report`, delivered as a document to the chat the user has with the tenant's Telegram bot. Without `period` the last closed month is sent.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description UTC month; defaults to the last closed month.
+                         * @example 2026-08
+                         */
+                        period?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description The report was handed to Telegram. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /** @example true */
+                                sent?: boolean;
+                                /** @example 2026-08 */
+                                period?: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid body (`VALIDATION_ERROR`). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description The user has not started the tenant's bot (`TELEGRAM_NOT_LINKED`), or the tenant runs no bot (`TELEGRAM_NOT_AVAILABLE`). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description More than 5 report requests (downloads and Telegram sends together) in a minute (`RATE_LIMIT_EXCEEDED`). */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Telegram did not accept the document (`TELEGRAM_DELIVERY_FAILED`); retry later. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/referrals/telegram-report": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The "report every month" Telegram setting
+         * @description Whether the user has linked the tenant's Telegram bot, and whether they asked for their referral report there every month. The report is sent when the month's payout is made.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The setting. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["ReferralTelegramReportSetting"];
+                        };
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /** Switch the monthly Telegram report on or off */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        enabled: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description The setting after the change. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["ReferralTelegramReportSetting"];
+                        };
+                    };
+                };
+                /** @description Invalid body (`VALIDATION_ERROR`). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description The user has not started the tenant's bot (`TELEGRAM_NOT_LINKED`) — there is nowhere to send the report. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/rfi/{wallet_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List compliance requests (RFI) of an account, with the banner counters
+         * @description Requests for information compliance sent about this account, newest first. `summary`
+         *     counts every open request regardless of paging — use it for the home-screen banner:
+         *     `action_required > 0` shows it, `overdue > 0` turns it red, `next_due_at` is the
+         *     nearest deadline. Any wallet member except the scoped `user` role may read.
+         *     Refresh on the realtime `data.changed` hint with entity `WALLET_RFI`.
+         *
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description `open` — everything still in progress (`action_required` + `awaiting_compliance`), the Open tab; `closed` — the Resolved tab. */
+                    status?: "open" | "action_required" | "awaiting_compliance" | "closed";
+                    /** @description Only the requests covering this transaction — what the transaction screen asks by to decide whether to show "compliance has questions". A transaction of another account, or one no request covers, returns an empty page. */
+                    order_uuid?: string;
+                    limit?: number;
+                    offset?: number;
+                };
+                header?: never;
+                path: {
+                    /** @description The account the requests are about. Requests and their conversations are kept per account. */
+                    wallet_id: components["parameters"]["RfiWalletId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Page of requests and the open-request counters */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                summary?: {
+                                    action_required?: number;
+                                    overdue?: number;
+                                    awaiting_compliance?: number;
+                                    /** Format: date-time */
+                                    next_due_at?: string | null;
+                                };
+                                items?: components["schemas"]["RfiCase"][];
+                                total?: number;
+                                limit?: number;
+                                offset?: number;
+                            };
+                        };
+                    };
+                };
+                403: components["responses"]["ForbiddenError"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/rfi/{wallet_id}/{case_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a compliance request with its conversation and covered transactions
+         * @description The conversation holds compliance's questions and the client's answers, oldest first.
+         *     A request of another account answers 404.
+         *
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The account the requests are about. Requests and their conversations are kept per account. */
+                    wallet_id: components["parameters"]["RfiWalletId"];
+                    case_id: components["parameters"]["RfiCaseId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The request */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["RfiCaseDetail"];
+                        };
+                    };
+                };
+                404: components["responses"]["NotFoundError"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/rfi/{wallet_id}/{case_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Answer a compliance request
+         * @description `multipart/form-data` with a `body` text field and up to 10 files under `files`
+         *     (PDF, JPEG, PNG, WebP, TXT, DOCX, XLSX; 20 MB each). At least one of the two is required.
+         *     The request moves to `awaiting_compliance`; answering again while compliance reviews is
+         *     allowed, and compliance may ask further rounds. Requires the `admin` role on the wallet.
+         *     Do not set `Content-Type` manually — the browser adds the multipart boundary.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The account the requests are about. Requests and their conversations are kept per account. */
+                    wallet_id: components["parameters"]["RfiWalletId"];
+                    case_id: components["parameters"]["RfiCaseId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        body?: string;
+                        files?: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description The message as stored */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["RfiMessage"];
+                        };
+                    };
+                };
+                /** @description `VALIDATION_ERROR` (empty answer, too many files), `FILE_TOO_LARGE`, `UNSUPPORTED_FILE_TYPE` or `INVALID_REQUEST` (malformed multipart) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                404: components["responses"]["NotFoundError"];
+                /** @description `RFI_CLOSED` — the request no longer accepts replies */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Too many replies */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/rfi/{wallet_id}/{case_id}/attachments/{attachment_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a short-lived download link for a file in the conversation */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The account the requests are about. Requests and their conversations are kept per account. */
+                    wallet_id: components["parameters"]["RfiWalletId"];
+                    case_id: components["parameters"]["RfiCaseId"];
+                    attachment_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description A signed link, valid for `expires_in` seconds — open it right away, do not store it */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                url?: string;
+                                /** @example 120 */
+                                expires_in?: number;
+                            };
+                        };
+                    };
+                };
+                404: components["responses"]["NotFoundError"];
             };
         };
         put?: never;
@@ -13412,7 +14417,7 @@ export interface components {
          * @example EXCHANGE_OMNI
          * @enum {string}
          */
-        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE" | "MONTHLY_FEE";
+        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE" | "MONTHLY_FEE" | "REFERRAL_PAYOUT";
         OrderCalculation: {
             /**
              * Format: uuid
@@ -15293,6 +16298,94 @@ export interface components {
             /** Format: uuid */
             wallet_id?: string;
         };
+        AmlProvider: {
+            /** @description Name of the on-chain analytics partner, for the "Screening by …" line */
+            display_name?: string;
+        };
+        AmlScreeningAsset: {
+            /** Format: uuid */
+            currency_id?: string;
+            /** @example USDT */
+            symbol?: string;
+            chain_id?: number;
+            /** @example TRX */
+            chain_symbol?: string;
+            /** @example Tron */
+            chain_name?: string;
+        };
+        AmlCheckedCategory: {
+            /** @example sanctions */
+            code?: string;
+            /** @example Sanctions */
+            title?: string;
+            /** @description True when the address has exposure to this category */
+            flagged?: boolean;
+        };
+        AmlScreeningResult: {
+            /** @enum {string} */
+            risk_level?: "LOW" | "ELEVATED" | "HIGH";
+            risk_score?: number;
+            checked_categories?: components["schemas"]["AmlCheckedCategory"][];
+            checked_categories_total?: number;
+            /**
+             * Format: date-time
+             * @description The on-chain data cut the verdict was made against
+             */
+            data_as_of?: string;
+        };
+        AmlScreening: {
+            /** Format: uuid */
+            id?: string;
+            /**
+             * @description PENDING — paid, not yet handed to the provider. SCREENING — the
+             *     provider is analysing it; poll `GET …/screenings/{id}`. COMPLETED —
+             *     `result` is set and the report can be downloaded. FAILED — no
+             *     result will come; the fee has been refunded to the paying balance.
+             *
+             * @enum {string}
+             */
+            status?: "PENDING" | "SCREENING" | "COMPLETED" | "FAILED";
+            /**
+             * @description PAYMENT_FAILED — the fee could not be taken, nothing was charged; the other two refund the fee
+             * @enum {string|null}
+             */
+            failure_reason?: "PAYMENT_FAILED" | "PROVIDER_ERROR" | "TIMEOUT" | null;
+            address?: string;
+            asset?: components["schemas"]["AmlScreeningAsset"];
+            provider?: components["schemas"]["AmlProvider"];
+            /**
+             * Format: uuid
+             * @description The AML_CHECK fee order that paid for the screening
+             */
+            order_id?: string | null;
+            result?: components["schemas"]["AmlScreeningResult"] | null;
+            report_available?: boolean;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            completed_at?: string | null;
+        };
+        AmlScreeningQuote: {
+            /** @example 10 */
+            price_usd?: number;
+            /** Format: uuid */
+            price_currency_id?: string;
+            /** Format: uuid */
+            pay_from_currency_id?: string;
+            /** @description How many USD one unit of the paying currency is worth */
+            rate?: number;
+            /** @description What leaves the wallet, in the paying currency */
+            total?: number;
+            provider?: components["schemas"]["AmlProvider"];
+            /** @description Present when `currency_id` was given — whether that token's network can be screened */
+            asset?: {
+                /** Format: uuid */
+                currency_id?: string;
+                supported?: boolean;
+                /** @enum {string|null} */
+                unsupported_reason?: "NOT_CRYPTO" | "UNKNOWN_CURRENCY" | "NETWORK_NOT_SUPPORTED" | null;
+            } | null;
+        };
         Invoice: {
             /** Format: uuid */
             id?: string;
@@ -15582,7 +16675,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            type: "DEPOSIT_RECEIVED" | "TRANSFER_RECEIVED" | "ORDER_STATUS_CHANGED" | "KYC_STATUS_CHANGED" | "ANNOUNCEMENT" | "SYSTEM_MESSAGE" | "MASS_PAYOUT_STATUS_CHANGED" | "CARD_OTP";
+            type: "DEPOSIT_RECEIVED" | "DEPOSIT_NOT_ACCEPTED" | "TRANSFER_RECEIVED" | "ORDER_STATUS_CHANGED" | "KYC_STATUS_CHANGED" | "ANNOUNCEMENT" | "SYSTEM_MESSAGE" | "MASS_PAYOUT_STATUS_CHANGED" | "CARD_OTP" | "RFI_REQUESTED" | "RFI_RESOLVED";
             /** @description Structured fact snapshot; the client renders the presentation. Shape depends on `type`; evolution is additive-only. */
             payload: Record<string, never>;
             /** Format: uuid */
@@ -15601,6 +16694,241 @@ export interface components {
             /** @enum {string} */
             category: "TRANSACTIONS" | "COMPLIANCE" | "ANNOUNCEMENTS" | "SYSTEM" | "SECURITY";
             enabled: boolean;
+        };
+        ReferralLevelRate: {
+            /** @example TRANSFER_CARD_SUBACCOUNT */
+            order_type?: string;
+            /** @example Top-ups */
+            label?: string;
+            /** @example 0.7 */
+            percent?: number;
+            /** @example 0 */
+            fixed_usd?: number;
+        };
+        ReferralSummary: {
+            /**
+             * @description The agent's referral code. The invite link is built by the client (`t.me/<bot>?start=referrer=<code>`).
+             * @example k3j9dm2p1q
+             */
+            code?: string;
+            /** @description The current UTC month — the one `earned_usd`, `level` and `breakdown` are about. */
+            period?: {
+                /** @example 2026-09 */
+                month?: string;
+                /** Format: date-time */
+                closes_at?: string;
+            };
+            /**
+             * @description Signed sum of this month's rewards (reversals are negative).
+             * @example 186
+             */
+            earned_usd?: number;
+            /**
+             * @description Earned in closed months and waiting for a payout.
+             * @example 75
+             */
+            pending_usd?: number;
+            /** @example 980 */
+            paid_total_usd?: number;
+            /**
+             * Format: date-time
+             * @description When the first payout was made.
+             */
+            paid_since?: string | null;
+            /** @description Whether the tenant's default tariff runs the program. When false there is no ladder — `level` is null, `levels` and `terms` are empty — while the money fields are still real. */
+            participating?: boolean;
+            level?: {
+                /** @example 2 */
+                no?: number;
+                /** @example Bronze */
+                name?: string;
+                /**
+                 * @description This month's turnover the level is measured by.
+                 * @example 186000
+                 */
+                turnover_usd?: number;
+                /** @description The next level; null on the top one. */
+                next?: {
+                    /** @example 3 */
+                    no?: number;
+                    /** @example Silver */
+                    name?: string;
+                    /** @example 300000 */
+                    min_turnover_usd?: number;
+                    /** @example 114000 */
+                    remaining_usd?: number;
+                } | null;
+            } | null;
+            /** @description This month by order type — every type the program prices (a zero line before the first order), plus any type the month earned on. */
+            breakdown?: {
+                /** @example CARD_ISSUING_FEE */
+                order_type?: string;
+                /** @example Card openings */
+                label?: string;
+                /** @example 6 */
+                orders?: number;
+                /** @example 300 */
+                amount_usd?: number;
+                /** @example 150 */
+                reward_usd?: number;
+                /** @description What the type pays on the agent's current level; null when the program no longer prices it. */
+                current_rate_percent?: number | null;
+                current_fixed_usd?: number | null;
+            }[];
+            /** @description The ladder, for the levels carousel. */
+            levels?: {
+                no?: number;
+                name?: string;
+                min_turnover_usd?: number;
+                /** @description The threshold of the next level; null on the top one. */
+                max_turnover_usd?: number | null;
+                rates?: components["schemas"]["ReferralLevelRate"][];
+            }[];
+            /** @description The "Program terms" lines — what each order type pays across the levels. */
+            terms?: {
+                order_type?: string;
+                /** @example Top-ups */
+                label?: string;
+                /** @example 0.5%–1.3% */
+                fee_label?: string;
+                counts_toward_turnover?: boolean;
+            }[];
+        };
+        ReferralEvent: {
+            /** Format: uuid */
+            id?: string;
+            /** @enum {string} */
+            kind?: "ACCRUAL" | "REVERSAL";
+            /** @enum {string} */
+            status?: "PENDING" | "PAID";
+            /** @example TRANSFER_CARD_SUBACCOUNT */
+            order_type?: string;
+            /** @example Top-ups */
+            label?: string;
+            /**
+             * @description The referred customer, anonymised.
+             * @example Customer 4821
+             */
+            customer_alias?: string;
+            /** @example 18000 */
+            amount_usd?: number;
+            /** @example 0.7 */
+            rate_percent?: number;
+            /** @example 0 */
+            fixed_usd?: number;
+            /**
+             * @description Negative on a REVERSAL.
+             * @example 126
+             */
+            reward_usd?: number;
+            /** @example 2 */
+            level_no?: number;
+            /** @example Bronze */
+            level_name?: string;
+            /** Format: date-time */
+            occurred_at?: string;
+        };
+        ReferralPayout: {
+            /** @example 2026-08 */
+            period?: string;
+            /** @enum {string} */
+            status?: "PROCESSING" | "PAID";
+            /** @example 980 */
+            amount_usd?: number;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            paid_at?: string | null;
+        };
+        ReferralTelegramReportSetting: {
+            /** @description The user has started the tenant's Telegram bot. */
+            linked?: boolean;
+            /** @description The report is sent to Telegram every month. Always false while not linked. */
+            enabled?: boolean;
+        };
+        RfiCase: {
+            /** Format: uuid */
+            id?: string;
+            /**
+             * @description Human-facing id — quoted in the notification email
+             * @example RFI-000042
+             */
+            reference?: string;
+            /** @enum {string} */
+            type?: "onboarding" | "transaction" | "ongoing";
+            /**
+             * @description `action_required` — compliance asked and waits for the client; `awaiting_compliance` — the client answered, compliance is reviewing; `closed` — no longer accepts replies.
+             * @enum {string}
+             */
+            status?: "action_required" | "awaiting_compliance" | "closed";
+            /**
+             * Format: date-time
+             * @description When the answer is due
+             */
+            due_at?: string | null;
+            /** @description True only while `action_required` and past `due_at` (red banner) */
+            overdue?: boolean;
+            /** @description One of the covered transactions is held until the request closes */
+            holds_transaction?: boolean;
+            /** @description The account is on hold while the request is open */
+            holds_account?: boolean;
+            /** @description How many transactions the request covers */
+            transactions_count?: number;
+            /** @description The last message of the conversation, for the card — null while nothing is visible yet */
+            last_message?: {
+                /** @enum {string} */
+                author?: "compliance" | "client";
+                /** @description One line of the message, up to 140 characters, cut at a word */
+                preview?: string | null;
+                /** Format: date-time */
+                created_at?: string;
+            } | null;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
+            /** Format: date-time */
+            closed_at?: string | null;
+        };
+        RfiAttachment: {
+            /** Format: uuid */
+            id?: string;
+            file_name?: string;
+            content_type?: string | null;
+            size_bytes?: number | null;
+            /** Format: date-time */
+            created_at?: string;
+        };
+        RfiMessage: {
+            /** Format: uuid */
+            id?: string;
+            /** @enum {string} */
+            author?: "compliance" | "client";
+            /**
+             * @description The analyst's signature on a compliance message — first name and last initial, from the analyst's current name. Null on the client's own messages (render them as "You") and when no name is on record.
+             * @example Polina S
+             */
+            author_name?: string | null;
+            body?: string;
+            attachments?: components["schemas"]["RfiAttachment"][];
+            /** Format: date-time */
+            created_at?: string;
+        };
+        RfiTransaction: {
+            order_uuid?: string;
+            order_type?: string | null;
+            status?: string | null;
+            amount_from?: number | null;
+            amount_to?: number | null;
+            /** Format: date-time */
+            created_at?: string | null;
+        };
+        RfiCaseDetail: components["schemas"]["RfiCase"] & {
+            can_reply?: boolean;
+            /** @description The conversation, oldest first */
+            messages?: components["schemas"]["RfiMessage"][];
+            /** @description Every transaction the request covers, in the order compliance linked them */
+            transactions?: components["schemas"]["RfiTransaction"][];
         };
     };
     responses: {
@@ -15659,6 +16987,9 @@ export interface components {
          * @example e04c0c85-b031-47d7-8541-207b4e83d91a
          */
         TenantId: string;
+        /** @description Wallet the screening belongs to (and is paid from) */
+        AmlWalletId: string;
+        AmlScreeningId: string;
         /** @description Wallet the invoices belong to */
         InvoiceWalletId: string;
         InvoiceId: string;
@@ -15668,6 +16999,9 @@ export interface components {
         MassPayoutWalletId: string;
         MassPayoutId: string;
         MassPayoutTemplateId: string;
+        /** @description The account the requests are about. Requests and their conversations are kept per account. */
+        RfiWalletId: string;
+        RfiCaseId: string;
     };
     requestBodies: never;
     headers: never;

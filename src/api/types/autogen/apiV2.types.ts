@@ -734,7 +734,10 @@ export interface paths {
         /** List KYC entities of the current user */
         get: operations["KycEntitiesController_findMy"];
         put?: never;
-        /** Create a KYC entity for the current user */
+        /**
+         * Create a KYC entity for the current user
+         * @description Idempotent for "individual": a user has exactly one individual entity, so when it already exists (in any status) it is returned instead of creating a new one. "business" always creates a new entity.
+         */
         post: operations["KycEntitiesController_create"];
         delete?: never;
         options?: never;
@@ -2033,6 +2036,12 @@ export interface components {
             /** @description Supporting documents allowed per recipient row of a batch (template rows carry none). */
             max_item_documents: number;
         };
+        SystemAmlCheckConfigDto: {
+            /** @description Whether AML address screening is available to this tenant. When false, every screening endpoint of the API answers 403 and the widget must not be shown. */
+            enabled: boolean;
+            /** @description Price of one screening in USD, for the "Screen address · $10" label. The exact total in the paying currency comes from the API quote. Null when the tenant has no price configured (the feature is then unusable even if enabled). */
+            price_usd: number | null;
+        };
         SystemConfigDto: {
             tenant_id: string;
             app_url: string | null;
@@ -2067,6 +2076,7 @@ export interface components {
             auth_provider: "supabase" | "clerk";
             base_currency: string;
             mass_payouts: components["schemas"]["SystemMassPayoutsConfigDto"];
+            aml_check: components["schemas"]["SystemAmlCheckConfigDto"];
         };
         SystemChainsResponseDto: {
             total: number;
