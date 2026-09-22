@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.67] - 2026-09-22
+
 ### Added
 
 - **`is_reverse` on sub-account and card deposits (base_backend#1638 / #1639).** Regenerated from the deployed spec: `API.Issuing.SubAccounts.Deposit.Request` and `API.Issuing.Cards.Deposit.Request` (`frontend.issuing.subAccounts.deposit` / `frontend.issuing.cards.deposit`) accept an optional `is_reverse?: boolean`, and so do the same deposit bodies in the api and admin specs. When `true`, `amount` is what the sub-account is credited and the wallet is debited that amount converted back plus fees; omitted or `false`, `amount` is the wallet debit, as before. This is what lets a card top-up move off `orders.v2.create.byOrderType.RN_CARDS_OFFRAMP` / `orders.create.byOrderType.TRANSFER_CARD_SUBACCOUNT` without losing the "amount the card receives" input.
