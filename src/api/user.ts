@@ -20,6 +20,17 @@ export const user = {
       ),
     update: (data: API.User.UserData.Update.Request): Promise<API.User.UserData.Update.Response> =>
       apiClientV2.patchRequest<API.User.UserData.Update.Response>('/user/user-data', { data }),
+    logo: {
+      upload: (file: File): Promise<API.User.UserData.Logo.Upload.Response> => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        return apiClientV2.postRequest<API.User.UserData.Logo.Upload.Response>('/user/user-data/logo', {
+          data: formData,
+        });
+      },
+      delete: (): Promise<void> => apiClientV2.deleteRequest('/user/user-data/logo'),
+    },
   },
   verification: {
     // Starts (or moves up) the per-user Sumsub level for the requested step and returns the WebSDK

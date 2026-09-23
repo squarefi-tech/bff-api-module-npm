@@ -5439,7 +5439,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Cardholder with this email already exists in this wallet + issuing_program. `error.details.cardholder_id` names the conflicting cardholder (when it could be resolved) so the client can adopt it instead of dead-ending.
+                /** @description A cardholder already exists for this person in this wallet + issuing_program — the member named by `user_data_id` already holds one, or one carries this email. `error.details.cardholder_id` names it (when it could be resolved) so the client can adopt it instead of dead-ending. When `user_data_id` names a member who may adopt the row, the row is first completed from that member's KYC dossier: empty identity fields and document photos of a type it does not hold are filled in, and nothing already on it is changed. Re-read the row for its refreshed `missing_kyc_fields`.
                  *      */
                 409: {
                     headers: {
@@ -5750,6 +5750,13 @@ export interface paths {
          *       demands (a required document — usually the selfie — was never captured). Read
          *       `required_level` to name the bar ("requires FULL verification"). Same remediation as
          *       `NEEDS_VERIFICATION`, run to add the missing step.
+         *     - `NEEDS_COMPLETION` — an ACTIVE cardholder is linked (`cardholder_id`), but it does not
+         *       hold what the program's ISSUANCE bar asks for — typically one written before that bar
+         *       existed. Creating a card now is refused with `400`; `will_require` names the same
+         *       fields that 400 would. Nothing is submitted again: `PATCH` the fields, and for the
+         *       document photos call `POST /cardholders` with the member's `user_data_id` — it answers
+         *       `409` with this `cardholder_id` after completing the row from the member's KYC
+         *       dossier. When the member has not passed that verification, run it first.
          *     - `NEEDS_RESUBMIT` — the VENDOR's review of the cardholder came back rejected (or asked
          *       for part of the dossier again). Not a dead end: fix what `reject_reason` names —
          *       `PATCH` the field, or re-upload and re-attach the document — then call
@@ -5768,7 +5775,8 @@ export interface paths {
          *
          *     **`will_require`**: fields the client should expect to collect BY HAND (same vocabulary
          *     as the submit 400 `missing` list, e.g. `address.line1`, `tax_identification_number`,
-         *     `email or phone`). For `DRAFT` it is the draft's actual leftovers; for `CAN_CREATE` it
+         *     `email or phone`). For `DRAFT` it is the draft's actual leftovers; for `NEEDS_COMPLETION`
+         *     it is what the card create refuses the row over; for `CAN_CREATE` it
          *     is a projection that assumes the KYC dossier covers what it usually covers — the created
          *     draft's `missing_kyc_fields` is the authoritative version.
          *
@@ -5814,10 +5822,10 @@ export interface paths {
                                 /** Format: uuid */
                                 user_data_id: string;
                                 /** @enum {string} */
-                                verdict: "READY" | "DRAFT" | "CAN_CREATE" | "PENDING" | "NEEDS_VERIFICATION" | "NEEDS_VERIFICATION_UPGRADE" | "NEEDS_RESUBMIT" | "ISSUER_REVIEW_PENDING" | "REJECTED" | "NOT_MEMBER";
+                                verdict: "READY" | "DRAFT" | "CAN_CREATE" | "PENDING" | "NEEDS_VERIFICATION" | "NEEDS_VERIFICATION_UPGRADE" | "NEEDS_COMPLETION" | "NEEDS_RESUBMIT" | "ISSUER_REVIEW_PENDING" | "REJECTED" | "NOT_MEMBER";
                                 /**
                                  * Format: uuid
-                                 * @description The linked cardholder for READY / DRAFT / NEEDS_RESUBMIT / ISSUER_REVIEW_PENDING verdicts
+                                 * @description The linked cardholder for READY / DRAFT / NEEDS_COMPLETION / NEEDS_RESUBMIT / ISSUER_REVIEW_PENDING verdicts
                                  *
                                  */
                                 cardholder_id: string | null;
@@ -12716,11 +12724,11 @@ export interface paths {
          *     **Access Control**: Any active wallet member. The response shape depends on the caller's role and
          *     is told apart by `access_role`:
          *     - `owner` / `admin` / `auditor` — the full wallet (`WalletDetails`): identity, KYC, `balance`,
-         *       `fiat_accounts`, `base_currency` and the totals.
+         *       `fiat_accounts`, `base_currency`, the totals and `api_access_enabled`.
          *     - `user` — a shell-only wallet (`WalletDetailsScopedUser`): `uuid`, `id`, `name`, `display_name`,
          *       `tenant_id`, `kyc_entity_id`, `kyc_info`, `created_at` + the role fields. `logo_url`, `balance`, `fiat_accounts`,
-         *       `base_currency`, `fiat_total`, `crypto_total`, `pending_balance` and `total_amount` are absent
-         *       (not null) for that role — check `access_role` before reading them.
+         *       `base_currency`, `fiat_total`, `crypto_total`, `pending_balance`, `total_amount` and `api_access_enabled`
+         *       are absent (not null) for that role — check `access_role` before reading them.
          *
          */
         get: {
@@ -12881,6 +12889,215 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/frontend/wallets/{wallet_id}/logo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload wallet logo
+         * @description Uploads the company logo of the wallet and points `logo_url` at it. Replaces the legacy
+         *     `POST /wallets/{wallet_id}/logo`, which answered `{ fullPath }`: this endpoint answers with the
+         *     updated wallet — read the new URL from `data.logo_url`.
+         *
+         *     The file is checked by its content: PNG, JPEG or WebP, at most 1 MB. SVG is refused.
+         *     The previous logo file is kept in storage; only the wallet's pointer changes.
+         *
+         *     **Rate limit**: 10 uploads per hour per wallet; over it the endpoint answers `429 RATE_LIMIT_EXCEEDED`.
+         *
+         *     **Authentication**: Bearer token with x-tenant-id header required
+         *
+         *     **Access Control**: Owner or admin of the wallet; wallet KYC must be APPROVED
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The ID of the wallet */
+                    wallet_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        /**
+                         * Format: binary
+                         * @description PNG, JPEG or WebP image, at most 1 MB.
+                         */
+                        file: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Logo uploaded. `data` is the updated wallet, the same shape `PATCH /frontend/wallets/{wallet_id}` returns. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                /** Format: uuid */
+                                uuid: string;
+                                name: string | null;
+                                /** @description Computed label — wallet name, else KYC-derived (business_name / first+last), else "New account". Always present. */
+                                display_name: string;
+                                /**
+                                 * @description Public URL of the uploaded logo.
+                                 * @example https://api.example.com/storage/logo/0b5c2f4e-6a1d-4c8e-9f3a-2d7b1e5c8a90/7f1e2d3c-4b5a-4968-8776-5a4b3c2d1e0f.png
+                                 */
+                                logo_url: string;
+                                /** Format: uuid */
+                                tenant_id: string;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                kyc_entity_id: string | null;
+                                kyc_info: components["schemas"]["WalletKycInfo"] | null;
+                            };
+                            /** @example Wallet logo uploaded successfully */
+                            message: string;
+                        };
+                    };
+                };
+                /** @description No file, more than one file, a file over 1 MB, or content that is not a PNG, JPEG or WebP image
+                 *     (`INVALID_WALLET_LOGO`).
+                 *      */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Caller is not owner/admin of the wallet, or wallet KYC not approved */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Wallet not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description More than 10 logo uploads for this wallet within the last hour (`RATE_LIMIT_EXCEEDED`) */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Logo upload is not configured on this server */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /**
+         * Reset wallet logo
+         * @description Removes the company logo of the wallet: `logo_url` becomes `null`. Idempotent — resetting a wallet
+         *     without a logo succeeds the same way.
+         *
+         *     **Authentication**: Bearer token with x-tenant-id header required
+         *
+         *     **Access Control**: Owner or admin of the wallet; wallet KYC must be APPROVED
+         *
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The ID of the wallet */
+                    wallet_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Logo removed. `data` is the updated wallet, the same shape `PATCH /frontend/wallets/{wallet_id}` returns. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                /** Format: uuid */
+                                uuid: string;
+                                name: string | null;
+                                /** @description Computed label — wallet name, else KYC-derived (business_name / first+last), else "New account". Always present. */
+                                display_name: string;
+                                /**
+                                 * @description Always `null` after a reset.
+                                 * @example null
+                                 */
+                                logo_url: string | null;
+                                /** Format: uuid */
+                                tenant_id: string;
+                                /** Format: date-time */
+                                created_at: string;
+                                /** Format: uuid */
+                                kyc_entity_id: string | null;
+                                kyc_info: components["schemas"]["WalletKycInfo"] | null;
+                            };
+                            /** @example Wallet logo removed successfully */
+                            message: string;
+                        };
+                    };
+                };
+                /** @description Caller is not owner/admin of the wallet, or wallet KYC not approved */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Wallet not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/frontend/wallets/{wallet_id}/balance": {
@@ -16290,6 +16507,11 @@ export interface components {
             pending_balance: number;
             total_amount: number;
             /**
+             * @description Whether the wallet may use the developer API (`/api/*` with a wallet-bound key). Off by default; only a platform owner switches it. While `false`, API keys of this wallet are refused with `403 WALLET_API_DISABLED`.
+             * @example false
+             */
+            api_access_enabled: boolean;
+            /**
              * @description The caller's role for this wallet. Never `user` on this shape. (enum property replaced by openapi-typescript)
              * @enum {string}
              */
@@ -16302,7 +16524,7 @@ export interface components {
             /** @description `true` exactly when `access_role` is `owner`. */
             is_owner: boolean;
         };
-        /** @description Shell-only wallet read for the scoped `user` role: identity, KYC and display name. No main-account financials are ever included — `logo_url`, `balance`, `fiat_accounts`, `base_currency`, `fiat_total`, `crypto_total`, `pending_balance` and `total_amount` are absent, not null. Check `access_role` before reading balances. */
+        /** @description Shell-only wallet read for the scoped `user` role: identity, KYC and display name. No main-account financials are ever included — `logo_url`, `balance`, `fiat_accounts`, `base_currency`, `fiat_total`, `crypto_total`, `pending_balance`, `total_amount` and `api_access_enabled` are absent, not null. Check `access_role` before reading balances. */
         WalletDetailsScopedUser: {
             /** Format: uuid */
             uuid: string;
