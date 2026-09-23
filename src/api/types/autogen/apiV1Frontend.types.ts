@@ -9375,12 +9375,18 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description List of available order types */
+                /** @description The whole order-type catalogue, each with the tenant markup */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["OrderTypeInfo"][];
+                        };
+                    };
                 };
             };
         };
@@ -9422,14 +9428,22 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["OrderTypeInfo"];
+                        };
+                    };
                 };
                 /** @description Order type not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -10112,7 +10126,14 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["ExchangeRate"][];
+                            pagination: components["schemas"]["PaginationResponse"];
+                        };
+                    };
                 };
                 401: components["responses"]["UnauthorizedError"];
             };
@@ -10165,7 +10186,14 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["ReferenceOrderType"][];
+                            pagination: components["schemas"]["PaginationResponse"];
+                        };
+                    };
                 };
                 401: components["responses"]["UnauthorizedError"];
             };
@@ -14486,6 +14514,90 @@ export interface components {
             total: number;
             has_more: boolean;
         };
+        /** @description A currency pair enabled for the tenant: the `exchange_rates` row with the tenant FX spread applied. Pairs a vendor rate table adds for its own order types (Reap Payments, `RPP_*`) have no `id`. */
+        ExchangeRate: {
+            /** @description Absent on a vendor-only pair */
+            id?: number;
+            /** Format: date-time */
+            updated_at: string;
+            /** @description Symbol of the currency sold */
+            from?: string;
+            /** @description Symbol of the currency bought */
+            to?: string;
+            /** @description Rate the tenant trades at — `base_rate` with `fx_spread_percent` taken off */
+            rate: number;
+            /** @description Exact inverse of `rate` */
+            inverted_rate: number;
+            /**
+             * @description Feed the market rate came from; `reap_payments` on vendor pairs
+             * @enum {string|null}
+             */
+            rate_source?: "cryptomus" | "coingecko" | "openexchangerates" | "reap_payments" | null;
+            /** Format: uuid */
+            from_uuid: string;
+            /** Format: uuid */
+            to_uuid: string;
+            /** @description Market rate before the tenant FX spread */
+            base_rate: number;
+            /** @description Tenant FX spread taken off `base_rate`, in percent; 0 when none applies */
+            fx_spread_percent: number;
+        };
+        /**
+         * @description Rail an order type pays through (`order_types.payment_method`)
+         * @enum {string}
+         */
+        OrderPaymentMethod: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "RTP" | "INTERNAL" | "CARD";
+        /** @description The tenant's markup for the order type (`tenant_order_type_rates`) */
+        OrderTypeTenantRates: {
+            markup_percent: number | null;
+            markup_fixed: number | null;
+            mon_min_usd: number | null;
+        };
+        /** @description An order type from the global catalogue (`order_types`), with its KYC rails and the tenant markup. */
+        OrderTypeInfo: {
+            /** @description Order type id, e.g. `TRANSFER_CARD_SUBACCOUNT` */
+            id: string;
+            name: string | null;
+            description: string | null;
+            /** @enum {string|null} */
+            transaction_type: "deposit" | "withdrawal" | null;
+            payment_method: components["schemas"]["OrderPaymentMethod"] | null;
+            is_internal: boolean | null;
+            /** @description Trusted order types skip the OTP step on approve */
+            is_trusted: boolean;
+            is_deprecated: boolean;
+            /** @description Payouts are limited to the wallet owner's own account */
+            first_party_only: boolean;
+            /**
+             * Format: uuid
+             * @description Legacy single rail; use `order_types_kyc_rails`
+             */
+            kyc_rails_id: string | null;
+            /** @description Minimum amount the product should allow */
+            min_amount: number | null;
+            /** @description Maximum amount the product should allow */
+            max_amount: number | null;
+            order_types_kyc_rails: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                kyc_rail_id: string;
+            }[];
+            /** @description Null when the tenant has no rate row for the type; absent if the rates lookup failed */
+            tenant_rates?: components["schemas"]["OrderTypeTenantRates"] | null;
+        };
+        /** @description An order type enabled for the tenant — one with a `tenant_order_type_rates` row. */
+        ReferenceOrderType: {
+            id: string;
+            description: string | null;
+            is_internal: boolean | null;
+            payment_method: components["schemas"]["OrderPaymentMethod"] | null;
+            is_trusted: boolean;
+            min_amount: number | null;
+            max_amount: number | null;
+            first_party_only: boolean;
+            tenant_rates: components["schemas"]["OrderTypeTenantRates"];
+        };
         ErrorResponse: {
             /** @example false */
             success?: boolean;
@@ -15693,7 +15805,7 @@ export interface components {
             transaction_amount_currency?: string | null;
             /** @description Total amount debited (including fees) */
             billing_amount?: number | null;
-            /** Format: uuid */
+            /** @description Currency of `billing_amount`. Not uniform across rails: a currency uuid on most orders, an ISO code (e.g. `EUR`) on L2F off-ramps, the destination currency uuid on BC/DLS on-ramps. Use the order's `from_uuid` for the debited currency. */
             billing_amount_currency?: string | null;
             fee?: number | null;
             /** Format: uuid */
@@ -15740,6 +15852,11 @@ export interface components {
             linked_order_uuid?: string | null;
             /** @description True when the order settled as an internal (on-platform) transfer */
             is_internal?: boolean | null;
+            /**
+             * @description Leg side of an internal transfer: 'out' on the sender's order, 'in' on the receiver's. Card authorizations carry 'out', their refunds 'in'.
+             * @enum {string|null}
+             */
+            direction?: "in" | "out" | null;
             /** Format: uuid */
             counterparty_account_id?: string | null;
             counterparty_account_name?: string | null;
@@ -16260,6 +16377,11 @@ export interface components {
             to_fiat_account_id?: string;
             to_vendor_id?: string;
             txid?: string;
+            /**
+             * @description Which side of the movement this row is: 'out' debits the wallet, 'in' credits it. Set on internal-transfer legs (copied from the order's meta), card authorizations ('out') and their refunds ('in').
+             * @enum {string}
+             */
+            direction?: "in" | "out";
             /** Format: uuid */
             order_id?: string;
         } & {
