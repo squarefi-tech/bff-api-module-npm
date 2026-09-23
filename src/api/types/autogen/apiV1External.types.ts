@@ -1997,7 +1997,7 @@ export interface paths {
                         "application/json": components["schemas"]["ApiErrorResponse"];
                     };
                 };
-                /** @description Cardholder with this email already exists in this wallet + issuing_program. `error.details.cardholder_id` names the conflicting cardholder (when it could be resolved) so the client can adopt it instead of dead-ending.
+                /** @description A cardholder already exists for this person in this wallet + issuing_program — the member named by `user_data_id` already holds one, or one carries this email. `error.details.cardholder_id` names it (when it could be resolved) so the client can adopt it instead of dead-ending. When `user_data_id` names a member who may adopt the row, the row is first completed from that member's KYC dossier: empty identity fields and document photos of a type it does not hold are filled in, and nothing already on it is changed.
                  *      */
                 409: {
                     headers: {

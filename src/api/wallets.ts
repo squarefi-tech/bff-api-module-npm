@@ -27,6 +27,22 @@ export const wallets = {
       data,
     }),
 
+  // Company logo. Both calls answer with the updated wallet (read `data.logo_url`), unlike the legacy apiV2
+  // `POST /wallets/{wallet_id}/logo` and its `{ fullPath }`. Owner/admin only; the wallet's KYC must be APPROVED.
+  logo: {
+    upload: ({ wallet_id, file }: API.Wallets.Logo.Upload.Request): Promise<API.Wallets.Logo.Upload.Response> => {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      return apiClientV1Frontend.postRequest<API.Wallets.Logo.Upload.Response>(`/frontend/wallets/${wallet_id}/logo`, {
+        data: formData,
+      });
+    },
+
+    delete: ({ wallet_id }: API.Wallets.Logo.Delete.Request): Promise<API.Wallets.Logo.Delete.Response> =>
+      apiClientV1Frontend.deleteRequest(`/frontend/wallets/${wallet_id}/logo`),
+  },
+
   getBalance: ({
     wallet_id,
     ...params

@@ -976,6 +976,24 @@ export namespace API {
       }
     }
 
+    export namespace NotificationPreferences {
+      type NotificationPreferencesRoot = pathsV1Frontend['/frontend/notification-preferences'];
+
+      export type ChannelPreference = componentsV1Frontend['schemas']['NotificationPreference'];
+      export type CategoryPreference = componentsV1Frontend['schemas']['NotificationCategoryPreference'];
+      export type Channel = ChannelPreference['channel'];
+      export type Category = CategoryPreference['category'];
+
+      export namespace Get {
+        export type Response = NotificationPreferencesRoot['get']['responses'][200]['content']['application/json'];
+      }
+
+      export namespace Update {
+        export type Request = NotificationPreferencesRoot['put']['requestBody']['content']['application/json'];
+        export type Response = NotificationPreferencesRoot['put']['responses'][200]['content']['application/json'];
+      }
+    }
+
     export namespace Issuing {
       type CardsRoot = pathsV1Frontend['/frontend/issuing/cards'];
       type CardRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}'];
@@ -3748,6 +3766,13 @@ export namespace API {
         export type Response =
           operations['UserController_updateMyUserData']['responses']['200']['content']['application/json'];
       }
+
+      export namespace Logo {
+        export namespace Upload {
+          export type Response =
+            operations['UserController_uploadLogoFile']['responses']['200']['content']['application/json'];
+        }
+      }
     }
 
     export namespace Verification {
@@ -3779,6 +3804,7 @@ export namespace API {
 
     type WalletsRoot = pathsV1Frontend['/frontend/wallets'];
     type WalletByIdRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}'];
+    type WalletLogoRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/logo'];
     type WalletBalanceRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/balance'];
     type WalletDashboardRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/dashboard'];
     type WalletAddressesRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/addresses'];
@@ -3819,6 +3845,18 @@ export namespace API {
         export type Request = WalletByIdRoot['patch']['parameters']['path'] &
           WalletByIdRoot['patch']['requestBody']['content']['application/json'];
         export type Response = WalletByIdRoot['patch']['responses']['200']['content']['application/json'];
+      }
+    }
+
+    export namespace Logo {
+      export namespace Upload {
+        export type Request = WalletLogoRoot['post']['parameters']['path'] & { file: File };
+        export type Response = WalletLogoRoot['post']['responses']['200']['content']['application/json'];
+      }
+
+      export namespace Delete {
+        export type Request = WalletLogoRoot['delete']['parameters']['path'];
+        export type Response = WalletLogoRoot['delete']['responses']['200']['content']['application/json'];
       }
     }
 

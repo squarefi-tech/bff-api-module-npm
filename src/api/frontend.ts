@@ -331,4 +331,18 @@ export const frontend = {
         ),
     },
   },
+  // IN_APP stays on (400 INBOX_CHANNEL_LOCKED); channels vary by tenant (TELEGRAM needs a bot); PUT upserts any subset.
+  notificationPreferences: {
+    get: (): Promise<API.Frontend.NotificationPreferences.Get.Response> =>
+      apiClientV1Frontend.getRequest<API.Frontend.NotificationPreferences.Get.Response>(
+        '/frontend/notification-preferences',
+      ),
+    update: (
+      data: API.Frontend.NotificationPreferences.Update.Request,
+    ): Promise<API.Frontend.NotificationPreferences.Update.Response> =>
+      apiClientV1Frontend.putRequest<API.Frontend.NotificationPreferences.Update.Response>(
+        '/frontend/notification-preferences',
+        { data },
+      ),
+  },
 };
