@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`frontend.reference.exchangeRates.list` — the frontend route for currency pairs.** Wraps `GET /frontend/reference/exchange_rates` (`from_uuid`, `to_uuid`, `order_type`, `offset`, `limit`), the replacement for the legacy `exchange.byOrderType.*` (`GET /exchange/`). Same data — the tenant's enabled pairs from `getTenantExchangeRates` — with three differences a caller must handle: the body is the `{ success, data, pagination }` envelope instead of a bare array; the route needs the bearer session (the legacy one is public); and the list is paged in memory, 50 rows by default and 500 at most, in no stable order — pass `limit: 500` and filter by `order_type` plus `from_uuid` / `to_uuid` to get the whole set in one call. Items are typed as `API.Frontend.Reference.ExchangeRates.ExchangeRate`: `id` (absent on a Reap vendor pair), `updated_at`, `from`, `to`, `rate`, `inverted_rate`, `rate_source`, `from_uuid`, `to_uuid`, plus `base_rate` and `fx_spread_percent` (the market rate and the tenant spread taken off it). The spec does not describe this body, so the type is written from the backend handler.
+
+### Fixed
+
+- **`orders.frontend.types.list` / `getById` return the `{ success, data }` envelope.** The types promised a bare `OrderInfo[]` / `OrderInfo`, but `/frontend/orders/*` wraps every response, so `data` is where the order types are. `API.Orders.Frontend.Types.List.Response` is now `{ success: boolean; data: API.Orders.V2.OrderTypes.OrderInfo[] }` and `GetById.Response` `{ success: boolean; data: API.Orders.V2.OrderTypes.OrderInfo }` — the `V2` shape, because the handler is the one behind `orders.v2.orderTypes.list`, so moving to the frontend route is `.data` and nothing else. Code that read the old type as an array now fails to compile instead of failing at runtime.
+
 ## [1.36.67] - 2026-09-22
 
 ### Added

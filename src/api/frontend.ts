@@ -318,4 +318,17 @@ export const frontend = {
       },
     },
   },
+  reference: {
+    // Frontend twin of `exchange.byOrderType.*` (legacy `GET /exchange/`): the same tenant pairs, but paged in
+    // memory — 50 per page by default, 500 at most, in no particular order — and behind the bearer session.
+    exchangeRates: {
+      list: (
+        params: API.Frontend.Reference.ExchangeRates.List.Request = {},
+      ): Promise<API.Frontend.Reference.ExchangeRates.List.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.Reference.ExchangeRates.List.Response>(
+          '/frontend/reference/exchange_rates',
+          { params },
+        ),
+    },
+  },
 };
