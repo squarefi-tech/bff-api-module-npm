@@ -8268,7 +8268,7 @@ export interface components {
             /** Format: uuid */
             transaction_amount_currency?: string | null;
             billing_amount?: number | null;
-            /** Format: uuid */
+            /** @description Currency of `billing_amount`. Not uniform across rails: a currency uuid on most orders, an ISO code (e.g. `EUR`) on L2F off-ramps, the destination currency uuid on BC/DLS on-ramps. Use the order's `from_uuid` for the debited currency. */
             billing_amount_currency?: string | null;
             fee?: number | null;
             /** Format: uuid */
@@ -8287,6 +8287,11 @@ export interface components {
             from_currency_id?: string | null;
             /** Format: uuid */
             to_currency_id?: string | null;
+            /**
+             * @description Leg side of an internal transfer: 'out' on the sender's order, 'in' on the receiver's. Card authorizations carry 'out', their refunds 'in'.
+             * @enum {string|null}
+             */
+            direction?: "in" | "out" | null;
             /** Format: uuid */
             counterparty_account_id?: string | null;
             counterparty_account_name?: string | null;

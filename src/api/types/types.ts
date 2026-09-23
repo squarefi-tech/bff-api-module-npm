@@ -965,33 +965,13 @@ export namespace API {
 
     export namespace Reference {
       export namespace ExchangeRates {
-        // The spec leaves this 200 body untyped (content: never); the shape is the handler's
-        // (`getTenantExchangeRates`): an `exchange_rates` row plus the tenant FX spread.
-        export interface ExchangeRate {
-          /** Absent on a pair a vendor rate table adds for its own order types (Reap, `RPP_*`). */
-          id?: number;
-          updated_at: string;
-          from: string;
-          to: string;
-          /** What the tenant trades at: `base_rate` with `fx_spread_percent` taken off. */
-          rate: number;
-          inverted_rate: number;
-          rate_source: string | null;
-          from_uuid: string;
-          to_uuid: string;
-          base_rate: number;
-          fx_spread_percent: number;
-        }
+        type ExchangeRatesRoot = pathsV1Frontend['/frontend/reference/exchange_rates'];
+
+        export type ExchangeRate = componentsV1Frontend['schemas']['ExchangeRate'];
 
         export namespace List {
-          export type Request = NonNullable<
-            pathsV1Frontend['/frontend/reference/exchange_rates']['get']['parameters']['query']
-          >;
-          export type Response = {
-            success: boolean;
-            data: ExchangeRate[];
-            pagination: componentsV1Frontend['schemas']['PaginationResponse'];
-          };
+          export type Request = NonNullable<ExchangeRatesRoot['get']['parameters']['query']>;
+          export type Response = ExchangeRatesRoot['get']['responses'][200]['content']['application/json'];
         }
       }
     }
@@ -3278,21 +3258,15 @@ export namespace API {
       }
 
       export namespace Types {
-        // The spec leaves both 200 bodies untyped (content: never). The handlers are the ones behind
-        // `/v2/orders/order_types`, wrapped in the `{ success, data }` envelope of `/frontend/orders/*`.
         export namespace List {
-          export type Response = {
-            success: boolean;
-            data: API.Orders.V2.OrderTypes.OrderInfo[];
-          };
+          export type Response =
+            pathsV1Frontend['/frontend/orders/types']['get']['responses'][200]['content']['application/json'];
         }
 
         export namespace GetById {
           export type Request = pathsV1Frontend['/frontend/orders/types/{id}']['get']['parameters']['path'];
-          export type Response = {
-            success: boolean;
-            data: API.Orders.V2.OrderTypes.OrderInfo;
-          };
+          export type Response =
+            pathsV1Frontend['/frontend/orders/types/{id}']['get']['responses'][200]['content']['application/json'];
         }
       }
     }
