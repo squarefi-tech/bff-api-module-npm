@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.68] - 2026-09-23
+
 ### Added
 
 - **`frontend.reference.exchangeRates.list` — the frontend route for currency pairs.** Wraps `GET /frontend/reference/exchange_rates` (`from_uuid`, `to_uuid`, `order_type`, `offset`, `limit`), the replacement for the legacy `exchange.byOrderType.*` (`GET /exchange/`). Same data — the tenant's enabled pairs from `getTenantExchangeRates` — with three differences a caller must handle: the body is the `{ success, data, pagination }` envelope instead of a bare array; the route needs the bearer session (the legacy one is public); and the list is paged in memory, 50 rows by default and 500 at most, in no stable order — pass `limit: 500` and filter by `order_type` plus `from_uuid` / `to_uuid` to get the whole set in one call. Typed from the spec (base_backend#1650/#1651 added the schema): `API.Frontend.Reference.ExchangeRates.ExchangeRate` is `ExchangeRate` — `id` absent on a Reap vendor pair, `from` / `to` optional, `rate_source` one of `cryptomus`, `coingecko`, `openexchangerates`, `reap_payments` or `null`, plus `base_rate` and `fx_spread_percent`.
