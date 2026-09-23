@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.69] - 2026-09-23
+
 ### Added
 
 - **`user.userData.logo.upload` / `delete` — the user's avatar (SFI-1491).** Wraps `POST` and `DELETE /user/user-data/logo` on `apiClientV2`. `upload(file)` sends the file as the multipart field `file` — JPEG, PNG or WEBP, up to 1 MB — and resolves to `{ fullPath: string }` (`API.User.UserData.Logo.Upload.Response`). `delete()` answers `204` with no body and resolves to `void`.
