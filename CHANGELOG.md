@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.71] - 2026-09-24
+
 ### Added
 
 - **`frontend.virtualAccounts.*` — the frontend routes for virtual accounts.** Wraps `GET` and `POST /frontend/virtual-accounts/wallet/{wallet_id}`, `GET /frontend/virtual-accounts/{id}` and `GET /frontend/virtual-accounts/programs/wallet/{wallet_id}` on `apiClientV1Frontend` as `getAll`, `create`, `getById` and `programs.getAll` — the replacements for the legacy `virtualAccounts.getAll`, `create`, `getByUuid` and `programs.list` (`/virtual_account`). The handlers read the same rows as the legacy ones, so the rows keep the legacy types (`API.VirtualAccounts.VirtualAccount.VirtualAccountListItem` / `VirtualAccountDetailItem`, `API.VirtualAccounts.Programs.Program`); what changes is the call and the body:
