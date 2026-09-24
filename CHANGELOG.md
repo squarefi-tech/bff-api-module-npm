@@ -7,7 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Reap Payments order types.** `OrderType` and `WalletTransactionRecordType` gain `RPP_SWIFT_OFFRAMP`, `RPP_SEPA_OFFRAMP`, `RPP_FPS_OFFRAMP` and `RPP_ACH_OFFRAMP`. The backend has served them, and the generated `OrderTypeId` has listed them, since the Reap Payments rail shipped; a client narrowing with the enum (`isOrderType`, `exchange.byOrderType`) could not name them. A consumer with an exhaustive `Record<OrderType, …>` or `Record<WalletTransactionRecordType, …>` has to add the four keys when it upgrades.
+- **`documents_required_from_amount` on the order type directory.** `API.Orders.V2.OrderTypes.OrderInfo` and `API.Orders.OrderTypes.OrderInfo` carry the amount in the send currency from which an order of that type needs supporting documents: `0` for always, `null` for never. It is optional because a backend without base_backend#1679 / #1680 does not send it; treat a missing field as "unknown", not as "never".
+
 ## [1.36.72] - 2026-09-24
+
+### Added
+
+- **Card-onboarding fields in the generated types.** `UserDataEntity.is_onboarded` and `SystemConfigDto.enable_card_onboarding` (`apiV2.types.ts`), regenerated from the dev spec. They back the rule that a newly registered user issues a card before reaching the wallet app (SFI-2388).
 
 ## [1.36.71] - 2026-09-24
 
