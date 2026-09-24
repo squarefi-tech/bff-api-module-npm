@@ -2942,6 +2942,8 @@ export namespace API {
           max_amount: number | null;
           /** Whether payouts for this order type are limited to the wallet owner's own account */
           first_party_only: boolean;
+          /** Amount in the send currency from which an order needs supporting documents; `0` — always, `null` — never */
+          documents_required_from_amount: number | null;
           order_types_kyc_rails: OrderTypeKycRail[];
         }
 
