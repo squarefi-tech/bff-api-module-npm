@@ -318,6 +318,43 @@ export const frontend = {
       },
     },
   },
+  // Frontend twin of `virtualAccounts.*` (legacy `/virtual_account`). On a KYC tenant reads need the wallet's KYC
+  // APPROVED or HOLD and `create` needs APPROVED — otherwise `403 KYC_REQUIREMENTS_NOT_MET`.
+  virtualAccounts: {
+    getAll: ({
+      wallet_id,
+      ...params
+    }: API.Frontend.VirtualAccounts.List.Request): Promise<API.Frontend.VirtualAccounts.List.Response> =>
+      apiClientV1Frontend.getRequest<API.Frontend.VirtualAccounts.List.Response>(
+        `/frontend/virtual-accounts/wallet/${wallet_id}`,
+        { params },
+      ),
+    getById: ({
+      id,
+      ...params
+    }: API.Frontend.VirtualAccounts.Get.Request): Promise<API.Frontend.VirtualAccounts.Get.Response> =>
+      apiClientV1Frontend.getRequest<API.Frontend.VirtualAccounts.Get.Response>(`/frontend/virtual-accounts/${id}`, {
+        params,
+      }),
+    create: ({
+      wallet_id,
+      ...data
+    }: API.Frontend.VirtualAccounts.Create.Request): Promise<API.Frontend.VirtualAccounts.Create.Response> =>
+      apiClientV1Frontend.postRequest<API.Frontend.VirtualAccounts.Create.Response>(
+        `/frontend/virtual-accounts/wallet/${wallet_id}`,
+        { data },
+      ),
+    programs: {
+      getAll: ({
+        wallet_id,
+        ...params
+      }: API.Frontend.VirtualAccounts.Programs.List.Request): Promise<API.Frontend.VirtualAccounts.Programs.List.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.VirtualAccounts.Programs.List.Response>(
+          `/frontend/virtual-accounts/programs/wallet/${wallet_id}`,
+          { params },
+        ),
+    },
+  },
   reference: {
     // Frontend twin of `exchange.byOrderType.*` (legacy `GET /exchange/`): the same tenant pairs, but paged in
     // memory — 50 per page by default, 500 at most, in no particular order — and behind the bearer session.

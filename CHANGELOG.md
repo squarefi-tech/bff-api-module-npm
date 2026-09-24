@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`frontend.virtualAccounts.*` — the frontend routes for virtual accounts.** Wraps `GET` and `POST /frontend/virtual-accounts/wallet/{wallet_id}`, `GET /frontend/virtual-accounts/{id}` and `GET /frontend/virtual-accounts/programs/wallet/{wallet_id}` on `apiClientV1Frontend` as `getAll`, `create`, `getById` and `programs.getAll` — the replacements for the legacy `virtualAccounts.getAll`, `create`, `getByUuid` and `programs.list` (`/virtual_account`). The handlers read the same rows as the legacy ones, so the rows keep the legacy types (`API.VirtualAccounts.VirtualAccount.VirtualAccountListItem` / `VirtualAccountDetailItem`, `API.VirtualAccounts.Programs.Program`); what changes is the call and the body:
+  - `wallet_id` is a path parameter everywhere (`getAll` took `wallet_uuid`, `programs.list` a `wallet_id` query plus `pagination`), `getById` takes `id` and an optional `skip_sync`, and `create` takes `{ wallet_id, va_programs_id }`.
+  - Lists answer `{ success, data, pagination: { offset, limit, total, has_more } }` instead of `{ data, count, has_more }` — `has_more` moved into `pagination`, and `programs.getAll` adds `meta.total_count`, the count after KYC filtering (the legacy `total_count` counted before it). Single reads answer `{ success, data }`.
+  - `create` answers `201 { success, data: { id, … }, message }`, or `202` while the vendor is still activating the account: `data` is then `{ status: 'pending', vendor_account_id?, vendor_status?, account_id?, message? }` with no `id` (`API.Frontend.VirtualAccounts.Create.PendingActivation`), and posting the same request again polls. The legacy route answered that case with `202 { error, details }`.
+  - On a tenant with KYC enabled, the reads need the wallet's KYC `APPROVED` or `HOLD` and `create` needs `APPROVED`; anything else answers `403 KYC_REQUIREMENTS_NOT_MET`. The legacy reads had no KYC gate. `create` still needs the wallet's `owner` or `admin` role.
+  - In list rows `account_currency_id` / `destination_currency_id` are now currency uuids; the legacy list returned the joined currency objects under those names.
+
 ## [1.36.70] - 2026-09-24
 
 ### Fixed
