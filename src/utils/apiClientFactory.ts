@@ -90,6 +90,11 @@ export const createApiClient = ({ baseURL, isBearerToken, tenantId }: CreateApiC
   instance.interceptors.response.use(
     (response) => response,
     (error: AxiosError) => {
+      // A request the caller aborted (e.g. `useOrderCalc` superseding a stale calc) is not a failure.
+      if (axios.isCancel(error)) {
+        return Promise.reject(error);
+      }
+
       if (typeof window === 'undefined') {
         return Promise.reject(error);
       }

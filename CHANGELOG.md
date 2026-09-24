@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **An aborted request no longer logs `Axios error`.** Every client's response interceptor logged each failure with `console.error('Axios error', …)`, including requests the caller cancelled on purpose — `useOrderCalc` aborts the previous calc on every keystroke, so one amount entry left dozens of `CanceledError` (`ERR_CANCELED`) entries in the console. Cancellations are now rejected straight away, before the reverification, refresh and logging branches; the promise still rejects with the same `CanceledError`, so callers that already ignore it (`useOrderCalc` checks `ERR_CANCELED`) behave as before. Real failures are logged as before.
+
 ## [1.36.69] - 2026-09-23
 
 ### Added
