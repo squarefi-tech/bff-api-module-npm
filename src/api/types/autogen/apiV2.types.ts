@@ -1081,6 +1081,7 @@ export interface components {
             default_currency: string;
             user_groups_id: string | null;
             is_developer: boolean;
+            is_onboarded: boolean;
             first_name?: string | null;
             last_name?: string | null;
             /** @description User birth date in ISO 8601 format */
@@ -2065,6 +2066,7 @@ export interface components {
             enable_auto_exchange: boolean;
             enable_crypto_withdrawal: boolean;
             enable_referral_program: boolean;
+            enable_card_onboarding: boolean;
             readonly metrics_data?: components["schemas"]["MetricsDataEntity"] | null;
             readonly statement_branding?: components["schemas"]["StatementBrandingEntity"] | null;
             readonly mailing_data?: components["schemas"]["MailingDataEntity"] | null;
