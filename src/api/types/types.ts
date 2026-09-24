@@ -963,6 +963,68 @@ export namespace API {
       }
     }
 
+    // Rows keep the legacy `API.VirtualAccounts` types: the frontend handlers read the same select as
+    // `/virtual_account`, so only the path, the envelope and the KYC gates differ.
+    export namespace VirtualAccounts {
+      type WalletAccountsRoot = pathsV1Frontend['/frontend/virtual-accounts/wallet/{wallet_id}'];
+      type AccountRoot = pathsV1Frontend['/frontend/virtual-accounts/{id}'];
+      type WalletProgramsRoot = pathsV1Frontend['/frontend/virtual-accounts/programs/wallet/{wallet_id}'];
+
+      type Pagination = componentsV1Frontend['schemas']['PaginationResponse'];
+
+      export namespace List {
+        export type Request = WalletAccountsRoot['get']['parameters']['path'] &
+          NonNullable<WalletAccountsRoot['get']['parameters']['query']>;
+        export type Response = {
+          success: boolean;
+          data: API.VirtualAccounts.VirtualAccount.VirtualAccountListItem[];
+          pagination: Pagination;
+        };
+      }
+
+      export namespace Create {
+        export type Request = WalletAccountsRoot['post']['parameters']['path'] &
+          WalletAccountsRoot['post']['requestBody']['content']['application/json'];
+
+        // `202`: the vendor has not activated the account yet, so there is no `id`; posting the same request again polls.
+        export interface PendingActivation {
+          status: 'pending';
+          vendor_account_id?: string;
+          vendor_status?: string;
+          account_id?: string;
+          message?: string;
+        }
+
+        export type Response = {
+          success: boolean;
+          data: API.VirtualAccounts.Create.Response | PendingActivation;
+          message: string;
+        };
+      }
+
+      export namespace Get {
+        export type Request = AccountRoot['get']['parameters']['path'] &
+          NonNullable<AccountRoot['get']['parameters']['query']>;
+        export type Response = {
+          success: boolean;
+          data: API.VirtualAccounts.VirtualAccount.VirtualAccountDetailItem;
+        };
+      }
+
+      export namespace Programs {
+        export namespace List {
+          export type Request = WalletProgramsRoot['get']['parameters']['path'] &
+            NonNullable<WalletProgramsRoot['get']['parameters']['query']>;
+          export type Response = {
+            success: boolean;
+            data: API.VirtualAccounts.Programs.Program[];
+            pagination: Pagination;
+            meta: { total_count: number };
+          };
+        }
+      }
+    }
+
     export namespace Reference {
       export namespace ExchangeRates {
         type ExchangeRatesRoot = pathsV1Frontend['/frontend/reference/exchange_rates'];
