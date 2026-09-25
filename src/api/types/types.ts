@@ -2494,7 +2494,7 @@ export namespace API {
         first_party_only: boolean;
         /**
          * Amount in the send currency from which an order needs supporting documents; `0` — always, `null` — never.
-         * Absent on a backend that predates the field.
+         * Absent on a backend that predates the field, which means the same as `null`.
          */
         documents_required_from_amount?: number | null;
       }
@@ -2949,7 +2949,7 @@ export namespace API {
           first_party_only: boolean;
           /**
            * Amount in the send currency from which an order needs supporting documents; `0` — always, `null` — never.
-           * Absent on a backend that predates the field.
+           * Absent on a backend that predates the field, which means the same as `null`.
            */
           documents_required_from_amount?: number | null;
           order_types_kyc_rails: OrderTypeKycRail[];
