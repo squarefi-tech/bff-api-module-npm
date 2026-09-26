@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.73] - 2026-09-26
+
 ### Added
 
 - **`is_reverse` on card creation.** `frontend.issuing.cards.create` (`POST /frontend/issuing/cards`, typed from the regenerated spec) and the legacy `API.Cards.Create.StandAloneRequest` (`POST /issuing/cards/create`) take `is_reverse?: boolean`. With it, `initial_topup` is the amount to land on the card, in the card's currency, and the issuing fee and the top-up commission are charged on top — so the card gets exactly that amount, and the cost of the top-up is the `from_amount` of one reverse `TRANSFER_CARD_SUBACCOUNT` calc. Without it `initial_topup` stays the total wallet debit (fee + top-up, commission taken out of it). Needs `initial_topup` of at least 0.01; the backend refuses anything but a boolean with `400`. A backend without the flag ignores it and reads `initial_topup` as the total, so switch a client over only once its backend serves `is_reverse` in its spec. `SubAccountRequest` (`/issuing/cards/balance`, retired) does not get the flag.
