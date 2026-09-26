@@ -446,7 +446,22 @@ export namespace API {
         currency_id?: string;
         user_data_id: string;
       }
-      export type StandAloneRequest = CommonRequest;
+      /** `POST /issuing/cards/create`. */
+      export interface StandAloneRequest extends CommonRequest {
+        /**
+         * TOTAL wallet debit (fee + top-up), in `currency_id` — charged only on a tariff with an
+         * issuing fee; on a tariff without one nothing is charged unless `is_reverse` is set. With
+         * `is_reverse`, the amount to land on the card instead.
+         */
+        initial_topup?: number;
+        /**
+         * `initial_topup` is the amount to land on the card, in the card's currency; the issuing fee
+         * and the top-up commission are charged on top, on every tariff. Its cost is the
+         * `from_amount` of a reverse `TRANSFER_CARD_SUBACCOUNT` calc for that amount. Needs
+         * `initial_topup` of at least 0.01. A backend without base_backend#1710 ignores the flag.
+         */
+        is_reverse?: boolean;
+      }
 
       export interface SubAccountRequest extends CommonRequest {
         sub_account_id: string;
@@ -1214,8 +1229,8 @@ export namespace API {
           // The spec marks `cardholder_id` required, but the handler equally accepts
           // `assigned_user_data_uuid` (or the caller's own identity) and resolves the cardholder
           // LINKED to that user via issuing_cardholder_links — provision the cardholder first
-          // through `frontend.issuing.cardholders`. The money fields were added in SFI-2129 and
-          // may lag in the deployed spec, so they are declared here explicitly.
+          // through `frontend.issuing.cardholders`. The money fields (`initial_topup`,
+          // `is_reverse`, `currency_id`) and `request_id` come from the spec as they are.
           export type Request = Omit<
             CardsRoot['post']['requestBody']['content']['application/json'],
             'cardholder_id'
@@ -1223,15 +1238,6 @@ export namespace API {
             cardholder_id?: string;
             /** Card assignee (`user_data.uuid`); their linked cardholder is used. */
             assigned_user_data_uuid?: string;
-            /**
-             * TOTAL wallet debit at issuance (fee + card top-up). Accepted only on group
-             * tariffs that already mandate an initial top-up. Requires `currency_id`.
-             */
-            initial_topup?: number;
-            /** Wallet currency to debit; required whenever the tariff has a fee or a top-up. */
-            currency_id?: string;
-            /** Client-generated id stored with the card (idempotency/tracing reference). */
-            request_id?: string;
           };
           // 201 data is the same decorated shape as GET /cards/{card_id}: `data.id` is the card
           // id, `data.sub_account_id` the (possibly just-provisioned) sub-account. The top-up
