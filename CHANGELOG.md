@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.74] - 2026-09-26
+
 ### Added
 
 - **Reap Payments order types.** `OrderType` and `WalletTransactionRecordType` gain `RPP_SWIFT_OFFRAMP`, `RPP_SEPA_OFFRAMP`, `RPP_FPS_OFFRAMP` and `RPP_ACH_OFFRAMP`. The backend has served them, and the generated `OrderTypeId` has listed them, since the Reap Payments rail shipped; a client narrowing with the enum (`isOrderType`, `exchange.byOrderType`) could not name them. A consumer with an exhaustive `Record<OrderType, …>` or `Record<WalletTransactionRecordType, …>` has to add the four keys when it upgrades.
