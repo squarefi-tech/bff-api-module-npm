@@ -10,13 +10,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Reap Payments order types.** `OrderType` and `WalletTransactionRecordType` gain `RPP_SWIFT_OFFRAMP`, `RPP_SEPA_OFFRAMP`, `RPP_FPS_OFFRAMP` and `RPP_ACH_OFFRAMP`. The backend has served them, and the generated `OrderTypeId` has listed them, since the Reap Payments rail shipped; a client narrowing with the enum (`isOrderType`, `exchange.byOrderType`) could not name them. A consumer with an exhaustive `Record<OrderType, …>` or `Record<WalletTransactionRecordType, …>` has to add the four keys when it upgrades.
-- **`documents_required_from_amount` on the order type directory.** `API.Orders.V2.OrderTypes.OrderInfo` and `API.Orders.OrderTypes.OrderInfo` carry the amount in the send currency from which an order of that type needs supporting documents: `0` for always, `null` for never. Any number, `0` included, means documents are required from that amount; only `null` switches them off. It is optional because a backend without base_backend#1679 / #1680 does not send it, and a missing field means the same as `null`.
+- **`documents_required_from_amount` on the order type directory.** `API.Orders.V2.OrderTypes.OrderInfo` and `API.Orders.OrderTypes.OrderInfo` carry the amount in the send currency from which an order of that type needs supporting documents: `0` for always, `null` for never. Any number, `0` included, means documents are required from that amount; only `null` switches them off. It is optional because a backend without base_backend#1679 / #1680 does not send it, and a missing field means the same as `null`. The generated V1 types (`apiV1External`, `apiV1Frontend`, `apiV1Legacy`, `apiV1Tenant`) carry it too, regenerated from the dev spec.
+
+## [1.36.73] - 2026-09-26
+
+### Added
+
+- **`is_reverse` on card creation.** `frontend.issuing.cards.create` (`POST /frontend/issuing/cards`, typed from the regenerated spec) and the legacy `API.Cards.Create.StandAloneRequest` (`POST /issuing/cards/create`) take `is_reverse?: boolean`. With it, `initial_topup` is the amount to land on the card, in the card's currency, and the issuing fee and the top-up commission are charged on top — so the card gets exactly that amount, and the cost of the top-up is the `from_amount` of one reverse `TRANSFER_CARD_SUBACCOUNT` calc. Without it `initial_topup` stays the total wallet debit (fee + top-up, commission taken out of it). Needs `initial_topup` of at least 0.01; the backend refuses anything but a boolean with `400`. A backend without the flag ignores it and reads `initial_topup` as the total, so switch a client over only once its backend serves `is_reverse` in its spec. `SubAccountRequest` (`/issuing/cards/balance`, retired) does not get the flag.
+- **`ui_branding` on the V2 system config** (`SystemConfigDto.ui_branding`, `UiBrandingEntity` with its identity, support and assets parts) — the tenant's front-end branding (SFI-2545), picked up by the same regeneration.
+
+### Changed
+
+- **Card-issuance docs brought up to the deployed spec.** The `initial_topup` descriptions on the three create routes now say what the amount is in each mode, and the create routes document the opening-balance refusals (`INITIAL_TOPUP_BELOW_OPENING_LOAD`, `OPENING_LOAD_NOT_PAID`); the Tenant card-create route gains its `400` response. The cardholder update description now says which fields reach the card vendor and which are stored locally only. `API.Frontend.Issuing.Cards.Create.Request` no longer redeclares `initial_topup`, `currency_id` and `request_id` by hand: the spec carries them now, with the same types. Types only — no call changes.
 
 ## [1.36.72] - 2026-09-24
 
 ### Added
 
-- **Card-onboarding fields in the generated types.** `UserDataEntity.is_onboarded` and `SystemConfigDto.enable_card_onboarding` (`apiV2.types.ts`), regenerated from the dev spec. They back the rule that a newly registered user issues a card before reaching the wallet app (SFI-2388).
+- **`UserDataEntity.is_onboarded` and `SystemConfigDto.enable_card_onboarding`** (regenerated from the dev spec, SFI-2388). They back the rule that a freshly registered user issues a card before reaching the wallet app: the frontend reads them together with the user's cards to decide whether to gate.
 
 ## [1.36.71] - 2026-09-24
 

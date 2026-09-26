@@ -2174,7 +2174,9 @@ export interface paths {
         head?: never;
         /**
          * Update cardholder
-         * @description Updates cardholder information (local row + vendor propagation of personal fields).
+         * @description Updates cardholder information. Email and phone of an Interlace or PhotonPay
+         *     cardholder are sent to the vendor first; every other field, and every other
+         *     vendor, is stored locally only.
          *     Same contract as `PATCH /frontend/issuing/cardholders/{cardholder_id}`.
          *
          *     **Authentication**: x-api-key header required
@@ -2691,6 +2693,44 @@ export interface paths {
                          *
                          */
                         vendor_user_id?: string;
+                        /**
+                         * @description TOTAL wallet debit at issuance, in the currency of `currency_id`: the issuing fee
+                         *     plus the amount to land on the card, from which the top-up commission is taken.
+                         *     When omitted, the tariff's default total applies: it is stated in the card's
+                         *     currency and converted into `currency_id` at the pair's rate. On a program whose cards open holding
+                         *     a mandatory minimum balance, what it pays toward the card after the issuing fee must be
+                         *     at least that balance — refused with `400 INITIAL_TOPUP_BELOW_OPENING_LOAD` otherwise,
+                         *     nothing charged. The top-up commission is not held against it: the card opens holding
+                         *     the minimum even when the commission takes the top-up a few cents under.
+                         *     Not charged at all where the wallet has no issuance tariff on the program.
+                         *
+                         * @example 80.4
+                         */
+                        initial_topup?: number;
+                        /**
+                         * @description When `true`, `initial_topup` is the amount to land on the card, in the card's currency,
+                         *     instead of the total debit: the issuing fee and the top-up commission are charged on top.
+                         *     The commission is added to the amount, as with a reverse card deposit, so the card gets
+                         *     exactly `initial_topup`. The top-up debit is the `from_amount` of
+                         *     `GET /api/orders/calc?order_type=TRANSFER_CARD_SUBACCOUNT&is_reverse=true&amount=<initial_topup>`
+                         *     (from `currency_id` to the card's currency); the issuing fee comes on top of it.
+                         *     What the tariff puts on the card at minimum (its minimum total less the issuing fee — 25
+                         *     on a 50 / 75 tariff) and a program's mandatory opening balance are held against the
+                         *     amount that lands. Needs `initial_topup` of at least 0.01; a boolean only, refused
+                         *     with `400` otherwise — also where the program does not bill issuance and the field
+                         *     is ignored.
+                         *
+                         * @default false
+                         */
+                        is_reverse?: boolean;
+                        /**
+                         * Format: uuid
+                         * @description Wallet currency to debit for the issuing fee and `initial_topup`. Required
+                         *     whenever issuance is billed on the program — the request is refused with `400`
+                         *     otherwise.
+                         *
+                         */
+                        currency_id?: string;
                     };
                 };
             };
@@ -2714,6 +2754,12 @@ export interface paths {
                  *     - Missing program_id
                  *     - Missing required fields based on program type
                  *     - Unsupported program type
+                 *     - `INITIAL_TOPUP_BELOW_OPENING_LOAD` — `initial_topup` less the issuing fee is below the
+                 *       program's mandatory opening balance; the message names the total accepted at the current rate
+                 *     - `OPENING_LOAD_NOT_PAID` — the program's cards open holding a mandatory balance and
+                 *       this issuance charges nothing for it (issuance not billed here, or no issuance tariff
+                 *       for the wallet on the program), or the card spends from a sub-account, whose top-up
+                 *       funds the sub-account rather than the card
                  *      */
                 400: {
                     headers: {
