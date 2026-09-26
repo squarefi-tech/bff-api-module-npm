@@ -9519,6 +9519,13 @@ export interface paths {
                     is_subtract?: boolean;
                     /** @description Destination address (for crypto withdrawals; affects network fee estimation). */
                     to_address?: string;
+                    /** @description The wallet the order would be for. When the caller may act on it, the quote is priced with the
+                     *     wallet OWNER's tariff — the one every order on the wallet is charged at — so a member of a shared
+                     *     wallet is quoted what will be debited. Without it, or for a wallet the caller may not act on, the
+                     *     caller's own tariff prices the quote. On a tenant priced by tariff plans, the quote uses the named
+                     *     wallet's plan — the tenant's default plan without `wallet_id`.
+                     *      */
+                    wallet_id?: string;
                 };
                 header?: never;
                 path?: never;
