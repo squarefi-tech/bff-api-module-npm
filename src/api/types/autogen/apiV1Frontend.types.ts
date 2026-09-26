@@ -10198,7 +10198,7 @@ export interface paths {
          *
          *     Each returned item includes a `tenant_rates` object (`markup_percent`,
          *     `markup_fixed`, `mon_min_usd`) and may expose product-facing guardrails
-         *     such as `min_amount`, `max_amount`, and `first_party_only`.
+         *     such as `min_amount`, `max_amount`, `first_party_only` and `documents_required_from_amount`.
          *
          *     **Authentication**: Bearer token + x-tenant-id header
          *
@@ -14822,6 +14822,8 @@ export interface components {
             min_amount: number | null;
             /** @description Maximum amount the product should allow */
             max_amount: number | null;
+            /** @description Amount in the send currency from which the order needs supporting documents (`documents`); `0` — always, `null` — never */
+            documents_required_from_amount: number | null;
             order_types_kyc_rails: {
                 /** Format: uuid */
                 id: string;
@@ -14841,6 +14843,8 @@ export interface components {
             min_amount: number | null;
             max_amount: number | null;
             first_party_only: boolean;
+            /** @description Amount in the send currency from which the order needs supporting documents (`documents`); `0` — always, `null` — never */
+            documents_required_from_amount: number | null;
             tenant_rates: components["schemas"]["OrderTypeTenantRates"];
         };
         ErrorResponse: {

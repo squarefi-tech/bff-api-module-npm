@@ -3912,7 +3912,7 @@ export interface paths {
          *       i.e. those having a row in `tenant_order_type_rates`. Each returned item is
          *       enriched with `tenant_rates` (`markup_percent`, `markup_fixed`, `mon_min_usd`)
          *       and may expose product-facing guardrails such as `min_amount`,
-         *       `max_amount`, and `first_party_only`.
+         *       `max_amount`, `first_party_only` and `documents_required_from_amount`.
          *     - Without a tenant scope (admin global view), the full catalogue is returned
          *       and `tenant_rates` is omitted.
          *
@@ -8718,6 +8718,11 @@ export interface components {
             max_amount?: number | null;
             /** @description Whether payouts for this order type are limited to the wallet owner's own account */
             first_party_only?: boolean;
+            /**
+             * @description Amount in the send currency from which an order of this type needs supporting documents (`documents`); `0` — always, `null` — never
+             * @example 20000
+             */
+            documents_required_from_amount?: number | null;
             kyc_rails?: {
                 /** Format: uuid */
                 id?: string;
