@@ -49,14 +49,6 @@ export const frontend = {
           `/frontend/issuing/cards/${card_id}/withdraw`,
           { data },
         ),
-      // Unified create — the backend routes to the balance or prepaid flow by the program's
-      // `sub_account_type`, so there is one method for both. Replaces the legacy
-      // `issuing.cards.create.*` methods. The cardholder is either an explicit `cardholder_id`
-      // or resolved from `assigned_user_data_uuid` via the user's linked cardholder (provision it
-      // first through `cardholders.*` — an unlinked user gets `400 CARDHOLDER_NOT_LINKED`).
-      // Issuing fee / initial top-up follow the group tariff; pass `currency_id` (and optionally
-      // `initial_topup`) whenever the tariff carries money. With `is_reverse: true`,
-      // `initial_topup` is what lands on the card and the fee and top-up commission come on top.
       getById: ({
         card_id,
       }: API.Frontend.Issuing.Cards.Get.Request): Promise<API.Frontend.Issuing.Cards.Get.Response> =>
@@ -130,6 +122,14 @@ export const frontend = {
           `/frontend/issuing/cards/${card_id}/transactions`,
           { params },
         ),
+      // Unified create — the backend routes to the balance or prepaid flow by the program's
+      // `sub_account_type`, so there is one method for both. Replaces the legacy
+      // `issuing.cards.create.*` methods. The cardholder is either an explicit `cardholder_id`
+      // or resolved from `assigned_user_data_uuid` via the user's linked cardholder (provision it
+      // first through `cardholders.*` — an unlinked user gets `400 CARDHOLDER_NOT_LINKED`).
+      // Issuing fee / initial top-up follow the group tariff; pass `currency_id` (and optionally
+      // `initial_topup`) whenever the tariff carries money. With `is_reverse: true`,
+      // `initial_topup` is what lands on the card and the fee and top-up commission come on top.
       create: (data: API.Frontend.Issuing.Cards.Create.Request): Promise<API.Frontend.Issuing.Cards.Create.Response> =>
         apiClientV1Frontend.postRequest<API.Frontend.Issuing.Cards.Create.Response>('/frontend/issuing/cards', {
           data,
