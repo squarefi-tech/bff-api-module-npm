@@ -2440,6 +2440,11 @@ export namespace API {
         to_currency: string;
         amount: number;
         is_reverse?: boolean;
+        /**
+         * The wallet the order would be for: the backend prices the quote at its owner's tariff, as the
+         * order is charged (on a tenant priced by tariff plans, at the wallet's plan).
+         */
+        wallet_id?: string;
         signal?: AbortSignal;
       }
 
@@ -2621,6 +2626,11 @@ export namespace API {
           amount: number;
           is_reverse: boolean;
           is_subtract: boolean;
+          /**
+           * The wallet the order would be for: the backend prices the quote at its owner's tariff, as the
+           * order is charged (on a tenant priced by tariff plans, at the wallet's plan).
+           */
+          wallet_id?: string;
           signal?: AbortSignal;
         }
 
