@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.76] - 2026-09-26
+
 ### Fixed
 
 - **`wallet_id` on the hand-written calc request types.** 1.36.75 regenerated the autogen types only, so `orders.v2.calc` (`API.Orders.V2.Calc.Request`) and `API.Orders.Calc.Request` still refused `wallet_id`, contrary to that release's note. Both now take `wallet_id?: string`: the quote is priced at the wallet owner's tariff, as the order is charged.
