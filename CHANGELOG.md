@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`wallet_id` on the calc requests.** `API.Orders.Frontend.Calc.Request` (`GET /frontend/orders/calc`) and the legacy `GET /orders/calc` / `GET /v2/orders/calc` query types take `wallet_id?: string`, regenerated from the dev spec (base_backend#1717). With it, when the caller may act on the wallet, the quote is priced at the wallet owner's tariff — the one its orders are charged at — so a member of a shared wallet is quoted what is debited; on a tenant priced by tariff plans, at the wallet's plan. Clients that widened the request type by hand for it can drop that.
+
 ## [1.36.74] - 2026-09-26
 
 ### Added
