@@ -3152,13 +3152,35 @@ export interface paths {
                         vendor_user_id?: string;
                         /**
                          * @description TOTAL wallet debit asked for at issuance: the issuing fee is subtracted and
-                         *     the remainder lands on the card's sub-account. Accepted only on group tariffs
-                         *     that already mandate an initial top-up (`initial_topup_usd > 0`); otherwise the
-                         *     group amount stands. Requires `currency_id`.
+                         *     the remainder, less the top-up commission, lands on the card's sub-account.
+                         *     When omitted, the group tariff's total applies, stated in the card's currency and
+                         *     converted into `currency_id` at the pair's rate. On a program whose cards open
+                         *     holding a mandatory minimum balance, what it pays toward the card after the
+                         *     issuing fee must be at least that balance — refused with
+                         *     `400 INITIAL_TOPUP_BELOW_OPENING_LOAD` otherwise, nothing charged. The top-up
+                         *     commission is not held against it: the card opens holding the minimum even when
+                         *     the commission takes the top-up a few cents under. Requires `currency_id`.
                          *
                          * @example 100
                          */
                         initial_topup?: number;
+                        /**
+                         * @description When `true`, `initial_topup` is the amount to land on the card, in the card's currency,
+                         *     instead of the total debit: the issuing fee and the top-up commission are charged on top.
+                         *     The commission is added to the amount, as with a reverse card deposit, so the card gets
+                         *     exactly `initial_topup`. The top-up debit is the `from_amount` of
+                         *     `GET /frontend/orders/calc?order_type=TRANSFER_CARD_SUBACCOUNT&is_reverse=true&amount=<initial_topup>`
+                         *     (from `currency_id` to the card's currency, with `wallet_id`); the issuing fee comes on top
+                         *     of it.
+                         *     What the tariff puts on the card at minimum (its minimum total less the issuing fee — 25
+                         *     on a 50 / 75 tariff) and a program's mandatory opening balance are held against the
+                         *     amount that lands. Needs `initial_topup` of at least 0.01; a boolean only, refused
+                         *     with `400` otherwise — also where the program does not bill issuance and the field
+                         *     is ignored.
+                         *
+                         * @default false
+                         */
+                        is_reverse?: boolean;
                         /**
                          * Format: uuid
                          * @description Wallet currency to debit for the issuing fee / initial top-up.
@@ -3216,6 +3238,12 @@ export interface paths {
                  *     - Missing program_id
                  *     - Missing required fields based on program type
                  *     - Unsupported program type
+                 *     - `INITIAL_TOPUP_BELOW_OPENING_LOAD` — `initial_topup` less the issuing fee is below the
+                 *       program's mandatory opening balance; the message names the total accepted at the current rate
+                 *     - `OPENING_LOAD_NOT_PAID` — the program's cards open holding a mandatory balance and
+                 *       this issuance charges nothing for it (issuance not billed here, or no issuance tariff
+                 *       for the wallet on the program), or the card spends from a sub-account, whose top-up
+                 *       funds the sub-account rather than the card
                  *      */
                 400: {
                     headers: {

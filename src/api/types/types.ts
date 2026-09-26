@@ -442,7 +442,14 @@ export namespace API {
         request_id: string;
         nick_name: string;
         wallet_id: string;
+        /** TOTAL wallet debit (fee + top-up) — or, with `is_reverse`, the amount to land on the card. */
         initial_topup?: number;
+        /**
+         * `initial_topup` is the amount to land on the card, in the card's currency; the issuing fee
+         * and the top-up commission are charged on top. Its cost is the `from_amount` of a reverse
+         * `TRANSFER_CARD_SUBACCOUNT` calc for that amount. Needs `initial_topup` of at least 0.01.
+         */
+        is_reverse?: boolean;
         currency_id?: string;
         user_data_id: string;
       }
@@ -1224,8 +1231,9 @@ export namespace API {
             /** Card assignee (`user_data.uuid`); their linked cardholder is used. */
             assigned_user_data_uuid?: string;
             /**
-             * TOTAL wallet debit at issuance (fee + card top-up). Accepted only on group
-             * tariffs that already mandate an initial top-up. Requires `currency_id`.
+             * TOTAL wallet debit at issuance (fee + card top-up), in `currency_id` — or, with
+             * `is_reverse`, the amount to land on the card, in the card's currency, with the fee
+             * and the top-up commission charged on top. Requires `currency_id`.
              */
             initial_topup?: number;
             /** Wallet currency to debit; required whenever the tariff has a fee or a top-up. */

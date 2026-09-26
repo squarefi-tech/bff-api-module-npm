@@ -1556,7 +1556,9 @@ export interface paths {
         /**
          * Create a new card
          * @deprecated
-         * @description Creates a new card for the user. Initial topup amount is now determined by user group settings, not by request parameters.
+         * @description Creates a new card for the user. The amount charged is `initial_topup` when sent — with
+         *     `is_reverse`, the fee plus what lands `initial_topup` on the card — otherwise the tariff's
+         *     default total. Without `is_reverse`, a tariff with no issuing fee charges nothing here.
          *     This endpoint is deprecated, please use `POST /api/issuing/cards` or `POST /frontend/issuing/cards` instead.
          *
          *     **Cardholder is required**: Every card must be associated with a cardholder.
@@ -1591,6 +1593,28 @@ export interface paths {
                          *
                          */
                         cardholder_id: string;
+                        /** @description TOTAL wallet debit at issuance, in the currency of `currency_id`: the issuing fee plus the
+                         *     amount to land on the card, from which the top-up commission is taken — unless
+                         *     `is_reverse` is set. Charged only on a group tariff with an issuing fee, unless `is_reverse`
+                         *     is set.
+                         *      */
+                        initial_topup?: number;
+                        /**
+                         * @description When `true`, `initial_topup` is the amount to land on the card, in the card's currency,
+                         *     instead of the total debit: the issuing fee and the top-up commission are charged on top.
+                         *     The commission is added to the amount, as with a reverse card deposit, so the card gets
+                         *     exactly `initial_topup`. The top-up debit is the `from_amount` of
+                         *     `GET /frontend/orders/calc?order_type=TRANSFER_CARD_SUBACCOUNT&is_reverse=true&amount=<initial_topup>`
+                         *     (from `currency_id` to the card's currency, with `wallet_id`); the issuing fee comes on top
+                         *     of it.
+                         *     What the tariff puts on the card at minimum (its minimum total less the issuing fee — 25
+                         *     on a 50 / 75 tariff) and a program's mandatory opening balance are held against the
+                         *     amount that lands. Needs `initial_topup` of at least 0.01; a boolean only, refused
+                         *     with `400` otherwise.
+                         *
+                         * @default false
+                         */
+                        is_reverse?: boolean;
                         /**
                          * Format: uuid
                          * @description Currency ID for card fees (required if card has issuing fee or initial topup)

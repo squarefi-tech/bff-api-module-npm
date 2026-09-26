@@ -7,7 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`is_reverse` on card creation.** `frontend.issuing.cards.create` (`POST /frontend/issuing/cards`, typed from the regenerated spec), the External `POST /api/issuing/cards` types and the legacy `API.Cards.Create.CommonRequest` (`POST /issuing/cards/create`) take `is_reverse?: boolean`. With it, `initial_topup` is the amount to land on the card, in the card's currency, and the issuing fee and the top-up commission are charged on top — so the card gets exactly that amount, and the cost of the top-up is the `from_amount` of one reverse `TRANSFER_CARD_SUBACCOUNT` calc. Without it `initial_topup` stays the total wallet debit (fee + top-up, commission taken out of it). Needs `initial_topup` of at least 0.01; the backend refuses anything but a boolean with `400`.
+- **`ui_branding` on the V2 system config** (`SystemConfigDto.ui_branding`, `UiBrandingEntity` with its identity, support and assets parts) — the tenant's front-end branding (SFI-2545), picked up by the same regeneration.
+
+### Changed
+
+- **Card-issuance docs brought up to the deployed spec.** The `initial_topup` descriptions on the three create routes now say what the amount is in each mode, and the create routes document the opening-balance refusals (`INITIAL_TOPUP_BELOW_OPENING_LOAD`, `OPENING_LOAD_NOT_PAID`); the Tenant card-create route gains its `400` response. The cardholder update description now says which fields reach the card vendor and which are stored locally only. Types only — no call changes.
+
 ## [1.36.72] - 2026-09-24
+
+### Added
+
+- **`UserDataEntity.is_onboarded` and `SystemConfigDto.enable_card_onboarding`** (regenerated from the dev spec, SFI-2388). They back the rule that a freshly registered user issues a card before reaching the wallet app: the frontend reads them together with the user's cards to decide whether to gate.
 
 ## [1.36.71] - 2026-09-24
 

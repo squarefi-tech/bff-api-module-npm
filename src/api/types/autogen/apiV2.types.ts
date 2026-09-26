@@ -2021,6 +2021,81 @@ export interface components {
             readonly fraud_and_security_url?: string | null;
             readonly consumer_protection_url?: string | null;
         };
+        UiBrandingIdentityEntity: {
+            readonly name?: string;
+            /** @description Installed-app label, at most 12 characters. */
+            readonly short_name?: string;
+            readonly seo_title?: string;
+            readonly seo_description?: string;
+        };
+        UiBrandingSupportEntity: {
+            /** @description https support link; absent = fall back to mailto. */
+            readonly url?: string;
+            readonly email?: string;
+        };
+        UiBrandingAssetsEntity: {
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly logo_light?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly logo_dark?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly mark_light?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly mark_dark?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly header_logo_light?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly header_logo_dark?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly loader_logo_light?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly loader_logo_dark?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly footer_logo_light?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly footer_logo_dark?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly card_logo?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly card_logo_pale?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly card_default_design?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly favicon?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly apple_touch?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly pwa_192?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly pwa_512?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly pwa_maskable_192?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly pwa_maskable_512?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly og_image?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly pdf_logo?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly cards_placeholder_light?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly cards_placeholder_dark?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly auth_background?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly sidebar_background_light?: string;
+            /** @description Public URL of the image in the tenant-branding bucket; absent = not set. */
+            readonly sidebar_background_dark?: string;
+        };
+        UiBrandingEntity: {
+            /** @enum {number} */
+            readonly version?: 1;
+            /** @description Key of the design preset committed in every frontend repo; a build with an unknown key fails. */
+            readonly preset?: string;
+            readonly identity?: components["schemas"]["UiBrandingIdentityEntity"];
+            readonly support?: components["schemas"]["UiBrandingSupportEntity"];
+            readonly assets?: components["schemas"]["UiBrandingAssetsEntity"];
+        };
         SupportedLocalesEntity: {
             default: string;
             supported: string[];
@@ -2071,6 +2146,7 @@ export interface components {
             readonly statement_branding?: components["schemas"]["StatementBrandingEntity"] | null;
             readonly mailing_data?: components["schemas"]["MailingDataEntity"] | null;
             readonly app_links?: components["schemas"]["AppLinksEntity"] | null;
+            readonly ui_branding?: components["schemas"]["UiBrandingEntity"] | null;
             /** @enum {string} */
             kyc_data_provider: "persona" | "sumsub";
             readonly supported_locales?: components["schemas"]["SupportedLocalesEntity"] | null;

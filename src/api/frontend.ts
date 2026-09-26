@@ -55,7 +55,8 @@ export const frontend = {
       // or resolved from `assigned_user_data_uuid` via the user's linked cardholder (provision it
       // first through `cardholders.*` — an unlinked user gets `400 CARDHOLDER_NOT_LINKED`).
       // Issuing fee / initial top-up follow the group tariff; pass `currency_id` (and optionally
-      // `initial_topup`) whenever the tariff carries money.
+      // `initial_topup`) whenever the tariff carries money. With `is_reverse: true`,
+      // `initial_topup` is what lands on the card and the fee and top-up commission come on top.
       getById: ({
         card_id,
       }: API.Frontend.Issuing.Cards.Get.Request): Promise<API.Frontend.Issuing.Cards.Get.Response> =>

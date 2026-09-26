@@ -6728,6 +6728,16 @@ export interface paths {
                         };
                     };
                 };
+                /** @description `OPENING_LOAD_NOT_PAID` — the program's cards open holding a mandatory balance, and an
+                 *     issuance through this API charges nothing for it (nor can a card spending from a
+                 *     sub-account), so the card is not issued.
+                 *      */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
             };
         };
         delete?: never;
