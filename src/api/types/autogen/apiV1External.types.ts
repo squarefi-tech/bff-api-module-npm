@@ -6195,7 +6195,7 @@ export interface paths {
          *
          *     Each returned item includes a `tenant_rates` object (`markup_percent`,
          *     `markup_fixed`, `mon_min_usd`) and may expose product-facing guardrails
-         *     such as `min_amount`, `max_amount`, and `first_party_only`.
+         *     such as `min_amount`, `max_amount`, `first_party_only` and `documents_required_from_amount`.
          *
          *     **Authentication**: x-api-key header required
          *
@@ -8686,6 +8686,11 @@ export interface components {
             max_amount?: number | null;
             /** @description Whether payouts for this order type are limited to the wallet owner's own account */
             first_party_only?: boolean;
+            /**
+             * @description Amount in the send currency from which an order of this type needs supporting documents (`documents`); `0` — always, `null` — never
+             * @example 20000
+             */
+            documents_required_from_amount?: number | null;
             /** @description Tenant-specific billing rates (present when tenant context is available) */
             tenant_rates?: {
                 /**

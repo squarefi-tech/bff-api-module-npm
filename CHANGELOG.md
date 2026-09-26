@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Reap Payments order types.** `OrderType` and `WalletTransactionRecordType` gain `RPP_SWIFT_OFFRAMP`, `RPP_SEPA_OFFRAMP`, `RPP_FPS_OFFRAMP` and `RPP_ACH_OFFRAMP`. The backend has served them, and the generated `OrderTypeId` has listed them, since the Reap Payments rail shipped; a client narrowing with the enum (`isOrderType`, `exchange.byOrderType`) could not name them. A consumer with an exhaustive `Record<OrderType, …>` or `Record<WalletTransactionRecordType, …>` has to add the four keys when it upgrades.
+- **`documents_required_from_amount` on the order type directory.** `API.Orders.V2.OrderTypes.OrderInfo` and `API.Orders.OrderTypes.OrderInfo` carry the amount in the send currency from which an order of that type needs supporting documents: `0` for always, `null` for never. Any number, `0` included, means documents are required from that amount; only `null` switches them off. It is optional because a backend without base_backend#1679 / #1680 does not send it, and a missing field means the same as `null`. The generated V1 types (`apiV1External`, `apiV1Frontend`, `apiV1Legacy`, `apiV1Tenant`) carry it too, regenerated from the dev spec.
+
 ## [1.36.73] - 2026-09-26
 
 ### Added

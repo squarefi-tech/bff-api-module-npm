@@ -7398,6 +7398,11 @@ export interface components {
             max_amount?: number | null;
             /** @description Whether payouts for this order type are limited to the wallet owner's own account */
             first_party_only?: boolean;
+            /**
+             * @description Amount in the send currency from which an order of this type needs supporting documents (`documents`); `0` — always, `null` — never
+             * @example 20000
+             */
+            documents_required_from_amount?: number | null;
             /** @description Associated KYC rails for this order type */
             order_types_kyc_rails?: {
                 /**
