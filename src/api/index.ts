@@ -10,6 +10,7 @@ import { list } from './list';
 import { massPayouts } from './mass-payouts';
 import { orders } from './orders';
 import { referrals } from './referrals';
+import { rfi } from './rfi';
 import { statements } from './statements';
 import { storage } from './storage';
 import { tenants } from './tenants';
@@ -31,6 +32,7 @@ type Api = {
   massPayouts: typeof massPayouts;
   orders: typeof orders;
   referrals: typeof referrals;
+  rfi: typeof rfi;
   statements: typeof statements;
   storage: typeof storage;
   tenants: typeof tenants;
@@ -53,6 +55,7 @@ export const squarefi_bff_api_client: Api = {
   massPayouts,
   orders,
   referrals,
+  rfi,
   statements,
   storage,
   tenants,

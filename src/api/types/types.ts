@@ -2191,6 +2191,61 @@ export namespace API {
       }
     }
   }
+  /**
+   * Requests for information (RFI, SFI-2280): compliance's questions about an account or its
+   * transactions, answered by the account's team with text and files.
+   *
+   * Every path is scoped by `wallet_id`, so each Request carries it. Responses are the frontend
+   * `{ success, data }` envelope as the spec declares it. Every `Rfi*` field is optional for now
+   * because the spec declares no `required`; the types tighten on the regeneration that adds it.
+   */
+  export namespace Rfi {
+    type CasesRoot = pathsV1Frontend['/frontend/rfi/{wallet_id}'];
+    type CaseRoot = pathsV1Frontend['/frontend/rfi/{wallet_id}/{case_id}'];
+    type CaseMessagesRoot = pathsV1Frontend['/frontend/rfi/{wallet_id}/{case_id}/messages'];
+    type CaseAttachmentRoot = pathsV1Frontend['/frontend/rfi/{wallet_id}/{case_id}/attachments/{attachment_id}'];
+
+    export type Case = componentsV1Frontend['schemas']['RfiCase'];
+    export type CaseDetail = componentsV1Frontend['schemas']['RfiCaseDetail'];
+    export type Message = componentsV1Frontend['schemas']['RfiMessage'];
+    export type Attachment = componentsV1Frontend['schemas']['RfiAttachment'];
+    export type Transaction = componentsV1Frontend['schemas']['RfiTransaction'];
+
+    export type CaseStatus = NonNullable<Case['status']>;
+    export type CaseType = NonNullable<Case['type']>;
+    export type MessageAuthor = NonNullable<Message['author']>;
+    /** The list's `status` filter. `open` = `action_required` + `awaiting_compliance`; no case has it. */
+    export type ListStatus = NonNullable<List.Request['status']>;
+    export type Summary = NonNullable<NonNullable<List.Response['data']>['summary']>;
+
+    export namespace List {
+      export type Request = CasesRoot['get']['parameters']['path'] &
+        NonNullable<CasesRoot['get']['parameters']['query']>;
+      export type Response = CasesRoot['get']['responses']['200']['content']['application/json'];
+    }
+
+    export namespace GetById {
+      export type Request = CaseRoot['get']['parameters']['path'];
+      export type Response = CaseRoot['get']['responses']['200']['content']['application/json'];
+    }
+
+    export namespace Reply {
+      // The spec types the multipart parts as binary strings; on the client they are the File
+      // objects to upload. `signal` and `timeout` go to axios for this call only.
+      export type Request = CaseMessagesRoot['post']['parameters']['path'] &
+        Omit<CaseMessagesRoot['post']['requestBody']['content']['multipart/form-data'], 'files'> & {
+          files?: File[];
+          signal?: AbortSignal;
+          timeout?: number;
+        };
+      export type Response = CaseMessagesRoot['post']['responses']['201']['content']['application/json'];
+    }
+
+    export namespace GetAttachmentLink {
+      export type Request = CaseAttachmentRoot['get']['parameters']['path'];
+      export type Response = CaseAttachmentRoot['get']['responses']['200']['content']['application/json'];
+    }
+  }
   export namespace Orders {
     export namespace Create {
       export namespace ByOrderType {
