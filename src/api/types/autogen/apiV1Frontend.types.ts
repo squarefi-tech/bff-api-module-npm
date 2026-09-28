@@ -1943,109 +1943,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/frontend/counterparty/destinations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Create destination
-         * @description counterparty_account_id in body. Caller must be owner or admin of the account's wallet and the wallet's KYC must be APPROVED; other members receive 403.
-         *
-         *     **Banking types**: banking_data required. `banking_data.address` (the bank address) is mandatory; `banking_data.beneficiary_address` (the recipient's own postal address, same shape) is optional — when present it must be complete (city, country_id, postcode, street1; state_id on US rails), is never overwritten by bank-directory enrichment, is exempt from the bank-country check, and payouts use it in place of the bank address.
-         *     **Crypto types**: crypto_data required
-         *     **Internal type**: internal_data required (target wallet on the same platform)
-         *
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": {
-                        /** Format: uuid */
-                        counterparty_account_id: string;
-                        /** @enum {string} */
-                        type: "ACH" | "RTP" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
-                        nickname?: string;
-                        banking_data?: Record<string, never>;
-                        crypto_data?: Record<string, never>;
-                        /** @description Required for type INTERNAL — points at the receiver wallet. */
-                        internal_data?: {
-                            /**
-                             * Format: uuid
-                             * @description Target (receiver) wallet uuid on the same platform.
-                             */
-                            wallet_id: string;
-                            /** @description Optional, reserved for future use. */
-                            description?: string;
-                        };
-                    };
-                };
-            };
-            responses: {
-                /** @description Created */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @example true */
-                            success: boolean;
-                            data: {
-                                destination: components["schemas"]["CounterpartyDestination"];
-                                /** @example Destination created successfully */
-                                message: string;
-                            };
-                        };
-                    };
-                };
-                /** @description Validation error (type-specific payload missing or invalid, target wallet inactive, or the address country contradicts the bank code country — error code BANK_COUNTRY_MISMATCH) */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Access denied, or (Clerk tenants) the second-factor verification is
-                 *     stale — `TWO_FACTOR_REVERIFICATION_REQUIRED`: re-verify and retry.
-                 *      */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Account not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/frontend/crypto_wallets/wallet/{wallet_id}": {
         parameters: {
             query?: never;
@@ -3847,6 +3744,71 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/frontend/issuing/cards/{card_id}/transactions/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download card transactions as CSV
+         * @description Every transaction on the card — vendor transactions and the card's top-ups
+         *     and withdrawals — newest first, with a running balance.
+         *
+         *     **Authentication**: Bearer token with x-tenant-id header required
+         *
+         *     **Access Control**: User must have access to the card's transactions
+         *
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Only transactions up to this moment (inclusive), ISO 8601 */
+                    to_date?: string;
+                };
+                header?: never;
+                path: {
+                    /** @description The ID of the card */
+                    card_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description CSV file with the card's transactions */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/csv": string;
+                    };
+                };
+                /** @description Invalid query parameter */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Access denied to this card */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/frontend/issuing/cards/{card_id}/limits": {
         parameters: {
             query?: never;
@@ -4543,6 +4505,77 @@ export interface paths {
                             };
                         };
                     };
+                };
+                /** @description Access denied to this sub-account */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/issuing/sub-accounts/{sub_account_id}/transactions/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download sub-account transactions as CSV
+         * @description Every transaction on the sub-account — vendor transactions, pending
+         *     authorizations and top-ups — newest first, with a running balance.
+         *
+         *     **Authentication**: Bearer token with x-tenant-id header required
+         *
+         *     **Access Control**: User must have access to the sub-account
+         *
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Only this card's transactions */
+                    card_id?: string;
+                    /** @description Only transactions with this status */
+                    status?: string;
+                    /** @description Only transactions from this moment (inclusive), ISO 8601 */
+                    from_date?: string;
+                    /** @description Only transactions up to this moment (inclusive), ISO 8601 */
+                    to_date?: string;
+                };
+                header?: never;
+                path: {
+                    /** @description The ID of the sub-account */
+                    sub_account_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description CSV file with the sub-account's transactions */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/csv": string;
+                    };
+                };
+                /** @description Invalid query parameter */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
                 };
                 /** @description Access denied to this sub-account */
                 403: {
@@ -10869,6 +10902,395 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/frontend/reports/{wallet_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the wallet's reports, newest first */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Comma-separated report types */
+                    type?: string;
+                    /** @description Comma-separated statuses (PENDING, GENERATING, READY, FAILED) */
+                    status?: string;
+                    created_from?: string;
+                    created_to?: string;
+                    offset?: number;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    /** @description Wallet the report belongs to */
+                    wallet_id: components["parameters"]["ReportWalletId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description One page of reports */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                items?: components["schemas"]["WalletReport"][];
+                                total?: number;
+                                offset?: number;
+                                limit?: number;
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid filter (VALIDATION_ERROR) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Ask for a report — it is generated in the background
+         * @description Stores the request and starts the generation; the answer comes back at once
+         *     with the report in `PENDING`. When it is ready the wallet's owner and admins
+         *     (and the requester) get a `REPORT_READY` in-app notification, and the wallet
+         *     channel receives `data.changed` with entity `WALLET_REPORTS` on every status change.
+         *
+         *     The same report (type, format and params) asked again while the first one is
+         *     still being generated returns that first report with 200 instead of starting
+         *     another. Up to 3 reports of a wallet are generated at once.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Wallet the report belongs to */
+                    wallet_id: components["parameters"]["ReportWalletId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        type: "TRANSACTION_STATEMENT" | "ACCOUNT_STATEMENT" | "ACCOUNT_CONFIRMATION";
+                        /**
+                         * @description CSV / XLSX for TRANSACTION_STATEMENT, PDF for ACCOUNT_STATEMENT and ACCOUNT_CONFIRMATION
+                         * @enum {string}
+                         */
+                        format: "CSV" | "XLSX" | "PDF";
+                        params: components["schemas"]["WalletReportParams"];
+                    };
+                };
+            };
+            responses: {
+                /** @description An identical report is already being generated — that one is returned */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["WalletReport"];
+                        };
+                    };
+                };
+                /** @description Generation started */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["WalletReport"];
+                        };
+                    };
+                };
+                /** @description Invalid body (VALIDATION_ERROR), a period that ends before it starts or a card period over 100 days (INVALID_REPORT_PARAMS), or a format the report is not offered in (REPORT_FORMAT_NOT_SUPPORTED) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not a member of the wallet, or KYC read access denied */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The card, sub-account or virtual account the report is about is not the wallet's (REPORT_SUBJECT_NOT_FOUND) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description 3 reports of the wallet are already being generated (REPORT_QUEUE_FULL) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description More than 20 report requests of the wallet within an hour (RATE_LIMIT_EXCEEDED) */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/reports/{wallet_id}/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get one report */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Wallet the report belongs to */
+                    wallet_id: components["parameters"]["ReportWalletId"];
+                    id: components["parameters"]["ReportId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The report */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["WalletReport"];
+                        };
+                    };
+                };
+                /** @description Not found in this wallet (REPORT_NOT_FOUND) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/reports/{wallet_id}/{id}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a short-lived download link to a ready report
+         * @description The link is valid for 2 minutes and downloads the file as an attachment. Ask for a new one on every download.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Wallet the report belongs to */
+                    wallet_id: components["parameters"]["ReportWalletId"];
+                    id: components["parameters"]["ReportId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The link */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /** Format: uri */
+                                url?: string;
+                                /** Format: date-time */
+                                expires_at?: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Not found in this wallet (REPORT_NOT_FOUND) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The report is not ready (REPORT_NOT_READY) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/reports/{wallet_id}/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generate a failed report again
+         * @description Starts the next attempt with the same parameters. A report is generated at most
+         *     3 times in total; after the 3rd failure it stays FAILED with `can_retry: false`.
+         *     If an identical report is already being generated, that one is returned with 200
+         *     and the failed one is left as it is.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Wallet the report belongs to */
+                    wallet_id: components["parameters"]["ReportWalletId"];
+                    id: components["parameters"]["ReportId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description An identical report is already being generated — that one is returned */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["WalletReport"];
+                        };
+                    };
+                };
+                /** @description Next attempt started */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["WalletReport"];
+                        };
+                    };
+                };
+                /** @description Not found in this wallet (REPORT_NOT_FOUND) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The report is not FAILED (INVALID_STATE), it already failed 3 times (REPORT_RETRY_LIMIT_REACHED), or 3 reports of the wallet are being generated (REPORT_QUEUE_FULL) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description More than 20 report requests of the wallet within an hour (RATE_LIMIT_EXCEEDED) */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/frontend/rfi/{wallet_id}": {
         parameters: {
             query?: never;
@@ -13678,6 +14100,93 @@ export interface paths {
                 };
                 /** @description Access denied to this wallet */
                 403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/wallets/{wallet_id}/statement-pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download wallet statement as PDF
+         * @description Account statement for the wallet: holder details, bank details and crypto
+         *     addresses, then transactions grouped by currency. Branding comes from the
+         *     wallet's tenant. Covers at most the 10,100 most recent transactions of the period.
+         *
+         *     **Authentication**: Bearer token with x-tenant-id header required
+         *
+         *     **Access Control**: User must have access to the wallet
+         *
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Start of the period (inclusive), ISO 8601 */
+                    from_date?: string;
+                    /** @description End of the period (inclusive), ISO 8601 */
+                    to_date?: string;
+                    /** @description Statement for this currency only; every currency when omitted */
+                    currency_uuid?: string;
+                    /** @description When false (default), dust transactions below threshold are hidden */
+                    show_low_balance?: boolean;
+                };
+                header?: never;
+                path: {
+                    /** @description The ID of the wallet */
+                    wallet_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description PDF statement file */
+                200: {
+                    headers: {
+                        "Content-Disposition"?: string;
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/pdf": string;
+                    };
+                };
+                /** @description Invalid query parameter */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Access denied to this wallet */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Wallet not found */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -17058,7 +17567,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            type: "DEPOSIT_RECEIVED" | "DEPOSIT_NOT_ACCEPTED" | "TRANSFER_RECEIVED" | "ORDER_STATUS_CHANGED" | "KYC_STATUS_CHANGED" | "ANNOUNCEMENT" | "SYSTEM_MESSAGE" | "MASS_PAYOUT_STATUS_CHANGED" | "CARD_OTP" | "RFI_REQUESTED" | "RFI_RESOLVED";
+            type: "DEPOSIT_RECEIVED" | "DEPOSIT_NOT_ACCEPTED" | "TRANSFER_RECEIVED" | "ORDER_STATUS_CHANGED" | "KYC_STATUS_CHANGED" | "ANNOUNCEMENT" | "SYSTEM_MESSAGE" | "MASS_PAYOUT_STATUS_CHANGED" | "CARD_OTP" | "RFI_REQUESTED" | "RFI_RESOLVED" | "REPORT_READY";
             /** @description Structured fact snapshot; the client renders the presentation. Shape depends on `type`; evolution is additive-only. */
             payload: Record<string, never>;
             /** Format: uuid */
@@ -17229,6 +17738,131 @@ export interface components {
             /** @description The report is sent to Telegram every month. Always false while not linked. */
             enabled?: boolean;
         };
+        /**
+         * Format: date
+         * @description First day of the period, UTC.
+         * @example 2026-09-01
+         */
+        ReportPeriodFrom: string;
+        /**
+         * Format: date
+         * @description Last day of the period (inclusive), UTC.
+         * @example 2026-09-24
+         */
+        ReportPeriodTo: string;
+        /** @description Transaction statement → Banking & crypto — the wallet's orders of a period. Formats CSV, XLSX. */
+        BankingCryptoStatementParams: {
+            /**
+             * @description Tab of the Transaction statement dialog — the feed the rows come from.
+             * @enum {string}
+             */
+            source: "BANKING_CRYPTO";
+            from: components["schemas"]["ReportPeriodFrom"];
+            to: components["schemas"]["ReportPeriodTo"];
+            /** @description Orders whose sent OR received currency is one of these. Empty or absent — every currency. */
+            currency_ids?: string[];
+            /** @description Order statuses to include; empty or absent — every status. Every status an unfiltered report can hold is accepted.
+             *     Design checkboxes: Pending → PENDING, Processing → PROCESSING, Complete → COMPLETE, Failed → FAILED,
+             *     Cancelled → CANCELED, Pending approval → NEW, Scheduled → EXPECTED, Refunded → REFUNDED. ERROR exists on legacy orders only.
+             *      */
+            statuses?: ("NEW" | "PENDING" | "PROCESSING" | "COMPLETE" | "FAILED" | "ERROR" | "CANCELED" | "EXPECTED" | "REFUNDED")[];
+        };
+        /** @description Transaction statement → Debit cards — the transactions of one or several cards of the wallet, one file. Formats CSV, XLSX. Period up to 100 days. */
+        DebitCardStatementParams: {
+            /** @enum {string} */
+            source: "DEBIT_CARD";
+            from: components["schemas"]["ReportPeriodFrom"];
+            to: components["schemas"]["ReportPeriodTo"];
+            /** @description Cards of the wallet (the id the card endpoints take), in the order their rows follow one another. A card of another wallet → 404 REPORT_SUBJECT_NOT_FOUND. */
+            card_ids: string[];
+        };
+        /** @description Transaction statement → Account cards — the transactions of a sub-account (card program) of the wallet. Formats CSV, XLSX. Period up to 100 days. */
+        AccountCardStatementParams: {
+            /** @enum {string} */
+            source: "ACCOUNT_CARD";
+            from: components["schemas"]["ReportPeriodFrom"];
+            to: components["schemas"]["ReportPeriodTo"];
+            /**
+             * Format: uuid
+             * @description Sub-account of the wallet. Another wallet's → 404 REPORT_SUBJECT_NOT_FOUND.
+             */
+            sub_account_id: string;
+            /** @description Transaction status to keep, as the sub-account CSV export takes it; null or absent — every status. */
+            status?: string | null;
+        };
+        /** @description Account statement — the wallet's transactions journal of a period, one page per currency, with a balance summary (Opening + Money in − Money out = Closing). Format PDF. */
+        AccountStatementParams: {
+            from: components["schemas"]["ReportPeriodFrom"];
+            to: components["schemas"]["ReportPeriodTo"];
+            /**
+             * Format: uuid
+             * @description One currency only; null or absent — every currency of the wallet.
+             */
+            crypto_id?: string | null;
+            /**
+             * @description Show dust transactions (is_threshold_amount) in the table too. The summary counts them either way.
+             * @default false
+             */
+            show_low_balance: boolean;
+        };
+        /** @description Account details — the bank-details letter of a virtual account of the wallet. Format PDF. */
+        AccountConfirmationParams: {
+            /**
+             * Format: uuid
+             * @description Virtual account of the wallet. Another wallet's → 404 REPORT_SUBJECT_NOT_FOUND.
+             */
+            virtual_account_id: string;
+            /**
+             * @description Every deposit-enabled account of the wallet's KYC entity, not only this one.
+             * @default false
+             */
+            all_accounts: boolean;
+        };
+        /** @description Params by type (and params.source for TRANSACTION_STATEMENT). The same shape comes back in the report. */
+        WalletReportParams: components["schemas"]["BankingCryptoStatementParams"] | components["schemas"]["DebitCardStatementParams"] | components["schemas"]["AccountCardStatementParams"] | components["schemas"]["AccountStatementParams"] | components["schemas"]["AccountConfirmationParams"];
+        WalletReport: {
+            /** Format: uuid */
+            id?: string;
+            /** @enum {string} */
+            type?: "TRANSACTION_STATEMENT" | "ACCOUNT_STATEMENT" | "ACCOUNT_CONFIRMATION";
+            /**
+             * @description CSV / XLSX for TRANSACTION_STATEMENT, PDF for ACCOUNT_STATEMENT and ACCOUNT_CONFIRMATION
+             * @enum {string}
+             */
+            format?: "CSV" | "XLSX" | "PDF";
+            /**
+             * @description PENDING and GENERATING are shown as "Generating"; only READY can be downloaded.
+             * @enum {string}
+             */
+            status?: "PENDING" | "GENERATING" | "READY" | "FAILED";
+            params?: components["schemas"]["WalletReportParams"];
+            /**
+             * @description TIMEOUT — the attempt was still generating 30 minutes after it was queued; it is failed on the wallet's next report request.
+             * @enum {string|null}
+             */
+            failure_code?: "GENERATION_ERROR" | "QUEUE_ERROR" | "TIMEOUT" | null;
+            /** @description Generation attempt. A report is generated at most 3 times in total. */
+            attempt?: number;
+            /** @description FAILED with an attempt left — show the retry button. false after the 3rd failure. */
+            can_retry?: boolean;
+            /** @description Present when READY. */
+            file?: {
+                /**
+                 * @description What the report is and its period (transaction-statement-<source>_<from>_<to>, account-statement_<from>_<to>, account-details_<day>); the download link saves the file under this name.
+                 * @example transaction-statement-banking-crypto_2026-09-01_2026-09-24.xlsx
+                 */
+                name?: string;
+                content_type?: string;
+                size_bytes?: number;
+                row_count?: number;
+            } | null;
+            /** Format: uuid */
+            requested_by?: string | null;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            completed_at?: string | null;
+        };
         RfiCase: {
             /** Format: uuid */
             id?: string;
@@ -17382,6 +18016,9 @@ export interface components {
         MassPayoutWalletId: string;
         MassPayoutId: string;
         MassPayoutTemplateId: string;
+        /** @description Wallet the report belongs to */
+        ReportWalletId: string;
+        ReportId: string;
         /** @description The account the requests are about. Requests and their conversations are kept per account. */
         RfiWalletId: string;
         RfiCaseId: string;

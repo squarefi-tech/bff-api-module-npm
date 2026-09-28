@@ -22,6 +22,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - The spec asks for the `admin` role to reply, but a reply from the wallet `owner` is accepted too (`201`).
   - The `400`, `409` and `429` bodies are untyped in the spec; the error code is in the response's `error.code` — `VALIDATION_ERROR`, `UNSUPPORTED_FILE_TYPE`, `INVALID_REQUEST` or `RFI_CLOSED`. An oversized file or an eleventh file answers `INVALID_REQUEST`, not the `FILE_TOO_LARGE` / `VALIDATION_ERROR` the spec names.
 
+## [1.36.77] - 2026-09-28
+
+### Fixed
+
+- **`API.Orders.V2.Create.ByOrderType.INTERNAL_TRANSFER` no longer depends on the legacy spec publishing its route.** The dev Legacy spec stopped publishing `POST /v2/orders/TRANSFER_INTERNAL` (with 47 other legacy paths, below), and the type was derived from it, so the build broke on regeneration — and with it every commit to this repo, since the pre-commit hook regenerates and builds. The type is now declared by hand with the shape the route was last published with: it is unchanged for consumers, and `orders.v2.create.byOrderType.TRANSFER_INTERNAL` still posts to the same route. The frontend spec's `POST /frontend/orders/TRANSFER_INTERNAL` could not stand in: its body has no `is_reverse` or `documents`, and it declares no response body.
+
+### Changed
+
+- **Regenerated the V1 type files from the dev specs.** No `API.*` type other than `INTERNAL_TRANSFER` reads from what changed, and no client method changes.
+  - Legacy: 48 of its 79 paths are no longer published, with 19 schemas — among them `/auth/me`, `/chains`, `/countries`, `/crypto*`, `/wallets/*`, `/virtual_account/*`, most of `/v2/orders/*` and several `/orders/*` and `/issuing/*` routes. The SDK methods that call them keep doing so; the spec change alone does not say whether the backend still serves them: `orders.v2.create.byOrderType` (`TRANSFER_INTERNAL`, `OMNIBUS_CRYPTO_TRANSFER`, `SEGREGATED_CRYPTO_TRANSFER`, `RN_CARDS_OFFRAMP`, the `BRL_*` and `DLS_*` off-ramps), `orders.v2.calc`, `orders.v2.list.csv.getByWalletUuid`, `orders.create.byOrderType` (`EXCHANGE_OMNI`, `WITHDRAW_CARD_SUBACCOUNT`), `issuing.cards.sensitiveData`, `issuing.cards.limits.update`, `issuing.sub_accounts.getByUuid` and `virtualAccounts.*`. Three legacy routes stay but are marked deprecated in favour of the new frontend routes below: `GET /wallets/transactions/{wallet_uuid}/statement-pdf` (`statements.pdfByWalletUuid`), `GET /issuing/transactions/csv` and `GET /issuing/sub_account/{id}/transactions/csv` (`issuing.transactions.csv.*`).
+  - Frontend: new routes, types only — no client methods wrap them yet: wallet reports (`/frontend/reports/{wallet_id}`, `/{id}`, `/{id}/download`, `/{id}/retry`, with `WalletReport` and the report parameter schemas), `GET /frontend/issuing/cards/{card_id}/transactions/csv`, `GET /frontend/issuing/sub-accounts/{sub_account_id}/transactions/csv` and `GET /frontend/wallets/{wallet_id}/statement-pdf`. The notification `type` gains `REPORT_READY`.
+  - `POST /frontend/counterparty/destinations` (create destination) is no longer published, and neither is its twin in the api and admin specs; no replacement route is documented. `counterparties.destinations.create` is unchanged and still calls it.
+
 ## [1.36.76] - 2026-09-26
 
 ### Fixed
