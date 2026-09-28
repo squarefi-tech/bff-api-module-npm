@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`squarefi_bff_api_client.rfi` — compliance requests for information (SFI-2280).** The `/frontend/rfi/*` paths and the `Rfi*` schemas have been in the generated types since 1.36.67 but were reachable from nowhere: there was no `API.*` namespace, no client method, and the package `exports` map is `"."` only, so a consumer could not deep-import the autogen types either. Four methods, all on `apiClientV1Frontend`, each resolving to the `{ success, data }` envelope as it comes. As 1.36.67 noted, the routes are merged to the backend `dev` branch only, so production answers `404` until the backend merges RFI to `main`.
+  - `list({ wallet_id, status?, order_uuid?, limit?, offset? })` — `GET /frontend/rfi/{wallet_id}`: the account's requests, newest first, with `summary`, the open-request counters for the home-screen banner (`action_required`, `overdue`, `awaiting_compliance`, `next_due_at`), counted regardless of paging. `status: 'open'` means `action_required` plus `awaiting_compliance`; `order_uuid` narrows the page to the requests covering one transaction.
+  - `getById({ wallet_id, case_id })` — `GET /frontend/rfi/{wallet_id}/{case_id}`: the request with its conversation (oldest first), the transactions it covers and `can_reply`.
+  - `reply({ wallet_id, case_id, body?, files?, signal?, timeout? })` — `POST /frontend/rfi/{wallet_id}/{case_id}/messages` as `multipart/form-data`, with `Content-Type` left to the browser. `body` is sent only when non-empty, and each file is its own part named `files` (not `files[]`). Answers `201` with the stored message and moves the request to `awaiting_compliance`. `signal` and `timeout` go to axios for this call: the client's 60-second default may not cover a reply carrying up to 10 files of 20 MB.
+  - `getAttachmentLink({ wallet_id, case_id, attachment_id })` — `GET /frontend/rfi/{wallet_id}/{case_id}/attachments/{attachment_id}`: a signed link to one file of the conversation, valid for `expires_in` seconds (about 120) — open it right away and do not store it.
+- **`API.Rfi` types**, all derived from the generated spec — no hand-written fields. Operations mirror the client (`List`, `GetById`, `Reply`, `GetAttachmentLink`), and the schemas are exported as `Case`, `CaseDetail`, `Message`, `Attachment` and `Transaction`. The unions are read off the spec: `CaseStatus` (`action_required | awaiting_compliance | closed`), `CaseType` (`onboarding | transaction | ongoing`), `MessageAuthor` (`compliance | client`) and `ListStatus`, the list's `status` filter, which adds `open`; `Summary` is the list's counter object. `Reply.Request` takes `files` as `File[]` — the spec types the multipart parts as binary strings — plus `signal` and `timeout`. Every `Rfi*` field is optional for now because the spec declares no `required`; the backend adds it in SFI-2612, and the types tighten with the regeneration that picks it up.
+- **RFI behaviour observed on the dev stand on 2026-09-23:**
+  - `list` without `status` returns every request, closed ones included.
+  - `limit` runs from 1 to 100 and defaults to 20.
+  - A reply takes up to 10 files of 20 MB each (PDF, JPEG, PNG, WebP, TXT, DOCX, XLSX) and up to 20,000 characters of text, and needs at least one of the two.
+  - The spec asks for the `admin` role to reply, but a reply from the wallet `owner` is accepted too (`201`).
+  - The `400`, `409` and `429` bodies are untyped in the spec; the error code is in the response's `error.code` — `VALIDATION_ERROR`, `UNSUPPORTED_FILE_TYPE`, `INVALID_REQUEST` or `RFI_CLOSED`. An oversized file or an eleventh file answers `INVALID_REQUEST`, not the `FILE_TOO_LARGE` / `VALIDATION_ERROR` the spec names.
+
 ## [1.36.76] - 2026-09-26
 
 ### Fixed
