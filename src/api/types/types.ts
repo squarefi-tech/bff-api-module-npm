@@ -2796,11 +2796,44 @@ export namespace API {
         }
 
         export namespace ByOrderType {
+          // The legacy spec no longer publishes POST /v2/orders/TRANSFER_INTERNAL, so the shape it was
+          // last published with is declared by hand. The frontend twin (/frontend/orders/TRANSFER_INTERNAL)
+          // cannot stand in: its body has no `is_reverse` / `documents`, and its spec declares no response.
           export namespace INTERNAL_TRANSFER {
-            export type Request =
-              pathsV1Legacy['/v2/orders/TRANSFER_INTERNAL']['post']['requestBody']['content']['application/json'];
-            export type Response =
-              pathsV1Legacy['/v2/orders/TRANSFER_INTERNAL']['post']['responses']['200']['content']['application/json'];
+            export type Request = {
+              wallet_id: string;
+              from_currency_id: string;
+              /** A counterparty destination of type `INTERNAL`, pointing at the receiving wallet. */
+              counterparty_destination_id: string;
+              amount: number;
+              request_id: string;
+              is_reverse?: boolean;
+              documents?: { url: string; description?: string | null }[];
+            };
+            export type Response = {
+              id?: string;
+              order_uuid?: string;
+              wallet_uuid?: string;
+              from_uuid?: string;
+              to_uuid?: string;
+              amount_from?: number;
+              amount_to?: number;
+              order_type?: string;
+              status?: string;
+              created_at?: string;
+              meta?: {
+                meta_type?: string;
+                from_wallet_uuid?: string;
+                to_wallet_uuid?: string;
+                transaction_amount?: number;
+                transaction_amount_currency?: string;
+                billing_amount?: number;
+                billing_amount_currency?: string;
+                exchange_rate?: number;
+                network_fee?: number;
+                network_fee_currency?: string | null;
+              };
+            };
           }
 
           export namespace HIFI_WIRE_ONRAMP {
