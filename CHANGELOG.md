@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.78] - 2026-09-28
+
 ### Added
 
 - **`squarefi_bff_api_client.rfi` — compliance requests for information (SFI-2280).** The `/frontend/rfi/*` paths and the `Rfi*` schemas have been in the generated types since 1.36.67 but were reachable from nowhere: there was no `API.*` namespace, no client method, and the package `exports` map is `"."` only, so a consumer could not deep-import the autogen types either. Four methods, all on `apiClientV1Frontend`, each resolving to the `{ success, data }` envelope as it comes. As 1.36.67 noted, the routes are merged to the backend `dev` branch only, so production answers `404` until the backend merges RFI to `main`.
