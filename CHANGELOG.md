@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.77] - 2026-09-28
+
 ### Fixed
 
 - **`API.Orders.V2.Create.ByOrderType.INTERNAL_TRANSFER` no longer depends on the legacy spec publishing its route.** The dev Legacy spec stopped publishing `POST /v2/orders/TRANSFER_INTERNAL` (with 47 other legacy paths, below), and the type was derived from it, so the build broke on regeneration — and with it every commit to this repo, since the pre-commit hook regenerates and builds. The type is now declared by hand with the shape the route was last published with: it is unchanged for consumers, and `orders.v2.create.byOrderType.TRANSFER_INTERNAL` still posts to the same route. The frontend spec's `POST /frontend/orders/TRANSFER_INTERNAL` could not stand in: its body has no `is_reverse` or `documents`, and it declares no response body.
