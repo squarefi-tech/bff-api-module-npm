@@ -154,7 +154,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **`OrderMeta.billing_amount_currency` is no longer documented as a uuid.** On L2F off-ramps it holds an ISO code (`EUR`), on BC/DLS on-ramps the destination currency; the type was already `string`, only the description changed. Read the debited currency from the order's `from_uuid`.
+- **`OrderMeta.billing_amount_currency` is no longer documented as a uuid.** On `L2F_*` off-ramps it holds an ISO code (`EUR`), on `BC1_*`/`BC3_*`/`DLS_*` on-ramps the destination currency; the type was already `string`, only the description changed. Read the debited currency from the order's `from_uuid`.
 
 ## [1.36.67] - 2026-09-22
 
@@ -357,7 +357,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **The retired L2F rail no longer breaks the build.** The spec renamed `FrontendL2FOrderRequest` to `FrontendFiatWithdrawalRequest` (identical shape; the `L2F_*` order-type ids are historical and can no longer create orders), so the six `API.Orders.Create.ByOrderType.*` withdrawal aliases — `Wire`, `Ach`, `Sepa`, `Swift`, `Chaps`, `Fps` — now point at the new schema name. Public type names and shapes are unchanged.
+- **The retired `L2F_*` rail no longer breaks the build.** The spec renamed `FrontendL2FOrderRequest` to `FrontendFiatWithdrawalRequest` (identical shape; the `L2F_*` order-type ids are historical and can no longer create orders), so the six `API.Orders.Create.ByOrderType.*` withdrawal aliases — `Wire`, `Ach`, `Sepa`, `Swift`, `Chaps`, `Fps` — now point at the new schema name. Public type names and shapes are unchanged.
 
 ## [1.36.51] - 2026-08-21
 
@@ -496,7 +496,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **16 order type ids the `order_types` table already carried.** `OrderType` and `WalletTransactionRecordType` gained `BC1_SEPA_ONRAMP`/`OFFRAMP`, `BC1_SWIFT_ONRAMP`/`OFFRAMP`, `BC3_SEPA_ONRAMP`/`OFFRAMP`, `NARVI_SEPA_ONRAMP`/`OFFRAMP`, `EXCHANGE_OMNI_ONRAMP`/`OFFRAMP`/`CRYPTO`, `CARD_AUTHORIZATION`, `CARD_AUTH_REFUND`, `REFUND_CARD_PREPAID`, `REFUND_CARD_SUBACCOUNT` and `ADJUSTMENT`. Without them consumers fell back to raw ids for orders that already exist (`CARD_AUTHORIZATION`, `CARD_AUTH_REFUND`, `ADJUSTMENT`) and could not route the rails configured on virtual account programs (BC1/BC3, NARVI). Nothing was removed — ids no longer in the table still have historical orders.
+- **16 order type ids the `order_types` table already carried.** `OrderType` and `WalletTransactionRecordType` gained `BC1_SEPA_ONRAMP`/`OFFRAMP`, `BC1_SWIFT_ONRAMP`/`OFFRAMP`, `BC3_SEPA_ONRAMP`/`OFFRAMP`, `NARVI_SEPA_ONRAMP`/`OFFRAMP`, `EXCHANGE_OMNI_ONRAMP`/`OFFRAMP`/`CRYPTO`, `CARD_AUTHORIZATION`, `CARD_AUTH_REFUND`, `REFUND_CARD_PREPAID`, `REFUND_CARD_SUBACCOUNT` and `ADJUSTMENT`. Without them consumers fell back to raw ids for orders that already exist (`CARD_AUTHORIZATION`, `CARD_AUTH_REFUND`, `ADJUSTMENT`) and could not route the rails configured on virtual account programs (`BC1_*`, `BC3_*`, `NARVI_*`). Nothing was removed — ids no longer in the table still have historical orders.
 - **`RTP` and `CARD` payment methods** on `OrderTypePaymentMethod` and `API.Orders.V2.OrderTypes.PaymentMethod`; both were already in use by the table and the API docs.
 
 ### Changed
@@ -831,7 +831,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added new L2F and CARD transaction enum values to order and transaction types
+- Added new `L2F_*` and `CARD_*` transaction enum values to order and transaction types
 - Introduced utility types for union subset checks and aligned API request/response types accordingly
 
 ## [1.34.22] - 2026-05-12
