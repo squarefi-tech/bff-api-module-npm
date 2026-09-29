@@ -2230,8 +2230,7 @@ export namespace API {
    * transactions, answered by the account's team with text and files.
    *
    * Every path is scoped by `wallet_id`, so each Request carries it. Responses are the frontend
-   * `{ success, data }` envelope as the spec declares it. Every `Rfi*` field is optional for now
-   * because the spec declares no `required`; the types tighten on the regeneration that adds it.
+   * `{ success, data }` envelope as the spec declares it.
    */
   export namespace Rfi {
     type CasesRoot = pathsV1Frontend['/frontend/rfi/{wallet_id}'];
@@ -2245,12 +2244,12 @@ export namespace API {
     export type Attachment = componentsV1Frontend['schemas']['RfiAttachment'];
     export type Transaction = componentsV1Frontend['schemas']['RfiTransaction'];
 
-    export type CaseStatus = NonNullable<Case['status']>;
-    export type CaseType = NonNullable<Case['type']>;
-    export type MessageAuthor = NonNullable<Message['author']>;
+    export type CaseStatus = Case['status'];
+    export type CaseType = Case['type'];
+    export type MessageAuthor = Message['author'];
     /** The list's `status` filter. `open` = `action_required` + `awaiting_compliance`; no case has it. */
     export type ListStatus = NonNullable<List.Request['status']>;
-    export type Summary = NonNullable<NonNullable<List.Response['data']>['summary']>;
+    export type Summary = List.Response['data']['summary'];
 
     export namespace List {
       export type Request = CasesRoot['get']['parameters']['path'] &
@@ -3110,13 +3109,20 @@ export namespace API {
            * is refused with 400.
            */
           export type OrderListMassPayoutFilter = Record<'mass_payout_id', string>;
+          /**
+           * Narrows the feed to the orders a compliance request covers — the same ones as
+           * `transactions` in the request's detail, closed requests included. A single uuid only
+           * (not an array); a non-uuid value is refused with 400.
+           */
+          export type OrderListRfiCaseFilter = Record<'rfi_case_id', string>;
 
           export type OrderListFilter =
             | OrderListStatusFilter
             | OrderListOrderTypeFilter
             | OrderListFromUuidFilter
             | OrderListToUuidFilter
-            | OrderListMassPayoutFilter;
+            | OrderListMassPayoutFilter
+            | OrderListRfiCaseFilter;
           export interface Request {
             wallet_uuid: string;
             offset?: number;

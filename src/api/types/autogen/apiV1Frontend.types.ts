@@ -9639,6 +9639,13 @@ export interface paths {
                      *     Besides order columns it accepts `mass_payout_id` (uuid), which narrows the
                      *     result to the orders of one mass payout batch — the same batch reported by
                      *     the `mass_payout_id` field of each order. A non-uuid value is rejected with 400.
+                     *
+                     *     It also accepts `rfi_case_id` (uuid), e.g. `[{"rfi_case_id":"<uuid>"}]`: only the
+                     *     orders a compliance request covers — the same ones as `transactions` of
+                     *     `GET /frontend/rfi/{wallet_id}/{case_id}`, closed requests included; dust orders
+                     *     among them show only with `show_low_balance=true`, as everywhere in this list. It
+                     *     combines with the other filters and the dates. A request of another account, or an
+                     *     unknown id, gives an empty result; a non-uuid value is rejected with 400.
                      *      */
                     filters?: string;
                     date_from?: string;
@@ -9666,6 +9673,15 @@ export interface paths {
                             data: components["schemas"]["Order"][];
                             pagination: components["schemas"]["PaginationResponse"];
                         };
+                    };
+                };
+                /** @description `INVALID_REQUEST` — `filters` is not a JSON array, or `mass_payout_id` / `rfi_case_id` is not a uuid */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
                 /** @description Access denied to wallet */
@@ -9710,6 +9726,13 @@ export interface paths {
                      *     Besides order columns it accepts `mass_payout_id` (uuid), which narrows the
                      *     result to the orders of one mass payout batch — the same batch reported by
                      *     the `mass_payout_id` field of each order. A non-uuid value is rejected with 400.
+                     *
+                     *     It also accepts `rfi_case_id` (uuid), e.g. `[{"rfi_case_id":"<uuid>"}]`: only the
+                     *     orders a compliance request covers — the same ones as `transactions` of
+                     *     `GET /frontend/rfi/{wallet_id}/{case_id}`, closed requests included; dust orders
+                     *     among them show only with `show_low_balance=true`, as everywhere in this list. It
+                     *     combines with the other filters and the dates. A request of another account, or an
+                     *     unknown id, gives an empty result; a non-uuid value is rejected with 400.
                      *      */
                     filters?: string;
                     /** @description If `true`, includes dust orders (amount below render threshold for either currency). Defaults to `false` — dust orders are hidden. */
@@ -9730,6 +9753,15 @@ export interface paths {
                     };
                     content: {
                         "text/csv": string;
+                    };
+                };
+                /** @description `INVALID_REQUEST` — `filters` is not a JSON array, or `mass_payout_id` / `rfi_case_id` is not a uuid */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
                 /** @description Access denied to wallet */
@@ -11305,11 +11337,15 @@ export interface paths {
         };
         /**
          * List compliance requests (RFI) of an account, with the banner counters
-         * @description Requests for information compliance sent about this account, newest first. `summary`
-         *     counts every open request regardless of paging — use it for the home-screen banner:
-         *     `action_required > 0` shows it, `overdue > 0` turns it red, `next_due_at` is the
-         *     nearest deadline. Any wallet member except the scoped `user` role may read.
-         *     Refresh on the realtime `data.changed` hint with entity `WALLET_RFI`.
+         * @description Requests for information compliance sent about this account, newest first. RFI in
+         *     the app is being rolled out per workspace: while a workspace still works RFI by
+         *     email, the list is empty, `summary` is all zeros and every request answers 404 —
+         *     its requests stay in the client's mailbox. `summary` counts every open request regardless of paging — use it for the
+         *     home-screen banner: `action_required > 0` shows it, `overdue > 0` turns it red,
+         *     `next_due_at` is the nearest deadline. Any wallet member except the scoped `user` role
+         *     may read. Refresh on the realtime `data.changed` hint with entity `WALLET_RFI`; a new
+         *     question, a new message from compliance and the closing also arrive as the
+         *     `RFI_REQUESTED` / `RFI_RESOLVED` notifications (in-app, push, email).
          *
          */
         get: {
@@ -11319,6 +11355,7 @@ export interface paths {
                     status?: "open" | "action_required" | "awaiting_compliance" | "closed";
                     /** @description Only the requests covering this transaction — what the transaction screen asks by to decide whether to show "compliance has questions". A transaction of another account, or one no request covers, returns an empty page. */
                     order_uuid?: string;
+                    /** @description Page size, from 1 to 100; 20 when omitted. */
                     limit?: number;
                     offset?: number;
                 };
@@ -11339,24 +11376,41 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @example true */
-                            success?: boolean;
-                            data?: {
-                                summary?: {
-                                    action_required?: number;
-                                    overdue?: number;
-                                    awaiting_compliance?: number;
+                            success: boolean;
+                            data: {
+                                summary: {
+                                    action_required: number;
+                                    overdue: number;
+                                    awaiting_compliance: number;
                                     /** Format: date-time */
-                                    next_due_at?: string | null;
+                                    next_due_at: string | null;
                                 };
-                                items?: components["schemas"]["RfiCase"][];
-                                total?: number;
-                                limit?: number;
-                                offset?: number;
+                                items: components["schemas"]["RfiCase"][];
+                                total: number;
+                                limit: number;
+                                offset: number;
                             };
                         };
                     };
                 };
-                403: components["responses"]["ForbiddenError"];
+                /** @description `VALIDATION_ERROR` — `limit` outside 1–100, a negative `offset`, an unknown `status` */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `ACCESS_DENIED` — not a member of this account */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
@@ -11377,7 +11431,8 @@ export interface paths {
         /**
          * Get a compliance request with its conversation and covered transactions
          * @description The conversation holds compliance's questions and the client's answers, oldest first.
-         *     A request of another account answers 404.
+         *     A request of another account answers 404, and so does every request of a workspace
+         *     that still works RFI by email.
          *
          */
         get: {
@@ -11401,12 +11456,38 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @example true */
-                            success?: boolean;
-                            data?: components["schemas"]["RfiCaseDetail"];
+                            success: boolean;
+                            data: components["schemas"]["RfiCaseDetail"];
                         };
                     };
                 };
-                404: components["responses"]["NotFoundError"];
+                /** @description `VALIDATION_ERROR` — `case_id` is not a UUID */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `ACCESS_DENIED` — not a member of this account */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `NOT_FOUND` — no such request on this account */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
@@ -11428,10 +11509,18 @@ export interface paths {
         put?: never;
         /**
          * Answer a compliance request
-         * @description `multipart/form-data` with a `body` text field and up to 10 files under `files`
-         *     (PDF, JPEG, PNG, WebP, TXT, DOCX, XLSX; 20 MB each). At least one of the two is required.
+         * @description `multipart/form-data` with a `body` text field (up to 20 000 characters) and up to 10
+         *     files under `files` (PDF, JPEG, PNG, WebP, TXT, DOCX, XLSX; 20 MB each). At least one
+         *     of the two is required.
+         *
+         *     Each file is checked by its content, not by the `Content-Type` the browser sends: the
+         *     content must be one of these formats and the file name must end in its extension
+         *     (`.pdf`, `.jpg`/`.jpeg`, `.png`, `.webp`, `.txt`, `.docx`, `.xlsx`). The file is stored
+         *     under the type its content proves.
+         *
          *     The request moves to `awaiting_compliance`; answering again while compliance reviews is
-         *     allowed, and compliance may ask further rounds. Requires the `admin` role on the wallet.
+         *     allowed, and compliance may ask further rounds. Requires the `owner` or `admin` role on the
+         *     wallet — an `auditor` reads only (`can_reply` is false for them).
          *     Do not set `Content-Type` manually — the browser adds the multipart boundary.
          *
          */
@@ -11449,6 +11538,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "multipart/form-data": {
+                        /** @description The answer, up to 20 000 characters */
                         body?: string;
                         files?: string[];
                     };
@@ -11463,32 +11553,59 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @example true */
-                            success?: boolean;
-                            data?: components["schemas"]["RfiMessage"];
+                            success: boolean;
+                            data: components["schemas"]["RfiMessage"];
                         };
                     };
                 };
-                /** @description `VALIDATION_ERROR` (empty answer, too many files), `FILE_TOO_LARGE`, `UNSUPPORTED_FILE_TYPE` or `INVALID_REQUEST` (malformed multipart) */
+                /** @description - `VALIDATION_ERROR` — no text and no files, more than 10 files, text over 20 000 characters, an empty file, `case_id` not a UUID
+                 *     - `FILE_TOO_LARGE` — a file over 20 MB
+                 *     - `UNSUPPORTED_FILE_TYPE` — a file whose content is not one of the formats, or does not match its name's extension
+                 *     - `INVALID_REQUEST` — malformed multipart, or files under a field other than `files`
+                 *      */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
-                404: components["responses"]["NotFoundError"];
+                /** @description `ACCESS_DENIED` — not a member of this account, or a member who only reads (`auditor`); `can_reply` in the detail is false for them */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `NOT_FOUND` — no such request on this account */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
                 /** @description `RFI_CLOSED` — the request no longer accepts replies */
                 409: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
-                /** @description Too many replies */
+                /** @description `RATE_LIMIT_EXCEEDED` — more than 20 replies a minute */
                 429: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -11528,16 +11645,42 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @example true */
-                            success?: boolean;
-                            data?: {
-                                url?: string;
+                            success: boolean;
+                            data: {
+                                url: string;
                                 /** @example 120 */
-                                expires_in?: number;
+                                expires_in: number;
                             };
                         };
                     };
                 };
-                404: components["responses"]["NotFoundError"];
+                /** @description `VALIDATION_ERROR` — `case_id` or `attachment_id` is not a UUID */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `ACCESS_DENIED` — not a member of this account */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `NOT_FOUND` — no such request or file on this account */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
@@ -18187,87 +18330,92 @@ export interface components {
         };
         RfiCase: {
             /** Format: uuid */
-            id?: string;
+            id: string;
             /**
              * @description Human-facing id — quoted in the notification email
              * @example RFI-000042
              */
-            reference?: string;
+            reference: string;
             /** @enum {string} */
-            type?: "onboarding" | "transaction" | "ongoing";
+            type: "onboarding" | "transaction" | "ongoing";
+            /**
+             * @description What the request is about — the subject compliance wrote when opening it. Show it as is above the conversation; `messages` hold the question itself.
+             * @example Incoming payments of $10,970 and $7,500
+             */
+            subject: string;
             /**
              * @description `action_required` — compliance asked and waits for the client; `awaiting_compliance` — the client answered, compliance is reviewing; `closed` — no longer accepts replies.
              * @enum {string}
              */
-            status?: "action_required" | "awaiting_compliance" | "closed";
+            status: "action_required" | "awaiting_compliance" | "closed";
             /**
              * Format: date-time
              * @description When the answer is due
              */
-            due_at?: string | null;
+            due_at: string | null;
             /** @description True only while `action_required` and past `due_at` (red banner) */
-            overdue?: boolean;
+            overdue: boolean;
             /** @description One of the covered transactions is held until the request closes */
-            holds_transaction?: boolean;
+            holds_transaction: boolean;
             /** @description The account is on hold while the request is open */
-            holds_account?: boolean;
+            holds_account: boolean;
             /** @description How many transactions the request covers */
-            transactions_count?: number;
+            transactions_count: number;
             /** @description The last message of the conversation, for the card — null while nothing is visible yet */
-            last_message?: {
+            last_message: {
                 /** @enum {string} */
-                author?: "compliance" | "client";
+                author: "compliance" | "client";
                 /** @description One line of the message, up to 140 characters, cut at a word */
-                preview?: string | null;
+                preview: string | null;
                 /** Format: date-time */
-                created_at?: string;
+                created_at: string;
             } | null;
             /** Format: date-time */
-            created_at?: string;
+            created_at: string;
             /** Format: date-time */
-            updated_at?: string;
+            updated_at: string;
             /** Format: date-time */
-            closed_at?: string | null;
+            closed_at: string | null;
         };
         RfiAttachment: {
             /** Format: uuid */
-            id?: string;
-            file_name?: string;
-            content_type?: string | null;
-            size_bytes?: number | null;
+            id: string;
+            file_name: string;
+            /** @description The type the file's content proves (for files sent in the app); null only on some files that came by email */
+            content_type: string | null;
+            size_bytes: number | null;
             /** Format: date-time */
-            created_at?: string;
+            created_at: string;
         };
         RfiMessage: {
             /** Format: uuid */
-            id?: string;
-            /** @enum {string} */
-            author?: "compliance" | "client";
+            id: string;
             /**
-             * @description The analyst's signature on a compliance message — first name and last initial, from the analyst's current name. Null on the client's own messages (render them as "You") and when no name is on record.
-             * @example Polina S
+             * @description Which side wrote the message. The analyst is never named — show a placeholder (e.g. "Compliance team") for `compliance` and "You" for `client`.
+             * @enum {string}
              */
-            author_name?: string | null;
-            body?: string;
-            attachments?: components["schemas"]["RfiAttachment"][];
+            author: "compliance" | "client";
+            body: string;
+            attachments: components["schemas"]["RfiAttachment"][];
             /** Format: date-time */
-            created_at?: string;
+            created_at: string;
         };
         RfiTransaction: {
-            order_uuid?: string;
-            order_type?: string | null;
-            status?: string | null;
-            amount_from?: number | null;
-            amount_to?: number | null;
+            order_uuid: string;
+            order_type: string | null;
+            status: string | null;
+            amount_from: number | null;
+            amount_to: number | null;
             /** Format: date-time */
-            created_at?: string | null;
+            created_at: string | null;
         };
         RfiCaseDetail: components["schemas"]["RfiCase"] & {
-            can_reply?: boolean;
+            /** @description Whether YOU may answer this request now: it is open (`action_required` or `awaiting_compliance`) and your role on the account writes — `owner` or `admin`. False on a closed request and for an `auditor`, who reads the conversation only: show it read-only, without the answer box. Otherwise `POST …/messages` answers 409 `RFI_CLOSED` or 403 `ACCESS_DENIED` respectively. */
+            can_reply: boolean;
             /** @description The conversation, oldest first */
-            messages?: components["schemas"]["RfiMessage"][];
-            /** @description Every transaction the request covers, in the order compliance linked them */
-            transactions?: components["schemas"]["RfiTransaction"][];
+            messages: components["schemas"]["RfiMessage"][];
+            /** @description Every transaction the request covers, in the order compliance linked them. For the full table (currencies, paging) open the order list with `filters=[{"rfi_case_id":"<id>"}]`. */
+            transactions: components["schemas"]["RfiTransaction"][];
         };
         WalletKycRailResponse: {
             /** @example true */
