@@ -659,7 +659,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Init user-level Sumsub verification (data / documents / face flow) */
+        /** Init user-level KYC verification (data / documents / face flow) */
         post: operations["UserVerificationController_init"];
         delete?: never;
         options?: never;
@@ -676,7 +676,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Re-issue the WebSDK access token for the current level */
+        /** Re-issue the SDK access token for the current level */
         post: operations["UserVerificationController_resume"];
         delete?: never;
         options?: never;
