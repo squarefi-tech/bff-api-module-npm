@@ -36,10 +36,10 @@ export const user = {
     // Starts (or moves up) the per-user KYC level for the requested step and returns the SDK
     // credentials. Resolves 404 when the tenant has no level configured for the step. Step results
     // land on user-data (`identity_verification_status` / `face_verification_status`), so poll
-    // `user.userData.get()` after the WebSDK reports completion.
+    // `user.userData.get()` after the SDK reports completion.
     init: (data: API.User.Verification.Init.Request): Promise<API.User.Verification.Init.Response> =>
       apiClientV2.postRequest<API.User.Verification.Init.Response>('/user/verification/init', { data }),
-    // Re-issues the WebSDK access token for the level the user is already on; 404 when the user has
+    // Re-issues the SDK access token for the level the user is already on; 404 when the user has
     // never been initialized.
     resume: (): Promise<API.User.Verification.Resume.Response> =>
       apiClientV2.postRequest<API.User.Verification.Resume.Response>('/user/verification/resume'),

@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Vendor-neutral wording.** The README, source comments and past changelog entries describe the KYC provider, card issuers and payout rails by their role and by order type prefix (`RPP_*`, `DLS_*`), not by vendor. Documentation only: no type or method changes. Exported names stay as they are, since consumers import them.
+- **Vendor-neutral wording.** The README, source comments and past changelog entries describe the KYC provider, card issuers, custody and payout rails by their role and by order type prefix (`RPP_*`, `DLS_*`), not by vendor. Documentation only: no type or method changes. Order type ids, API paths and exported names stay as they are, since consumers use them.
 
 ## [1.36.80] - 2026-09-29
 
@@ -144,7 +144,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **`frontend.reference.exchangeRates.list` — the frontend route for currency pairs.** Wraps `GET /frontend/reference/exchange_rates` (`from_uuid`, `to_uuid`, `order_type`, `offset`, `limit`), the replacement for the legacy `exchange.byOrderType.*` (`GET /exchange/`). Same data — the tenant's enabled pairs from `getTenantExchangeRates` — with three differences a caller must handle: the body is the `{ success, data, pagination }` envelope instead of a bare array; the route needs the bearer session (the legacy one is public); and the list is paged in memory, 50 rows by default and 500 at most, in no stable order — pass `limit: 500` and filter by `order_type` plus `from_uuid` / `to_uuid` to get the whole set in one call. Typed from the spec (base_backend#1650/#1651 added the schema): `API.Frontend.Reference.ExchangeRates.ExchangeRate` is `ExchangeRate` — `id` absent on a Reap vendor pair, `from` / `to` optional, `rate_source` one of `cryptomus`, `coingecko`, `openexchangerates`, `reap_payments` or `null`, plus `base_rate` and `fx_spread_percent`.
+- **`frontend.reference.exchangeRates.list` — the frontend route for currency pairs.** Wraps `GET /frontend/reference/exchange_rates` (`from_uuid`, `to_uuid`, `order_type`, `offset`, `limit`), the replacement for the legacy `exchange.byOrderType.*` (`GET /exchange/`). Same data — the tenant's enabled pairs from `getTenantExchangeRates` — with three differences a caller must handle: the body is the `{ success, data, pagination }` envelope instead of a bare array; the route needs the bearer session (the legacy one is public); and the list is paged in memory, 50 rows by default and 500 at most, in no stable order — pass `limit: 500` and filter by `order_type` plus `from_uuid` / `to_uuid` to get the whole set in one call. Typed from the spec (base_backend#1650/#1651 added the schema): `API.Frontend.Reference.ExchangeRates.ExchangeRate` is `ExchangeRate` — `id` absent on an `RPP_*` vendor pair, `from` / `to` optional, `rate_source` one of `cryptomus`, `coingecko`, `openexchangerates`, `reap_payments` or `null`, plus `base_rate` and `fx_spread_percent`.
 - **`meta.direction` on orders (base_backend#1642/#1643).** `OrderMeta` (frontend and api specs) carries `direction?: 'in' | 'out' | null` — the leg side of an internal transfer (`out` on the sender's order, `in` on the receiver's; card authorizations `out`, their refunds `in`). The backend used to strip it from every order read.
 - **Response schemas for the order-type reads.** The same regen types `/frontend/reference/order_types` (`ReferenceOrderType`, paginated) and adds `OrderTypeInfo`, `OrderTypeTenantRates` and `OrderPaymentMethod` to the frontend components. No client method wraps the reference route yet.
 
@@ -531,7 +531,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`user.verification.init` and `user.verification.resume`** — the per-user KYC verification ladder (`POST /user/verification/init`, `POST /user/verification/resume`). `init({ flow })` starts (or moves the applicant up to) the level for the requested step and returns `{ verificationId, verificationToken }` for the provider SDK; `resume()` re-issues the SDK token for the level the user is already on. `flow` is `'data' | 'documents' | 'face'`: `data` collects the base profile, `documents` and `face` are the optional follow-up steps. Both are per-user and independent of the wallet-scoped `kyc.*` entity flow. `init` answers `404` when the tenant has no level configured for that step (the per-tenant rollout gate); `resume` answers `404` when the user was never initialized.
 - **`API.User.Verification.*` types** — `Flow`, `Init.Request`, `Init.Response`, `Resume.Response`.
 - **`UserVerificationFlows` enum** (`DATA` / `DOCUMENTS` / `FACE`) in `constants.ts`, with the usual compile-time parity check against the generated `API.User.Verification.Flow` union.
-- **New read-only fields on `API.User.UserData.UserData`** (returned by `user.userData.get()`): `identity_verification_status` and `face_verification_status` carry the per-step outcome (same status union as `kyc_status`, so the existing `KYCStatuses` enum applies, default `UNVERIFIED`), plus `profile_source` and `profile_synced_at` describing where the stored profile came from and when it was last synced from the provider. Poll `user.userData.get()` after the WebSDK reports completion — the step statuses and the profile fields (`first_name`, `last_name`, `birth_date`, `nationality`) are updated from the provider verdict, not from the client.
+- **New read-only fields on `API.User.UserData.UserData`** (returned by `user.userData.get()`): `identity_verification_status` and `face_verification_status` carry the per-step outcome (same status union as `kyc_status`, so the existing `KYCStatuses` enum applies, default `UNVERIFIED`), plus `profile_source` and `profile_synced_at` describing where the stored profile came from and when it was last synced from the provider. Poll `user.userData.get()` after the SDK reports completion — the step statuses and the profile fields (`first_name`, `last_name`, `birth_date`, `nationality`) are updated from the provider verdict, not from the client.
 
 - **`frontend.issuing` — card money movement.** Four methods over the frontend issuing routes: `frontend.issuing.cards.deposit({ card_id, reference_id, from_currency_id, amount, note? })` and `frontend.issuing.cards.withdraw({ card_id, amount })`, plus their sub-account equivalents `frontend.issuing.subAccounts.deposit({ sub_account_id, reference_id, from_currency_id, amount, note?, card_id? })` and `frontend.issuing.subAccounts.withdraw({ sub_account_id, amount, wallet_id? })`. The card-level pair are thin wrappers the backend resolves to the card's sub-account, so all four share the same order types, validation and program routing; all require the ADMIN role on the owning wallet. Both deposits take `reference_id` as the idempotency key; withdrawals derive the currency from the sub-account, and concurrent withdrawals on the same sub-account are rejected with `409`. Responses are `{ success, data: { order_uuid, transaction_id, status, amount_from, amount_to, meta, ... } }`. **`status` is widened past the spec** to the SDK's order-status union (`OrderStatuses`): the spec documents only `PENDING | COMPLETE | FAILED`, but the handler returns the raw order status, so workflow-routed programs answer `PROCESSING` — an exhaustive `switch` over the three documented values would have treated an in-flight transfer as a failure. Types under `API.Frontend.Issuing.*`. This is the replacement for the removed `orders.frontend.create.withdrawal.card` (see below); the legacy `orders.create.byOrderType.TRANSFER_CARD_*` / `WITHDRAW_CARD_*` v1 methods still work and are unchanged.
 
@@ -734,7 +734,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Exposed the new v2 order-creation routes for the `DLS_*` and `BRL_RTP_OFFRAMP` rails: `orders.v2.create.byOrderType[OrderType.DLS_WIRE_OFFRAMP|DLS_ACH_OFFRAMP|DLS_SEPA_OFFRAMP|DLS_SWIFT_OFFRAMP]` (USD/EUR/GBP withdrawals sourced from the rail's virtual account) and `orders.v2.create.byOrderType[OrderType.BRL_RTP_OFFRAMP]` (stablecoin → USD Real-Time Payments transfer). Each has typed `Request`/`Response` under `API.Orders.V2.Create.ByOrderType.*`, with a new `Common.Response.DlsResponse` for the `DLS_*` offramps and `BRL_RTP_OFFRAMP` added to the `BraleResponse` union
+- Exposed the new v2 order-creation routes for the `DLS_*` and `BRL_RTP_OFFRAMP` rails: `orders.v2.create.byOrderType[OrderType.DLS_WIRE_OFFRAMP|DLS_ACH_OFFRAMP|DLS_SEPA_OFFRAMP|DLS_SWIFT_OFFRAMP]` (USD/EUR/GBP withdrawals sourced from the rail's virtual account) and `orders.v2.create.byOrderType[OrderType.BRL_RTP_OFFRAMP]` (stablecoin → USD Real-Time Payments transfer). Each has typed `Request`/`Response` under `API.Orders.V2.Create.ByOrderType.*`, with a new `Common.Response.DlsResponse` for the `DLS_*` offramps and `BRL_RTP_OFFRAMP` added to the `BRL_*` response union
 - Added the `BRL_RTP_OFFRAMP` and `DLS_{WIRE,ACH,SEPA,SWIFT}_{ONRAMP,OFFRAMP}` values to the `OrderType` and `WalletTransactionRecordType` enums to match the regenerated autogen `OrderTypeId`
 
 ## [1.36.5] - 2026-06-15
@@ -842,8 +842,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Migrated the persona API to be a thin wrapper around the new KYC data collection client
-- Aligned persona response aliases with the autogenerated KYC types
+- Migrated the hosted-KYC API to be a thin wrapper around the new KYC data collection client
+- Aligned hosted-KYC response aliases with the autogenerated KYC types
 
 ### Removed
 
@@ -1348,8 +1348,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Removed outdated HIFI transaction types and added new L2F transaction types for deposits and withdrawals
-- Updated OrderType enum to include new deposit and withdrawal types for HIFI and L2F
+- Removed outdated `HIFI_*` transaction types and added new `L2F_*` transaction types for deposits and withdrawals
+- Updated OrderType enum to include new `HIFI_*` and `L2F_*` deposit and withdrawal types
 
 ## [1.30.7] - 2025-11-14
 
@@ -2116,15 +2116,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Corrected persona inquiries endpoint path for initialization
-- Changed persona inquiries initialization method from GET to POST
+- Corrected hosted-KYC inquiries endpoint path for initialization
+- Changed hosted-KYC inquiries initialization method from GET to POST
 - Updated endpoint paths for currencies and chains in the API client to support nonAuth users
 
 ## [1.17.27] - 2025-05-16
 
 ### Added
 
-- Integrated persona module into API client for enhanced KYC and identity verification workflows
+- Integrated the hosted-KYC module into API client for enhanced KYC and identity verification workflows
 
 ## [1.17.26] - 2025-05-15
 
@@ -2202,8 +2202,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Reverted wallet address creation method to use apiClientV1 (UTILA)
-  - This change was necessary to maintain compatibility with the UTILA service
+- Reverted wallet address creation method to use apiClientV1 (custody provider)
+  - This change was necessary to maintain compatibility with the custody service
   - Ensures proper address generation and validation
 
 ## [1.17.16] - 2025-05-06
