@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.80] - 2026-09-29
+
 ### Added
 
 - **`subject` on `API.Rfi.Case` and `CaseDetail` — what a compliance request is about (SFI-2612).** A required, non-null `string`: the subject compliance writes when it opens the request (e.g. `Incoming payments of $10,970 and $7,500`), to show as is above the conversation. The mock-up's "Reason: …" line had nothing to read from, since a request carried only its `type`; the backend made `subject` public instead of adding a separate `reason`. The question itself stays in `messages`.
