@@ -1701,8 +1701,8 @@ export interface paths {
          *
          *     **Two modes**:
          *     - `user_data_id` mode: personal data and KYC documents are seeded from an existing
-         *       verified user (requires an approved identity/face verification and a Sumsub applicant).
-         *       Manual fields only fill gaps. The Sumsub files are attached to the draft
+         *       verified user (requires an approved identity/face verification and a KYC applicant).
+         *       Manual fields only fill gaps. The applicant's KYC files are attached to the draft
          *       immediately, so step 2 is usually unnecessary in this mode.
          *     - Manual mode: `first_name`, `last_name`, `email`, `phone` are required.
          *
@@ -2056,9 +2056,10 @@ export interface paths {
         head?: never;
         /**
          * Update cardholder
-         * @description Updates cardholder information. Email and phone of an Interlace or PhotonPay
-         *     cardholder are sent to the vendor first; every other field, and every other
-         *     vendor, is stored locally only.
+         * @description Updates cardholder information. On programs whose card issuer takes contact
+         *     updates from the platform (not every issuer does), email and phone are sent to
+         *     the issuer first; every other field, and every field on other programs, is
+         *     stored locally only. Read the cardholder back from `GET` for the stored value.
          *     Same contract as `PATCH /frontend/issuing/cardholders/{cardholder_id}`.
          *
          *     **Authentication**: x-api-key header required
@@ -8201,7 +8202,7 @@ export interface components {
             /** Format: uuid */
             transaction_amount_currency?: string | null;
             billing_amount?: number | null;
-            /** @description Currency of `billing_amount`. Not uniform across rails: a currency uuid on most orders, an ISO code (e.g. `EUR`) on L2F off-ramps, the destination currency uuid on BC/DLS on-ramps. Use the order's `from_uuid` for the debited currency. */
+            /** @description Currency of `billing_amount`. Not uniform across rails: a currency uuid on most orders, an ISO code (e.g. `EUR`) on `L2F_*` off-ramps, the destination currency uuid on `BC1_*`/`BC3_*`/`DLS_*` on-ramps. Use the order's `from_uuid` for the debited currency. */
             billing_amount_currency?: string | null;
             fee?: number | null;
             /** Format: uuid */

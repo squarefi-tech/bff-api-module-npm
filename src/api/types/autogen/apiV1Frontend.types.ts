@@ -1138,7 +1138,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Download the PDF report of a completed screening */
+        /**
+         * Download the PDF report of a completed screening
+         * @description The report is the analytics provider's own PDF, carrying the provider's
+         *     brand. It is fetched from the provider on every download; while the
+         *     provider is unreachable the answer is 400 AML_REPORT_PROVIDER_UNAVAILABLE
+         *     and the client retries later.
+         *
+         */
         get: {
             parameters: {
                 query?: never;
@@ -1159,6 +1166,15 @@ export interface paths {
                     };
                     content: {
                         "application/pdf": string;
+                    };
+                };
+                /** @description The analytics provider cannot hand the report over right now — retry later (AML_REPORT_PROVIDER_UNAVAILABLE) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
                 /** @description Not found in this wallet (SCREENING_NOT_FOUND) */
@@ -5335,7 +5351,7 @@ export interface paths {
          *     **Two modes**:
          *     - `user_data_id` mode: personal data + KYC documents are seeded from an existing
          *       verified user. An approved identity/face verification plus a KYC applicant are required only when the program's KYC level needs document photos; otherwise any active member without a final rejection can be seeded (documents are then uploaded by hand).
-         *       Manual fields only fill gaps. The Sumsub files are attached to the draft
+         *       Manual fields only fill gaps. The applicant's KYC files are attached to the draft
          *       immediately, so step 2 is usually unnecessary in this mode.
          *     - Manual mode: `first_name`, `last_name`, `email`, `phone` are required.
          *
@@ -6357,10 +6373,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Initialize Persona KYC session for a wallet
+         * Initialize hosted KYC session for a wallet
          * @deprecated
-         * @description Creates a Persona inquiry via the Auth API for the specified wallet and
-         *     returns the hosted Persona URL. The caller's Bearer token is forwarded to
+         * @description Creates a KYC inquiry via the Auth API for the specified wallet and
+         *     returns the hosted verification URL. The caller's Bearer token is forwarded to
          *     the Auth API; access requires the caller to be a member of the wallet
          *     (ownership/membership is enforced by the standard wallet-access check).
          *
@@ -6383,7 +6399,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Persona link generated successfully */
+                /** @description Verification link generated successfully */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -6400,21 +6416,19 @@ export interface paths {
                                  */
                                 wallet_id: string;
                                 /**
-                                 * @description Persona inquiry ID returned by the Auth API
+                                 * @description KYC inquiry ID returned by the Auth API
                                  * @example inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
                                  */
                                 inquiry_id: string;
                                 /**
-                                 * @description Persona session token, when upstream returns one — otherwise null
+                                 * @description Session token, when upstream returns one — otherwise null
                                  * @example null
                                  */
                                 session_id: string | null;
                                 /**
                                  * Format: uri
-                                 * @description Hosted Persona URL with `inquiry-id` (and `session-token` if `session_id` is present).
-                                 *     Base host: `PERSONA_HOSTED_FLOW_URL` env, default `https://withpersona.com/verify`.
+                                 * @description Hosted verification URL with `inquiry-id` (and `session-token` if `session_id` is present).
                                  *
-                                 * @example https://withpersona.com/verify?inquiry-id=inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
                                  */
                                 url: string;
                             };
@@ -6484,10 +6498,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Resume Persona KYC session for a wallet
+         * Resume hosted KYC session for a wallet
          * @deprecated
-         * @description Resumes an existing Persona inquiry via the Auth API for the specified
-         *     wallet and returns the hosted Persona URL. The caller's Bearer token is
+         * @description Resumes an existing KYC inquiry via the Auth API for the specified
+         *     wallet and returns the hosted verification URL. The caller's Bearer token is
          *     forwarded to the Auth API; access requires the caller to be a member of
          *     the wallet (ownership/membership is enforced by the standard wallet-access check).
          *
@@ -6510,7 +6524,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Persona link generated successfully */
+                /** @description Verification link generated successfully */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -6527,21 +6541,19 @@ export interface paths {
                                  */
                                 wallet_id: string;
                                 /**
-                                 * @description Persona inquiry ID returned by the Auth API (same as the one being resumed)
+                                 * @description KYC inquiry ID returned by the Auth API (same as the one being resumed)
                                  * @example inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
                                  */
                                 inquiry_id: string;
                                 /**
-                                 * @description Persona session token, when upstream returns one — otherwise null
+                                 * @description Session token, when upstream returns one — otherwise null
                                  * @example null
                                  */
                                 session_id: string | null;
                                 /**
                                  * Format: uri
-                                 * @description Hosted Persona URL with `inquiry-id` (and `session-token` if `session_id` is present).
-                                 *     Base host: `PERSONA_HOSTED_FLOW_URL` env, default `https://withpersona.com/verify`.
+                                 * @description Hosted verification URL with `inquiry-id` (and `session-token` if `session_id` is present).
                                  *
-                                 * @example https://withpersona.com/verify?inquiry-id=inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
                                  */
                                 url: string;
                             };
@@ -6615,7 +6627,7 @@ export interface paths {
         /**
          * Initialize KYC verification for a wallet
          * @description Starts a provider-agnostic KYC data-collection flow for the wallet via
-         *     the Auth API. The KYC provider (Persona, Sumsub, …) is resolved
+         *     the Auth API. The KYC provider is resolved
          *     internally per tenant — the caller does not choose it. Returns the
          *     provider verification id plus an optional short-lived SDK token the
          *     client uses to launch the verification. The caller's Bearer token is
@@ -6666,15 +6678,9 @@ export interface paths {
                                  * @description Echo of the wallet from the path
                                  */
                                 wallet_id: string;
-                                /**
-                                 * @description Provider that handled the flow (e.g. persona, sumsub)
-                                 * @example persona
-                                 */
+                                /** @description Provider that handled the flow */
                                 provider_type: string;
-                                /**
-                                 * @description Provider verification id — Persona: inquiryId, Sumsub: applicantId
-                                 * @example inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
-                                 */
+                                /** @description Provider verification id */
                                 verification_id: string;
                                 /** @description Short-lived SDK/session token when the provider mints one — otherwise null */
                                 verification_token?: string | null;
@@ -6748,8 +6754,9 @@ export interface paths {
          * Resume KYC verification for a wallet
          * @description Resumes an existing provider-agnostic KYC data-collection flow for the
          *     wallet via the Auth API. The provider is resolved internally per tenant.
-         *     `verification_ref` is the provider reference returned by init (Persona:
-         *     `inquiry_id`, Sumsub: `applicant_id`). The caller's Bearer token is
+         *     `verification_ref` is the `verification_id` returned by init (for a session
+         *     started through the deprecated `kyc_persona` endpoints, pass its `inquiry_id`).
+         *     The caller's Bearer token is
          *     forwarded to the Auth API.
          *
          *     Provider-agnostic replacement for the deprecated
@@ -6773,10 +6780,9 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        /**
-                         * @description Provider verification reference (Persona: inquiry_id, Sumsub: applicant_id)
-                         * @example inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
-                         */
+                        /** @description Provider verification reference: the `verification_id` returned by init, or the
+                         *     `inquiry_id` of a session started through the deprecated `kyc_persona` endpoints
+                         *      */
                         verification_ref: string;
                     };
                 };
@@ -6797,15 +6803,9 @@ export interface paths {
                                  * @description Echo of the wallet from the path
                                  */
                                 wallet_id: string;
-                                /**
-                                 * @description Provider that handled the flow (e.g. persona, sumsub)
-                                 * @example persona
-                                 */
+                                /** @description Provider that handled the flow */
                                 provider_type: string;
-                                /**
-                                 * @description Provider verification id — Persona: inquiryId, Sumsub: applicantId
-                                 * @example inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
-                                 */
+                                /** @description Provider verification id */
                                 verification_id: string;
                                 /** @description Short-lived SDK/session token when the provider mints one — otherwise null */
                                 verification_token?: string | null;
@@ -11701,13 +11701,13 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Initialize user-level Sumsub verification
-         * @description Starts (or upgrades) the caller's user-level Sumsub verification via
-         *     the Auth API. The chosen `flow` maps to a tenant-configured Sumsub
+         * Initialize user-level KYC verification
+         * @description Starts (or upgrades) the caller's user-level KYC verification via
+         *     the Auth API. The chosen `flow` maps to a tenant-configured verification
          *     level — `data` (personal information), `documents` (+identity
          *     document) or `face` (+face check) — and the whole level is completed
-         *     as one WebSDK session. Returns the Sumsub applicant id plus a
-         *     short-lived WebSDK access token. The caller's Bearer token is
+         *     as one SDK session. Returns the provider verification id plus a
+         *     short-lived SDK access token. The caller's Bearer token is
          *     forwarded to the Auth API.
          *
          *     User-scoped: no wallet is involved, unlike
@@ -11750,9 +11750,9 @@ export interface paths {
                                  * @enum {string}
                                  */
                                 flow: "data" | "documents" | "face";
-                                /** @description Sumsub applicantId */
+                                /** @description Provider verification id */
                                 verification_id: string;
-                                /** @description Short-lived WebSDK access token — otherwise null */
+                                /** @description Short-lived SDK access token — otherwise null */
                                 verification_token?: string | null;
                             };
                         };
@@ -11776,7 +11776,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description User verification is not enabled for the tenant (no Sumsub levels configured) */
+                /** @description User verification is not enabled for the tenant (no verification levels configured) */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -11821,9 +11821,9 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Resume user-level Sumsub verification
-         * @description Re-issues the short-lived WebSDK access token for the level the caller
-         *     is already on (the WebSDK's expirationHandler contract). The caller's
+         * Resume user-level KYC verification
+         * @description Re-issues the short-lived SDK access token for the level the caller
+         *     is already on, for the SDK's token-expiry callback. The caller's
          *     Bearer token is forwarded to the Auth API.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
@@ -11850,9 +11850,9 @@ export interface paths {
                             data: {
                                 /** @description Always null on resume — the Auth API resumes the current level */
                                 flow?: string | null;
-                                /** @description Sumsub applicantId */
+                                /** @description Provider verification id */
                                 verification_id: string;
-                                /** @description Short-lived WebSDK access token — otherwise null */
+                                /** @description Short-lived SDK access token — otherwise null */
                                 verification_token?: string | null;
                             };
                         };
@@ -12069,7 +12069,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description The program's vendor is retired (Rail.io) or unsupported — no new accounts can be created on it */
+                /** @description The program's vendor is retired or unsupported — no new accounts can be created on it */
                 501: {
                     headers: {
                         [name: string]: unknown;
@@ -12247,8 +12247,8 @@ export interface paths {
         /**
          * Sync virtual account
          * @description Refreshes the bank account details and deposit instructions from the provider
-         *     serving the account and updates the local record. Historical Rail.io
-         *     (RAIL-B / RAIL-C) accounts cannot be refreshed — their stored requisites are
+         *     serving the account and updates the local record. Historical accounts of the
+         *     retired rail (RAIL-B / RAIL-C) cannot be refreshed — their stored requisites are
          *     returned unchanged.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
@@ -12338,8 +12338,8 @@ export interface paths {
          * @description Retrieves detailed information about a specific virtual account.
          *     For accounts linked to a provider the requisites are refreshed
          *     from the vendor on read unless `skip_sync=true`; a failed refresh falls back to the
-         *     cached data (still 200). Accounts without a vendor link and historical Rail.io
-         *     accounts return the stored data.
+         *     cached data (still 200). Accounts without a vendor link and historical accounts
+         *     of the retired rail return the stored data.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -14504,7 +14504,7 @@ export interface paths {
                                     last_name?: string;
                                     logo_url?: string;
                                     /**
-                                     * @description Outcome of the member's Sumsub IDENTITY-document step.
+                                     * @description Outcome of the member's KYC IDENTITY-document step.
                                      *     `APPROVED` is the only value that permits issuing a card to this member.
                                      *
                                      * @enum {string}
@@ -15402,7 +15402,7 @@ export interface paths {
          *     compliance (`WAITING_ON_REVIEW`); a universal rail is approved on the spot. An application the vendor
          *     sent back (`HOLD`, `SOFT_REJECT`) is resubmitted. No body.
          *
-         *     Refused unless the rail has an onboarding implementation (Rail.io rails never do), takes submissions,
+         *     Refused unless the rail has an onboarding implementation (retired rails never do), takes submissions,
          *     fits the entity type, and the entity's KYC is `APPROVED` or `WAITING_ON_REVIEW`. On a tenant without KYC
          *     only the tenant's default universal rail can be submitted without it.
          *
@@ -15696,7 +15696,7 @@ export interface components {
             total: number;
             has_more: boolean;
         };
-        /** @description A currency pair enabled for the tenant: the `exchange_rates` row with the tenant FX spread applied. Pairs a vendor rate table adds for its own order types (Reap Payments, `RPP_*`) have no `id`. */
+        /** @description A currency pair enabled for the tenant: the `exchange_rates` row with the tenant FX spread applied. Pairs a vendor rate table adds for its own order types (`RPP_*`) have no `id`. */
         ExchangeRate: {
             /** @description Absent on a vendor-only pair */
             id?: number;
@@ -16991,7 +16991,7 @@ export interface components {
             transaction_amount_currency?: string | null;
             /** @description Total amount debited (including fees) */
             billing_amount?: number | null;
-            /** @description Currency of `billing_amount`. Not uniform across rails: a currency uuid on most orders, an ISO code (e.g. `EUR`) on L2F off-ramps, the destination currency uuid on BC/DLS on-ramps. Use the order's `from_uuid` for the debited currency. */
+            /** @description Currency of `billing_amount`. Not uniform across rails: a currency uuid on most orders, an ISO code (e.g. `EUR`) on `L2F_*` off-ramps, the destination currency uuid on `BC1_*`/`BC3_*`/`DLS_*` on-ramps. Use the order's `from_uuid` for the debited currency. */
             billing_amount_currency?: string | null;
             fee?: number | null;
             /** Format: uuid */

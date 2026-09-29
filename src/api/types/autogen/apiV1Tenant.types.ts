@@ -1501,14 +1501,14 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Initialize Persona KYC session for a wallet
+         * Initialize hosted KYC session for a wallet
          * @deprecated
          * @description **Deprecated** — use the provider-agnostic
-         *     `POST /admin/kyc_verification/{wallet_id}/init` instead. This endpoint is
-         *     Persona-only and calls a deprecated upstream method.
+         *     `POST /admin/kyc_verification/{wallet_id}/init` instead. This endpoint
+         *     calls a deprecated upstream method.
          *
-         *     Creates a Persona inquiry via the Auth API for the specified wallet
-         *     and returns the hosted Persona URL.
+         *     Creates a KYC inquiry via the Auth API for the specified wallet
+         *     and returns the hosted verification URL.
          *
          */
         get: {
@@ -1525,7 +1525,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Persona link generated successfully */
+                /** @description Verification link generated successfully */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -1542,21 +1542,19 @@ export interface paths {
                                  */
                                 wallet_id: string;
                                 /**
-                                 * @description Persona inquiry ID returned by the Auth API
+                                 * @description KYC inquiry ID returned by the Auth API
                                  * @example inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
                                  */
                                 inquiry_id: string;
                                 /**
-                                 * @description Persona session token, when upstream returns one — otherwise null
+                                 * @description Session token, when upstream returns one — otherwise null
                                  * @example null
                                  */
                                 session_id: string | null;
                                 /**
                                  * Format: uri
-                                 * @description Hosted Persona URL with `inquiry-id` (and `session-token` if `session_id` is present).
-                                 *     Base host: `PERSONA_HOSTED_FLOW_URL` env, default `https://withpersona.com/verify`.
+                                 * @description Hosted verification URL with `inquiry-id` (and `session-token` if `session_id` is present).
                                  *
-                                 * @example https://withpersona.com/verify?inquiry-id=inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
                                  */
                                 url: string;
                             };
@@ -1616,14 +1614,14 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Resume Persona KYC session for a wallet
+         * Resume hosted KYC session for a wallet
          * @deprecated
          * @description **Deprecated** — use the provider-agnostic
-         *     `POST /admin/kyc_verification/{wallet_id}/resume` instead. This endpoint is
-         *     Persona-only and calls a deprecated upstream method.
+         *     `POST /admin/kyc_verification/{wallet_id}/resume` instead. This endpoint
+         *     calls a deprecated upstream method.
          *
-         *     Resumes an existing Persona inquiry via the Auth API for the specified wallet
-         *     and returns the hosted Persona URL.
+         *     Resumes an existing KYC inquiry via the Auth API for the specified wallet
+         *     and returns the hosted verification URL.
          *
          */
         get: {
@@ -1640,7 +1638,7 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
-                /** @description Persona link generated successfully */
+                /** @description Verification link generated successfully */
                 200: {
                     headers: {
                         [name: string]: unknown;
@@ -1657,21 +1655,19 @@ export interface paths {
                                  */
                                 wallet_id: string;
                                 /**
-                                 * @description Persona inquiry ID returned by the Auth API (same as the one being resumed)
+                                 * @description KYC inquiry ID returned by the Auth API (same as the one being resumed)
                                  * @example inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
                                  */
                                 inquiry_id: string;
                                 /**
-                                 * @description Persona session token, when upstream returns one — otherwise null
+                                 * @description Session token, when upstream returns one — otherwise null
                                  * @example null
                                  */
                                 session_id: string | null;
                                 /**
                                  * Format: uri
-                                 * @description Hosted Persona URL with `inquiry-id` (and `session-token` if `session_id` is present).
-                                 *     Base host: `PERSONA_HOSTED_FLOW_URL` env, default `https://withpersona.com/verify`.
+                                 * @description Hosted verification URL with `inquiry-id` (and `session-token` if `session_id` is present).
                                  *
-                                 * @example https://withpersona.com/verify?inquiry-id=inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
                                  */
                                 url: string;
                             };
@@ -1735,7 +1731,7 @@ export interface paths {
         /**
          * Initialize KYC verification for a wallet
          * @description Starts a provider-agnostic KYC data-collection flow for the wallet. The
-         *     KYC provider (Persona, Sumsub, …) is resolved internally per tenant — the
+         *     KYC provider is resolved internally per tenant — the
          *     caller does not choose it. Returns the provider verification id plus an
          *     optional short-lived SDK token and provider-specific payload the client
          *     uses to launch the verification.
@@ -1781,15 +1777,9 @@ export interface paths {
                                  * @description Echo of the wallet from the path
                                  */
                                 wallet_id: string;
-                                /**
-                                 * @description Provider that handled the flow (e.g. persona, sumsub)
-                                 * @example persona
-                                 */
+                                /** @description Provider that handled the flow */
                                 provider_type: string;
-                                /**
-                                 * @description Provider verification id — Persona: inquiryId, Sumsub: applicantId
-                                 * @example inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
-                                 */
+                                /** @description Provider verification id */
                                 verification_id: string;
                                 /** @description Short-lived SDK/session token when the provider mints one — otherwise null */
                                 verification_token?: string | null;
@@ -1864,8 +1854,8 @@ export interface paths {
          * Resume KYC verification for a wallet
          * @description Resumes an existing provider-agnostic KYC data-collection flow for the
          *     wallet. The provider is resolved internally per tenant. `verification_ref`
-         *     is the provider reference returned by init (Persona: `inquiry_id`,
-         *     Sumsub: `applicant_id`).
+         *     is the `verification_id` returned by init (for a session started through
+         *     the deprecated `kyc_persona` endpoints, pass its `inquiry_id`).
          *
          *     Provider-agnostic replacement for the deprecated
          *     `POST/GET /admin/kyc_persona/{wallet_id}/resume`.
@@ -1884,10 +1874,9 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        /**
-                         * @description Provider verification reference (Persona: inquiry_id, Sumsub: applicant_id)
-                         * @example inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
-                         */
+                        /** @description Provider verification reference: the `verification_id` returned by init, or the
+                         *     `inquiry_id` of a session started through the deprecated `kyc_persona` endpoints
+                         *      */
                         verification_ref: string;
                     };
                 };
@@ -1908,17 +1897,11 @@ export interface paths {
                                  * @description Echo of the wallet from the path
                                  */
                                 wallet_id: string;
-                                /**
-                                 * @description Provider that handled the flow (e.g. persona, sumsub)
-                                 * @example persona
-                                 */
+                                /** @description Provider that handled the flow */
                                 provider_type: string;
-                                /**
-                                 * @description Provider verification id — Persona: inquiryId, Sumsub: applicantId
-                                 * @example inq_ABDNxhp9ZzD3yehivCbMVvmjwh5g5r
-                                 */
+                                /** @description Provider verification id */
                                 verification_id: string;
-                                /** @description Short-lived SDK/session token — Persona: sessionToken, Sumsub: accessToken — otherwise null */
+                                /** @description Short-lived SDK/session token, when the provider issues one — otherwise null */
                                 verification_token?: string | null;
                                 /** @description Provider-specific payload forwarded to the client SDK */
                                 provider_data?: {
@@ -5852,8 +5835,8 @@ export interface paths {
          *
          *     **Two modes**:
          *     - `user_data_id` mode: personal data + KYC documents are seeded from an existing
-         *       verified user (approved identity/face verification + Sumsub applicant required).
-         *       Manual fields only fill gaps; the Sumsub files are attached immediately.
+         *       verified user (approved identity/face verification + KYC applicant required).
+         *       Manual fields only fill gaps; the applicant's KYC files are attached immediately.
          *     - Manual mode: `first_name`, `last_name`, `email`, `phone` are required.
          *
          */
