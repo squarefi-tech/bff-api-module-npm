@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.83] - 2026-09-29
+
 ### Changed
 
 - **`apiV2` types regenerated.** The user-verification `init` and `resume` descriptions name KYC verification and the SDK access token rather than the provider, following the service's Swagger. Documentation only: no path, schema or method changes.
