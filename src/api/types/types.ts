@@ -3997,7 +3997,7 @@ export namespace API {
     }
 
     export namespace Verification {
-      // Steps of the per-user Sumsub ladder: `data` collects the base profile (name, birth date,
+      // Steps of the per-user KYC ladder: `data` collects the base profile (name, birth date,
       // nationality), `documents` and `face` are the optional follow-up steps. Their outcome is
       // reported back on user-data as `identity_verification_status` / `face_verification_status`.
       export type Flow = components['schemas']['UserVerificationFlow'];

@@ -33,7 +33,7 @@ export const user = {
     },
   },
   verification: {
-    // Starts (or moves up) the per-user Sumsub level for the requested step and returns the WebSDK
+    // Starts (or moves up) the per-user KYC level for the requested step and returns the SDK
     // credentials. Resolves 404 when the tenant has no level configured for the step. Step results
     // land on user-data (`identity_verification_status` / `face_verification_status`), so poll
     // `user.userData.get()` after the WebSDK reports completion.

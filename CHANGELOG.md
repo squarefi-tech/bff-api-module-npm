@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Vendor-neutral wording.** The README, source comments and past changelog entries describe the KYC provider, card issuers and payout rails by their role and by order type prefix (`RPP_*`, `DLS_*`), not by vendor. Documentation only: no type or method changes. Exported names stay as they are, since consumers import them.
+
 ## [1.36.80] - 2026-09-29
 
 ### Added
@@ -88,7 +92,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **Reap Payments order types.** `OrderType` and `WalletTransactionRecordType` gain `RPP_SWIFT_OFFRAMP`, `RPP_SEPA_OFFRAMP`, `RPP_FPS_OFFRAMP` and `RPP_ACH_OFFRAMP`. The backend has served them, and the generated `OrderTypeId` has listed them, since the Reap Payments rail shipped; a client narrowing with the enum (`isOrderType`, `exchange.byOrderType`) could not name them. A consumer with an exhaustive `Record<OrderType, …>` or `Record<WalletTransactionRecordType, …>` has to add the four keys when it upgrades.
+- **`RPP_*` payout order types.** `OrderType` and `WalletTransactionRecordType` gain `RPP_SWIFT_OFFRAMP`, `RPP_SEPA_OFFRAMP`, `RPP_FPS_OFFRAMP` and `RPP_ACH_OFFRAMP`. The backend has served them, and the generated `OrderTypeId` has listed them, since the `RPP_*` rail shipped; a client narrowing with the enum (`isOrderType`, `exchange.byOrderType`) could not name them. A consumer with an exhaustive `Record<OrderType, …>` or `Record<WalletTransactionRecordType, …>` has to add the four keys when it upgrades.
 - **`documents_required_from_amount` on the order type directory.** `API.Orders.V2.OrderTypes.OrderInfo` and `API.Orders.OrderTypes.OrderInfo` carry the amount in the send currency from which an order of that type needs supporting documents: `0` for always, `null` for never. Any number, `0` included, means documents are required from that amount; only `null` switches them off. It is optional because a backend without base_backend#1679 / #1680 does not send it, and a missing field means the same as `null`. The generated V1 types (`apiV1External`, `apiV1Frontend`, `apiV1Legacy`, `apiV1Tenant`) carry it too, regenerated from the dev spec.
 
 ## [1.36.73] - 2026-09-26
@@ -233,14 +237,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Frontend notifications: `NotificationView.type` adds `MASS_PAYOUT_STATUS_CHANGED` and `CARD_OTP`, `NotificationPreference.channel` adds `SMS`, `NotificationCategoryPreference.category` adds `SECURITY`.
   - `OrderTypeId` adds `MONTHLY_FEE` in the frontend, tenant, external and legacy specs.
   - Crypto withdrawals document an optional cross-currency send: a `to_currency_id` different from `from_currency_id` debits the wallet in `from_currency_id` and delivers `amount_to` in `to_currency_id` at the tenant's rate (`400 EXCHANGE_RATE_NOT_FOUND` / `INVALID_REQUEST` / `DESTINATION_CHAIN_MISMATCH` on a bad pair, currency or network). The frontend `FrontendCryptoTransferRequest` already had `to_currency_id`; the tenant `CryptoTransferRequest` and the legacy `POST /v2/orders/OMNIBUS_CRYPTO_TRANSFER` body gain it. The tenant and external internal-transfer bodies gain optional `reference` and `note`.
-  - Documentation only: frontend `403` responses mention `TWO_FACTOR_REVERIFICATION_REQUIRED` for Clerk tenants, and vendor names (Utila, Interlace, Wallester) are dropped from descriptions.
+  - Documentation only: frontend `403` responses mention `TWO_FACTOR_REVERIFICATION_REQUIRED` for Clerk tenants, and vendor names are dropped from descriptions.
 
 ## [1.36.60] - 2026-09-07
 
 ### Added
 
 - **Banking destinations carry an optional beneficiary address (SFI-2363).** `CounterpartyBankingData` gains `beneficiary_address` — the recipient's own postal address, same `CounterpartyBankingAddress` shape as the bank address — in every destination read, and `API.Counterparties.Destination.Create.Request['external_banking_data']` accepts it on create. Unlike `address` (the BANK's address, overwritten from the bank directory on enrichment), the beneficiary address is user-owned: never enriched, exempt from the bank-country check, and payouts use it in place of the bank address when present. Absent → `null`, and payouts fall back to the bank address exactly as before, so nothing changes for existing destinations. Regenerated from the deployed dev spec (base_backend#1334).
-- **The same regen picked up the other spec changes deployed since 1.36.58:** the card-close response gains a `sweep` block (what happened to the sub-account balance before the close); exchange rates gain `base_rate` and `fx_spread` next to the spread-inclusive `rate`; the Reap Payments payout order types (`RPP_SWIFT_OFFRAMP`, `RPP_SEPA_OFFRAMP`, `RPP_FPS_OFFRAMP`, `RPP_ACH_OFFRAMP`) join `OrderTypeId`; wallet creation documents `chain_ids` as optional (a wallet can start with no addresses).
+- **The same regen picked up the other spec changes deployed since 1.36.58:** the card-close response gains a `sweep` block (what happened to the sub-account balance before the close); exchange rates gain `base_rate` and `fx_spread` next to the spread-inclusive `rate`; the `RPP_*` payout order types (`RPP_SWIFT_OFFRAMP`, `RPP_SEPA_OFFRAMP`, `RPP_FPS_OFFRAMP`, `RPP_ACH_OFFRAMP`) join `OrderTypeId`; wallet creation documents `chain_ids` as optional (a wallet can start with no addresses).
 
 ### Changed
 
@@ -333,7 +337,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **The fee some vendors charge inside a card operation is now typed.** Interlace and others bill the fee within the operation rather than as its own `FEE` row, which makes `billing_amount` the principal only. `TransactionItem` gains `fee` (in billing currency, `0` for vendors that bill separately), `fee_details` (the vendor's itemisation, as the new `TransactionFee`) and `conversion_rate`, all optional because older backends omit them. `total_amount` — already on the type but undocumented — is the figure to render as the transaction's amount.
+- **The fee some vendors charge inside a card operation is now typed.** Some card issuers bill the fee within the operation rather than as its own `FEE` row, which makes `billing_amount` the principal only. `TransactionItem` gains `fee` (in billing currency, `0` for vendors that bill separately), `fee_details` (the vendor's itemisation, as the new `TransactionFee`) and `conversion_rate`, all optional because older backends omit them. `total_amount` — already on the type but undocumented — is the figure to render as the transaction's amount.
 - **`min_topup` on the issuing program.** The per-program minimum top-up (`issuing_programs.min_topup`) is compared against the amount credited to the card after fees and conversion, and a deposit below it is refused with 400 `TOPUP_BELOW_MINIMUM`. `0` means no minimum, and the initial top-up at issuance is exempt. Optional on the type: a program served by a backend predating the migration omits it. Consumers had been reaching the field through a local cast.
 
 ## [1.36.52] - 2026-08-26
@@ -503,7 +507,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **`identity_verification_status` on wallet members** (`wallets.users.getAll` → `data[].user_data`) — the outcome of that member's Sumsub IDENTITY-document step, so a consumer can tell whether a teammate may be issued a card without a per-user lookup. `'APPROVED'` is the only value that permits issuing; every other value means "not (yet) eligible". The field is **optional**: `undefined` means _no information_ (a backend older than this field, or a member with no `user_data` row) and must not be read as "unverified" — fail open and let the API reject. Same enum as `API.User.UserData.UserData['identity_verification_status']`.
+- **`identity_verification_status` on wallet members** (`wallets.users.getAll` → `data[].user_data`) — the outcome of that member's KYC IDENTITY-document step, so a consumer can tell whether a teammate may be issued a card without a per-user lookup. `'APPROVED'` is the only value that permits issuing; every other value means "not (yet) eligible". The field is **optional**: `undefined` means _no information_ (a backend older than this field, or a member with no `user_data` row) and must not be read as "unverified" — fail open and let the API reject. Same enum as `API.User.UserData.UserData['identity_verification_status']`.
 
 ### Changed
 
@@ -524,7 +528,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **`user.verification.init` and `user.verification.resume`** — the per-user Sumsub verification ladder (`POST /user/verification/init`, `POST /user/verification/resume`). `init({ flow })` starts (or moves the applicant up to) the level for the requested step and returns `{ verificationId, verificationToken }` for the Sumsub WebSDK; `resume()` re-issues the WebSDK token for the level the user is already on. `flow` is `'data' | 'documents' | 'face'`: `data` collects the base profile, `documents` and `face` are the optional follow-up steps. Both are per-user and independent of the wallet-scoped `kyc.*` entity flow. `init` answers `404` when the tenant has no level configured for that step (the per-tenant rollout gate); `resume` answers `404` when the user was never initialized.
+- **`user.verification.init` and `user.verification.resume`** — the per-user KYC verification ladder (`POST /user/verification/init`, `POST /user/verification/resume`). `init({ flow })` starts (or moves the applicant up to) the level for the requested step and returns `{ verificationId, verificationToken }` for the provider SDK; `resume()` re-issues the SDK token for the level the user is already on. `flow` is `'data' | 'documents' | 'face'`: `data` collects the base profile, `documents` and `face` are the optional follow-up steps. Both are per-user and independent of the wallet-scoped `kyc.*` entity flow. `init` answers `404` when the tenant has no level configured for that step (the per-tenant rollout gate); `resume` answers `404` when the user was never initialized.
 - **`API.User.Verification.*` types** — `Flow`, `Init.Request`, `Init.Response`, `Resume.Response`.
 - **`UserVerificationFlows` enum** (`DATA` / `DOCUMENTS` / `FACE`) in `constants.ts`, with the usual compile-time parity check against the generated `API.User.Verification.Flow` union.
 - **New read-only fields on `API.User.UserData.UserData`** (returned by `user.userData.get()`): `identity_verification_status` and `face_verification_status` carry the per-step outcome (same status union as `kyc_status`, so the existing `KYCStatuses` enum applies, default `UNVERIFIED`), plus `profile_source` and `profile_synced_at` describing where the stored profile came from and when it was last synced from the provider. Poll `user.userData.get()` after the WebSDK reports completion — the step statuses and the profile fields (`first_name`, `last_name`, `birth_date`, `nationality`) are updated from the provider verdict, not from the client.
@@ -730,7 +734,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Exposed the new v2 order-creation routes for the Delos Financial and Brale RTP rails: `orders.v2.create.byOrderType[OrderType.DLS_WIRE_OFFRAMP|DLS_ACH_OFFRAMP|DLS_SEPA_OFFRAMP|DLS_SWIFT_OFFRAMP]` (USD/EUR/GBP withdrawals via Delos, sourced from a Delos virtual account) and `orders.v2.create.byOrderType[OrderType.BRL_RTP_OFFRAMP]` (stablecoin → USD Real-Time Payments transfer via Brale). Each has typed `Request`/`Response` under `API.Orders.V2.Create.ByOrderType.*`, with a new `Common.Response.DlsResponse` for the Delos offramps and `BRL_RTP_OFFRAMP` added to the Brale response union
+- Exposed the new v2 order-creation routes for the `DLS_*` and `BRL_RTP_OFFRAMP` rails: `orders.v2.create.byOrderType[OrderType.DLS_WIRE_OFFRAMP|DLS_ACH_OFFRAMP|DLS_SEPA_OFFRAMP|DLS_SWIFT_OFFRAMP]` (USD/EUR/GBP withdrawals sourced from the rail's virtual account) and `orders.v2.create.byOrderType[OrderType.BRL_RTP_OFFRAMP]` (stablecoin → USD Real-Time Payments transfer). Each has typed `Request`/`Response` under `API.Orders.V2.Create.ByOrderType.*`, with a new `Common.Response.DlsResponse` for the `DLS_*` offramps and `BRL_RTP_OFFRAMP` added to the `BraleResponse` union
 - Added the `BRL_RTP_OFFRAMP` and `DLS_{WIRE,ACH,SEPA,SWIFT}_{ONRAMP,OFFRAMP}` values to the `OrderType` and `WalletTransactionRecordType` enums to match the regenerated autogen `OrderTypeId`
 
 ## [1.36.5] - 2026-06-15
@@ -871,7 +875,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added new KYC and Persona admin endpoints with updated operations
+- Added new KYC admin endpoints, including the hosted KYC flow, with updated operations
 
 ## [1.34.17] - 2026-04-22
 
@@ -2138,7 +2142,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Persona inquiries initialization for advanced KYC workflows
+- Hosted KYC inquiry initialization for advanced KYC workflows
 - Rails and Forms namespaces with new types and methods for KYC integration (onboarding/compliance flows)
 
 ### Changed
