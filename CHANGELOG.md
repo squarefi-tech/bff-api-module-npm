@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.79] - 2026-09-29
+
 ### Added
 
 - **`squarefi_bff_api_client.frontend.kycRails` — wallet KYC rails on CORE (SFI-2614).** The CORE `/frontend` twin of the BFF `kyc.rails.*`, which it replaces. Four methods on `apiClientV1Frontend`, each resolving to the `{ success, data }` envelope as it comes:
