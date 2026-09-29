@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.81] - 2026-09-29
+
 ### Changed
 
 - **Vendor-neutral wording.** The README, source comments and past changelog entries describe the KYC provider, card issuers, custody and payout rails by their role and by order type prefix (`RPP_*`, `DLS_*`), not by vendor. Documentation only: no type or method changes. Order type ids, API paths and exported names stay as they are, since consumers use them.
