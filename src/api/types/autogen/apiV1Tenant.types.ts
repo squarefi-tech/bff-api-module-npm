@@ -6514,6 +6514,8 @@ export interface paths {
                      *     Accepts a single value or a comma-separated list, e.g. `status=ACTIVE,CANCELED`.
                      *      */
                     status?: ("ACTIVE" | "INACTIVE" | "SUSPENDED" | "CANCELED")[];
+                    /** @description Only cards issued to this cardholder. */
+                    cardholder_id?: string;
                     sub_account_type?: "balance" | "prepaid";
                     offset?: number;
                     limit?: number;

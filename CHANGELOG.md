@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`squarefi_bff_api_client.frontend.kycRails` — wallet KYC rails on CORE (SFI-2614).** The CORE `/frontend` twin of the BFF `kyc.rails.*`, which it replaces. Four methods on `apiClientV1Frontend`, each resolving to the `{ success, data }` envelope as it comes:
+  - `getAll({ wallet_id })` — `GET /frontend/wallets/{wallet_id}/kyc-rails`: the tenant's rails of the wallet's entity type and the universal ones, each with the wallet's application, plus `count`. No rails is an empty `data`, not the BFF's `404`.
+  - `getById({ wallet_id, rail_id })` — `GET /frontend/wallets/{wallet_id}/kyc-rails/{rail_id}`.
+  - `submit({ wallet_id, rail_id })` — `POST /frontend/wallets/{wallet_id}/kyc-rails/{rail_id}`: resolves to the rail after the submission. Refusals come as error codes (`RAIL_NOT_AVAILABLE`, `RAIL_TYPE_MISMATCH`, `KYC_NOT_APPROVED`, `RAIL_ALREADY_APPROVED`, `RAIL_SUBMISSION_IN_PROGRESS`, `RAIL_SUBMISSION_REJECTED`, `RAIL_SUBMISSION_FAILED`, …); the vendor's own reason is never returned.
+  - `confirmTerms({ wallet_id, rail_id })` — `POST /frontend/wallets/{wallet_id}/kyc-rails/{rail_id}/terms-and-conditions`.
+  Reads take any wallet member except the scoped `user` role; `submit` and `confirmTerms` take the wallet admin or owner, and only they get `wallet_rail.extra_actions`. There is no KYC gate, so a wallet on hold reads its rails instead of the BFF's `403`.
+- **`API.Frontend.KycRails` types**, derived from the generated spec: `WalletKycRail` (the BFF rail shape plus `can_submit` — whether a submission would be accepted now), `WalletKycRailApplication`, `WalletKycRailExtraAction`, `WalletKycRailTerms`, `RailStatus`, and `List` / `Get` / `Submit` / `ConfirmTerms` requests and responses. Against `API.KYC.Rails`: a term's `link` may be `null`, and an extra action may be `kyb_onboarding` (a vendor-hosted onboarding link) besides `verification`.
+
+### Deprecated
+
+- **`kyc.rails.*`** — the BFF `/kyc/{wallet_id}/rails` routes are replaced by `frontend.kycRails` (SFI-2614).
+
 ## [1.36.78] - 2026-09-28
 
 ### Added
