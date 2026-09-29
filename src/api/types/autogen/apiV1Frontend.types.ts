@@ -2904,6 +2904,8 @@ export interface paths {
                      *     client can act on. Pass `status=FAILED` to get them back.
                      *      */
                     status?: ("ACTIVE" | "INACTIVE" | "FROZEN" | "CANCELED" | "CLOSED" | "BLOCKED" | "FAILED" | "PENDING")[];
+                    /** @description Only cards issued to this cardholder. */
+                    cardholder_id?: string;
                     /** @description Filter cards by last 4 digits of the card number (partial, case-insensitive match) */
                     last4?: string;
                     /** @description Number of items to skip */
@@ -4765,7 +4767,10 @@ export interface paths {
         /**
          * Withdraw funds from sub-account
          * @description Withdraws funds from a sub-account back to the associated wallet.
-         *     Currency is automatically determined from sub-account's account_currency.
+         *     The sub-account is debited in its account_currency. The wallet is credited
+         *     in the tenant's base currency when the tenant has auto-exchange on (converted
+         *     at the tenant's WITHDRAW_CARD_SUBACCOUNT rate inside the same order), otherwise
+         *     — or when that pair has no rate — in the sub-account's account_currency.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -15128,6 +15133,279 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/frontend/wallets/{wallet_id}/kyc-rails": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * KYC rails of the wallet
+         * @description The tenant's KYC rails of the wallet's entity type and the universal ones, each with the wallet's
+         *     application on it. A rail is listed while it is active; an archived rail stays listed only when the
+         *     wallet is approved on it. `can_submit` tells whether `POST …/kyc-rails/{rail_id}` would be accepted now.
+         *
+         *     Replaces the BFF `GET /kyc/{wallet_id}/rails`; items have its shape plus `can_submit`.
+         *
+         *     **Access Control**: any member of the wallet except the scoped `user` role. No KYC gate.
+         *
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    wallet_id: components["parameters"]["KycRailsWalletId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Rails of the wallet */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["WalletKycRail"][];
+                            count: number;
+                        };
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["ForbiddenError"];
+                /** @description Wallet not found (NOT_FOUND) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/wallets/{wallet_id}/kyc-rails/{rail_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * One KYC rail of the wallet
+         * @description One rail with the wallet's application on it, under the visibility rule of the list.
+         *
+         *     Replaces the BFF `GET /kyc/{wallet_id}/rails/{rail_id}`.
+         *
+         *     **Access Control**: any member of the wallet except the scoped `user` role. No KYC gate.
+         *
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    wallet_id: components["parameters"]["KycRailsWalletId"];
+                    /** @description `kyc_rails.id` of the wallet's tenant */
+                    rail_id: components["parameters"]["KycRailId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The rail */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WalletKycRailResponse"];
+                    };
+                };
+                /** @description `rail_id` is not a UUID (VALIDATION_ERROR) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["ForbiddenError"];
+                /** @description No such rail on the wallet's tenant, or an archived rail the wallet is not approved on (RAIL_NOT_FOUND) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Submit the wallet to a KYC rail
+         * @description Puts the wallet on the rail, the way compliance does from the panel: a rail whose vendor CORE onboards
+         *     itself is submitted here, any other goes through the KYC-admin service. A manual rail waits for
+         *     compliance (`WAITING_ON_REVIEW`); a universal rail is approved on the spot. An application the vendor
+         *     sent back (`HOLD`, `SOFT_REJECT`) is resubmitted. No body.
+         *
+         *     Refused unless the rail has an onboarding implementation (Rail.io rails never do), takes submissions,
+         *     fits the entity type, and the entity's KYC is `APPROVED` or `WAITING_ON_REVIEW`. On a tenant without KYC
+         *     only the tenant's default universal rail can be submitted without it.
+         *
+         *     Replaces the BFF `POST /kyc/{wallet_id}/rails/{rail_id}`.
+         *
+         *     **Access Control**: wallet `admin` or `owner`. No KYC gate.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    wallet_id: components["parameters"]["KycRailsWalletId"];
+                    /** @description `kyc_rails.id` of the wallet's tenant */
+                    rail_id: components["parameters"]["KycRailId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The rail after the submission */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WalletKycRailResponse"];
+                    };
+                };
+                /** @description `rail_id` is not a UUID (VALIDATION_ERROR); the rail has no onboarding implementation, or is a universal
+                 *     rail other than the tenant's default on a tenant without KYC (RAIL_NOT_AVAILABLE); the rail takes no
+                 *     submissions (RAIL_SUBMIT_UNAVAILABLE); the rail is of the other entity type (RAIL_TYPE_MISMATCH); the
+                 *     onboarding behind the rail refused the submission (RAIL_SUBMISSION_REJECTED — the vendor's reason is
+                 *     logged, never returned)
+                 *      */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description Not an admin of the wallet (ACCESS_DENIED), or the entity's KYC is not approved or under review (KYC_NOT_APPROVED) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description No such rail on the wallet's tenant, or an archived one (RAIL_NOT_FOUND) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Already approved on the rail (RAIL_ALREADY_APPROVED), an application is with the vendor
+                 *     (RAIL_SUBMISSION_IN_PROGRESS), or the same submission is being processed (OPERATION_IN_PROGRESS)
+                 *      */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description The onboarding behind the rail failed or is unreachable (RAIL_SUBMISSION_FAILED), or the lock service is down (SERVICE_UNAVAILABLE) */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/wallets/{wallet_id}/kyc-rails/{rail_id}/terms-and-conditions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept the terms of a KYC rail
+         * @description Records that the wallet accepted the rail's terms (`wallet_rail.terms_confirmed`). The wallet must have
+         *     submitted to the rail first. No body.
+         *
+         *     Replaces the BFF `POST /kyc/{wallet_id}/rails/{rail_id}/terms-and-conditions`.
+         *
+         *     **Access Control**: wallet `admin` or `owner`. No KYC gate.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    wallet_id: components["parameters"]["KycRailsWalletId"];
+                    /** @description `kyc_rails.id` of the wallet's tenant */
+                    rail_id: components["parameters"]["KycRailId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The rail with the terms accepted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WalletKycRailResponse"];
+                    };
+                };
+                /** @description `rail_id` is not a UUID (VALIDATION_ERROR) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["ForbiddenError"];
+                /** @description No such rail (RAIL_NOT_FOUND), or the wallet never submitted to it (RAIL_NOT_SUBMITTED) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/frontend/notifications/test": {
         parameters: {
             query?: never;
@@ -17008,6 +17286,50 @@ export interface components {
             email: string | null;
             phone: string | null;
         };
+        /** @description A terms-and-conditions document of a KYC rail. */
+        WalletKycRailTerms: {
+            title: string;
+            description: string | null;
+            link: string | null;
+        };
+        /** @description Something the user has to do with the rail vendor: `verification` — a vendor self-verification link (`type` names it, `full_name` the person it is for); `kyb_onboarding` — the vendor-hosted onboarding link. */
+        WalletKycRailExtraAction: {
+            /** @enum {string} */
+            action: "verification" | "kyb_onboarding";
+            type: string;
+            full_name: string | null;
+            /** Format: uri */
+            url: string;
+        };
+        /** @description The wallet's application on the rail. `null` on the rail while the wallet never submitted to it. */
+        WalletKycRailApplication: {
+            /**
+             * @description `APPROVED` — onboarded. `PROCESSING` / `PENDING` — with the vendor. `HOLD` / `SOFT_REJECT` — the vendor asked for a resubmission. `WAITING_ON_REVIEW` — a manual rail waiting for compliance.
+             * @enum {string}
+             */
+            status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
+            /** @description Neutral text for the status, for display. Never the vendor's or compliance's own words. */
+            message: string | null;
+            terms_confirmed: boolean;
+            /** @description Vendor links to follow. Always empty for a caller below wallet `admin` — the links are one-time capabilities. */
+            extra_actions: components["schemas"]["WalletKycRailExtraAction"][];
+            /** @description The terms the rail had when the wallet first submitted — what the user accepted. */
+            terms_and_conditions: components["schemas"]["WalletKycRailTerms"][];
+        };
+        /** @description A KYC rail of the wallet's tenant with the wallet's application on it. Same shape as the BFF `GET /kyc/{wallet_id}/rails` item, plus `can_submit`. Vendor texts are not returned: `wallet_rail.message` is a neutral text for the status. */
+        WalletKycRail: {
+            /** Format: uuid */
+            id: string;
+            code: string | null;
+            name: string;
+            /** @description The rail takes submissions at all. */
+            is_submit_available: boolean;
+            /** @description The wallet can submit to the rail right now: it has an onboarding implementation, is of the entity's type or universal, the entity's KYC is approved or under review, and no application is approved or with the vendor. */
+            can_submit: boolean;
+            /** @description The rail's active terms, in display order. */
+            terms_and_conditions: components["schemas"]["WalletKycRailTerms"][];
+            wallet_rail: components["schemas"]["WalletKycRailApplication"] | null;
+        };
         /** @description One aggregated crypto balance of the wallet: every balance row sharing the same symbol is merged into a single entry, and `details[]` keeps the per-row breakdown. */
         WalletBalanceEntry: {
             symbol: string;
@@ -17947,6 +18269,11 @@ export interface components {
             /** @description Every transaction the request covers, in the order compliance linked them */
             transactions?: components["schemas"]["RfiTransaction"][];
         };
+        WalletKycRailResponse: {
+            /** @example true */
+            success: boolean;
+            data: components["schemas"]["WalletKycRail"];
+        };
     };
     responses: {
         /** @description Authentication credentials are missing or invalid */
@@ -18022,6 +18349,9 @@ export interface components {
         /** @description The account the requests are about. Requests and their conversations are kept per account. */
         RfiWalletId: string;
         RfiCaseId: string;
+        KycRailsWalletId: string;
+        /** @description `kyc_rails.id` of the wallet's tenant */
+        KycRailId: string;
     };
     requestBodies: never;
     headers: never;

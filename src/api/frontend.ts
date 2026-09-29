@@ -356,6 +356,30 @@ export const frontend = {
         ),
     },
   },
+  // Frontend twin of `kyc.rails.*` (BFF `/kyc/{wallet_id}/rails`). Reads take any wallet member; `submit` and
+  // `confirmTerms` take the wallet admin or owner, and only they get the rail's `extra_actions`.
+  kycRails: {
+    getAll: ({ wallet_id }: API.Frontend.KycRails.List.Request): Promise<API.Frontend.KycRails.List.Response> =>
+      apiClientV1Frontend.getRequest<API.Frontend.KycRails.List.Response>(`/frontend/wallets/${wallet_id}/kyc-rails`),
+    getById: ({ wallet_id, rail_id }: API.Frontend.KycRails.Get.Request): Promise<API.Frontend.KycRails.Get.Response> =>
+      apiClientV1Frontend.getRequest<API.Frontend.KycRails.Get.Response>(
+        `/frontend/wallets/${wallet_id}/kyc-rails/${rail_id}`,
+      ),
+    submit: ({
+      wallet_id,
+      rail_id,
+    }: API.Frontend.KycRails.Submit.Request): Promise<API.Frontend.KycRails.Submit.Response> =>
+      apiClientV1Frontend.postRequest<API.Frontend.KycRails.Submit.Response>(
+        `/frontend/wallets/${wallet_id}/kyc-rails/${rail_id}`,
+      ),
+    confirmTerms: ({
+      wallet_id,
+      rail_id,
+    }: API.Frontend.KycRails.ConfirmTerms.Request): Promise<API.Frontend.KycRails.ConfirmTerms.Response> =>
+      apiClientV1Frontend.postRequest<API.Frontend.KycRails.ConfirmTerms.Response>(
+        `/frontend/wallets/${wallet_id}/kyc-rails/${rail_id}/terms-and-conditions`,
+      ),
+  },
   reference: {
     // Frontend twin of `exchange.byOrderType.*` (legacy `GET /exchange/`): the same tenant pairs, but paged in
     // memory — 50 per page by default, 500 at most, in no particular order — and behind the bearer session.

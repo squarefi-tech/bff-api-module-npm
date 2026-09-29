@@ -1040,6 +1040,40 @@ export namespace API {
       }
     }
 
+    // Frontend twin of `kyc.rails.*` (BFF `/kyc/{wallet_id}/rails`): the same rail shape plus `can_submit`, inside
+    // the `{ success, data }` envelope. The list has no 404 "no rails" answer — an empty `data` is.
+    export namespace KycRails {
+      type ListRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/kyc-rails'];
+      type RailRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/kyc-rails/{rail_id}'];
+      type TermsRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/kyc-rails/{rail_id}/terms-and-conditions'];
+
+      export type WalletKycRail = componentsV1Frontend['schemas']['WalletKycRail'];
+      export type WalletKycRailApplication = componentsV1Frontend['schemas']['WalletKycRailApplication'];
+      export type WalletKycRailExtraAction = componentsV1Frontend['schemas']['WalletKycRailExtraAction'];
+      export type WalletKycRailTerms = componentsV1Frontend['schemas']['WalletKycRailTerms'];
+      export type RailStatus = WalletKycRailApplication['status'];
+
+      export namespace List {
+        export type Request = ListRoot['get']['parameters']['path'];
+        export type Response = ListRoot['get']['responses'][200]['content']['application/json'];
+      }
+
+      export namespace Get {
+        export type Request = RailRoot['get']['parameters']['path'];
+        export type Response = RailRoot['get']['responses'][200]['content']['application/json'];
+      }
+
+      export namespace Submit {
+        export type Request = RailRoot['post']['parameters']['path'];
+        export type Response = RailRoot['post']['responses'][200]['content']['application/json'];
+      }
+
+      export namespace ConfirmTerms {
+        export type Request = TermsRoot['post']['parameters']['path'];
+        export type Response = TermsRoot['post']['responses'][200]['content']['application/json'];
+      }
+    }
+
     export namespace Reference {
       export namespace ExchangeRates {
         type ExchangeRatesRoot = pathsV1Frontend['/frontend/reference/exchange_rates'];

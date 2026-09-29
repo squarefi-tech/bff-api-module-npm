@@ -2429,6 +2429,8 @@ export interface paths {
                      *     Pass `status=FAILED` to get them back.
                      *      */
                     status?: ("ACTIVE" | "INACTIVE" | "SUSPENDED" | "CANCELED")[];
+                    /** @description Only cards issued to this cardholder. */
+                    cardholder_id?: string;
                     /** @description Filter cards by last 4 digits of the card number (partial, case-insensitive match) */
                     last4?: string;
                     /** @description Number of items to skip */
@@ -4262,7 +4264,10 @@ export interface paths {
         /**
          * Withdraw funds from sub-account
          * @description Withdraws funds from a sub-account back to the associated wallet.
-         *     Currency is automatically determined from sub-account's account_currency.
+         *     The sub-account is debited in its account_currency. The wallet is credited
+         *     in the tenant's base currency when the tenant has auto-exchange on (converted
+         *     at the tenant's WITHDRAW_CARD_SUBACCOUNT rate inside the same order), otherwise
+         *     — or when that pair has no rate — in the sub-account's account_currency.
          *
          *     **Authentication**: x-api-key header required
          *

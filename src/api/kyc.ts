@@ -37,6 +37,7 @@ export const kyc = {
         `/kyc/entities/${kyc_entity_id}/resume/${verification_ref}`,
       ),
   },
+  /** @deprecated BFF rails are replaced by CORE `/frontend/wallets/{wallet_id}/kyc-rails` (SFI-2614). Use `frontend.kycRails`. */
   rails: {
     info: {
       getAll: ({ wallet_id }: API.KYC.Rails.RailInfo.List.Request): Promise<API.KYC.Rails.RailInfo.List.Response> =>
