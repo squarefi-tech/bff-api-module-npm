@@ -2243,6 +2243,11 @@ export namespace API {
     export type Message = componentsV1Frontend['schemas']['RfiMessage'];
     export type Attachment = componentsV1Frontend['schemas']['RfiAttachment'];
     export type Transaction = componentsV1Frontend['schemas']['RfiTransaction'];
+    /**
+     * The body of every RFI error response (`400`, `403`, `404`, `409`, `429`). The client rejects with
+     * the `AxiosError`, so read it from `response.data`; the RFI code is its `error.code`.
+     */
+    export type ErrorResponse = componentsV1Frontend['schemas']['ErrorResponse'];
 
     export type CaseStatus = Case['status'];
     export type CaseType = Case['type'];
