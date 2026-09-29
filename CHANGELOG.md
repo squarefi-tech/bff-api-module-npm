@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Generated types regenerated from the dev specs (base_backend#1766).** The Tenant, External, Frontend and Legacy descriptions name the KYC provider, card issuer and payout rail by their role instead of by vendor. Documentation only: every path, schema, field and enum value is unchanged, except for the item below. The `apiV2` types come from a different service and are regenerated once its descriptions follow.
+- **The same regen picked up a documented `400` on `GET /frontend/aml/{wallet_id}/screenings/{id}/report`.** It answers `ErrorResponse` with `AML_REPORT_PROVIDER_UNAVAILABLE` while the screening provider cannot hand the report over; retry later. No SDK method wraps this path, so only `paths` changes.
+
 ## [1.36.81] - 2026-09-29
 
 ### Changed

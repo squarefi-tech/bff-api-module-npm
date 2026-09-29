@@ -2836,7 +2836,7 @@ export interface paths {
                                  *
                                  *     L2F orders (L2F_*_OFFRAMP):
                                  *     - virtual_account_id, virtual_account_name
-                                 *     - vendor_account_id (Railio account ID)
+                                 *     - vendor_account_id (account ID at the rail provider)
                                  *     - counterparty_destination_id
                                  *     - counterparty_account_id
                                  *     - counterparty_account_name
@@ -2906,7 +2906,7 @@ export interface paths {
                                     processing_started_at?: string | null;
                                     /** @description QStash message ID for async workflows */
                                     qstash_message_id?: string | null;
-                                    /** @description Vendor account ID (Railio, etc.) */
+                                    /** @description Account ID at the rail provider */
                                     vendor_account_id?: string | null;
                                 };
                             }[];
@@ -3602,8 +3602,8 @@ export interface components {
          * @description Standardized originator (sender) information for incoming fiat payments,
          *     exposed as `order.meta.originator`.
          *
-         *     The shape is the same whichever rail carried the payment — L2F, Brale,
-         *     BCB or Delos onramps all normalize into it. Sender details come from the
+         *     The shape is the same whichever rail carried the payment — every fiat
+         *     onramp rail normalizes into it. Sender details come from the
          *     paying bank, so how much is populated varies by rail and by payment:
          *     `profile.name` is almost always present, while the sender's address is
          *     rarely reported and is often empty for every field.
@@ -3650,12 +3650,12 @@ export interface components {
                 crypto_address?: string | null;
             } | null;
             /**
-             * @description Payment reference number (rail_reference from Railio)
+             * @description Payment reference number (rail_reference from the rail provider)
              * @example 20251016MMQFMP2U004005
              */
             reference?: string | null;
             /**
-             * @description Payment memo/note (rail_originator_memo from Railio)
+             * @description Payment memo/note (rail_originator_memo from the rail provider)
              * @example bfgkp5w
              */
             memo?: string | null;
