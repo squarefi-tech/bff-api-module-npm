@@ -484,12 +484,15 @@ export namespace API {
       id: number;
       name: string;
       symbol: string;
+      /** The network name to show people (BNB Smart Chain, TRON); when null, show name. name and symbol are stable keys, not labels. */
+      display_name: string | null;
       is_beta: boolean | null;
     }
 
     export type ChainList = {
-      count: number;
+      total: number;
       data: Chain[];
+      has_more: boolean;
     };
   }
 

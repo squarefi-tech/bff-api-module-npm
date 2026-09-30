@@ -7954,11 +7954,22 @@ export interface components {
         /** @description Blockchain chain reference */
         ChainRef: {
             id?: number;
-            /** @example Ethereum */
+            /**
+             * @description Stable key of the network. Match on `id`, `name` or `symbol`; show `display_name`.
+             * @example Ethereum
+             */
             name?: string;
-            /** @example ETH */
+            /**
+             * @description Stable key of the network (not a ticker to display).
+             * @example ETH
+             */
             symbol?: string;
             enabled?: boolean;
+            /**
+             * @description Network name to show people. Falls back to `name`.
+             * @example BNB Smart Chain
+             */
+            display_name?: string;
         };
         /** @description Crypto deposit address */
         CryptoAddress: {

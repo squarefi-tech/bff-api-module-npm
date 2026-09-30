@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`display_name` on `API.Chains.Chain` — the name of a network to show people (SFI-2661).** `list.chains.getAll` (`GET /system/chains`) now returns it on every network: `BNB Smart Chain` where `name` is `Binance Smart Chain`, `TRON` for `Tron`, `TON` for `The Open Network`, and the same as `name` for the rest. `name` and `symbol` stay what they were — stable keys to match on and look icons up by, not labels — so show `chain.display_name ?? chain.name`. The field is required and `string | null`, as the spec declares it. Production gets it with the next backend release; until then the field is missing from the response, and the `?? chain.name` fallback covers that. Code that builds a `Chain` by hand (mocks, fixtures) must now set `display_name`.
+
+### Changed
+
+- **Generated types regenerated from the dev specs: `display_name` on the chain schemas (SFI-2661).** The backend added the name of a network to show people (`BNB Smart Chain`, `TRON`, `TON`) next to `name` and `symbol`, which the specs now describe as stable keys to match on, not labels. The `apiV2` `ChainDto` gains a required `display_name: string | null`. The Frontend `Chain` schema gains an optional `display_name?: string | null`, so the `chain` of each item in `API.Wallets.WalletChain.GetAll.Response` (`GET /frontend/wallets/{wallet_id}/addresses`) carries it. The External `ChainRef` and the Tenant chain objects gain an optional `display_name?: string`. No field is removed and no existing field changes type. The hand-written `API.Chains.Chain` that `list.chains.getAll` returns is not generated, so this regen leaves it as it is.
+- **The same regen documents the body of `GET /frontend/reference/chains`.** Its `200` declared no content; it now answers `{ success, data: ReferenceChain[], pagination? }`. `ReferenceChain` is a new schema: `id`, `name`, `symbol`, `enabled`, `display_name` (a `string` that falls back to `name`) and the optional `aml_supported`. No SDK method wraps this path, so only `paths` and `components` change.
+
+### Fixed
+
+- **`API.Chains.ChainList` matches what `GET /system/chains` returns.** The type declared `count`, which the endpoint never sends; the response is `{ total, data, has_more }`, as the spec's `SystemChainsResponseDto` and the dev stand agree. `ChainList` now has `total: number` and `has_more: boolean` in place of `count`. Code that read `count` got `undefined` at runtime and now stops compiling; read `total` instead.
+
 ## [1.36.83] - 2026-09-29
 
 ### Changed
