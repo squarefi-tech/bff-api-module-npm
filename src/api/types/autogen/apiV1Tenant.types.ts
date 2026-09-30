@@ -3882,6 +3882,8 @@ export interface paths {
                                 name?: string;
                                 symbol?: string;
                                 enabled?: boolean;
+                                /** @description Network name to show people; falls back to `name` */
+                                display_name?: string;
                             }[];
                         };
                     };
@@ -8037,9 +8039,16 @@ export interface components {
             is_tenant_enabled?: boolean;
             chain?: {
                 id?: number;
+                /** @description Stable key of the network; show `display_name` */
                 name?: string;
+                /** @description Stable key of the network */
                 symbol?: string;
                 enabled?: boolean;
+                /**
+                 * @description Network name to show people; falls back to `name`
+                 * @example BNB Smart Chain
+                 */
+                display_name?: string;
             } | null;
         };
         CryptoAddress: {

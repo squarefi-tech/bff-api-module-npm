@@ -10352,7 +10352,14 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["ReferenceChain"][];
+                            pagination?: components["schemas"]["PaginationResponse"];
+                        };
+                    };
                 };
                 401: components["responses"]["UnauthorizedError"];
             };
@@ -16519,7 +16526,30 @@ export interface components {
             /** Format: date-time */
             created_at?: string;
         };
-        /** @description Blockchain network as stored in the `chain` reference table. Embedded whole into every item of `GET /frontend/wallets/{wallet_id}/addresses`; `GET /frontend/reference/chains` returns the `id` / `name` / `symbol` / `enabled` subset of the same rows. Rely on those four fields — the rest is the raw reference row and is not a stable contract. */
+        /** @description A network on `GET /frontend/reference/chains` (and the `chain` of each currency on `GET /frontend/reference/currencies`). `name` and `symbol` are keys: match on them, show `display_name`. */
+        ReferenceChain: {
+            /** @example 3 */
+            id: number;
+            /**
+             * @description Stable key of the network
+             * @example Binance Smart Chain
+             */
+            name: string | null;
+            /**
+             * @description Stable key of the network, not a ticker to display
+             * @example BSC
+             */
+            symbol: string | null;
+            enabled: boolean;
+            /**
+             * @description Network name to show people; falls back to `name`
+             * @example BNB Smart Chain
+             */
+            display_name: string;
+            /** @description Whether the tenant's AML provider can screen addresses on this network (chains list only) */
+            aml_supported?: boolean;
+        };
+        /** @description Blockchain network as stored in the `chain` reference table. Embedded whole into every item of `GET /frontend/wallets/{wallet_id}/addresses`; `GET /frontend/reference/chains` returns the `ReferenceChain` subset of the same rows. Rely on `id` / `name` / `symbol` / `enabled` / `display_name` — the rest is the raw reference row and is not a stable contract. `name` and `symbol` are keys: match on them, show `display_name`. */
         Chain: {
             /**
              * @description Numeric chain ID — the value `chain` carries on the single-address endpoints and in the `{chain}` path parameter
@@ -16532,6 +16562,11 @@ export interface components {
             symbol: string | null;
             /** @description Whether new addresses can be created on this network */
             enabled: boolean;
+            /**
+             * @description Network name to show people, as stored. Filled for every network; `GET /frontend/reference/chains` (`ReferenceChain`) also falls back to `name`.
+             * @example BNB Smart Chain
+             */
+            display_name?: string | null;
             is_beta?: boolean | null;
             is_testnet?: boolean | null;
             /** @description Public RPC endpoint of the network */

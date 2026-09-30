@@ -1436,8 +1436,15 @@ export interface components {
         };
         ChainDto: {
             id: number;
+            /** @description Stable key of the network (e.g. `Binance Smart Chain`). Match on it; show `display_name`. */
             name: string | null;
+            /** @description Stable key of the network (e.g. `MATIC`), also the icon key. Not a ticker to display. */
             symbol: string | null;
+            /**
+             * @description Network name to show people (BNB Smart Chain, TRON, TON). Falls back to `name`.
+             * @example BNB Smart Chain
+             */
+            display_name: string | null;
             is_beta: boolean | null;
         };
         AllChainsResponseDto: {
