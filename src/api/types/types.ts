@@ -490,8 +490,9 @@ export namespace API {
     }
 
     export type ChainList = {
-      count: number;
+      total: number;
       data: Chain[];
+      has_more: boolean;
     };
   }
 
