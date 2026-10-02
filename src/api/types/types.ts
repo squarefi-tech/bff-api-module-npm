@@ -598,6 +598,7 @@ export namespace API {
           external_banking_data?: never;
           external_crypto_data: DestinationListItemExternalCryptoData;
           internal_data?: never;
+          validation_issues?: never;
         }
 
         export interface DestinationListItemWithInternalData extends DestinationListItemCommonFields {
@@ -605,6 +606,7 @@ export namespace API {
           external_banking_data?: never;
           external_crypto_data?: never;
           internal_data: DestinationInternalData;
+          validation_issues?: never;
         }
 
         export type CounterpartyDestinationListItem =
