@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`API.Orders.Frontend.Order` — an order as the frontend router returns it (SFI-1507).** It aliases the frontend spec's `Order` schema: the items of `orders.frontend.list.byWallet` and the `data` of `OrderEnvelope`, the envelope the `create`, `approve`, `cancel` and `comment` responses share, which is now written through it. Code that reached the order as `NonNullable<API.Orders.Frontend.OrderEnvelope['data']>` can name it directly; both resolve to the same type.
+- **`OrderStatuses.EXPECTED` and `OrderStatuses.REFUNDED` (SFI-1507).** `EXPECTED` is a scheduled payment waiting for its `scheduled_at`, which the Scheduled tab of the order list filters on. `REFUNDED` is a failed order whose funds were paid back, as opposed to `CANCELED`, where nothing ever moved. A `Record<OrderStatuses, …>` (status labels, colours) now needs both keys, and an exhaustive `switch` over a status needs both cases.
+
+### Fixed
+
+- **The order-list status filter accepts `EXPECTED` and `REFUNDED` (SFI-1507).** `API.Orders.OrderStatus` was a hand-written list that had fallen behind the server. It lacked both statuses, so `filters: [{ status: 'EXPECTED' }]` did not compile, although `filters` takes any order column and dev answers that filter with `200` (checked 2026-10-02). The type is now read off the frontend `Order` schema, `NEW | PENDING | EXPECTED | PROCESSING | COMPLETE | FAILED | CANCELED | REFUNDED`, so a status the backend adds arrives with the next regeneration. `OrderListStatusFilter` follows it for `orders.frontend.list.byWallet`, `orders.frontend.list.csv.getByWalletUuid` and the legacy `orders.v2.list.*` alike, with a single value or an array (`[{ status: ['NEW', 'EXPECTED'] }]`). So does every other `status` typed as `OrderStatus`: `API.Orders.V2.List.ByWallet.OrderItem` (and with it `API.Orders.V2.GetById.Response`), `API.Orders.V2.Create.Common.Response.BaseOrderResponse`, `API.Orders.Status.Response` and the `API.Orders.Create.ByOrderType.*` responses that carry a `status`. Through `OrderStatuses`, so does the `data.status` of `API.Frontend.Issuing.SubAccounts.Deposit.Response` and `Withdraw.Response`.
+- **`OrderStatusCheck` compares `OrderStatuses` with the schema.** It checked the enum against `API.Orders.V2.GetById.Response['status']`, the same hand-written list, so it could not see the drift. It now checks against `API.Orders.OrderStatus`, and a status added to or dropped from the `Order` schema fails the build until the enum follows. `OrderStatusMismatch` takes the same union.
+
+### Removed
+
+- **`ERROR` from `OrderStatuses` and `API.Orders.OrderStatus` — breaking for consumers (SFI-1507).** The `Order` schema has no `ERROR`: a failure there is always `FAILED`. The spec's report parameters (`BankingCryptoStatementParams.statuses`) still accept `ERROR` and note that it exists on legacy orders only; the SDK type follows the `Order` schema, which does not list it. Code that uses `OrderStatuses.ERROR`, compares a status with `'ERROR'` or has a `case 'ERROR'` stops compiling: handle `FAILED`, and `REFUNDED` for a failed order whose funds came back. The change ships in a patch release, since CI bumps the patch on every merge, so a `^1.36` range picks it up on the next install.
+
 ## [1.36.84] - 2026-09-30
 
 ### Added

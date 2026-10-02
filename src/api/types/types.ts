@@ -2577,7 +2577,12 @@ export namespace API {
       }
     }
 
-    export type OrderStatus = 'NEW' | 'PENDING' | 'PROCESSING' | 'CANCELED' | 'COMPLETE' | 'ERROR' | 'FAILED';
+    /**
+     * Read off the `Order` schema rather than re-declared, so a status the backend adds lands here
+     * on the next regeneration. `EXPECTED` = a scheduled payment waiting for its `scheduled_at`;
+     * `REFUNDED` = a failed order whose funds were paid back.
+     */
+    export type OrderStatus = NonNullable<API.Orders.Frontend.Order['status']>;
 
     export namespace OrderTypes {
       export type OrderTypeKycRail = {
@@ -3372,10 +3377,14 @@ export namespace API {
       // Result payload returned inside the `orders.frontend.calc` response envelope (`{ success, data }`).
       export type OrderCalculation = componentsV1Frontend['schemas']['OrderCalculation'];
 
+      // An order as the frontend router returns it: the items of `orders.frontend.list.byWallet`
+      // and the `data` of every OrderEnvelope.
+      export type Order = componentsV1Frontend['schemas']['Order'];
+
       // Shared success envelope returned by every create/approve/cancel frontend order endpoint.
       export type OrderEnvelope = {
         success?: boolean;
-        data?: componentsV1Frontend['schemas']['Order'];
+        data?: Order;
         message?: string;
       };
 
