@@ -1227,7 +1227,8 @@ export interface paths {
          *     Matching is by full code — prefix search is not supported, so `data`
          *     carries at most one element today. A well-formed code that matches no
          *     bank is `200` with an empty `data`, not a 404. Banks that do not accept
-         *     the selected method also resolve to an empty `data`.
+         *     the selected method also resolve to an empty `data` — for `sepa`, that
+         *     includes a bank outside the SEPA zone.
          *
          *     **Authentication**: Bearer token + x-tenant-id header
          *
@@ -1953,6 +1954,183 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/counterparty/destinations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create destination
+         * @description counterparty_account_id in body. Caller must be owner or admin of the account's wallet and the wallet's KYC must be APPROVED; other members receive 403.
+         *
+         *     **Banking types**: banking_data required. `banking_data.address` (the bank address) is mandatory; `banking_data.beneficiary_address` (the recipient's own postal address, same shape) is optional — when present it must be complete (city, country_id, postcode, street1; state_id on US rails), is never overwritten by bank-directory enrichment, is exempt from the bank-country check, and payouts use it in place of the bank address.
+         *     **Crypto types**: crypto_data required
+         *     **Internal type**: internal_data required (target wallet on the same platform)
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        counterparty_account_id: string;
+                        /** @enum {string} */
+                        type: "ACH" | "RTP" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
+                        nickname?: string;
+                        banking_data?: Record<string, never>;
+                        crypto_data?: Record<string, never>;
+                        /** @description Required for type INTERNAL — points at the receiver wallet. An account holds one INTERNAL destination per wallet; if it already has an active one to this wallet, that destination is returned instead of a new one. */
+                        internal_data?: {
+                            /**
+                             * Format: uuid
+                             * @description Target (receiver) wallet uuid on the same platform.
+                             */
+                            wallet_id: string;
+                            /** @description Optional, reserved for future use. */
+                            description?: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                destination: components["schemas"]["CounterpartyDestination"];
+                                /** @example Destination created successfully */
+                                message: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Validation error: type-specific payload missing or invalid, target wallet inactive, or the address country contradicts the bank code country (`BANK_COUNTRY_MISMATCH`).
+                 *
+                 *     Bank details are checked per payment method — IBAN (country, length, account format, check digits), SWIFT/BIC, ABA routing number, US/UK account number, sort code, IBAN inside the SEPA zone on SEPA. Every problem is listed in `error.details.issues` (`field`, `code`, `message`, optional `country` / `detected`), so a form can mark each field; `POST /frontend/counterparty/destinations/validate` returns the same list without saving.
+                 *      */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Access denied, or (Clerk tenants) the second-factor verification is
+                 *     stale — `TWO_FACTOR_REVERIFICATION_REQUIRED`: re-verify and retry.
+                 *      */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Account not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/counterparty/destinations/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate destination details without saving
+         * @description Dry run of `POST /frontend/counterparty/destinations`: the same body, the same checks —
+         *     bank details per payment method, address completeness, location reference data, the
+         *     bank-country check — and nothing is saved. Answers `200` whether or not the details are
+         *     valid; `valid: false` comes with every problem in `issues`. A form calls it as bank fields
+         *     are left and before submitting, and shows each issue's `message` under its `field`.
+         *
+         *     No counterparty account is needed and no second-factor step-up is asked. Without an account it
+         *     cannot tell whether an INTERNAL target wallet is active — creation still checks that. Rate limited
+         *     to 60 requests per minute per user.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        type: "ACH" | "RTP" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
+                        banking_data?: Record<string, never>;
+                        crypto_data?: Record<string, never>;
+                        internal_data?: Record<string, never>;
+                    };
+                };
+            };
+            responses: {
+                /** @description Validation result */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["DestinationValidationResult"];
+                        };
+                    };
+                };
+                /** @description Too many validation requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -15951,8 +16129,37 @@ export interface components {
             banking_data?: components["schemas"]["CounterpartyBankingData"] | null;
             crypto_data?: components["schemas"]["CounterpartyCryptoData"] | null;
             internal_data?: components["schemas"]["CounterpartyInternalData"] | null;
+            /** @description Banking destinations only: problems that make the stored bank details unpayable (an IBAN that fails its checks, an IBAN outside SEPA on a SEPA destination, a routing number that fails the ABA check). Non-empty means withdrawals to this destination are refused with `DESTINATION_INVALID` — details cannot be edited, so add a new destination. Empty for valid banking destinations; absent for crypto and internal ones. */
+            validation_issues?: components["schemas"]["DestinationValidationIssue"][];
             /** @description Embedded on the list and get-by-id reads; absent on create/update. */
             counterparty_account?: components["schemas"]["CounterpartyAccountRef"] | null;
+        };
+        /** @description One problem with a destination payload. `field` is the request path of the offending value (`iban`, `routing_number`, `address.city`…); `message` is ready to show under that field. */
+        DestinationValidationIssue: {
+            /** @example iban */
+            field: string;
+            /**
+             * @description Machine-readable reason. Bank details: `REQUIRED`, `IBAN_WRONG_FORMAT`, `IBAN_INVALID_CHARACTERS`, `IBAN_COUNTRY_NOT_SUPPORTED`, `IBAN_WRONG_LENGTH`, `IBAN_WRONG_BBAN_FORMAT`, `IBAN_WRONG_CHECKSUM`, `IBAN_WRONG_NATIONAL_CHECKSUM`, `IBAN_QR_NOT_ALLOWED`, `IBAN_NOT_SEPA`, `IBAN_BIC_COUNTRY_MISMATCH`, `BIC_WRONG_FORMAT`, `BIC_UNKNOWN_COUNTRY`, `BIC_TEST_CODE`, `ROUTING_NUMBER_INVALID`, `ACCOUNT_NUMBER_INVALID`, `SORT_CODE_INVALID`, `WRONG_IDENTIFIER_TYPE`, `INVALID_VALUE`; reference data: `BANK_COUNTRY_MISMATCH`, `VALIDATION_ERROR`; dry run only: `INVALID_TYPE`. New codes may be added — show `message` for an unknown one.
+             * @example IBAN_NOT_SEPA
+             */
+            code: string;
+            /** @example IBAN country AE is outside the SEPA zone — SEPA transfers cannot reach it */
+            message: string;
+            /**
+             * @description ISO 3166-1 alpha-2 country the problem is about, when there is one
+             * @example AE
+             */
+            country?: string;
+            /**
+             * @description For `WRONG_IDENTIFIER_TYPE`: what the value looks like (an IBAN typed into a US account-number field…)
+             * @enum {string}
+             */
+            detected?: "IBAN" | "BIC" | "ROUTING_NUMBER";
+        };
+        DestinationValidationResult: {
+            /** @description True when creating the destination with this payload would pass every check */
+            valid: boolean;
+            issues: components["schemas"]["DestinationValidationIssue"][];
         };
         /** @description Whether an instant internal transfer is available for a counterparty destination. Two states: available (available=true, target_wallet_id set) and not available (available=false, target_wallet_id=null). Any recipient that cannot receive an instant internal transfer is uniformly reported as not available — the check does not disclose the reason. */
         InternalTransferAvailability: {
