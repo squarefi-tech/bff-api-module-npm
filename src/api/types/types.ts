@@ -558,6 +558,10 @@ export namespace API {
         | Extract<CounterpartyDestinationType, 'CRYPTO_INTERNAL'>;
       export type InternalDestinationType = Extract<CounterpartyDestinationType, 'INTERNAL'>;
       export type DestinationType = BankingDestinationType | CryptoDestinationType | InternalDestinationType;
+      // Одна проблема реквизита, как её отдаёт бэкенд: в ответе validate, в details.issues отказа
+      // create и в validation_issues банковского реквизита. field — путь в теле запроса
+      // (iban, routing_number, address.city…), message показывается под этим полем как есть.
+      export type ValidationIssue = componentsV1Frontend['schemas']['DestinationValidationIssue'];
       export namespace List {
         export interface DestinationListItemCommonFields {
           id: string;
@@ -583,6 +587,10 @@ export namespace API {
           external_banking_data: DestinationListItemExternalBankingData;
           external_crypto_data?: never;
           internal_data?: never;
+          // Что делает сохранённые реквизиты невыплачиваемыми (пусто — ничего). Вывод на такой
+          // реквизит бэкенд отклоняет с DESTINATION_INVALID, а реквизиты не редактируются —
+          // UI показывает его неактивным и предлагает завести новый.
+          validation_issues?: ValidationIssue[];
         }
 
         export interface DestinationListItemWithExternalCryptoData extends DestinationListItemCommonFields {
@@ -674,6 +682,15 @@ export namespace API {
         }
 
         export type Response = Detail.DestinationDetailItem;
+      }
+
+      // POST /frontend/counterparty/destinations/validate — пробный прогон create: те же проверки,
+      // ничего не сохраняет, отвечает 200 { valid, issues }. Тело — как у create, без полей,
+      // которые нужны только для сохранения (счёт контрагента, nickname).
+      export namespace Validate {
+        export type Request = Omit<Create.Request, 'counterparty_account_id' | 'nickname'>;
+
+        export type Response = componentsV1Frontend['schemas']['DestinationValidationResult'];
       }
 
       export namespace Delete {
