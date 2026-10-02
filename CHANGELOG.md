@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.85] - 2026-10-02
+
 ### Added
 
 - **`counterparties.destinations.validate` — dry run of destination creation (SFI-2607).** `POST /frontend/counterparty/destinations/validate` with the same body as `destinations.create` (the `external_banking_data` / `external_crypto_data` / `internal_data` keys, mapped the same way; no `counterparty_account_id` or `nickname`), resolving to `{ valid, issues }` (`API.Counterparties.Destination.Validate.Response`). It runs the checks creation runs — bank details per payment method (IBAN per country, SEPA zone, BIC, ABA routing number, account and sort-code formats), address completeness, the bank-country check — and saves nothing; only whether an `INTERNAL` target wallet is active is left to creation, which needs the counterparty account. Each issue (`API.Counterparties.Destination.ValidationIssue`) is `{ field, code, message, country?, detected? }`: `field` is the request path (`iban`, `routing_number`, `address.city`…), `message` is meant to be shown under that field as is. Bank-details rules live only on the backend; forms call this instead of checking formats themselves. The backend limits it to 60 requests per minute per user.
