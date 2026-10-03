@@ -401,15 +401,18 @@ export type UserVerificationFlowMismatch = EnumUnionMismatch<UserVerificationFlo
 export enum OrderStatuses {
   NEW = 'NEW',
   PENDING = 'PENDING',
+  EXPECTED = 'EXPECTED',
   PROCESSING = 'PROCESSING',
   CANCELED = 'CANCELED',
   COMPLETE = 'COMPLETE',
+  /** @deprecated Legacy orders only; the `Order` schema has no `ERROR` and reports a failure as `FAILED`. */
   ERROR = 'ERROR',
   FAILED = 'FAILED',
+  REFUNDED = 'REFUNDED',
 }
 
-export const OrderStatusCheck: IsEnumEqualToUnion<OrderStatuses, API.Orders.V2.GetById.Response['status']> = true;
-export type OrderStatusMismatch = EnumUnionMismatch<OrderStatuses, API.Orders.V2.GetById.Response['status']>;
+export const OrderStatusCheck: IsEnumEqualToUnion<OrderStatuses, API.Orders.OrderStatus> = true;
+export type OrderStatusMismatch = EnumUnionMismatch<OrderStatuses, API.Orders.OrderStatus>;
 
 export enum CardStatus {
   ACTIVE = 'ACTIVE',
