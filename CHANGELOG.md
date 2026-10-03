@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.86] - 2026-10-03
+
 ### Added
 
 - **`API.Orders.Frontend.Order` — an order as the frontend router returns it (SFI-1507).** It aliases the frontend spec's `Order` schema: the items of `orders.frontend.list.byWallet` and the `data` of `OrderEnvelope`, the envelope the `create`, `approve`, `cancel` and `comment` responses share, which is now written through it. Code that reached the order as `NonNullable<API.Orders.Frontend.OrderEnvelope['data']>` can name it directly; both resolve to the same type.
