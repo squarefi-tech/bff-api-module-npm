@@ -2599,9 +2599,10 @@ export namespace API {
     /**
      * Read off the `Order` schema rather than re-declared, so a status the backend adds lands here
      * on the next regeneration. `EXPECTED` = a scheduled payment waiting for its `scheduled_at`;
-     * `REFUNDED` = a failed order whose funds were paid back.
+     * `REFUNDED` = a failed order whose funds were paid back. `ERROR` is not in the schema: it exists on
+     * legacy orders only and is kept so code that handles it keeps compiling; new orders fail as `FAILED`.
      */
-    export type OrderStatus = NonNullable<API.Orders.Frontend.Order['status']>;
+    export type OrderStatus = NonNullable<API.Orders.Frontend.Order['status']> | 'ERROR';
 
     export namespace OrderTypes {
       export type OrderTypeKycRail = {
