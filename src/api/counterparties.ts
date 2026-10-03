@@ -36,8 +36,27 @@ const mapDestination = (destination: FrontendDestination): DestinationListItem =
     return { ...common, internal_data: destination.internal_data } as DestinationListItem;
   }
 
-  return { ...common, external_banking_data: destination.banking_data } as DestinationListItem;
+  return {
+    ...common,
+    external_banking_data: destination.banking_data,
+    ...(destination.validation_issues ? { validation_issues: destination.validation_issues } : {}),
+  } as DestinationListItem;
 };
+
+// Тело create/validate: наружу external_* контракт, на провод — ключи фронт-модуля. wallet_id бэкенду
+// не нужен (кошелёк берётся из счёта контрагента) и не отправляется.
+const toDestinationBody = <T extends API.Counterparties.Destination.Validate.Request>({
+  wallet_id: _wallet_id,
+  external_banking_data,
+  external_crypto_data,
+  internal_data,
+  ...rest
+}: T) => ({
+  ...rest,
+  ...(external_banking_data ? { banking_data: external_banking_data } : {}),
+  ...(external_crypto_data ? { crypto_data: external_crypto_data } : {}),
+  ...(internal_data ? { internal_data } : {}),
+});
 
 export const counterparties = {
   getAll: async ({
@@ -137,24 +156,28 @@ export const counterparties = {
 
       return mapDestination(res.data.destination);
     },
-    create: async ({
-      wallet_id: _wallet_id,
-      external_banking_data,
-      external_crypto_data,
-      internal_data,
-      ...rest
-    }: API.Counterparties.Destination.Create.Request): Promise<API.Counterparties.Destination.Create.Response> => {
-      const data = {
-        ...rest,
-        ...(external_banking_data ? { banking_data: external_banking_data } : {}),
-        ...(external_crypto_data ? { crypto_data: external_crypto_data } : {}),
-        ...(internal_data ? { internal_data } : {}),
-      };
+    create: async (
+      request: API.Counterparties.Destination.Create.Request,
+    ): Promise<API.Counterparties.Destination.Create.Response> => {
+      const data = toDestinationBody(request);
       const res = await apiClientV1Frontend.postRequest<
         Envelope<{ destination: FrontendDestination; message: string }>
       >(`/frontend/counterparty/destinations`, { data });
 
       return mapDestination(res.data.destination);
+    },
+    // Пробный прогон create: те же проверки реквизитов, ничего не сохраняет. Правила живут
+    // только на бэкенде — формы спрашивают этот вызов вместо собственных проверок формата.
+    validate: async (
+      request: API.Counterparties.Destination.Validate.Request,
+    ): Promise<API.Counterparties.Destination.Validate.Response> => {
+      const data = toDestinationBody(request);
+      const res = await apiClientV1Frontend.postRequest<Envelope<API.Counterparties.Destination.Validate.Response>>(
+        `/frontend/counterparty/destinations/validate`,
+        { data },
+      );
+
+      return res.data;
     },
     update: async ({
       counterparty_destination_id,
