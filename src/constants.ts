@@ -405,8 +405,6 @@ export enum OrderStatuses {
   PROCESSING = 'PROCESSING',
   CANCELED = 'CANCELED',
   COMPLETE = 'COMPLETE',
-  /** @deprecated Legacy orders only; the `Order` schema has no `ERROR` and reports a failure as `FAILED`. */
-  ERROR = 'ERROR',
   FAILED = 'FAILED',
   REFUNDED = 'REFUNDED',
 }

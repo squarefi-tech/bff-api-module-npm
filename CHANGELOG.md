@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **`OrderStatuses.ERROR` and `'ERROR'` in `API.Orders.OrderStatus` — breaking for consumers (SFI-1507).** 1.36.86 kept `ERROR` as a deprecated legacy status on top of the `Order` schema. The backend has since confirmed that no order carries `ERROR` any more: the legacy orders were moved to other statuses, and a failure is always `FAILED`. `OrderStatus` is now exactly the `Order` schema's union (`NEW | PENDING | EXPECTED | PROCESSING | COMPLETE | FAILED | CANCELED | REFUNDED`), and so are `OrderListStatusFilter` and every `status` typed with it. Code that uses `OrderStatuses.ERROR`, compares a status with `'ERROR'`, has a `case 'ERROR'` or an `ERROR` key in a `Record<OrderStatuses, …>` stops compiling: drop that branch, since `FAILED` covers it. The report parameters (`BankingCryptoStatementParams.statuses`) still list `ERROR` in the spec; that generated type follows the spec and is not changed here. This ships in a patch release, since CI bumps the patch on every merge, so a `^1.36` range picks it up on the next install.
+
 ## [1.36.86] - 2026-10-03
 
 ### Added
