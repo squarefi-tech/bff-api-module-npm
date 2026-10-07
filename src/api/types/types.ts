@@ -144,8 +144,8 @@ export namespace API {
       text_color?: string;
     }
 
-    /** A mobile wallet a card can be added to. */
-    export type DigitalWallet = 'APPLE_PAY' | 'GOOGLE_PAY';
+    /** A mobile wallet a card can be added to; follows the frontend program schema. */
+    export type DigitalWallet = componentsV1Frontend['schemas']['IssuingProgram']['digital_wallets'][number];
 
     export namespace Config {
       export type IssuingProgramOrderType = {
@@ -285,8 +285,14 @@ export namespace API {
       tokenizable: boolean;
       /**
        * Mobile wallets this card can be added to: its program's wallets, or none
-       * when `tokenizable` is false. Absent when the card's program could not
-       * be read, and on a backend older than the field.
+       * when `tokenizable` is false; a card with no program and `tokenizable`
+       * true lists both.
+       *
+       * Absent when the card's program could not be read (unknown, not "both")
+       * and on a backend older than the field. Without it, read it the way the
+       * backend does: none when `tokenizable` is false, otherwise the program's
+       * `digital_wallets` when the program is at hand (an empty list means
+       * none), both only when there is no program to ask.
        */
       digital_wallets?: API.Cards.DigitalWallet[];
       /**
