@@ -483,6 +483,13 @@ export const orders = {
       },
     },
 
+    scheduledFunding: ({
+      wallet_uuid,
+    }: API.Orders.Frontend.ScheduledFunding.Request): Promise<API.Orders.Frontend.ScheduledFunding.Response> =>
+      apiClientV1Frontend.getRequest<API.Orders.Frontend.ScheduledFunding.Response>(
+        `/frontend/orders/wallet/${wallet_uuid}/scheduled/funding`,
+      ),
+
     types: {
       list: (): Promise<API.Orders.Frontend.Types.List.Response> =>
         apiClientV1Frontend.getRequest<API.Orders.Frontend.Types.List.Response>('/frontend/orders/types'),
