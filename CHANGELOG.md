@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.88] - 2026-10-07
+
 ### Added
 
 - **`scheduled_failure` on `API.Orders.Frontend.Order` — why a scheduled payment failed (SFI-1507, backend SFI-2721).** `{ code, message } | null`: set on a scheduled order in `FAILED`, `null` on any other scheduled order, absent on an immediate one. A scheduled payment is attempted once at its `scheduled_at` and never retried. `INSUFFICIENT_FUNDS` means nothing was debited and the payment can be created again; `PROVIDER_ERROR` means the payment was debited and the provider side failed; `EXECUTION_ERROR` covers any other reason. `message` is customer-facing text for the code. The field comes from the regenerated frontend `Order` schema, so the items of `orders.frontend.list.byWallet` and the `data` of `OrderEnvelope` carry it.
