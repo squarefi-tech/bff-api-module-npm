@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.89] - 2026-10-07
+
 ### Added
 
 - **`API.Cards.DigitalWallet` and `digital_wallets` on the hand-written card types.** 1.36.88 brought `digital_wallets` to the generated frontend types; this adds it where the SDK's own types describe programs and cards: `API.Cards.DigitalWallet` (read off the frontend program schema) and `digital_wallets?: DigitalWallet[]` on `API.Cards.Config.Program`, `API.Cards.IssuingCardListItem` and `API.Cards.IssuingCardDetailItem` (the legacy `/issuing/cards` and `/issuing/config/programs` reads, which return it too).
