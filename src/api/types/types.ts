@@ -3175,6 +3175,13 @@ export namespace API {
            * (not an array); a non-uuid value is refused with 400.
            */
           export type OrderListRfiCaseFilter = Record<'rfi_case_id', string>;
+          /**
+           * Narrows the feed to scheduled payments (orders with `scheduled_at`): `all` — every one of
+           * them, unapproved drafts included; `upcoming` — approved and waiting for their date
+           * (`EXPECTED`); `past` — their date has come (any status but `NEW` and `EXPECTED`). Combines
+           * with `status`; any other value is refused with 400.
+           */
+          export type OrderListScheduledFilter = Record<'scheduled', 'all' | 'upcoming' | 'past'>;
 
           export type OrderListFilter =
             | OrderListStatusFilter
@@ -3182,7 +3189,8 @@ export namespace API {
             | OrderListFromUuidFilter
             | OrderListToUuidFilter
             | OrderListMassPayoutFilter
-            | OrderListRfiCaseFilter;
+            | OrderListRfiCaseFilter
+            | OrderListScheduledFilter;
           export interface Request {
             wallet_uuid: string;
             offset?: number;
@@ -3428,6 +3436,11 @@ export namespace API {
       // and the `data` of every OrderEnvelope.
       export type Order = componentsV1Frontend['schemas']['Order'];
 
+      // Why a scheduled payment failed: set on a scheduled order in `FAILED`, null on the other scheduled
+      // orders, absent on immediate ones. The payment is attempted once and never retried.
+      export type ScheduledFailure = NonNullable<Order['scheduled_failure']>;
+      export type ScheduledFailureCode = ScheduledFailure['code'];
+
       // Shared success envelope returned by every create/approve/cancel frontend order endpoint.
       export type OrderEnvelope = {
         success?: boolean;
@@ -3553,6 +3566,16 @@ export namespace API {
           }
           export type Response = string;
         }
+      }
+
+      // A forecast at request time: funds are not reserved for scheduled payments, so `sufficient` can
+      // change with any balance movement before their `scheduled_at`.
+      export namespace ScheduledFunding {
+        type ScheduledFundingRoot = pathsV1Frontend['/frontend/orders/wallet/{wallet_uuid}/scheduled/funding'];
+
+        export type Request = ScheduledFundingRoot['get']['parameters']['path'];
+        export type Response = ScheduledFundingRoot['get']['responses'][200]['content']['application/json'];
+        export type Data = NonNullable<Response['data']>;
       }
 
       export namespace Types {
