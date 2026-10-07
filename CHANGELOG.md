@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`digital_wallets` — Apple Pay and Google Pay told apart, on programs and cards.** `tokenizable` was one flag for both wallets; some programs support Google Pay without Apple Pay. New `API.Cards.DigitalWallet` (`'APPLE_PAY' | 'GOOGLE_PAY'`) and `digital_wallets?: DigitalWallet[]` on `API.Cards.Config.Program`, `API.Cards.IssuingCardListItem` and `API.Cards.IssuingCardDetailItem`; the regenerated frontend, external and tenant types carry it on programs and cards too (required on the frontend program schemas). On a program it lists the wallets its cards can be added to (empty = none) and `tokenizable` means "at least one". On a card it is the program's wallets, or none when the card's own `tokenizable` is false; the card's `tokenizable` itself is unchanged. Optional on the hand-written types because a backend without the field omits it: read it with a fallback to `tokenizable` (true = both wallets). Show "Google Pay" alone where the list says so instead of "Apple and Google Pay".
+- **Regenerated from the deployed dev specs, which picked up endpoints released since 1.36.87:**
+  - `POST /api/counterparty/destinations/validate` and `POST /admin/counterparty/destinations/validate` (`DestinationValidationResult`), the dry run of destination creation already wrapped for the frontend router; `RTP` joins the destination `type` union on the external API.
+  - `GET /frontend/orders/wallet/{wallet_uuid}/scheduled/funding` — whether the wallet's balance covers its scheduled payments, per currency with `shortfall`; the `scheduled` filter (`all` / `upcoming` / `past`) on the order list, `scheduled_failure` on orders, the `SCHEDULED_AT_TOO_SOON` approve error, and the `SCHEDULED_PAYMENT_REMINDER` / `SCHEDULED_PAYMENT_LOW_BALANCE` notification types.
+  - On the tenant API: `GET /admin/crypto_wallets/{wallet_id}`, `GET /admin/crypto_wallets/{wallet_id}/addresses` and `DELETE /admin/kyc_entity/{entity_id}/documents/{document_id}`, plus `cardholder_requirements` on `GET /admin/issuing/config/programs`.
+
+### Removed
+
+- **`kyb_onboarding` from the KYC rail `extra_actions[].action` union (frontend types).** The backend no longer returns the vendor-hosted onboarding link; `verification` is the only action left. Code with a `case 'kyb_onboarding'` stops compiling: drop that branch.
+- **The per-document `*_url` fields of the V2 KYC schemas (`gov_id_front_url`, `selfie_url`, `proof_of_address_url`, `formation_doc_url` and the rest).** KYC documents are now a `documents?: KycDocumentDto[]` list (`id`, `kyc_entity_id`, `ubo_id`, the document type, the file). Code that read a `*_url` field stops compiling: read the matching item of `documents` instead. The wallet, the b2b dashboards and the b2c app read none of these fields (checked 2026-10-07).
+
 ## [1.36.87] - 2026-10-03
 
 ### Removed

@@ -785,7 +785,138 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
+        /** Create destination */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * Format: uuid
+                         * @description Parent counterparty account ID
+                         */
+                        counterparty_account_id: string;
+                        /**
+                         * @description Payment rail type
+                         * @enum {string}
+                         */
+                        type: "ACH" | "RTP" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
+                        /** @description User-friendly alias for this destination */
+                        nickname?: string;
+                        /** @description Required for banking types (ACH, RTP, SWIFT, SEPA, CHAPS, FPS, FEDWIRE). What each rail needs:
+                         *
+                         *     | Rail | Required | Format |
+                         *     | --- | --- | --- |
+                         *     | ACH, RTP, FEDWIRE | `routing_number`, `account_number` | ABA routing number (9 digits, valid check digit); account 4–17 letters or digits |
+                         *     | SEPA | `iban` | IBAN of a SEPA-zone country; length, account format and check digits per country; `swift_bic` optional |
+                         *     | SWIFT | `swift_bic`, `account_number` (or `iban`) | valid SWIFT/BIC (not a test BIC); an IBAN-shaped account must be a valid IBAN; for a US bank `routing_number` is optional and must be valid when given |
+                         *     | CHAPS, FPS | `sort_code`, `account_number` | UK: 6-digit sort code and 8-digit account; FPS in HKD: 3-digit bank clearing code |
+                         *
+                         *     Every problem is returned at once in `error.details.issues`. `POST /api/counterparty/destinations/validate` checks a payload without saving it.
+                         *      */
+                        banking_data?: {
+                            /** @description Bank account number (on SWIFT, the IBAN where the bank's country uses one) */
+                            account_number?: string;
+                            /** @description US ABA routing number */
+                            routing_number?: string;
+                            /** @description Bank name */
+                            bank_name?: string;
+                            /** @description SWIFT/BIC code */
+                            swift_bic?: string;
+                            /** @description IBAN */
+                            iban?: string;
+                            /** @description Sort code (6 digits, UK banking) */
+                            sort_code?: string;
+                            /** @description Additional notes/reference */
+                            note?: string;
+                            /** @description Bank/beneficiary postal address */
+                            address?: {
+                                country_id?: number;
+                                city?: string;
+                                postcode?: string;
+                                street1?: string;
+                                street2?: string;
+                                /** @description Required when the selected country has states; countries without states may omit it */
+                                state_id?: number | null;
+                            };
+                        };
+                        /** @description Required for crypto types (CRYPTO_EXTERNAL, CRYPTO_INTERNAL) */
+                        crypto_data?: {
+                            /** @description Blockchain address */
+                            address?: string;
+                            /**
+                             * Format: uuid
+                             * @description Currency UUID
+                             */
+                            currency_id?: string;
+                            /** @description Memo/tag (for XRP, XLM, etc.) */
+                            memo?: string;
+                            /**
+                             * @description Hosting classification of the address (custodial VASP, self-hosted/unhosted, or unknown)
+                             * @default unknown
+                             * @enum {string}
+                             */
+                            wallet_custody_type?: "custodial" | "selfhosted" | "unknown";
+                        };
+                        /** @description Required for type INTERNAL — points at the receiver wallet on the same platform. An account holds one INTERNAL destination per wallet; if it already has an active one to this wallet, that destination is returned instead of a new one. */
+                        internal_data?: {
+                            /**
+                             * Format: uuid
+                             * @description Target (receiver) wallet uuid on the same platform.
+                             */
+                            wallet_id: string;
+                            /** @description Optional, reserved for future use. */
+                            description?: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Destination created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                destination?: components["schemas"]["CounterpartyDestination"];
+                                /** @example Destination created successfully */
+                                message?: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Validation error. Bank-details problems come as `VALIDATION_ERROR` with every problem in `error.details.issues` (`field`, `code`, `message`, optional `country` / `detected`).
+                 *
+                 *     **Until 2026-10-12 00:00 UTC** the stricter bank-details rules (per-country IBAN checks, SEPA-zone IBAN, BIC format, ABA check digit, account formats) are reported by the validation endpoint but do not refuse this request; from then on they do.
+                 *      */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Account not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -930,6 +1061,78 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/api/counterparty/destinations/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate destination details without saving
+         * @description Dry run of `POST /api/counterparty/destinations`: the same body and the same checks — bank details per
+         *     payment method, address completeness, location reference data, bank-country consistency — with nothing
+         *     saved and no counterparty account needed. Answers `200` whether or not the details are valid;
+         *     `valid: false` comes with every problem in `issues`.
+         *
+         *     It always applies the strict bank-details rules, including before they start refusing creation on this
+         *     surface (2026-10-12 00:00 UTC) — use it to find out what your integration sends that will be refused.
+         *     Without an account it cannot tell whether an INTERNAL target wallet is active — creation still checks
+         *     that. Rate limited to 60 requests per minute per API key's wallet.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        type: "ACH" | "RTP" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
+                        /** @description Same shape as in `POST /api/counterparty/destinations`. */
+                        banking_data?: Record<string, never>;
+                        crypto_data?: Record<string, never>;
+                        internal_data?: Record<string, never>;
+                    };
+                };
+            };
+            responses: {
+                /** @description Validation result */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["DestinationValidationResult"];
+                        };
+                    };
+                };
+                /** @description Too many validation requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/crypto_wallets": {
@@ -4809,6 +5012,9 @@ export interface paths {
                      *     Besides order columns it accepts `mass_payout_id` (uuid), which narrows the
                      *     result to the orders of one mass payout batch — the same batch reported by
                      *     the `mass_payout_id` field of each order. A non-uuid value is rejected with 400.
+                     *     `scheduled` narrows it to scheduled payments: `all`, `upcoming` (approved and
+                     *     waiting, `EXPECTED`) or `past` (any status but `NEW` and `EXPECTED`); it combines
+                     *     with `status`. Any other value is rejected with 400.
                      *      */
                     filters?: string;
                     date_from?: string;
@@ -4922,6 +5128,9 @@ export interface paths {
          *     status NEW can be approved. Orders
          *     created with `scheduled_at` move to EXPECTED instead — no funds are
          *     debited until execution at the requested time.
+         *     A scheduled order is approved only while its `scheduled_at` is at least
+         *     one hour away; a later approve answers 400 `SCHEDULED_AT_TOO_SOON`
+         *     (create the payment again with a new date).
          *
          */
         post: {
@@ -4949,7 +5158,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Insufficient funds (`INSUFFICIENT_FUNDS` — the order is released back to NEW) or validation error */
+                /** @description Insufficient funds (`INSUFFICIENT_FUNDS` — the order is released back to NEW), a scheduled order less than an hour before its `scheduled_at` (`SCHEDULED_AT_TOO_SOON`), or validation error */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -5142,7 +5351,7 @@ export interface paths {
                         note?: string;
                         /**
                          * Format: date-time
-                         * @description Optional. Schedule the transfer for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically.
+                         * @description Optional. Schedule the transfer for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically, once. If the balance does not cover it then, it fails with `scheduled_failure.code` INSUFFICIENT_FUNDS and is not retried. Approve at least 1 hour before scheduled_at.
                          * @example 2026-07-20T12:00:00Z
                          */
                         scheduled_at?: string;
@@ -6647,14 +6856,14 @@ export interface paths {
          *     - Returns raw balance records without aggregation
          *     - Includes crypto metadata for each balance
          *     - No currency conversion or totals calculation
-         *     - **Automatically filters out dust balances** below render_threshold
+         *     - **Automatically filters out dust balances** — smaller than the currency threshold in absolute value; a negative balance (a debt) beyond it is always returned
          *     - **Does NOT include icon in crypto meta** (use frontend endpoint if icon needed)
          *
          */
         get: {
             parameters: {
                 query?: {
-                    /** @description When false (default), dust balances below threshold are hidden */
+                    /** @description When false (default), dust balances — smaller than the currency threshold in absolute value — are hidden */
                     show_low_balance?: boolean;
                 };
                 header?: never;
@@ -7275,8 +7484,10 @@ export interface components {
              * @enum {string}
              */
             brand?: "VISA" | "MASTERCARD";
-            /** @description Whether card can be tokenized */
+            /** @description Whether this card can be added to a mobile wallet; set when the card was issued. Which ones: `digital_wallets`. */
             tokenizable?: boolean;
+            /** @description Mobile wallets this card can be added to: the wallets of the card's program, or none when the card's `tokenizable` is false. Left out when the program could not be read. */
+            digital_wallets?: ("APPLE_PAY" | "GOOGLE_PAY")[];
             /** @description Total spending cap/limit */
             spend_cap?: number;
             /** @description Total amount spent */
@@ -7672,8 +7883,16 @@ export interface components {
             form_factor?: "virtual" | "physical" | "both";
             /** @description Program type */
             type?: string;
-            /** @description Whether cards can be tokenized */
+            /** @description Whether cards of this program can be added to at least one mobile wallet. Which ones: `digital_wallets`. */
             tokenizable?: boolean;
+            /**
+             * @description Mobile wallets cards of this program can be added to. Empty when none; a program can support one wallet without the other.
+             * @example [
+             *       "APPLE_PAY",
+             *       "GOOGLE_PAY"
+             *     ]
+             */
+            digital_wallets?: ("APPLE_PAY" | "GOOGLE_PAY")[];
             /** @description What a cardholder on this program must carry. Set per program in the vendor config, so it can change without a release — read it instead of hardcoding the form. */
             cardholder_requirements?: {
                 /**
@@ -7871,7 +8090,7 @@ export interface components {
              * @description Destination/payment rail type
              * @enum {string}
              */
-            type?: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
+            type?: "ACH" | "RTP" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
             /** @description User-friendly alias */
             nickname?: string | null;
             /** Format: date-time */
@@ -7881,7 +8100,36 @@ export interface components {
             banking_data?: components["schemas"]["BankingData"];
             crypto_data?: components["schemas"]["CryptoData"];
             internal_data?: components["schemas"]["CounterpartyInternalData"];
+            /** @description Banking destinations only: problems that make the stored bank details unpayable (an IBAN that fails its checks, an IBAN outside SEPA on a SEPA destination, a routing number that fails the ABA check). Non-empty means withdrawals to this destination are refused with `DESTINATION_INVALID` — details cannot be edited, so add a new destination. Empty for valid banking destinations; absent for crypto and internal ones. */
+            validation_issues?: components["schemas"]["DestinationValidationIssue"][];
             counterparty_account?: components["schemas"]["CounterpartyAccountRef"];
+        };
+        /** @description One problem with a destination payload. `field` is the request path of the offending value (`iban`, `routing_number`, `address.city`…); `message` is ready to show under that field. */
+        DestinationValidationIssue: {
+            /** @example iban */
+            field: string;
+            /**
+             * @description Machine-readable reason. Bank details: `REQUIRED`, `IBAN_WRONG_FORMAT`, `IBAN_INVALID_CHARACTERS`, `IBAN_COUNTRY_NOT_SUPPORTED`, `IBAN_WRONG_LENGTH`, `IBAN_WRONG_BBAN_FORMAT`, `IBAN_WRONG_CHECKSUM`, `IBAN_WRONG_NATIONAL_CHECKSUM`, `IBAN_QR_NOT_ALLOWED`, `IBAN_NOT_SEPA`, `IBAN_BIC_COUNTRY_MISMATCH`, `BIC_WRONG_FORMAT`, `BIC_UNKNOWN_COUNTRY`, `BIC_TEST_CODE`, `ROUTING_NUMBER_INVALID`, `ACCOUNT_NUMBER_INVALID`, `SORT_CODE_INVALID`, `WRONG_IDENTIFIER_TYPE`, `INVALID_VALUE`; reference data: `BANK_COUNTRY_MISMATCH`, `VALIDATION_ERROR`; dry run only: `INVALID_TYPE`. New codes may be added — show `message` for an unknown one.
+             * @example IBAN_NOT_SEPA
+             */
+            code: string;
+            /** @example IBAN country AE is outside the SEPA zone — SEPA transfers cannot reach it */
+            message: string;
+            /**
+             * @description ISO 3166-1 alpha-2 country the problem is about, when there is one
+             * @example AE
+             */
+            country?: string;
+            /**
+             * @description For `WRONG_IDENTIFIER_TYPE`: what the value looks like (an IBAN typed into a US account-number field…)
+             * @enum {string}
+             */
+            detected?: "IBAN" | "BIC" | "ROUTING_NUMBER";
+        };
+        DestinationValidationResult: {
+            /** @description True when creating the destination with this payload would pass every check */
+            valid: boolean;
+            issues: components["schemas"]["DestinationValidationIssue"][];
         };
         /** @description Owning counterparty account, embedded on destination reads; absent on create/update. */
         CounterpartyAccountRef: {
@@ -8305,6 +8553,16 @@ export interface components {
              * @description Requested execution time for scheduled payments (status EXPECTED); null for immediate orders
              */
             scheduled_at?: string | null;
+            /** @description Why a scheduled payment failed — set on a scheduled order in `FAILED`, null on any other scheduled order, absent on an immediate one. A scheduled payment is attempted once and never retried: `INSUFFICIENT_FUNDS` means nothing was debited and the payment can be created again; `PROVIDER_ERROR` — the payment was debited and the provider side failed; `EXECUTION_ERROR` — any other reason. */
+            scheduled_failure?: {
+                /** @enum {string} */
+                code: "INSUFFICIENT_FUNDS" | "PROVIDER_ERROR" | "EXECUTION_ERROR";
+                /**
+                 * @description Customer-facing text of the code.
+                 * @example The balance was insufficient at the scheduled time.
+                 */
+                message: string;
+            } | null;
             /** Format: date-time */
             created_at?: string;
             /** Format: date-time */
@@ -8356,7 +8614,7 @@ export interface components {
             note?: string;
             /**
              * Format: date-time
-             * @description Optional. Schedule the payment for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in `EXPECTED` status and executes automatically at the requested time (balance is checked then, with retries and email notifications on insufficient funds).
+             * @description Optional. Schedule the payment for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in `EXPECTED` status and executes automatically at the requested time, once: the balance is checked then, and if it does not cover the payment the order fails with `scheduled_failure.code` `INSUFFICIENT_FUNDS` and is not retried. Approve at least 1 hour before `scheduled_at`.
              * @example 2026-07-20T12:00:00Z
              */
             scheduled_at?: string;
@@ -8408,7 +8666,7 @@ export interface components {
             note?: string;
             /**
              * Format: date-time
-             * @description Optional. Schedule the payment for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in `EXPECTED` status and executes automatically at the requested time (balance is checked then, with retries and email notifications on insufficient funds).
+             * @description Optional. Schedule the payment for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in `EXPECTED` status and executes automatically at the requested time, once: the balance is checked then, and if it does not cover the payment the order fails with `scheduled_failure.code` `INSUFFICIENT_FUNDS` and is not retried. Approve at least 1 hour before `scheduled_at`.
              * @example 2026-07-20T12:00:00Z
              */
             scheduled_at?: string;
