@@ -5207,8 +5207,10 @@ export interface paths {
                                 status: "ACTIVE" | "INACTIVE";
                                 /** @description Default card spending limit */
                                 card_limit: number;
-                                /** @description Whether card supports Apple/Google Pay */
+                                /** @description At least one mobile wallet is supported; which ones — `digital_wallets` */
                                 tokenizable: boolean;
+                                /** @description Mobile wallets cards of this program can be added to; empty when none. A program can support one without the other */
+                                digital_wallets: ("APPLE_PAY" | "GOOGLE_PAY")[];
                                 /** @description Icon URL for UI display */
                                 icon?: string | null;
                                 /** @description Program code */
@@ -5310,8 +5312,10 @@ export interface paths {
                                 status: "ACTIVE" | "INACTIVE";
                                 /** @description Default card spending limit */
                                 card_limit: number;
-                                /** @description Whether card supports Apple/Google Pay */
+                                /** @description At least one mobile wallet is supported; which ones — `digital_wallets` */
                                 tokenizable: boolean;
+                                /** @description Mobile wallets cards of this program can be added to; empty when none. A program can support one without the other */
+                                digital_wallets: ("APPLE_PAY" | "GOOGLE_PAY")[];
                                 icon?: string | null;
                                 code?: string | null;
                                 initial_topup?: number | null;
@@ -8680,7 +8684,7 @@ export interface paths {
                         is_reverse?: boolean;
                         /**
                          * Format: date-time
-                         * @description Optional. Schedule the transfer for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically.
+                         * @description Optional. Schedule the transfer for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically, once. If the balance does not cover it then, it fails with `scheduled_failure.code` INSUFFICIENT_FUNDS and is not retried. Approve at least 1 hour before scheduled_at.
                          */
                         scheduled_at?: string;
                         /** @description Optional supporting documents persisted with the order. */
@@ -9353,6 +9357,9 @@ export interface paths {
          *     (request the OTP for the order being approved). Orders created with
          *     `scheduled_at` move to EXPECTED instead — no funds are debited until
          *     execution at the requested time.
+         *     A scheduled order is approved only while its `scheduled_at` is at least
+         *     one hour away; a later approve answers 400 `SCHEDULED_AT_TOO_SOON`
+         *     (create the payment again with a new date).
          *
          */
         post: {
@@ -9386,7 +9393,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Insufficient funds (`INSUFFICIENT_FUNDS` — the order is released back to NEW) or validation error */
+                /** @description Insufficient funds (`INSUFFICIENT_FUNDS` — the order is released back to NEW), a scheduled order less than an hour before its `scheduled_at` (`SCHEDULED_AT_TOO_SOON`), or validation error */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -9824,6 +9831,13 @@ export interface paths {
                      *     among them show only with `show_low_balance=true`, as everywhere in this list. It
                      *     combines with the other filters and the dates. A request of another account, or an
                      *     unknown id, gives an empty result; a non-uuid value is rejected with 400.
+                     *
+                     *     `scheduled` narrows the result to scheduled payments (orders with `scheduled_at`):
+                     *     `all` — every one of them, unapproved drafts included; `upcoming` — approved and
+                     *     waiting for their date (`EXPECTED`); `past` — their turn has come: executing, sent,
+                     *     failed or canceled (any status but `NEW` and `EXPECTED`). It combines with `status`,
+                     *     e.g. `[{"scheduled":"past"},{"status":["PROCESSING","COMPLETE"]}]` lists the sent ones.
+                     *     Any other value is rejected with 400.
                      *      */
                     filters?: string;
                     date_from?: string;
@@ -9853,13 +9867,108 @@ export interface paths {
                         };
                     };
                 };
-                /** @description `INVALID_REQUEST` — `filters` is not a JSON array, or `mass_payout_id` / `rfi_case_id` is not a uuid */
+                /** @description `INVALID_REQUEST` — `filters` is not a JSON array, `mass_payout_id` / `rfi_case_id` is not a uuid, or `scheduled` is not `all` / `upcoming` / `past` */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
                         "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Access denied to wallet */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/orders/wallet/{wallet_uuid}/scheduled/funding": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Scheduled payments funding
+         * @description Whether the wallet's current balance covers its scheduled payments that wait for their date
+         *     (`EXPECTED`). Funds are not reserved for a scheduled payment — it is debited at its
+         *     `scheduled_at` and fails if the balance does not cover it then; there is no retry.
+         *
+         *     Payments are taken in `scheduled_at` order, each from the balance of the currency it
+         *     debits (`from_uuid`, amount `amount_from`). A payment is `covered` when the current
+         *     balance still holds it after every earlier payment of that currency. Per currency the
+         *     response gives the scheduled total, the balance and the `shortfall` (0 when covered), also
+         *     in USD; `total_shortfall_usd` sums the currencies that have a USD rate.
+         *
+         *     **Access Control**: User must have access to the wallet
+         *
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    wallet_uuid: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Funding forecast of the wallet's scheduled payments */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                /** @description True when every waiting scheduled payment is covered. */
+                                sufficient: boolean;
+                                /** @example 41.84 */
+                                total_shortfall_usd: number;
+                                currencies: {
+                                    /** Format: uuid */
+                                    currency_id: string;
+                                    /** @description Current balance in this currency. */
+                                    available: number;
+                                    /** @description Sum of the waiting scheduled payments in this currency. */
+                                    scheduled_amount: number;
+                                    /** @description Missing to send all of them; 0 when covered. */
+                                    shortfall: number;
+                                    /** @description The shortfall in USD; null when the currency has no USD rate. */
+                                    shortfall_usd: number | null;
+                                    sufficient: boolean;
+                                    orders_count: number;
+                                }[];
+                                /** @description The waiting scheduled payments, earliest `scheduled_at` first. */
+                                orders: {
+                                    /** Format: uuid */
+                                    order_id: string;
+                                    /** Format: uuid */
+                                    order_uuid: string;
+                                    /** Format: uuid */
+                                    currency_id: string;
+                                    amount: number;
+                                    /** Format: date-time */
+                                    scheduled_at: string;
+                                    covered: boolean;
+                                }[];
+                            };
+                        };
                     };
                 };
                 /** @description Access denied to wallet */
@@ -9911,6 +10020,13 @@ export interface paths {
                      *     among them show only with `show_low_balance=true`, as everywhere in this list. It
                      *     combines with the other filters and the dates. A request of another account, or an
                      *     unknown id, gives an empty result; a non-uuid value is rejected with 400.
+                     *
+                     *     `scheduled` narrows the result to scheduled payments (orders with `scheduled_at`):
+                     *     `all` — every one of them, unapproved drafts included; `upcoming` — approved and
+                     *     waiting for their date (`EXPECTED`); `past` — their turn has come: executing, sent,
+                     *     failed or canceled (any status but `NEW` and `EXPECTED`). It combines with `status`,
+                     *     e.g. `[{"scheduled":"past"},{"status":["PROCESSING","COMPLETE"]}]` lists the sent ones.
+                     *     Any other value is rejected with 400.
                      *      */
                     filters?: string;
                     /** @description If `true`, includes dust orders (amount below render threshold for either currency). Defaults to `false` — dust orders are hidden. */
@@ -9933,7 +10049,7 @@ export interface paths {
                         "text/csv": string;
                     };
                 };
-                /** @description `INVALID_REQUEST` — `filters` is not a JSON array, or `mass_payout_id` / `rfi_case_id` is not a uuid */
+                /** @description `INVALID_REQUEST` — `filters` is not a JSON array, `mass_payout_id` / `rfi_case_id` is not a uuid, or `scheduled` is not `all` / `upcoming` / `past` */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -11532,6 +11648,11 @@ export interface paths {
          *     question, a new message from compliance and the closing also arrive as the
          *     `RFI_REQUESTED` / `RFI_RESOLVED` notifications (in-app, push, email).
          *
+         *     No KYC status is required here or on any other `/frontend/rfi` path: requests are
+         *     read and answered while the account's verification is pending, under review, on
+         *     hold or declined — an onboarding request exists precisely because verification is
+         *     not finished.
+         *
          */
         get: {
             parameters: {
@@ -11617,7 +11738,7 @@ export interface paths {
          * Get a compliance request with its conversation and covered transactions
          * @description The conversation holds compliance's questions and the client's answers, oldest first.
          *     A request of another account answers 404, and so does every request of a workspace
-         *     that still works RFI by email.
+         *     that still works RFI by email. Works at any KYC status of the account.
          *
          */
         get: {
@@ -11705,7 +11826,8 @@ export interface paths {
          *
          *     The request moves to `awaiting_compliance`; answering again while compliance reviews is
          *     allowed, and compliance may ask further rounds. Requires the `owner` or `admin` role on the
-         *     wallet — an `auditor` reads only (`can_reply` is false for them).
+         *     wallet — an `auditor` reads only (`can_reply` is false for them). The KYC status of
+         *     the account does not matter: an answer is accepted while verification is unfinished too.
          *     Do not set `Content-Type` manually — the browser adds the multipart boundary.
          *
          */
@@ -11783,7 +11905,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description `RATE_LIMIT_EXCEEDED` — more than 20 replies a minute */
+                /** @description `RATE_LIMIT_EXCEEDED` — more than 20 answers within a minute by one user. The limit is counted per signed-in user, across all of their accounts and requests — not per account and not per request — and an attempt refused with 400, 404 or 409 counts too. Retry after a minute. */
                 429: {
                     headers: {
                         [name: string]: unknown;
@@ -11807,7 +11929,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a short-lived download link for a file in the conversation */
+        /**
+         * Get a short-lived download link for a file in the conversation
+         * @description Any wallet member who reads the request may open its files, at any KYC status of the account.
+         */
         get: {
             parameters: {
                 query?: never;
@@ -13354,8 +13479,9 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    /** @description When false (default), dust balances below the threshold are hidden
-                     *     from the response. Set to true to include all balances.
+                    /** @description When false (default), dust balances — smaller than the currency threshold in absolute value —
+                     *     are hidden from the response; a negative balance (a debt) beyond the threshold
+                     *     is always returned. Set to true to include all balances.
                      *      */
                     show_low_balance?: boolean;
                 };
@@ -13524,8 +13650,9 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    /** @description When false (default), dust balances below the threshold are hidden
-                     *     from the response. Set to true to include all balances.
+                    /** @description When false (default), dust balances — smaller than the currency threshold in absolute value —
+                     *     are hidden from the response; a negative balance (a debt) beyond the threshold
+                     *     is always returned. Set to true to include all balances.
                      *      */
                     show_low_balance?: boolean;
                 };
@@ -13910,14 +14037,14 @@ export interface paths {
          *     - Returns raw balance records without aggregation
          *     - Includes crypto metadata for each balance
          *     - No currency conversion or totals calculation
-         *     - **Automatically filters out dust balances** below render_threshold
+         *     - **Automatically filters out dust balances** — smaller than the currency threshold in absolute value; a negative balance (a debt) beyond it is always returned
          *     - **Includes icon URL in crypto meta** for frontend display
          *
          */
         get: {
             parameters: {
                 query?: {
-                    /** @description When false (default), dust balances below threshold are hidden */
+                    /** @description When false (default), dust balances — smaller than the currency threshold in absolute value — are hidden */
                     show_low_balance?: boolean;
                 };
                 header?: never;
@@ -15474,7 +15601,8 @@ export interface paths {
          *     application on it. A rail is listed while it is active; an archived rail stays listed only when the
          *     wallet is approved on it. `can_submit` tells whether `POST …/kyc-rails/{rail_id}` would be accepted now.
          *
-         *     Replaces the BFF `GET /kyc/{wallet_id}/rails`; items have its shape plus `can_submit`.
+         *     Replaces the BFF `GET /kyc/{wallet_id}/rails`; items have its shape plus `can_submit`, without the
+         *     rail's `code` and `name` — match a rail to a program by `id` (`kyc_rails_id`).
          *
          *     **Access Control**: any member of the wallet except the scoped `user` role. No KYC gate.
          *
@@ -15588,8 +15716,9 @@ export interface paths {
          *     sent back (`HOLD`, `SOFT_REJECT`) is resubmitted. No body.
          *
          *     Refused unless the rail has an onboarding implementation (retired rails never do), takes submissions,
-         *     fits the entity type, and the entity's KYC is `APPROVED` or `WAITING_ON_REVIEW`. On a tenant without KYC
-         *     only the tenant's default universal rail can be submitted without it.
+         *     fits the entity type, and the entity's KYC is `APPROVED` — an entity still under review
+         *     (`WAITING_ON_REVIEW`) cannot submit. On a tenant without KYC only the tenant's default universal rail
+         *     can be submitted without it.
          *
          *     Replaces the BFF `POST /kyc/{wallet_id}/rails/{rail_id}`.
          *
@@ -15631,7 +15760,7 @@ export interface paths {
                     content?: never;
                 };
                 401: components["responses"]["UnauthorizedError"];
-                /** @description Not an admin of the wallet (ACCESS_DENIED), or the entity's KYC is not approved or under review (KYC_NOT_APPROVED) */
+                /** @description Not an admin of the wallet (ACCESS_DENIED), or the entity's KYC is not approved — under review included (KYC_NOT_APPROVED) */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -16297,7 +16426,10 @@ export interface components {
             brand?: "VISA" | "MASTERCARD" | "AMEX" | "UNIONPAY" | null;
             /** @enum {string|null} */
             form_factor?: "PHYSICAL" | "VIRTUAL" | null;
+            /** @description At least one mobile wallet is supported; which ones: `digital_wallets`. */
             tokenizable: boolean;
+            /** @description Mobile wallets cards of this program can be added to. Empty when none; a program can support one wallet without the other. */
+            digital_wallets: ("APPLE_PAY" | "GOOGLE_PAY")[];
             /** @description What a cardholder on this program must carry. Set per program in the vendor config, so it can change without a release — read it instead of hardcoding the form. */
             cardholder_requirements?: {
                 /** @enum {string} */
@@ -16406,7 +16538,10 @@ export interface components {
              * @example 06/29
              */
             expiration_date_short?: string;
+            /** @description Whether this card can be added to a mobile wallet; set when the card was issued. Which ones: `digital_wallets`. */
             tokenizable?: boolean;
+            /** @description Mobile wallets this card can be added to: the wallets of the card's program, or none when the card's `tokenizable` is false. Left out when the program could not be read. */
+            digital_wallets?: ("APPLE_PAY" | "GOOGLE_PAY")[];
             spend_cap?: number;
             spent_amount?: number;
             /** Format: uuid */
@@ -17408,6 +17543,16 @@ export interface components {
              * @description Requested execution time for scheduled payments (status EXPECTED); null for immediate orders
              */
             scheduled_at?: string | null;
+            /** @description Why a scheduled payment failed — set on a scheduled order in `FAILED`, null on any other scheduled order, absent on an immediate one. A scheduled payment is attempted once and never retried: `INSUFFICIENT_FUNDS` means nothing was debited and the payment can be created again; `PROVIDER_ERROR` — the payment was debited and the provider side failed; `EXECUTION_ERROR` — any other reason. */
+            scheduled_failure?: {
+                /** @enum {string} */
+                code: "INSUFFICIENT_FUNDS" | "PROVIDER_ERROR" | "EXECUTION_ERROR";
+                /**
+                 * @description Customer-facing text of the code.
+                 * @example The balance was insufficient at the scheduled time.
+                 */
+                message: string;
+            } | null;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -17557,7 +17702,7 @@ export interface components {
             note?: string;
             /**
              * Format: date-time
-             * @description Optional. Schedule the payment for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically.
+             * @description Optional. Schedule the payment for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically, once: if the balance does not cover it then, it fails with `scheduled_failure.code` INSUFFICIENT_FUNDS and is not retried. Approve at least 1 hour before scheduled_at.
              */
             scheduled_at?: string;
             /** @description Optional supporting documents persisted with the order. */
@@ -17588,7 +17733,7 @@ export interface components {
             note?: string;
             /**
              * Format: date-time
-             * @description Optional. Schedule the payment for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically.
+             * @description Optional. Schedule the payment for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically, once: if the balance does not cover it then, it fails with `scheduled_failure.code` INSUFFICIENT_FUNDS and is not retried. Approve at least 1 hour before scheduled_at.
              */
             scheduled_at?: string;
             /** @description Optional supporting documents persisted with the order. */
@@ -17677,10 +17822,10 @@ export interface components {
             description: string | null;
             link: string | null;
         };
-        /** @description Something the user has to do with the rail vendor: `verification` — a vendor self-verification link (`type` names it, `full_name` the person it is for); `kyb_onboarding` — the vendor-hosted onboarding link. */
+        /** @description Something the user has to do with the rail vendor: `verification` — a vendor self-verification link (`type` names it, `full_name` the person it is for). */
         WalletKycRailExtraAction: {
             /** @enum {string} */
-            action: "verification" | "kyb_onboarding";
+            action: "verification";
             type: string;
             full_name: string | null;
             /** Format: uri */
@@ -17701,15 +17846,16 @@ export interface components {
             /** @description The terms the rail had when the wallet first submitted — what the user accepted. */
             terms_and_conditions: components["schemas"]["WalletKycRailTerms"][];
         };
-        /** @description A KYC rail of the wallet's tenant with the wallet's application on it. Same shape as the BFF `GET /kyc/{wallet_id}/rails` item, plus `can_submit`. Vendor texts are not returned: `wallet_rail.message` is a neutral text for the status. */
+        /** @description A KYC rail of the wallet's tenant with the wallet's application on it. The shape of the BFF `GET /kyc/{wallet_id}/rails` item, plus `can_submit`, without the vendor behind the rail: its `code` and `name` are not returned — a rail is identified by `id` — and `wallet_rail.message` is a neutral text for the status. */
         WalletKycRail: {
-            /** Format: uuid */
+            /**
+             * Format: uuid
+             * @description What programs reference in `kyc_rails_id`.
+             */
             id: string;
-            code: string | null;
-            name: string;
             /** @description The rail takes submissions at all. */
             is_submit_available: boolean;
-            /** @description The wallet can submit to the rail right now: it has an onboarding implementation, is of the entity's type or universal, the entity's KYC is approved or under review, and no application is approved or with the vendor. */
+            /** @description The wallet can submit to the rail right now: it has an onboarding implementation, is of the entity's type or universal, the entity's KYC is approved (not merely under review), and no application is approved or with the vendor. */
             can_submit: boolean;
             /** @description The rail's active terms, in display order. */
             terms_and_conditions: components["schemas"]["WalletKycRailTerms"][];
@@ -18274,7 +18420,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            type: "DEPOSIT_RECEIVED" | "DEPOSIT_NOT_ACCEPTED" | "TRANSFER_RECEIVED" | "ORDER_STATUS_CHANGED" | "KYC_STATUS_CHANGED" | "ANNOUNCEMENT" | "SYSTEM_MESSAGE" | "MASS_PAYOUT_STATUS_CHANGED" | "CARD_OTP" | "RFI_REQUESTED" | "RFI_RESOLVED" | "REPORT_READY";
+            type: "DEPOSIT_RECEIVED" | "DEPOSIT_NOT_ACCEPTED" | "TRANSFER_RECEIVED" | "ORDER_STATUS_CHANGED" | "KYC_STATUS_CHANGED" | "ANNOUNCEMENT" | "SYSTEM_MESSAGE" | "MASS_PAYOUT_STATUS_CHANGED" | "CARD_OTP" | "RFI_REQUESTED" | "RFI_RESOLVED" | "REPORT_READY" | "SCHEDULED_PAYMENT_REMINDER" | "SCHEDULED_PAYMENT_LOW_BALANCE";
             /** @description Structured fact snapshot; the client renders the presentation. Shape depends on `type`; evolution is additive-only. */
             payload: Record<string, never>;
             /** Format: uuid */
@@ -18578,7 +18724,10 @@ export interface components {
              * @example RFI-000042
              */
             reference: string;
-            /** @enum {string} */
+            /**
+             * @description `onboarding` — questions during verification (KYC / KYB); `transaction` — questions about specific transactions; `ongoing` — a periodic review of an active client. The list may grow: a new value is added here and announced in the changelog before any request carries it.
+             * @enum {string}
+             */
             type: "onboarding" | "transaction" | "ongoing";
             /**
              * @description What the request is about — the subject compliance wrote when opening it. Show it as is above the conversation; `messages` hold the question itself.
@@ -18592,12 +18741,12 @@ export interface components {
             status: "action_required" | "awaiting_compliance" | "closed";
             /**
              * Format: date-time
-             * @description When the answer is due
+             * @description When the answer is due. The date is set each time the request is handed to the client: when it is opened, and again on every new round — compliance asks after the client answered. A further message from compliance while the answer is still awaited keeps the date.
              */
             due_at: string | null;
             /** @description True only while `action_required` and past `due_at` (red banner) */
             overdue: boolean;
-            /** @description One of the covered transactions is held until the request closes */
+            /** @description True while the request keeps one of its transactions on hold — the one marked `held` in `transactions`. Decided when the request is opened and never turned on later: only a `transaction` request holds, and only when one of the transactions it covers was frozen by compliance at that moment. A request holds at most one transaction. The hold ends when the request closes — compliance's decision lets the transaction through or fails it — and the flag is false from then on. */
             holds_transaction: boolean;
             /** @description The account is on hold while the request is open */
             holds_account: boolean;
@@ -18607,7 +18756,7 @@ export interface components {
             last_message: {
                 /** @enum {string} */
                 author: "compliance" | "client";
-                /** @description One line of the message, up to 140 characters, cut at a word */
+                /** @description One line of the message, up to 140 characters, cut at a word; null when the message has no text — an answer of files only */
                 preview: string | null;
                 /** Format: date-time */
                 created_at: string;
@@ -18637,6 +18786,7 @@ export interface components {
              * @enum {string}
              */
             author: "compliance" | "client";
+            /** @description The text of the message. An empty string when the client answered with files only — show the attachments alone. */
             body: string;
             attachments: components["schemas"]["RfiAttachment"][];
             /** Format: date-time */
@@ -18650,6 +18800,8 @@ export interface components {
             amount_to: number | null;
             /** Format: date-time */
             created_at: string | null;
+            /** @description True for the one transaction the request keeps on hold while it is open (see `holds_transaction`). False for every other transaction, and for all of them once the request is closed. */
+            held: boolean;
         };
         RfiCaseDetail: components["schemas"]["RfiCase"] & {
             /** @description Whether YOU may answer this request now: it is open (`action_required` or `awaiting_compliance`) and your role on the account writes — `owner` or `admin`. False on a closed request and for an `auditor`, who reads the conversation only: show it read-only, without the answer box. Otherwise `POST …/messages` answers 409 `RFI_CLOSED` or 403 `ACCESS_DENIED` respectively. */
