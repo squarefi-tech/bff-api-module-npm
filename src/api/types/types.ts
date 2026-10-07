@@ -144,6 +144,9 @@ export namespace API {
       text_color?: string;
     }
 
+    /** A mobile wallet a card can be added to; follows the frontend program schema. */
+    export type DigitalWallet = componentsV1Frontend['schemas']['IssuingProgram']['digital_wallets'][number];
+
     export namespace Config {
       export type IssuingProgramOrderType = {
         id: string;
@@ -160,7 +163,17 @@ export namespace API {
         // card_limit: number;   deprecated, use max_cards instead
         max_cards: number;
         realtime_auth: boolean;
+        /** At least one mobile wallet is supported; which ones: `digital_wallets`. */
         tokenizable: boolean;
+        /**
+         * Mobile wallets cards of this program can be added to; empty = none. A
+         * program can support Google Pay without Apple Pay.
+         *
+         * Optional on the type because a backend older than the
+         * `issuing_programs.digital_wallets` migration omits it: read it with a
+         * fallback to `tokenizable` (true = both wallets).
+         */
+        digital_wallets?: API.Cards.DigitalWallet[];
         kyc_rails_id: string;
         integration_vendor_id: string;
         vendor_id: string;
@@ -268,7 +281,20 @@ export namespace API {
       name_on_card: string | null;
       type: CardType | string;
       form_factor: CardFormFactor | string;
+      /** Set when the card was issued; never rewritten from the program. */
       tokenizable: boolean;
+      /**
+       * Mobile wallets this card can be added to: its program's wallets, or none
+       * when `tokenizable` is false; a card with no program and `tokenizable`
+       * true lists both.
+       *
+       * Absent when the card's program could not be read (unknown, not "both")
+       * and on a backend older than the field. Without it, read it the way the
+       * backend does: none when `tokenizable` is false, otherwise the program's
+       * `digital_wallets` when the program is at hand (an empty list means
+       * none), both only when there is no program to ask.
+       */
+      digital_wallets?: API.Cards.DigitalWallet[];
       /**
        * This card's artwork, copied from its issuing program. Served WITH the
        * card on purpose: joining against the program catalogue client-side
@@ -291,6 +317,8 @@ export namespace API {
       wallet_id: string;
       type: string;
       tokenizable: boolean;
+      /** This card's mobile wallets; see `IssuingCardListItem.digital_wallets`. */
+      digital_wallets?: API.Cards.DigitalWallet[];
       issuing_programs: API.Cards.Config.Program;
       limits?: API.Cards.Limits.Limits;
       /** This card's artwork; see `IssuingCardListItem.card_design`. */

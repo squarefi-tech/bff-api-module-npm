@@ -1587,8 +1587,37 @@ export interface components {
             state_province_region?: string | null;
             id?: string;
         };
+        KycDocumentDto: {
+            /** Format: uuid */
+            readonly id?: string;
+            /** Format: uuid */
+            readonly kyc_entity_id?: string;
+            /**
+             * Format: uuid
+             * @description Beneficial owner the document belongs to; null for the entity itself.
+             */
+            readonly ubo_id?: Record<string, never> | null;
+            /**
+             * @description Document type.
+             * @example formation_doc
+             * @enum {string}
+             */
+            type: "supplementary" | "gov_id_front" | "gov_id_back" | "gov_id_hand_hold" | "selfie" | "proof_of_address" | "auth_letter" | "formation_doc" | "proof_of_ownership" | "certificate_of_registration_doc" | "business_registration_doc" | "share_structure" | "constitution_or_annual_report" | "articles_of_association" | "ubo_declaration" | "partnership_mins_of_meeting" | "partnership_deed" | "certificate_of_incumbency" | "regulatory_license" | "state_registry_doc" | "good_standing_cert" | "business_proof_of_address" | "invoices" | "contracts" | "financial_statements" | "source_of_funds" | "business_bank_statement" | "source_of_wealth_ubo" | "customer_supplier_agreements";
+            /** Format: uri */
+            link: string;
+            /** @example bff */
+            readonly source?: string;
+            /**
+             * Format: uuid
+             * @description Shared by the files filed together (one submission); the newest batch of a type is its current set.
+             */
+            readonly batch_id?: string;
+            /** @description Order of the file within its batch, from 0. */
+            readonly position?: number;
+            /** Format: date-time */
+            readonly created_at?: string;
+        };
         KycBeneficialOwnerDto: {
-            auth_letter_url: string | null;
             business_title: string | null;
             country_of_birth: string | null;
             date_of_birth: string | null;
@@ -1599,10 +1628,8 @@ export interface components {
             last_name_local: string | null;
             middle_name: string | null;
             middle_name_local: string | null;
-            gov_id_back_url: string | null;
             gov_id_country: string | null;
             gov_id_expiration_date: string | null;
-            gov_id_front_url: string | null;
             gov_id_issuance_authority: string | null;
             gov_id_issuance_date: string | null;
             gov_id_number: string | null;
@@ -1615,15 +1642,12 @@ export interface components {
             phone: string | null;
             /** @enum {string|null} */
             proof_of_address_type: "UTILITY_BILL" | "BANK_STATEMENT" | "RENTAL_AGREEMENT" | "TAX_DOCUMENT" | null;
-            proof_of_address_url: string | null;
             relationship_established_at: string | null;
             /** @enum {string|null} */
             role?: "OWNER_OR_OPERATOR" | "PARTNER" | "UBO" | "DIRECTOR_CONTROL_PERSON_OR_LEGAL_REP" | "AGENT_OR_AUTHORISED_PERSON" | null;
             share_proportion: string | null;
             supplementary_info: string | null;
-            supplementary_url: string | null;
             tax_identification_number: string | null;
-            selfie_url?: string | null;
             /**
              * @default individual
              * @enum {string|null}
@@ -1636,6 +1660,8 @@ export interface components {
             corporate_country: string | null;
             id?: string;
             address?: components["schemas"]["KycAddressDto"] | null;
+            /** @description KYC documents of this beneficial owner. Request: documents to file for the owner (type + link). */
+            documents?: components["schemas"]["KycDocumentDto"][];
         };
         KycEntityDto: {
             id: string;
@@ -1648,22 +1674,17 @@ export interface components {
             id_type?: "PASSPORT" | "ID_CARD" | "DRIVERS" | "NIN" | null;
             additional_id_number?: string | null;
             additional_id_type?: string | null;
-            articles_of_association_url?: string | null;
             business_description?: string | null;
             business_industry?: string[] | null;
             business_industry_other?: string | null;
             business_name?: string | null;
             business_name_local?: string | null;
-            business_registration_doc_url?: string | null;
             /** @enum {string|null} */
             business_type?: "cooperative" | "s_corporation" | "b_corporation" | "c_corporation" | "close_corporation" | "nonprofit_corporation" | "general_partnership" | "limited_partnership" | "limited_liability_company" | "other" | "sole_proprietorship" | "trust" | null;
             certificate_number?: string | null;
-            certificate_of_incumbency_url?: string | null;
             /** @enum {string|null} */
             certificate_of_registration_doc_type?: "ACRA" | "GST" | "MSME" | "CERTIFICATE_OF_REGISTRATION" | null;
-            certificate_of_registration_doc_url?: string | null;
             compliance_screening_explanation?: string | null;
-            constitution_or_annual_report_url?: string | null;
             country_of_birth?: string | null;
             /** @default false */
             dao_status: boolean | null;
@@ -1674,12 +1695,8 @@ export interface components {
             first_name?: string | null;
             first_name_local?: string | null;
             formation_date?: string | null;
-            formation_doc_url?: string | null;
-            gov_id_back_url?: string | null;
             gov_id_country?: string | null;
             gov_id_expiration_date?: string | null;
-            gov_id_front_url?: string | null;
-            gov_id_hand_hold_url?: string | null;
             gov_id_issuance_authority?: string | null;
             gov_id_issuance_date?: string | null;
             gov_id_number?: string | null;
@@ -1692,23 +1709,17 @@ export interface components {
             middle_name?: string | null;
             middle_name_local?: string | null;
             nationality?: string | null;
-            partnership_deed_url?: string | null;
-            partnership_mins_of_meeting_url?: string | null;
             phone?: string | null;
             product_service_category?: string | null;
             /** @enum {string|null} */
             proof_of_address_type?: "UTILITY_BILL" | "BANK_STATEMENT" | "RENTAL_AGREEMENT" | "TAX_DOCUMENT" | null;
-            proof_of_address_url?: string | null;
-            proof_of_ownership_url?: string | null;
             /** @enum {string|null} */
             purpose?: "charitable_donations" | "ecommerce_retail_payments" | "investment_purposes" | "other" | "payments_to_friends_or_family_abroad" | "payroll" | "personal_or_living_expenses" | "protect_wealth" | "purchase_goods_and_services" | "receive_payments_for_goods_and_services" | "tax_optimization" | "third_party_money_transmission" | "treasury_management" | "operating_a_company" | "receive_payment_for_freelancing" | "receive_salary" | null;
             purpose_other?: string | null;
             registration_number?: string | null;
-            share_structure_url?: string | null;
             /** @enum {string|null} */
             source_of_funds?: "employment" | "savings" | "winnings" | "marital" | "real_estate" | "trust" | "investment" | "other" | "sales_of_goods_and_services" | "owners_capital" | "business_loans" | "private_capital" | "grant" | null;
             supplementary_info?: string | null;
-            supplementary_url?: string | null;
             tax_identification_number?: string | null;
             /** @enum {string|null} */
             tax_identification_number_type?: "EIN" | "SSN" | "VAT" | "TIN" | "UTR" | null;
@@ -1717,10 +1728,7 @@ export interface components {
             trade_type?: "00" | "01" | "02" | "03" | "04" | "05" | "06" | "07" | "08" | "09" | "10" | "11" | "12" | "13" | "14" | "15" | "16" | "17" | "18" | "19" | "20" | "21" | "22" | "23" | "24" | "25" | "26" | "27" | "28" | "29" | "30" | "31" | "32" | "33" | "34" | "35" | "36" | "37" | "38" | "39" | "40" | "41" | null;
             /** @default false */
             transmits_customer_funds: boolean | null;
-            ubo_declaration_url?: string | null;
             website?: string | null;
-            selfie_url?: string | null;
-            regulatory_license_url?: string | null;
             annual_salary?: string | null;
             expected_monthly_volume?: string | null;
             monthly_crypto_deposits?: string | null;
@@ -1771,31 +1779,25 @@ export interface components {
             regulatory_authority_name?: string | null;
             regulatory_authority_country?: string | null;
             regulatory_license_number?: string | null;
-            regulatory_license_urls?: string[] | null;
-            state_registry_doc_url?: string | null;
-            good_standing_cert_url?: string | null;
-            business_proof_of_address_url?: string | null;
             /** @enum {string|null} */
             business_proof_of_address_type?: "UTILITY_BILL" | "BANK_STATEMENT" | "RENTAL_AGREEMENT" | "TAX_DOCUMENT" | null;
-            invoices_url?: string[] | null;
             invoices_absence_reason?: string | null;
-            contracts_url?: string[] | null;
             contracts_absence_reason?: string | null;
-            financial_statements_url?: string | null;
-            source_of_funds_url?: string | null;
-            business_bank_statement_url?: string[] | null;
             professional_description?: string | null;
             source_of_accumulated?: string | null;
             send_and_receive?: string | null;
             employment_status_other?: string | null;
             source_of_wealth_ubo?: string | null;
-            source_of_wealth_ubo_url?: string | null;
+            customer_acquisition_and_location?: string | null;
+            funds_senders_and_recipients?: string | null;
             purposes?: string[] | null;
             payment_flows?: string[] | null;
             source_of_funds_list?: string[] | null;
             address?: components["schemas"]["KycAddressDto"] | null;
             physical_address?: components["schemas"]["KycAddressDto"] | null;
             beneficial_owners?: components["schemas"]["KycBeneficialOwnerDto"][] | null;
+            /** @description KYC documents. Response: every document of the entity and of its beneficial owners (ubo_id set). Request: documents to file for the entity (type + link). */
+            documents?: components["schemas"]["KycDocumentDto"][];
         };
         WalletKycRailExtraActionDto: {
             /** @enum {string} */

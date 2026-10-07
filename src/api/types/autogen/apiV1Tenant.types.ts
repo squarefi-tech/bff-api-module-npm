@@ -572,7 +572,116 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
+        /**
+         * Create destination
+         * @description counterparty_account_id is required in the body.
+         *
+         *     **Banking types** (ACH, SWIFT, SEPA, CHAPS, FPS, FEDWIRE):
+         *     banking_data: { account_number, routing_number, bank_name, swift_bic, iban, sort_code, note, address }
+         *
+         *     **Crypto types** (CRYPTO_EXTERNAL, CRYPTO_INTERNAL):
+         *     crypto_data: { address, currency_id, memo }
+         *
+         *     **Internal type** (INTERNAL):
+         *     internal_data: { wallet_id, description? } — receiver wallet on the same platform
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        counterparty_account_id: string;
+                        /** @enum {string} */
+                        type: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
+                        nickname?: string;
+                        banking_data?: {
+                            account_number?: string;
+                            routing_number?: string;
+                            bank_name?: string;
+                            swift_bic?: string;
+                            iban?: string;
+                            /** @description Sort code (6 digits, UK banking) */
+                            sort_code?: string;
+                            note?: string;
+                            address?: {
+                                country_id?: number;
+                                city?: string;
+                                postcode?: string;
+                                street1?: string;
+                                street2?: string;
+                                /** @description Required when the selected country has states; countries without states may omit it */
+                                state_id?: number | null;
+                            };
+                        };
+                        crypto_data?: {
+                            address?: string;
+                            /** Format: uuid */
+                            currency_id?: string;
+                            memo?: string;
+                            /**
+                             * @description Hosting classification of the address
+                             * @default unknown
+                             * @enum {string}
+                             */
+                            wallet_custody_type?: "custodial" | "selfhosted" | "unknown";
+                        };
+                        /** @description Required for type INTERNAL — points at the receiver wallet on the same platform. An account holds one INTERNAL destination per wallet; if it already has an active one to this wallet, that destination is returned instead of a new one. */
+                        internal_data?: {
+                            /**
+                             * Format: uuid
+                             * @description Target (receiver) wallet uuid on the same platform.
+                             */
+                            wallet_id: string;
+                            /** @description Optional, reserved for future use. */
+                            description?: string;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Counterparty destination created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                destination?: components["schemas"]["CounterpartyDestination"];
+                                /** @example Counterparty destination created successfully */
+                                message?: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Validation error. Bank-details problems come as `VALIDATION_ERROR` with every problem in `error.details.issues` (`field`, `code`, `message`, optional `country` / `detected`).
+                 *
+                 *     **Until 2026-10-12 00:00 UTC** the stricter bank-details rules (per-country IBAN checks, SEPA-zone IBAN, BIC details, ABA check digit, account formats) are reported by `POST /admin/counterparty/destinations/validate` but do not refuse this request; from then on they do.
+                 *      */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Account not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -705,6 +814,76 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/admin/counterparty/destinations/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate destination details without saving
+         * @description Dry run of `POST /admin/counterparty/destinations`: the same body and the same checks — bank details per
+         *     payment method, address completeness, location reference data, bank-country consistency — with nothing
+         *     saved and no counterparty account needed. Answers `200` whether or not the details are valid;
+         *     `valid: false` comes with every problem in `issues`.
+         *
+         *     It always applies the strict bank-details rules, including before they start refusing creation on this
+         *     surface (2026-10-12 00:00 UTC) — use it to find out what your integration sends that will be refused.
+         *     Without an account it cannot tell whether an INTERNAL target wallet is active — creation still checks
+         *     that. Rate limited to 60 requests per minute per tenant API key.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        type: "ACH" | "RTP" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
+                        /** @description Same shape as in `POST /admin/counterparty/destinations`. */
+                        banking_data?: Record<string, never>;
+                        crypto_data?: Record<string, never>;
+                        internal_data?: Record<string, never>;
+                    };
+                };
+            };
+            responses: {
+                /** @description Validation result */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["DestinationValidationResult"];
+                        };
+                    };
+                };
+                /** @description Too many validation requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/admin/crypto_addresses/{wallet_id}": {
@@ -861,6 +1040,201 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/crypto_wallets/{wallet_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List crypto wallets */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Filter by exact external_id */
+                    external_id?: string;
+                    /** @description Search by name (case-insensitive, partial match) */
+                    name?: string;
+                    /** @description Filter by status (default active) */
+                    status?: "active" | "inactive";
+                    /** @description Filter wallets created after this date (ISO 8601) */
+                    created_after?: string;
+                    /** @description Filter wallets created before this date (ISO 8601) */
+                    created_before?: string;
+                    offset?: number;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    wallet_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Crypto wallets listed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            success?: boolean;
+                            data?: components["schemas"]["CryptoWalletListItem"][];
+                            pagination?: components["schemas"]["PaginationResponse"];
+                        };
+                    };
+                };
+                /** @description Wallet does not belong to tenant, or its KYC status does not allow the operation (`KYC_REQUIREMENTS_NOT_MET`) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create crypto wallet */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    wallet_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        name: string;
+                        external_id?: string;
+                        /** @description Chain IDs to create addresses on. Omit or leave empty to create a wallet without addresses; the first address added later creates the custody-provider wallet. */
+                        chains?: number[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Crypto wallet created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            success?: boolean;
+                            data?: components["schemas"]["CryptoWallet"];
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description Invalid request (missing name, invalid chains) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Wallet does not belong to tenant, or its KYC status does not allow the operation (`KYC_REQUIREMENTS_NOT_MET`) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description external_id already exists for this tenant */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/crypto_wallets/{wallet_id}/addresses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List crypto wallet addresses */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Filter by chain ID */
+                    chain?: number;
+                    /** @description Filter by specific crypto wallet */
+                    crypto_wallet_id?: string;
+                    /** @description Search by address (case-insensitive, partial match) */
+                    address?: string;
+                    offset?: number;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    wallet_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Addresses listed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            success?: boolean;
+                            data?: components["schemas"]["CryptoWalletAddressListItem"][];
+                            pagination?: components["schemas"]["PaginationResponse"];
+                        };
+                    };
+                };
+                /** @description Wallet does not belong to tenant, or its KYC status does not allow the operation (`KYC_REQUIREMENTS_NOT_MET`) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/crypto_wallets/{wallet_id}/{crypto_wallet_id}": {
         parameters: {
             query?: never;
@@ -915,7 +1289,57 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Delete crypto wallet
+         * @description Soft-deletes a crypto wallet and archives it with the custody provider.
+         *     The wallet is marked as deleted and all addresses are deactivated.
+         *
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    wallet_id: string;
+                    crypto_wallet_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Crypto wallet soft-deleted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            success?: boolean;
+                            data?: components["schemas"]["CryptoWalletDeleteResponse"];
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description Wallet does not belong to tenant, or its KYC status does not allow the operation (`KYC_REQUIREMENTS_NOT_MET`) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Crypto wallet not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -1165,46 +1589,11 @@ export interface paths {
                         gov_id_country?: string;
                         gov_id_type?: string;
                         gov_id_number?: string;
-                        /** @description URL to selfie image */
-                        selfie_url?: string;
-                        /** @description URL to government ID front image */
-                        gov_id_front_url?: string;
-                        /** @description URL to government ID back image */
-                        gov_id_back_url?: string;
-                        /** @description URL to hand-held government ID image */
-                        gov_id_hand_hold_url?: string;
-                        /** @description URL to proof of address document */
-                        proof_of_address_url?: string;
                         /** @description Type of proof of address document */
                         proof_of_address_type?: string;
-                        /** @description URL to formation document (business) */
-                        formation_doc_url?: string;
-                        /** @description URL to proof of ownership (business) */
-                        proof_of_ownership_url?: string;
                         certificate_of_registration_doc_type?: string;
-                        /** @description URL to certificate of registration (business) */
-                        certificate_of_registration_doc_url?: string;
                         certificate_number?: string;
-                        /** @description URL to business registration document */
-                        business_registration_doc_url?: string;
-                        /** @description URL to share structure document (business) */
-                        share_structure_url?: string;
-                        /** @description URL to constitution or annual report (business) */
-                        constitution_or_annual_report_url?: string;
-                        /** @description URL to articles of association (business) */
-                        articles_of_association_url?: string;
-                        /** @description URL to UBO declaration (business) */
-                        ubo_declaration_url?: string;
-                        /** @description URL to partnership minutes of meeting (business) */
-                        partnership_mins_of_meeting_url?: string;
-                        /** @description URL to partnership deed (business) */
-                        partnership_deed_url?: string;
-                        /** @description URL to certificate of incumbency (business) */
-                        certificate_of_incumbency_url?: string;
-                        /** @description URL to regulatory license (business) */
-                        regulatory_license_url?: string;
-                        /** @description URL to supplementary document */
-                        supplementary_url?: string;
+                        documents?: components["schemas"]["KycDocumentsInput"];
                     };
                 };
             };
@@ -1372,27 +1761,10 @@ export interface paths {
                         gov_id_country?: string;
                         gov_id_type?: string;
                         gov_id_number?: string;
-                        selfie_url?: string;
-                        gov_id_front_url?: string;
-                        gov_id_back_url?: string;
-                        gov_id_hand_hold_url?: string;
-                        proof_of_address_url?: string;
                         proof_of_address_type?: string;
-                        formation_doc_url?: string;
-                        proof_of_ownership_url?: string;
                         certificate_of_registration_doc_type?: string;
-                        certificate_of_registration_doc_url?: string;
                         certificate_number?: string;
-                        business_registration_doc_url?: string;
-                        share_structure_url?: string;
-                        constitution_or_annual_report_url?: string;
-                        articles_of_association_url?: string;
-                        ubo_declaration_url?: string;
-                        partnership_mins_of_meeting_url?: string;
-                        partnership_deed_url?: string;
-                        certificate_of_incumbency_url?: string;
-                        regulatory_license_url?: string;
-                        supplementary_url?: string;
+                        documents?: components["schemas"]["KycDocumentsInput"];
                     };
                 };
             };
@@ -1426,6 +1798,82 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/admin/kyc_entity/{entity_id}/documents/{document_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a KYC document
+         * @description Removes one document of the KYC entity — or of one of its beneficial owners — by the `id`
+         *     it carries in `documents[]`. Allowed while the entity is in `UNVERIFIED` or `SOFT_REJECT`,
+         *     the same window as `PATCH`. Documents are added through `documents[]` of `POST` / `PATCH`.
+         *
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    entity_id: string;
+                    /** @description The document `id` from `documents[]` */
+                    document_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Document removed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /** Format: uuid */
+                                id?: string;
+                                /** @example formation_doc */
+                                type?: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Entity not editable in its current status, or malformed id */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Entity does not belong to this tenant */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Entity or document not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/admin/kyc_entity/{entity_id}/submit": {
@@ -2251,7 +2699,7 @@ export interface paths {
                         note?: string;
                         /**
                          * Format: date-time
-                         * @description Optional. Schedule the transfer for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically.
+                         * @description Optional. Schedule the transfer for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically, once. If the balance does not cover it then, it fails with `scheduled_failure.code` INSUFFICIENT_FUNDS and is not retried. Approve at least 1 hour before scheduled_at.
                          */
                         scheduled_at?: string;
                         documents?: Record<string, never>[];
@@ -2921,7 +3369,9 @@ export interface paths {
                      *     text operator, e.g. `[{"meta->>workflow_status":"PROCESSING"}]` or, to find an order by
                      *     your own reference, `[{"meta->>reference":"invoice-2026-04-001"}]`. Besides order columns
                      *     it accepts `mass_payout_id` (uuid), which narrows the result to the orders of one mass
-                     *     payout batch. Malformed JSON or a non-array value is rejected with 400.
+                     *     payout batch, and `scheduled` — scheduled payments only: `all`, `upcoming` (approved and
+                     *     waiting, `EXPECTED`) or `past` (any status but `NEW` and `EXPECTED`); it combines with
+                     *     `status`. Malformed JSON or a non-array value is rejected with 400.
                      *
                      * @example [{"status":"COMPLETE"}]
                      */
@@ -2955,7 +3405,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Invalid `filters` (not a JSON array) or non-uuid `mass_payout_id` */
+                /** @description Invalid `filters` (not a JSON array), non-uuid `mass_payout_id`, or `scheduled` other than `all` / `upcoming` / `past` */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -3124,6 +3574,9 @@ export interface paths {
          *     status NEW can be approved. Orders
          *     created with `scheduled_at` move to EXPECTED instead — no funds are
          *     debited until execution at the requested time.
+         *     A scheduled order is approved only while its `scheduled_at` is at least
+         *     one hour away; a later approve answers 400 `SCHEDULED_AT_TOO_SOON`
+         *     (create the payment again with a new date).
          *
          */
         post: {
@@ -3151,7 +3604,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Insufficient funds (`INSUFFICIENT_FUNDS` — the order is released back to NEW) or validation error */
+                /** @description Insufficient funds (`INSUFFICIENT_FUNDS` — the order is released back to NEW), a scheduled order less than an hour before its `scheduled_at` (`SCHEDULED_AT_TOO_SOON`), or validation error */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -3584,7 +4037,10 @@ export interface paths {
                                 card_limit?: number | null;
                                 form_factor?: string | null;
                                 type?: string | null;
+                                /** @description At least one mobile wallet is supported; which ones — `digital_wallets` */
                                 tokenizable?: boolean | null;
+                                /** @description Mobile wallets cards of this program can be added to; empty when none. A program can support one without the other */
+                                digital_wallets?: ("APPLE_PAY" | "GOOGLE_PAY")[];
                                 order_types?: string[] | null;
                                 kyc_rails?: {
                                     /** Format: uuid */
@@ -5206,13 +5662,14 @@ export interface paths {
         /**
          * Get wallet balance
          * @description Returns raw balance records with crypto metadata.
-         *     Dust balances below `render_threshold` are hidden unless `show_low_balance=true`.
+         *     Dust balances — smaller than the currency threshold in absolute value — are hidden unless `show_low_balance=true`;
+         *     a negative balance (a debt) beyond the threshold is always returned.
          *
          */
         get: {
             parameters: {
                 query?: {
-                    /** @description When false (default), dust balances below threshold are hidden */
+                    /** @description When false (default), dust balances — smaller than the currency threshold in absolute value — are hidden */
                     show_low_balance?: boolean;
                 };
                 header?: never;
@@ -5232,7 +5689,7 @@ export interface paths {
                         "application/json": {
                             /** @example true */
                             success?: boolean;
-                            /** @description Filtered by render_threshold unless show_low_balance=true; icon may be stripped from crypto.meta */
+                            /** @description Dust balances are left out unless show_low_balance=true; icon may be stripped from crypto.meta */
                             data?: {
                                 /** Format: uuid */
                                 crypto_id?: string;
@@ -7012,6 +7469,12 @@ export interface paths {
          * @description Returns all active issuing programs available for the tenant.
          *     Programs are enriched with group-level pricing and limits.
          *
+         *     Each program also publishes what a cardholder on it must carry
+         *     (`cardholder_requirements`): the KYC level, the required fields and
+         *     documents, and what each country changes. Read it before building the
+         *     cardholder form instead of hardcoding one — it can differ between
+         *     programs, and a sandbox program may ask for less than the production one.
+         *
          */
         get: {
             parameters: {
@@ -7040,8 +7503,13 @@ export interface paths {
                                 /** @enum {string} */
                                 form_factor?: "virtual" | "physical" | "both";
                                 brand?: string;
+                                /** @description At least one mobile wallet is supported; which ones — `digital_wallets` */
+                                tokenizable?: boolean;
+                                /** @description Mobile wallets cards of this program can be added to; empty when none. A program can support one without the other */
+                                digital_wallets?: ("APPLE_PAY" | "GOOGLE_PAY")[];
                                 issuing_price_usd?: number;
                                 initial_topup_usd?: number;
+                                cardholder_requirements?: components["schemas"]["CardholderRequirements"];
                             }[];
                         };
                     };
@@ -7489,6 +7957,59 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description What a cardholder on this program must carry. Set per program in the vendor config, so it can change without a release — read it instead of hardcoding the form. */
+        CardholderRequirements: {
+            /**
+             * @description Cumulative KYC level; each level includes the previous one
+             * @enum {string}
+             */
+            level?: "minimal" | "basic" | "declared" | "full";
+            /**
+             * @description Required field names; address fields are dotted (address.line1). Some CONSUMER programs also list gov_id_issuance_date and gov_id_expiration_date (ISO YYYY-MM-DD).
+             * @example [
+             *       "first_name",
+             *       "last_name",
+             *       "email",
+             *       "phone",
+             *       "birth_date",
+             *       "nationality"
+             *     ]
+             */
+            required?: string[];
+            /** @description Documents that must be attached; empty below the full level */
+            required_documents?: ("gov_id_front" | "gov_id_back" | "selfie")[];
+            /** @description Human-readable constraints the field list cannot express — e.g. a CONSUMER program requiring tax_identification_number to be a valid SSN when nationality is USA. */
+            notes?: string[];
+            /** @description What each country changes, keyed by ISO 3166-1 alpha-3 with a `default` entry; empty when the vendor reviews nothing. These fields stay out of `required` because they only hold once the nationality or address country is known: read the rule for the nationality the user picked (required_by_nationality), the rule for the address country (required_by_address), and the rule for the country that issued the document (gov_id_types). */
+            country_rules?: {
+                [key: string]: {
+                    /**
+                     * @description gov_id_type values accepted for a document issued by this country
+                     * @example [
+                     *       "passport",
+                     *       "driving_license",
+                     *       "id_card"
+                     *     ]
+                     */
+                    gov_id_types?: string[];
+                    /**
+                     * @description Extra fields a person of this nationality must provide
+                     * @example [
+                     *       "tax_identification_number"
+                     *     ]
+                     */
+                    required_by_nationality?: string[];
+                    /**
+                     * @description Extra fields an address in this country must carry
+                     * @example [
+                     *       "address.state"
+                     *     ]
+                     */
+                    required_by_address?: string[];
+                    notes?: string[];
+                };
+            };
+        };
         ErrorResponse: {
             /** @example false */
             success?: boolean;
@@ -7576,8 +8097,10 @@ export interface components {
              * @enum {string}
              */
             brand?: "VISA" | "MASTERCARD";
-            /** @description Whether card can be tokenized */
+            /** @description Whether this card can be added to a mobile wallet; set when the card was issued. Which ones: `digital_wallets`. */
             tokenizable?: boolean;
+            /** @description Mobile wallets this card can be added to: the wallets of the card's program, or none when the card's `tokenizable` is false. Left out when the program could not be read. */
+            digital_wallets?: ("APPLE_PAY" | "GOOGLE_PAY")[];
             /** @description Total spending cap/limit */
             spend_cap?: number;
             /** @description Total amount spent */
@@ -8257,6 +8780,35 @@ export interface components {
             crypto_data?: components["schemas"]["CryptoData"];
             internal_data?: components["schemas"]["CounterpartyInternalData"];
             counterparty_account?: components["schemas"]["CounterpartyAccountRef"];
+            /** @description Banking destinations only: problems that make the stored bank details unpayable (an IBAN that fails its checks, an IBAN outside SEPA on a SEPA destination, a routing number that fails the ABA check). Non-empty means withdrawals to this destination are refused with `DESTINATION_INVALID` — details cannot be edited, so add a new destination. Empty for valid banking destinations; absent for crypto and internal ones. */
+            validation_issues?: components["schemas"]["DestinationValidationIssue"][];
+        };
+        /** @description One problem with a destination payload. `field` is the request path of the offending value (`iban`, `routing_number`, `address.city`…); `message` is ready to show under that field. */
+        DestinationValidationIssue: {
+            /** @example iban */
+            field: string;
+            /**
+             * @description Machine-readable reason. Bank details: `REQUIRED`, `IBAN_WRONG_FORMAT`, `IBAN_INVALID_CHARACTERS`, `IBAN_COUNTRY_NOT_SUPPORTED`, `IBAN_WRONG_LENGTH`, `IBAN_WRONG_BBAN_FORMAT`, `IBAN_WRONG_CHECKSUM`, `IBAN_WRONG_NATIONAL_CHECKSUM`, `IBAN_QR_NOT_ALLOWED`, `IBAN_NOT_SEPA`, `IBAN_BIC_COUNTRY_MISMATCH`, `BIC_WRONG_FORMAT`, `BIC_UNKNOWN_COUNTRY`, `BIC_TEST_CODE`, `ROUTING_NUMBER_INVALID`, `ACCOUNT_NUMBER_INVALID`, `SORT_CODE_INVALID`, `WRONG_IDENTIFIER_TYPE`, `INVALID_VALUE`; reference data: `BANK_COUNTRY_MISMATCH`, `VALIDATION_ERROR`; dry run only: `INVALID_TYPE`. New codes may be added — show `message` for an unknown one.
+             * @example IBAN_NOT_SEPA
+             */
+            code: string;
+            /** @example IBAN country AE is outside the SEPA zone — SEPA transfers cannot reach it */
+            message: string;
+            /**
+             * @description ISO 3166-1 alpha-2 country the problem is about, when there is one
+             * @example AE
+             */
+            country?: string;
+            /**
+             * @description For `WRONG_IDENTIFIER_TYPE`: what the value looks like (an IBAN typed into a US account-number field…)
+             * @enum {string}
+             */
+            detected?: "IBAN" | "BIC" | "ROUTING_NUMBER";
+        };
+        DestinationValidationResult: {
+            /** @description True when creating the destination with this payload would pass every check */
+            valid: boolean;
+            issues: components["schemas"]["DestinationValidationIssue"][];
         };
         /** @description Owning counterparty account, embedded on destination reads; absent on create/update. */
         CounterpartyAccountRef: {
@@ -8287,6 +8839,19 @@ export interface components {
             /** Format: date-time */
             updated_at?: string;
         };
+        /** @description Documents to file for the KYC entity. Each entry is stored as a document of its type; an earlier document of the same type stays on record (several documents of one type are allowed). All entries of one request form one batch in the given order, so a multi-file document (e.g. the pages of a bank statement) is sent as several entries of the same type in one request. A document is removed through DELETE /admin/kyc_entity/{entity_id}/documents/{document_id}. */
+        KycDocumentsInput: {
+            /**
+             * @description Document type: supplementary, gov_id_front, gov_id_back, gov_id_hand_hold, selfie, proof_of_address, auth_letter, formation_doc, proof_of_ownership, certificate_of_registration_doc, business_registration_doc, share_structure, constitution_or_annual_report, articles_of_association, ubo_declaration, partnership_mins_of_meeting, partnership_deed, certificate_of_incumbency, regulatory_license, state_registry_doc, good_standing_cert, business_proof_of_address, invoices, contracts, financial_statements, source_of_funds, business_bank_statement, source_of_wealth_ubo, customer_supplier_agreements.
+             * @example formation_doc
+             */
+            type: string;
+            /**
+             * Format: uri
+             * @description http(s) URL of the file.
+             */
+            link: string;
+        }[];
         KycEntity: {
             /** Format: uuid */
             id?: string;
@@ -8326,48 +8891,134 @@ export interface components {
             gov_id_country?: string | null;
             gov_id_type?: string | null;
             gov_id_number?: string | null;
-            /** @description URL to selfie image */
-            selfie_url?: string | null;
-            /** @description URL to government ID front image */
-            gov_id_front_url?: string | null;
-            /** @description URL to government ID back image */
-            gov_id_back_url?: string | null;
-            /** @description URL to hand-held government ID image */
-            gov_id_hand_hold_url?: string | null;
-            /** @description URL to proof of address document */
-            proof_of_address_url?: string | null;
+            /** @description Every KYC document of the entity and of its beneficial owners, oldest first. Several documents of one type may be on record; the current set of a type is its newest batch (files sent in one request share `batch_id`, ordered by `position`). The `*_url` fields below are deprecated copies of it. */
+            documents?: {
+                /** Format: uuid */
+                id?: string;
+                /**
+                 * @description Document type (see KycDocumentsInput for the list).
+                 * @example formation_doc
+                 */
+                type?: string;
+                /** Format: uri */
+                link?: string;
+                /**
+                 * Format: uuid
+                 * @description Beneficial owner the document belongs to; null for the entity itself.
+                 */
+                ubo_id?: string | null;
+                /**
+                 * @description Who filed the document: `admin_api` — this API, `panel` — an operator, `bff` — the client application, `kyc_provider` — received from the KYC provider, `backfill` — carried over from the former `*_url` fields.
+                 * @example admin_api
+                 * @enum {string}
+                 */
+                source?: "admin_api" | "panel" | "bff" | "kyc_provider" | "backfill";
+                /**
+                 * Format: uuid
+                 * @description Shared by the files sent in one request (one submission).
+                 */
+                batch_id?: string;
+                /** @description Order of the file within its batch, from 0. */
+                position?: number;
+                /** Format: date-time */
+                created_at?: string;
+            }[];
+            /**
+             * @deprecated
+             * @description Deprecated — read `documents[]`. Link of the newest `selfie` document of the entity itself; null when there is none.
+             */
+            readonly selfie_url?: string | null;
+            /**
+             * @deprecated
+             * @description Deprecated — read `documents[]`. Link of the newest `gov_id_front` document of the entity itself; null when there is none.
+             */
+            readonly gov_id_front_url?: string | null;
+            /**
+             * @deprecated
+             * @description Deprecated — read `documents[]`. Link of the newest `gov_id_back` document of the entity itself; null when there is none.
+             */
+            readonly gov_id_back_url?: string | null;
+            /**
+             * @deprecated
+             * @description Deprecated — read `documents[]`. Link of the newest `gov_id_hand_hold` document of the entity itself; null when there is none.
+             */
+            readonly gov_id_hand_hold_url?: string | null;
+            /**
+             * @deprecated
+             * @description Deprecated — read `documents[]`. Link of the newest `proof_of_address` document of the entity itself; null when there is none.
+             */
+            readonly proof_of_address_url?: string | null;
+            /**
+             * @deprecated
+             * @description Deprecated — read `documents[]`. Link of the newest `formation_doc` document of the entity itself; null when there is none.
+             */
+            readonly formation_doc_url?: string | null;
+            /**
+             * @deprecated
+             * @description Deprecated — read `documents[]`. Link of the newest `proof_of_ownership` document of the entity itself; null when there is none.
+             */
+            readonly proof_of_ownership_url?: string | null;
+            /**
+             * @deprecated
+             * @description Deprecated — read `documents[]`. Link of the newest `certificate_of_registration_doc` document of the entity itself; null when there is none.
+             */
+            readonly certificate_of_registration_doc_url?: string | null;
+            /**
+             * @deprecated
+             * @description Deprecated — read `documents[]`. Link of the newest `business_registration_doc` document of the entity itself; null when there is none.
+             */
+            readonly business_registration_doc_url?: string | null;
+            /**
+             * @deprecated
+             * @description Deprecated — read `documents[]`. Link of the newest `share_structure` document of the entity itself; null when there is none.
+             */
+            readonly share_structure_url?: string | null;
+            /**
+             * @deprecated
+             * @description Deprecated — read `documents[]`. Link of the newest `constitution_or_annual_report` document of the entity itself; null when there is none.
+             */
+            readonly constitution_or_annual_report_url?: string | null;
+            /**
+             * @deprecated
+             * @description Deprecated — read `documents[]`. Link of the newest `articles_of_association` document of the entity itself; null when there is none.
+             */
+            readonly articles_of_association_url?: string | null;
+            /**
+             * @deprecated
+             * @description Deprecated — read `documents[]`. Link of the newest `ubo_declaration` document of the entity itself; null when there is none.
+             */
+            readonly ubo_declaration_url?: string | null;
+            /**
+             * @deprecated
+             * @description Deprecated — read `documents[]`. Link of the newest `partnership_mins_of_meeting` document of the entity itself; null when there is none.
+             */
+            readonly partnership_mins_of_meeting_url?: string | null;
+            /**
+             * @deprecated
+             * @description Deprecated — read `documents[]`. Link of the newest `partnership_deed` document of the entity itself; null when there is none.
+             */
+            readonly partnership_deed_url?: string | null;
+            /**
+             * @deprecated
+             * @description Deprecated — read `documents[]`. Link of the newest `certificate_of_incumbency` document of the entity itself; null when there is none.
+             */
+            readonly certificate_of_incumbency_url?: string | null;
+            /**
+             * @deprecated
+             * @description Deprecated — read `documents[]`. Link of the newest `regulatory_license` document of the entity itself; null when there is none.
+             */
+            readonly regulatory_license_url?: string | null;
+            /**
+             * @deprecated
+             * @description Deprecated — read `documents[]`. Link of the newest `supplementary` document of the entity itself; null when there is none.
+             */
+            readonly supplementary_url?: string | null;
             /** @description Type of proof of address document */
             proof_of_address_type?: string | null;
-            /** @description URL to formation document (business) */
-            formation_doc_url?: string | null;
-            /** @description URL to proof of ownership document (business) */
-            proof_of_ownership_url?: string | null;
             /** @description Type of certificate of registration */
             certificate_of_registration_doc_type?: string | null;
-            /** @description URL to certificate of registration (business) */
-            certificate_of_registration_doc_url?: string | null;
             /** @description Certificate number (business) */
             certificate_number?: string | null;
-            /** @description URL to business registration document */
-            business_registration_doc_url?: string | null;
-            /** @description URL to share structure document (business) */
-            share_structure_url?: string | null;
-            /** @description URL to constitution or annual report (business) */
-            constitution_or_annual_report_url?: string | null;
-            /** @description URL to articles of association (business) */
-            articles_of_association_url?: string | null;
-            /** @description URL to UBO declaration (business) */
-            ubo_declaration_url?: string | null;
-            /** @description URL to partnership minutes of meeting (business) */
-            partnership_mins_of_meeting_url?: string | null;
-            /** @description URL to partnership deed (business) */
-            partnership_deed_url?: string | null;
-            /** @description URL to certificate of incumbency (business) */
-            certificate_of_incumbency_url?: string | null;
-            /** @description URL to regulatory license (business) */
-            regulatory_license_url?: string | null;
-            /** @description URL to supplementary document */
-            supplementary_url?: string | null;
             /** Format: uuid */
             kyc_address_id?: string | null;
             /** Format: uuid */
@@ -8667,7 +9318,7 @@ export interface components {
             note?: string;
             /**
              * Format: date-time
-             * @description Optional. Schedule the payment for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically.
+             * @description Optional. Schedule the payment for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically, once: if the balance does not cover it then, it fails with `scheduled_failure.code` INSUFFICIENT_FUNDS and is not retried. Approve at least 1 hour before scheduled_at.
              */
             scheduled_at?: string;
         };
@@ -8696,7 +9347,7 @@ export interface components {
             note?: string;
             /**
              * Format: date-time
-             * @description Optional. Schedule the payment for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically.
+             * @description Optional. Schedule the payment for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically, once: if the balance does not cover it then, it fails with `scheduled_failure.code` INSUFFICIENT_FUNDS and is not retried. Approve at least 1 hour before scheduled_at.
              */
             scheduled_at?: string;
         };
@@ -8753,6 +9404,16 @@ export interface components {
              * @description Requested execution time for scheduled payments (status EXPECTED); null for immediate orders
              */
             scheduled_at?: string | null;
+            /** @description Why a scheduled payment failed — set on a scheduled order in `FAILED`, null on any other scheduled order, absent on an immediate one. A scheduled payment is attempted once and never retried: `INSUFFICIENT_FUNDS` means nothing was debited and the payment can be created again; `PROVIDER_ERROR` — the payment was debited and the provider side failed; `EXECUTION_ERROR` — any other reason. */
+            scheduled_failure?: {
+                /** @enum {string} */
+                code: "INSUFFICIENT_FUNDS" | "PROVIDER_ERROR" | "EXECUTION_ERROR";
+                /**
+                 * @description Customer-facing text of the code.
+                 * @example The balance was insufficient at the scheduled time.
+                 */
+                message: string;
+            } | null;
             /** Format: date-time */
             created_at?: string;
             /** Format: date-time */

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`API.Cards.DigitalWallet` and `digital_wallets` on the hand-written card types.** 1.36.88 brought `digital_wallets` to the generated frontend types; this adds it where the SDK's own types describe programs and cards: `API.Cards.DigitalWallet` (read off the frontend program schema) and `digital_wallets?: DigitalWallet[]` on `API.Cards.Config.Program`, `API.Cards.IssuingCardListItem` and `API.Cards.IssuingCardDetailItem` (the legacy `/issuing/cards` and `/issuing/config/programs` reads, which return it too).
+  - On a program it lists the wallets its cards can be added to (empty = none); `tokenizable` means "at least one". Optional because a backend without the field omits it: fall back to `tokenizable` (true = both wallets).
+  - On a card it is its program's wallets, or none when the card's own `tokenizable` is false; a card with no program and `tokenizable` true lists both. The card's `tokenizable` is unchanged. A card without the list means unknown (the backend could not read the program), not both: read it the way the backend does — none when `tokenizable` is false, otherwise the program's list when the program is at hand, both only when there is no program to ask.
+- **External and tenant types regenerated from the dev specs:**
+  - `digital_wallets` on programs and cards of the external (`/api`) and tenant (`/admin`) APIs.
+  - Destinations: `POST /api/counterparty/destinations` and `POST /admin/counterparty/destinations` are now typed, with the dry runs `POST /api/counterparty/destinations/validate` and `POST /admin/counterparty/destinations/validate` (`DestinationValidationResult`), and `validation_issues` on stored banking destinations (a withdrawal to one that has issues is refused with `DESTINATION_INVALID`). `RTP` joins the destination `type` union on the external API; on the tenant API the validate body accepts `RTP` while the create body and `CounterpartyDestination` do not yet — a spec gap on the backend side.
+  - Crypto wallets on the tenant API: `GET /admin/crypto_wallets/{wallet_id}` (the wallet's crypto wallets, paginated) and `POST` on the same path (create one), `DELETE /admin/crypto_wallets/{wallet_id}/{crypto_wallet_id}` (soft delete) and `GET /admin/crypto_wallets/{wallet_id}/addresses`.
+  - KYC on the tenant API: `DELETE /admin/kyc_entity/{entity_id}/documents/{document_id}`, documents sent as `documents` (`KycDocumentsInput`) on `POST` / `PATCH /admin/kyc_entity`, and `cardholder_requirements` on `GET /admin/issuing/config/programs`.
+- **V2 types regenerated:** KYC `customer_acquisition_and_location` and `funds_senders_and_recipients`.
+
+### Removed
+
+- **The document URL fields of the KYC schemas.** V2 KYC drops the per-document `*_url` fields (`gov_id_front_url`, `selfie_url`, `proof_of_address_url`, `formation_doc_url`…) and the list ones (`regulatory_license_urls`, `invoices_url`, `contracts_url`, `business_bank_statement_url`) in favour of `documents?: KycDocumentDto[]`; the tenant API's `POST` / `PATCH /admin/kyc_entity` bodies drop the `*_url` fields in favour of `documents`, and its response `*_url` fields are read-only and deprecated. Code that read or sent a `*_url` field stops compiling: use the matching item of `documents`. `KycDocumentDto.ubo_id` is generated as `Record<string, never> | null` because the backend DTO declares no type for it — compare it as a string with a cast until the spec is fixed.
+
+These removals break compilation for code that uses them, yet ship in a patch release, since CI bumps the patch on every merge — a `^1.36` range picks them up on the next install. The wallet, the b2b dashboards and the b2c app use none of the removed fields (checked 2026-10-07).
+
 ## [1.36.88] - 2026-10-07
 
 ### Added
