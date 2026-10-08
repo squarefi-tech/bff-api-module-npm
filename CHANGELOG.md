@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.91] - 2026-10-08
+
 ### Added
 
 - **The fee split on `API.Orders.Frontend.OrderCalculation` (SFI-2556, backend SFI-2738).** `GET /frontend/orders/calc`, the `data` of `orders.frontend.calc`, now returns the two parts of `comission`: `fixed_commission` (the rail's flat charge) and `percent_commission` (the percentage part). Both are amounts in `commission_currency`, a currency uuid. `base_markup` is the rate behind `percent_commission`, in whole percent (`1` = 1%). `comission = fixed_commission + percent_commission`, but each part is truncated to cents on its own, so the parts can add up to a cent less than `comission`; the total is always `comission`. For example, `DLS_SWIFT_OFFRAMP` for an amount of 50 returns `comission: 40.5`, `fixed_commission: 40`, `percent_commission: 0.5`, `base_markup: 1`. `commission_currency` is optional: older engines omit it, and then the commission is in the same currency on both sides.
