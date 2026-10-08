@@ -16,6 +16,11 @@ type CalcResult = {
   network_fee: number;
   transaction_fee: number;
   from_symbol: string;
+  // Fee split of the frontend calc. Optional: the v2 calc and app-specific handlers may not return it.
+  commission_currency?: string;
+  fixed_commission?: number;
+  percent_commission?: number;
+  base_markup?: number;
 };
 
 type CalcData = CalcResult & {
@@ -152,6 +157,10 @@ export const useOrderCalc: UseOrderCalc = ({
         network_fee: data.network_fee,
         transaction_fee: data.transaction_fee,
         from_symbol: data.from_symbol,
+        commission_currency: data.commission_currency,
+        fixed_commission: data.fixed_commission,
+        percent_commission: data.percent_commission,
+        base_markup: data.base_markup,
         is_reverse,
         is_subtract,
       });

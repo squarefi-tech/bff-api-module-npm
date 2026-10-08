@@ -8477,6 +8477,12 @@ export interface components {
             fee?: number | null;
             /** Format: uuid */
             fee_currency?: string | null;
+            /** @description Fiat payouts: fixed part of `fee` (the rail's flat charge), in `fee_currency`. Absent on other order types and on payouts created before it was stored — show `fee` as one line then. */
+            fixed_commission?: number | null;
+            /** @description Percentage part of `fee`, in `fee_currency`. Each part is truncated to cents on its own, so `fixed_commission + percent_commission` can fall a cent short of `fee`; the total is always `fee`. */
+            percent_commission?: number | null;
+            /** @description Percent rate behind `percent_commission`, in whole percent (1 = 1%). */
+            base_markup?: number | null;
             network_fee?: number | null;
             /** Format: uuid */
             network_fee_currency?: string | null;
