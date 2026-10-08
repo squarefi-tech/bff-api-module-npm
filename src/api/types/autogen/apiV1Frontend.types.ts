@@ -9838,10 +9838,21 @@ export interface paths {
                      *     failed or canceled (any status but `NEW` and `EXPECTED`). It combines with `status`,
                      *     e.g. `[{"scheduled":"past"},{"status":["PROCESSING","COMPLETE"]}]` lists the sent ones.
                      *     Any other value is rejected with 400.
+                     *
+                     *     Every key is checked before the query runs (SFI-2693): an unknown field, a value of the
+                     *     wrong type (e.g. a status that does not exist, a non-uuid id) or an object on a plain
+                     *     field answers 400 `INVALID_REQUEST`, and `details.field` names the field. An object is
+                     *     accepted on `meta` only — `[{"meta":{"direction":"out"}}]` matches `meta->>direction`.
                      *      */
                     filters?: string;
                     date_from?: string;
                     date_to?: string;
+                    /** @description Part of the recipient's name or nickname (`meta.counterparty_account_name`,
+                     *     `meta.counterparty_account_nickname`), case-insensitive. Combines with `filters`,
+                     *     sorting and pagination; `pagination` counts the matches only. Up to 100 characters;
+                     *     `*`, `%`, `"` and `\` are ignored.
+                     *      */
+                    search?: string;
                     /** @description If `true`, includes dust orders (amount below render threshold for either currency). Defaults to `false` — dust orders are hidden. */
                     show_low_balance?: "true" | "false";
                 };
@@ -9867,7 +9878,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description `INVALID_REQUEST` — `filters` is not a JSON array, `mass_payout_id` / `rfi_case_id` is not a uuid, or `scheduled` is not `all` / `upcoming` / `past` */
+                /** @description `INVALID_REQUEST` — `filters` is not a JSON array, `mass_payout_id` / `rfi_case_id` is not a uuid, `scheduled` is not `all` / `upcoming` / `past`, or a filter names an unknown field or carries a value of the wrong type (`details.field` names it) */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -10027,8 +10038,19 @@ export interface paths {
                      *     failed or canceled (any status but `NEW` and `EXPECTED`). It combines with `status`,
                      *     e.g. `[{"scheduled":"past"},{"status":["PROCESSING","COMPLETE"]}]` lists the sent ones.
                      *     Any other value is rejected with 400.
+                     *
+                     *     Every key is checked before the query runs (SFI-2693): an unknown field, a value of the
+                     *     wrong type (e.g. a status that does not exist, a non-uuid id) or an object on a plain
+                     *     field answers 400 `INVALID_REQUEST`, and `details.field` names the field. An object is
+                     *     accepted on `meta` only — `[{"meta":{"direction":"out"}}]` matches `meta->>direction`.
                      *      */
                     filters?: string;
+                    /** @description Part of the recipient's name or nickname (`meta.counterparty_account_name`,
+                     *     `meta.counterparty_account_nickname`), case-insensitive. Combines with `filters`,
+                     *     sorting and pagination; `pagination` counts the matches only. Up to 100 characters;
+                     *     `*`, `%`, `"` and `\` are ignored.
+                     *      */
+                    search?: string;
                     /** @description If `true`, includes dust orders (amount below render threshold for either currency). Defaults to `false` — dust orders are hidden. */
                     show_low_balance?: "true" | "false";
                 };
@@ -10049,7 +10071,7 @@ export interface paths {
                         "text/csv": string;
                     };
                 };
-                /** @description `INVALID_REQUEST` — `filters` is not a JSON array, `mass_payout_id` / `rfi_case_id` is not a uuid, or `scheduled` is not `all` / `upcoming` / `past` */
+                /** @description `INVALID_REQUEST` — `filters` is not a JSON array, `mass_payout_id` / `rfi_case_id` is not a uuid, `scheduled` is not `all` / `upcoming` / `past`, or a filter names an unknown field or carries a value of the wrong type (`details.field` names it) */
                 400: {
                     headers: {
                         [name: string]: unknown;

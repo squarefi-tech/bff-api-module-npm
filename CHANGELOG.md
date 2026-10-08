@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`search` in the request of the `/frontend` order list and its CSV export (SFI-1507, backend SFI-2693).** `orders.frontend.list.byWallet({ wallet_uuid, search })` and `orders.frontend.list.csv.getByWalletUuid({ wallet_uuid, search })` accept part of the recipient's name or nickname (`meta.counterparty_account_name`, `meta.counterparty_account_nickname`), matched case-insensitively. Up to 100 characters; `*`, `%`, `"` and `\` are ignored, and an empty string means no search. It combines with `filters`, sorting and pagination, and `pagination.total` counts the matches only. The wrappers already passed extra fields into the query, so only the request types change.
+
+### Changed
+
+- **`API.Orders.Frontend.List.ByWallet.Request` and `API.Orders.Frontend.List.Csv.Request` are read off the generated paths.** They were hand-written interfaces; now they are the path and query parameters of `GET /frontend/orders/wallet/{wallet_uuid}` and `GET /frontend/orders/wallet/{wallet_uuid}/csv` from the frontend spec, with `filters` kept as `OrderListFilter[]` (the spec types it as the JSON string the wrapper serialises the array into). New query parameters of these routes now arrive with the regen. Apart from `search` the fields are the same; the types are aliases now, so they can no longer be augmented by declaration merging.
+- **Generated types regenerated from the dev specs (backend SFI-2693).** `search` also appears on the other order lists — external `GET /api/orders/list`, legacy `GET /v2/orders/list/{wallet_uuid}` and tenant `GET /admin/orders/{wallet_id}/list` — in the generated types only: the hand-written `API.Orders.V2.List.ByWallet.Request` behind `orders.v2.list.byWallet` does not have it. The `filters` descriptions of all five list routes, and the `400` responses of the frontend list, its CSV and the tenant list, now document that a filter naming an unknown field or carrying a value of the wrong type (a status that does not exist, a non-uuid id, an object on a plain field) is refused with `400 INVALID_REQUEST`, `error.details.field` naming it; an object is accepted on `meta` only. Nothing else changes in the generated types.
+
 ## [1.36.89] - 2026-10-07
 
 ### Added
