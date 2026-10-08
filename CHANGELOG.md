@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **The fee split on `API.Orders.Frontend.OrderCalculation` (SFI-2556, backend SFI-2738).** `GET /frontend/orders/calc`, the `data` of `orders.frontend.calc`, now returns the two parts of `comission`: `fixed_commission` (the rail's flat charge) and `percent_commission` (the percentage part). Both are amounts in `commission_currency`, a currency uuid. `base_markup` is the rate behind `percent_commission`, in whole percent (`1` = 1%). `comission = fixed_commission + percent_commission`, but each part is truncated to cents on its own, so the parts can add up to a cent less than `comission`; the total is always `comission`. For example, `DLS_SWIFT_OFFRAMP` for an amount of 50 returns `comission: 40.5`, `fixed_commission: 40`, `percent_commission: 0.5`, `base_markup: 1`. `commission_currency` is optional: older engines omit it, and then the commission is in the same currency on both sides.
+- **`fixed_commission`, `percent_commission` and `base_markup` in the `meta` of `API.Orders.Frontend.Order` (SFI-2556).** They have the same meaning as on the calc; the two parts are in the order's `fee_currency` and add up to its `fee`, with the same one-cent caveat. They are set only in `meta`, not at the top level of the order, and they arrive wherever the order does: `orders.frontend.create.withdrawal.*`, `orders.frontend.cancel`, `orders.frontend.list.byWallet` and `orders.frontend.getByUuid`. They are optional and nullable: fiat payouts created before the split was stored and other order types do not have them, so show `fee` as one line then.
+- **`useOrderCalc` passes the fee split through to `calcData` (SFI-2556).** `calcData` gains optional `commission_currency`, `fixed_commission`, `percent_commission` and `base_markup`. The hook copies the handler's result field by field, so before this change they were dropped at runtime even when the backend returned them. They stay `undefined` when the handler does not return them, as with the legacy v2 calc and calculators of flows without the split. The rest of the hook behaves as before.
+- **The same split on wallet transactions, from the regenerated dev specs.** The `meta` of the frontend transactions behind `wallets.transactions.getAll` and `wallets.transactions.getById` (`API.Wallets.WalletTransactions.*.Response`) gains optional `fixed_commission`, `percent_commission` and `base_markup`, with the same meaning as on order `meta`. The external (`/api`) `OrderMeta` gains them in the generated types only; no SDK type exposes them there. Nothing else changes in the generated types.
+
 ## [1.36.90] - 2026-10-08
 
 ### Added
