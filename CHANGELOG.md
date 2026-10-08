@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.90] - 2026-10-08
+
 ### Added
 
 - **`search` in the request of the `/frontend` order list and its CSV export (SFI-1507, backend SFI-2693).** `orders.frontend.list.byWallet({ wallet_uuid, search })` and `orders.frontend.list.csv.getByWalletUuid({ wallet_uuid, search })` accept part of the recipient's name or nickname (`meta.counterparty_account_name`, `meta.counterparty_account_nickname`), matched case-insensitively. Up to 100 characters; `*`, `%`, `"` and `\` are ignored, and an empty string means no search. It combines with `filters`, sorting and pagination, and `pagination.total` counts the matches only. The wrappers already passed extra fields into the query, so only the request types change.
