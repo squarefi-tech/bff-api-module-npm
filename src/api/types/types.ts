@@ -3539,31 +3539,26 @@ export namespace API {
           pathsV1Frontend['/frontend/orders/uuid/{order_uuid}']['get']['responses'][200]['content']['application/json'];
       }
 
+      // The query comes from the spec so new list params arrive with the regen. `filters` is the one
+      // override: the spec types it as the JSON string the wrapper serialises the array into.
       export namespace List {
         export namespace ByWallet {
-          export interface Request {
-            wallet_uuid: string;
-            offset?: number;
-            limit?: number;
-            sort_by?: string;
-            sort_order?: 'asc' | 'desc';
-            filters?: API.Orders.V2.List.ByWallet.OrderListFilter[];
-            date_from?: string;
-            date_to?: string;
-            show_low_balance?: 'true' | 'false';
-          }
-          export type Response =
-            pathsV1Frontend['/frontend/orders/wallet/{wallet_uuid}']['get']['responses'][200]['content']['application/json'];
+          type ByWalletRoot = pathsV1Frontend['/frontend/orders/wallet/{wallet_uuid}'];
+
+          export type Request = ByWalletRoot['get']['parameters']['path'] &
+            Omit<NonNullable<ByWalletRoot['get']['parameters']['query']>, 'filters'> & {
+              filters?: API.Orders.V2.List.ByWallet.OrderListFilter[];
+            };
+          export type Response = ByWalletRoot['get']['responses'][200]['content']['application/json'];
         }
 
         export namespace Csv {
-          export interface Request {
-            wallet_uuid: string;
-            filters?: API.Orders.V2.List.ByWallet.OrderListFilter[];
-            date_from?: string;
-            date_to?: string;
-            show_low_balance?: 'true' | 'false';
-          }
+          type CsvRoot = pathsV1Frontend['/frontend/orders/wallet/{wallet_uuid}/csv'];
+
+          export type Request = CsvRoot['get']['parameters']['path'] &
+            Omit<NonNullable<CsvRoot['get']['parameters']['query']>, 'filters'> & {
+              filters?: API.Orders.V2.List.ByWallet.OrderListFilter[];
+            };
           export type Response = string;
         }
       }

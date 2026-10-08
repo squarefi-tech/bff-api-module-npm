@@ -3373,6 +3373,11 @@ export interface paths {
                      *     waiting, `EXPECTED`) or `past` (any status but `NEW` and `EXPECTED`); it combines with
                      *     `status`. Malformed JSON or a non-array value is rejected with 400.
                      *
+                     *     Every key is checked before the query runs (SFI-2693): an unknown field, a value of the
+                     *     wrong type (e.g. a status that does not exist, a non-uuid id) or an object on a plain
+                     *     field answers 400 `INVALID_REQUEST`, and `details.field` names the field. An object is
+                     *     accepted on `meta` only — `[{"meta":{"direction":"out"}}]` matches `meta->>direction`.
+                     *
                      * @example [{"status":"COMPLETE"}]
                      */
                     filters?: string;
@@ -3380,6 +3385,12 @@ export interface paths {
                     date_from?: string;
                     /** @description Orders created up to this date (inclusive), ISO 8601 */
                     date_to?: string;
+                    /** @description Part of the recipient's name or nickname (`meta.counterparty_account_name`,
+                     *     `meta.counterparty_account_nickname`), case-insensitive. Combines with `filters`,
+                     *     sorting and pagination; `pagination` counts the matches only. Up to 100 characters;
+                     *     `*`, `%`, `"` and `\` are ignored.
+                     *      */
+                    search?: string;
                     /** @description If `true`, includes dust orders (amount below render threshold for either currency). Defaults to `false` — dust orders are hidden. */
                     show_low_balance?: "true" | "false";
                 };
@@ -3405,7 +3416,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Invalid `filters` (not a JSON array), non-uuid `mass_payout_id`, or `scheduled` other than `all` / `upcoming` / `past` */
+                /** @description Invalid `filters` (not a JSON array), non-uuid `mass_payout_id`, `scheduled` other than `all` / `upcoming` / `past`, or a filter with an unknown field or a value of the wrong type (`details.field` names it) */
                 400: {
                     headers: {
                         [name: string]: unknown;
