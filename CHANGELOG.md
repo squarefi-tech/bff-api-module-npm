@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`approval_window` on `API.Orders.Frontend.Order` — when a scheduled payment draft can be approved (SFI-2736).** `{ opens_at, closes_at } | null`, both date-times: set on a scheduled order in `NEW`, `null` on any other scheduled order, absent on an immediate one. `closes_at` is 1 hour before `scheduled_at`; `opens_at` depends on the order signature lifetime, so the window moves when that setting changes — read it off the order instead of computing it. `orders.frontend.approve` before `opens_at` answers `400 SCHEDULED_APPROVAL_NOT_OPEN` (the approve route documents `error.details.approvable_from`; `details` stays untyped), after `closes_at` `400 SCHEDULED_AT_TOO_SOON`. A draft still unapproved when its window closes is canceled: it moves to `CANCELED` with `scheduled_failure.code` `NOT_APPROVED`, and nothing is debited.
+- **`created_by` on `API.Orders.Frontend.Order` — who created the order (SFI-2694).** `{ id, name } | null`: `id` is the author's user uuid, `name` their first and last name from the profile, or `null` when it has neither. For a scheduled payment it is who scheduled it (pair it with `created_at`). It is `null` for orders created by an API key, an operator or the system, and for old orders with no creation record. Only `orders.frontend.list.byWallet`, `orders.frontend.getById` and `orders.frontend.getByUuid` return it; the `OrderEnvelope` of create, approve and cancel does not.
+- **`API.Orders.Frontend.ApprovalWindow` and `API.Orders.Frontend.OrderAuthor` (SFI-2736, SFI-2694).** The non-null `approval_window` (`{ opens_at: string; closes_at: string }`) and the non-null `created_by` (`{ id: string; name: string | null }`).
+- **Notification type `SCHEDULED_PAYMENT_APPROVAL_REQUIRED` (SFI-2736).** The generated `NotificationView.type` enum of the frontend spec gains it; no SDK type exposes the notification feed yet.
+- **`gender` and document dates on `API.KYC.Entity.Entity`, from the regenerated V2 spec.** `KycEntityDto` gains `gender?: 'M' | 'F' | null` (as the KYC provider reports it), and each item of its `documents` gains optional `issuance_date` and `expiration_date`, the dates printed on the document. The spec describes the dates as `YYYY-MM-DD` but declares them `type: object`, so they are generated as `Record<string, never> | null` — read them as strings with a cast until the spec is fixed upstream. The tenant (`/admin`) KYC types gain the same `gender` and document dates, correctly typed as strings, in the generated types only.
+
+### Changed
+
+- **`API.Orders.Frontend.ScheduledFailureCode` includes `NOT_APPROVED` (SFI-2736).** `scheduled_failure` is now also set on a scheduled order in `CANCELED` whose draft was not approved before its approval window closed, not only on one in `FAILED`. A `Record<ScheduledFailureCode, …>` of failure texts stops compiling until it gets a `NOT_APPROVED` entry, and code that read a set `scheduled_failure` as "the payment failed" should check the code or the status.
+- **Scheduled payments can be set at most 30 days ahead, down from 90 (SFI-2736).** The `scheduled_at` descriptions of the frontend create requests (`orders.frontend.create.withdrawal.*`) now say "max 30 days ahead" and point to the order's `approval_window` instead of "approve at least 1 hour before"; the types themselves do not change.
+- **Generated types regenerated from the dev specs (Frontend API 20.1.1, Developer API 17.2.1, Tenant API 15.2.1).** The external (`/api`) and tenant (`/admin`) `Order` schemas gain the same `approval_window`, `created_by` and `NOT_APPROVED`, and their create and approve routes document the 30-day horizon and `SCHEDULED_APPROVAL_NOT_OPEN`, in the generated types only; no SDK type exposes them. Nothing else changes in the generated types.
+
 ## [1.36.91] - 2026-10-08
 
 ### Added
