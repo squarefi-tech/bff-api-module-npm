@@ -1605,6 +1605,18 @@ export interface components {
             type: "supplementary" | "gov_id_front" | "gov_id_back" | "gov_id_hand_hold" | "selfie" | "proof_of_address" | "auth_letter" | "formation_doc" | "proof_of_ownership" | "certificate_of_registration_doc" | "business_registration_doc" | "share_structure" | "constitution_or_annual_report" | "articles_of_association" | "ubo_declaration" | "partnership_mins_of_meeting" | "partnership_deed" | "certificate_of_incumbency" | "regulatory_license" | "state_registry_doc" | "good_standing_cert" | "business_proof_of_address" | "invoices" | "contracts" | "financial_statements" | "source_of_funds" | "business_bank_statement" | "source_of_wealth_ubo" | "customer_supplier_agreements";
             /** Format: uri */
             link: string;
+            /**
+             * Format: date
+             * @description Issue date printed on the document (YYYY-MM-DD), when it has one.
+             * @example 2020-01-15
+             */
+            issuance_date?: Record<string, never> | null;
+            /**
+             * Format: date
+             * @description Expiry date printed on the document (YYYY-MM-DD), when it has one.
+             * @example 2030-01-14
+             */
+            expiration_date?: Record<string, never> | null;
             /** @example bff */
             readonly source?: string;
             /**
@@ -1689,6 +1701,11 @@ export interface components {
             /** @default false */
             dao_status: boolean | null;
             date_of_birth?: string | null;
+            /**
+             * @description Gender of an individual as the KYC provider reports it: M or F; null when unknown.
+             * @enum {string|null}
+             */
+            gender?: "M" | "F" | null;
             due_diligence_form?: components["schemas"]["KycEntityDueDiligenceFormEntity"] | null;
             email?: string | null;
             export_country?: string | null;

@@ -1564,6 +1564,11 @@ export interface paths {
                         middle_name?: string;
                         /** Format: date */
                         date_of_birth?: string;
+                        /**
+                         * @description Gender of an individual as reported by the verification
+                         * @enum {string|null}
+                         */
+                        gender?: "M" | "F" | null;
                         /** @description ISO 3166-1 alpha-3 country code */
                         nationality?: string;
                         country_of_birth?: string;
@@ -1738,6 +1743,11 @@ export interface paths {
                         middle_name?: string;
                         /** Format: date */
                         date_of_birth?: string;
+                        /**
+                         * @description Gender of an individual as reported by the verification
+                         * @enum {string|null}
+                         */
+                        gender?: "M" | "F" | null;
                         nationality?: string;
                         country_of_birth?: string;
                         occupation?: string;
@@ -2699,7 +2709,7 @@ export interface paths {
                         note?: string;
                         /**
                          * Format: date-time
-                         * @description Optional. Schedule the transfer for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically, once. If the balance does not cover it then, it fails with `scheduled_failure.code` INSUFFICIENT_FUNDS and is not retried. Approve at least 1 hour before scheduled_at.
+                         * @description Optional. Schedule the transfer for a future time (min 1 hour, max 30 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically, once. If the balance does not cover it then, it fails with `scheduled_failure.code` INSUFFICIENT_FUNDS and is not retried. Approve inside the `approval_window` of the order (from the order signature lifetime minus 1 hour before scheduled_at until 1 hour before it); a draft not approved by then is canceled.
                          */
                         scheduled_at?: string;
                         documents?: Record<string, never>[];
@@ -3585,8 +3595,10 @@ export interface paths {
          *     status NEW can be approved. Orders
          *     created with `scheduled_at` move to EXPECTED instead — no funds are
          *     debited until execution at the requested time.
-         *     A scheduled order is approved only while its `scheduled_at` is at least
-         *     one hour away; a later approve answers 400 `SCHEDULED_AT_TOO_SOON`
+         *     A scheduled order is approved only inside its `approval_window`: an
+         *     earlier approve answers 400 `SCHEDULED_APPROVAL_NOT_OPEN` with
+         *     `details.approvable_from`; once `scheduled_at` is less than one hour
+         *     away, 400 `SCHEDULED_AT_TOO_SOON`
          *     (create the payment again with a new date).
          *
          */
@@ -3615,7 +3627,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Insufficient funds (`INSUFFICIENT_FUNDS` — the order is released back to NEW), a scheduled order less than an hour before its `scheduled_at` (`SCHEDULED_AT_TOO_SOON`), or validation error */
+                /** @description Insufficient funds (`INSUFFICIENT_FUNDS` — the order is released back to NEW), a scheduled order before its approval window opens (`SCHEDULED_APPROVAL_NOT_OPEN`, `details.approvable_from`) or less than an hour before its `scheduled_at` (`SCHEDULED_AT_TOO_SOON`), or validation error */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -8850,7 +8862,7 @@ export interface components {
             /** Format: date-time */
             updated_at?: string;
         };
-        /** @description Documents to file for the KYC entity. Each entry is stored as a document of its type; an earlier document of the same type stays on record (several documents of one type are allowed). All entries of one request form one batch in the given order, so a multi-file document (e.g. the pages of a bank statement) is sent as several entries of the same type in one request. A document is removed through DELETE /admin/kyc_entity/{entity_id}/documents/{document_id}. */
+        /** @description Documents to file for the KYC entity. Each entry is stored as a document of its type; an earlier document of the same type stays on record (several documents of one type are allowed). All entries of one request form one batch in the given order, so a multi-file document (e.g. the pages of a bank statement) is sent as several entries of the same type in one request. A file already on record under its type is not filed again and keeps its dates; to change them, remove the document and file it again. A document is removed through DELETE /admin/kyc_entity/{entity_id}/documents/{document_id}. */
         KycDocumentsInput: {
             /**
              * @description Document type: supplementary, gov_id_front, gov_id_back, gov_id_hand_hold, selfie, proof_of_address, auth_letter, formation_doc, proof_of_ownership, certificate_of_registration_doc, business_registration_doc, share_structure, constitution_or_annual_report, articles_of_association, ubo_declaration, partnership_mins_of_meeting, partnership_deed, certificate_of_incumbency, regulatory_license, state_registry_doc, good_standing_cert, business_proof_of_address, invoices, contracts, financial_statements, source_of_funds, business_bank_statement, source_of_wealth_ubo, customer_supplier_agreements.
@@ -8862,6 +8874,18 @@ export interface components {
              * @description http(s) URL of the file.
              */
             link: string;
+            /**
+             * Format: date
+             * @description Issue date printed on the document (`YYYY-MM-DD`), when it has one.
+             * @example 2020-01-15
+             */
+            issuance_date?: string | null;
+            /**
+             * Format: date
+             * @description Expiry date printed on the document (`YYYY-MM-DD`), when it has one.
+             * @example 2030-01-14
+             */
+            expiration_date?: string | null;
         }[];
         KycEntity: {
             /** Format: uuid */
@@ -8879,6 +8903,11 @@ export interface components {
             middle_name?: string | null;
             /** Format: date-time */
             date_of_birth?: string | null;
+            /**
+             * @description Gender of an individual as reported by the verification — the form the cardholder endpoints take. Null when unknown.
+             * @enum {string|null}
+             */
+            gender?: "M" | "F" | null;
             nationality?: string | null;
             country_of_birth?: string | null;
             occupation?: string | null;
@@ -8913,6 +8942,16 @@ export interface components {
                 type?: string;
                 /** Format: uri */
                 link?: string;
+                /**
+                 * Format: date
+                 * @description Issue date printed on the document (`YYYY-MM-DD`); null when it has none or it is unknown. For an identity document this is the issue date the cardholder endpoints take — read it off the newest `gov_id_front` entry (the list is oldest first).
+                 */
+                issuance_date?: string | null;
+                /**
+                 * Format: date
+                 * @description Expiry date printed on the document (`YYYY-MM-DD`); null when it has none or it is unknown. For an identity document this is the expiry date the cardholder endpoints take — read it off the newest `gov_id_front` entry (the list is oldest first).
+                 */
+                expiration_date?: string | null;
                 /**
                  * Format: uuid
                  * @description Beneficial owner the document belongs to; null for the entity itself.
@@ -9329,7 +9368,7 @@ export interface components {
             note?: string;
             /**
              * Format: date-time
-             * @description Optional. Schedule the payment for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically, once: if the balance does not cover it then, it fails with `scheduled_failure.code` INSUFFICIENT_FUNDS and is not retried. Approve at least 1 hour before scheduled_at.
+             * @description Optional. Schedule the payment for a future time (min 1 hour, max 30 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically, once: if the balance does not cover it then, it fails with `scheduled_failure.code` INSUFFICIENT_FUNDS and is not retried. Approve inside the `approval_window` of the order: from `opens_at` (the order signature lifetime minus 1 hour before scheduled_at) until 1 hour before scheduled_at; a draft not approved by then is canceled.
              */
             scheduled_at?: string;
         };
@@ -9358,7 +9397,7 @@ export interface components {
             note?: string;
             /**
              * Format: date-time
-             * @description Optional. Schedule the payment for a future time (min 1 hour, max 90 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically, once: if the balance does not cover it then, it fails with `scheduled_failure.code` INSUFFICIENT_FUNDS and is not retried. Approve at least 1 hour before scheduled_at.
+             * @description Optional. Schedule the payment for a future time (min 1 hour, max 30 days ahead). No funds are reserved; after approval the order waits in EXPECTED status and executes automatically, once: if the balance does not cover it then, it fails with `scheduled_failure.code` INSUFFICIENT_FUNDS and is not retried. Approve inside the `approval_window` of the order: from `opens_at` (the order signature lifetime minus 1 hour before scheduled_at) until 1 hour before scheduled_at; a draft not approved by then is canceled.
              */
             scheduled_at?: string;
         };
@@ -9410,20 +9449,46 @@ export interface components {
                 id?: string;
                 name?: string | null;
             } | null;
+            /** @description Who created the order — for a scheduled payment, who scheduled it (pair it with `created_at`). Null when no user of the tenant created it: an API key, an operator, the system, or a legacy order with no creation record. Returned by the order list and the single-order reads. */
+            created_by?: {
+                /**
+                 * Format: uuid
+                 * @description User id of the author.
+                 */
+                id: string;
+                /**
+                 * @description First and last name from the profile; null when it has neither.
+                 * @example Jane Brown
+                 */
+                name: string | null;
+            } | null;
             /**
              * Format: date-time
              * @description Requested execution time for scheduled payments (status EXPECTED); null for immediate orders
              */
             scheduled_at?: string | null;
-            /** @description Why a scheduled payment failed — set on a scheduled order in `FAILED`, null on any other scheduled order, absent on an immediate one. A scheduled payment is attempted once and never retried: `INSUFFICIENT_FUNDS` means nothing was debited and the payment can be created again; `PROVIDER_ERROR` — the payment was debited and the provider side failed; `EXECUTION_ERROR` — any other reason. */
+            /** @description Why a scheduled payment failed — set on a scheduled order in `FAILED`, and on one in `CANCELED` that was never approved (`NOT_APPROVED`); null on any other scheduled order, absent on an immediate one. A scheduled payment is attempted once and never retried: `INSUFFICIENT_FUNDS` means nothing was debited and the payment can be created again; `PROVIDER_ERROR` — the payment was debited and the provider side failed; `EXECUTION_ERROR` — any other reason; `NOT_APPROVED` — the draft was not approved before its approval window closed and was canceled, nothing was debited. */
             scheduled_failure?: {
                 /** @enum {string} */
-                code: "INSUFFICIENT_FUNDS" | "PROVIDER_ERROR" | "EXECUTION_ERROR";
+                code: "INSUFFICIENT_FUNDS" | "PROVIDER_ERROR" | "EXECUTION_ERROR" | "NOT_APPROVED";
                 /**
                  * @description Customer-facing text of the code.
                  * @example The balance was insufficient at the scheduled time.
                  */
                 message: string;
+            } | null;
+            /** @description When a scheduled payment draft can be approved — set on a scheduled order in `NEW`, null on any other scheduled order, absent on an immediate one. Approve before `opens_at` returns 400 `SCHEDULED_APPROVAL_NOT_OPEN`, after `closes_at` 400 `SCHEDULED_AT_TOO_SOON`; a draft still unapproved when the window closes is canceled (`scheduled_failure.code` `NOT_APPROVED`). The window follows the order signature lifetime, so it can move when that setting changes. */
+            approval_window?: {
+                /**
+                 * Format: date-time
+                 * @description From this moment the draft can be approved.
+                 */
+                opens_at: string;
+                /**
+                 * Format: date-time
+                 * @description Last moment to approve: 1 hour before `scheduled_at`.
+                 */
+                closes_at: string;
             } | null;
             /** Format: date-time */
             created_at?: string;

@@ -3436,10 +3436,20 @@ export namespace API {
       // and the `data` of every OrderEnvelope.
       export type Order = componentsV1Frontend['schemas']['Order'];
 
-      // Why a scheduled payment failed: set on a scheduled order in `FAILED`, null on the other scheduled
-      // orders, absent on immediate ones. The payment is attempted once and never retried.
+      // Why a scheduled payment failed: set on a scheduled order in `FAILED`, and on one in `CANCELED` with
+      // `NOT_APPROVED` (the draft was not approved before its approval window closed); null on the other
+      // scheduled orders, absent on immediate ones. The payment is attempted once and never retried.
       export type ScheduledFailure = NonNullable<Order['scheduled_failure']>;
       export type ScheduledFailureCode = ScheduledFailure['code'];
+
+      // When a scheduled draft can be approved: set on a scheduled order in `NEW`. Approve before `opens_at`
+      // answers 400 `SCHEDULED_APPROVAL_NOT_OPEN`, after `closes_at` 400 `SCHEDULED_AT_TOO_SOON`. The window
+      // follows the order signature lifetime, so it moves when that setting changes.
+      export type ApprovalWindow = NonNullable<Order['approval_window']>;
+
+      // Who created the order. Null for orders from an API key, an operator or the system, and for old ones.
+      // Only the list and the single-order reads return it; the create / approve / cancel responses do not.
+      export type OrderAuthor = NonNullable<Order['created_by']>;
 
       // Shared success envelope returned by every create/approve/cancel frontend order endpoint.
       export type OrderEnvelope = {
