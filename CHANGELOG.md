@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.92] - 2026-10-10
+
 ### Added
 
 - **`approval_window` on `API.Orders.Frontend.Order` — when a scheduled payment draft can be approved (SFI-2736).** `{ opens_at, closes_at } | null`, both date-times: set on a scheduled order in `NEW`, `null` on any other scheduled order, absent on an immediate one. `closes_at` is 1 hour before `scheduled_at`; `opens_at` depends on the order signature lifetime, so the window moves when that setting changes — read it off the order instead of computing it. `orders.frontend.approve` before `opens_at` answers `400 SCHEDULED_APPROVAL_NOT_OPEN` (the approve route documents `error.details.approvable_from`; `details` stays untyped), after `closes_at` `400 SCHEDULED_AT_TOO_SOON`. A draft still unapproved when its window closes is canceled: it moves to `CANCELED` with `scheduled_failure.code` `NOT_APPROVED`, and nothing is debited.
