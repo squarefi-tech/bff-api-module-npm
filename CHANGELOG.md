@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.93] - 2026-10-13
+
 ### Added
 
 - **`frontend.reference.orderTypes.list` — the order types enabled for the tenant (SFI-1507).** It wraps `GET /frontend/reference/order_types` and returns `{ success, data, pagination }`. `data` holds only the types the tenant has a `tenant_order_type_rates` row for, each with its `tenant_rates` (`markup_percent`, `markup_fixed`, `mon_min_usd`) and the product guardrails (`min_amount`, `max_amount`, `first_party_only`, `documents_required_from_amount`); `orders.frontend.types.list` still returns the whole catalogue, where a type not enabled for the tenant has `tenant_rates: null`. The request takes optional `is_internal`, `payment_method`, `offset` and `limit`. Pages hold 50 items by default and 500 at most: a larger `limit` is cut to 500 without an error (`pagination.limit` comes back as 500), so pass `limit: 500` to get the list in one call. Use it to build the `order_type` filter of `orders.frontend.list.byWallet`: since backend SFI-2746 that filter answers `400 INVALID_REQUEST` with `details.field` `order_type` on a type that is neither enabled for the tenant nor present among the wallet's orders (in an `IN` list one such type is enough for the 400, even next to enabled ones).
