@@ -1135,6 +1135,17 @@ export namespace API {
           export type Response = ExchangeRatesRoot['get']['responses'][200]['content']['application/json'];
         }
       }
+
+      export namespace OrderTypes {
+        type OrderTypesRoot = pathsV1Frontend['/frontend/reference/order_types'];
+
+        export type OrderType = componentsV1Frontend['schemas']['ReferenceOrderType'];
+
+        export namespace List {
+          export type Request = NonNullable<OrderTypesRoot['get']['parameters']['query']>;
+          export type Response = OrderTypesRoot['get']['responses'][200]['content']['application/json'];
+        }
+      }
     }
 
     export namespace NotificationPreferences {
