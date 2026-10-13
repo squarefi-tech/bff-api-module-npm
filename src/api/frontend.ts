@@ -52,9 +52,7 @@ export const frontend = {
       getById: ({
         card_id,
       }: API.Frontend.Issuing.Cards.Get.Request): Promise<API.Frontend.Issuing.Cards.Get.Response> =>
-        apiClientV1Frontend.getRequest<API.Frontend.Issuing.Cards.Get.Response>(
-          `/frontend/issuing/cards/${card_id}`,
-        ),
+        apiClientV1Frontend.getRequest<API.Frontend.Issuing.Cards.Get.Response>(`/frontend/issuing/cards/${card_id}`),
       /** Rename (and other editable card fields). */
       update: ({
         card_id,
@@ -389,6 +387,16 @@ export const frontend = {
       ): Promise<API.Frontend.Reference.ExchangeRates.List.Response> =>
         apiClientV1Frontend.getRequest<API.Frontend.Reference.ExchangeRates.List.Response>(
           '/frontend/reference/exchange_rates',
+          { params },
+        ),
+    },
+    // Only the types enabled for the tenant (a `tenant_order_type_rates` row), paged — 50 by default, 500 at most.
+    orderTypes: {
+      list: (
+        params: API.Frontend.Reference.OrderTypes.List.Request = {},
+      ): Promise<API.Frontend.Reference.OrderTypes.List.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.Reference.OrderTypes.List.Response>(
+          '/frontend/reference/order_types',
           { params },
         ),
     },
