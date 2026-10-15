@@ -1166,6 +1166,46 @@ export namespace API {
       }
     }
 
+    export namespace Notifications {
+      type NotificationsRoot = pathsV1Frontend['/frontend/notifications'];
+      type UnreadCountRoot = pathsV1Frontend['/frontend/notifications/unread-count'];
+      type MarkReadRoot = pathsV1Frontend['/frontend/notifications/mark-read'];
+      type MarkAllReadRoot = pathsV1Frontend['/frontend/notifications/mark-all-read'];
+      type RealtimeTokenRoot = pathsV1Frontend['/frontend/notifications/realtime-token'];
+      type NotificationView = componentsV1Frontend['schemas']['NotificationView'];
+
+      // The spec generates `payload` as `Record<string, never>`: any read off it compiles as `never` and no object
+      // with fields fits it. Its shape depends on `type`, so it stays `unknown` per field until the app narrows it.
+      export type Notification = Omit<NotificationView, 'payload'> & { payload: Record<string, unknown> };
+      export type Type = NotificationView['type'];
+
+      export namespace List {
+        type RawResponse = NotificationsRoot['get']['responses'][200]['content']['application/json'];
+
+        export type Request = NonNullable<NotificationsRoot['get']['parameters']['query']>;
+        export type Response = Omit<RawResponse, 'data'> & {
+          data?: Omit<NonNullable<RawResponse['data']>, 'items'> & { items?: Notification[] };
+        };
+      }
+
+      export namespace UnreadCount {
+        export type Response = UnreadCountRoot['get']['responses'][200]['content']['application/json'];
+      }
+
+      export namespace MarkRead {
+        export type Request = MarkReadRoot['post']['requestBody']['content']['application/json'];
+        export type Response = MarkReadRoot['post']['responses'][200]['content']['application/json'];
+      }
+
+      export namespace MarkAllRead {
+        export type Response = MarkAllReadRoot['post']['responses'][200]['content']['application/json'];
+      }
+
+      export namespace RealtimeToken {
+        export type Response = RealtimeTokenRoot['post']['responses'][200]['content']['application/json'];
+      }
+    }
+
     export namespace Issuing {
       type CardsRoot = pathsV1Frontend['/frontend/issuing/cards'];
       type CardRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}'];

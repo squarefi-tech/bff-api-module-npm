@@ -415,4 +415,32 @@ export const frontend = {
         { data },
       ),
   },
+  // Server-checked (400 VALIDATION_ERROR): `limit` 1-50 (20 by default), `cursor` up to 200 chars, 1-100 uuid
+  // `notification_ids`. The feed ends only on `next_cursor: null`; the count and mark-all-read span every wallet.
+  notifications: {
+    list: (params: API.Frontend.Notifications.List.Request = {}): Promise<API.Frontend.Notifications.List.Response> =>
+      apiClientV1Frontend.getRequest<API.Frontend.Notifications.List.Response>('/frontend/notifications', {
+        params,
+      }),
+    unreadCount: (): Promise<API.Frontend.Notifications.UnreadCount.Response> =>
+      apiClientV1Frontend.getRequest<API.Frontend.Notifications.UnreadCount.Response>(
+        '/frontend/notifications/unread-count',
+      ),
+    markRead: (
+      data: API.Frontend.Notifications.MarkRead.Request,
+    ): Promise<API.Frontend.Notifications.MarkRead.Response> =>
+      apiClientV1Frontend.postRequest<API.Frontend.Notifications.MarkRead.Response>(
+        '/frontend/notifications/mark-read',
+        { data },
+      ),
+    markAllRead: (): Promise<API.Frontend.Notifications.MarkAllRead.Response> =>
+      apiClientV1Frontend.postRequest<API.Frontend.Notifications.MarkAllRead.Response>(
+        '/frontend/notifications/mark-all-read',
+      ),
+    // 503 REALTIME_DISABLED when realtime delivery is off for the deployment.
+    realtimeToken: (): Promise<API.Frontend.Notifications.RealtimeToken.Response> =>
+      apiClientV1Frontend.postRequest<API.Frontend.Notifications.RealtimeToken.Response>(
+        '/frontend/notifications/realtime-token',
+      ),
+  },
 };
