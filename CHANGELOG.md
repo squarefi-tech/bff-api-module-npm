@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.95] - 2026-10-15
+
 ### Changed
 
 - **`API.Frontend.Notifications.Notification` carries the texts of the item and the name of its wallet (SFI-2820).** Every item of `frontend.notifications.list` and of the realtime `notification.created` now has three required, nullable fields. `title` and `body` are the texts of the item, rendered by the backend from `payload` with the same template as the push and Telegram copy of its type; both are `null` on historical `CARD_OTP` rows and when the texts could not be built from `payload`. `wallet_name` is the wallet's current `display_name` (as `GET /frontend/wallets` returns it), resolved when the feed is read, so it follows a rename; it is `null` for a notification not scoped to a wallet, for a wallet the user can no longer access (the feed keeps the notifications of a wallet the user has left) and for a wallet that no longer exists. `API.Frontend.Notifications.Type` gains `SCHEDULED_PAYMENT_APPROVAL_CLOSING`, so it now lists 16 types: the last call to the wallet's owners and admins, sent once per scheduled payment still not approved 2 hours before its `approve_before` (when its approval window closes), with the same payload as `SCHEDULED_PAYMENT_APPROVAL_REQUIRED`. A `Record<Type, …>` stops compiling until it gets an entry for the new type. Both changes come from the generated `NotificationView`; `Notification` and `Type` are still derived from it as before.
