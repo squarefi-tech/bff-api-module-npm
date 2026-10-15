@@ -1184,7 +1184,7 @@ export namespace API {
 
         export type Request = NonNullable<NotificationsRoot['get']['parameters']['query']>;
         export type Response = Omit<RawResponse, 'data'> & {
-          data?: Omit<NonNullable<RawResponse['data']>, 'items'> & { items?: Notification[] };
+          data?: Omit<NonNullable<RawResponse['data']>, 'items'> & { items: Notification[] };
         };
       }
 

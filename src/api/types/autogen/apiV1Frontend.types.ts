@@ -8128,14 +8128,23 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List the notification inbox (newest first, cursor pagination) */
+        /**
+         * List the notification inbox (newest first, cursor pagination)
+         * @description The caller's own notifications of the current tenant, newest first.
+         *     `wallet_id` narrows the list to one wallet (it filters the caller's own
+         *     items; it is not a wallet access check). **Authentication**: Bearer token + x-tenant-id header.
+         *
+         */
         get: {
             parameters: {
                 query?: {
                     /** @description Opaque cursor from a previous page (`next_cursor`). Omit for the first page. */
                     cursor?: string;
+                    /** @description Page size. */
                     limit?: number;
+                    /** @description `true` — only unread items; `false` or omitted — all. */
                     unread_only?: "true" | "false";
+                    /** @description Only notifications scoped to this wallet. */
                     wallet_id?: string;
                 };
                 header?: never;
@@ -8154,8 +8163,8 @@ export interface paths {
                             /** @example true */
                             success?: boolean;
                             data?: {
-                                items?: components["schemas"]["NotificationView"][];
-                                next_cursor?: string | null;
+                                items: components["schemas"]["NotificationView"][];
+                                next_cursor: string | null;
                             };
                         };
                     };
@@ -8165,7 +8174,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 401: components["responses"]["UnauthorizedError"];
             };
@@ -8185,7 +8196,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Unread notifications count (badge) */
+        /**
+         * Unread notifications count (badge)
+         * @description Number of the caller's unread notifications in the current tenant, across all wallets. **Authentication**: Bearer token + x-tenant-id header.
+         *
+         */
         get: {
             parameters: {
                 query?: never;
@@ -8233,7 +8248,8 @@ export interface paths {
         put?: never;
         /**
          * Mark specific notifications as read
-         * @description Idempotent — already-read ids are not counted. Other tabs/devices sync via the realtime `notifications.read` event.
+         * @description Idempotent — already-read ids are not counted; ids of other users' notifications or unknown ids are silently ignored (not an error). Other tabs/devices sync via the realtime `notifications.read` event, which carries only the ids actually transitioned. **Authentication**: Bearer token + x-tenant-id header.
+         *
          */
         post: {
             parameters: {
@@ -8245,6 +8261,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
+                        /** @description Ids of the notifications to mark as read. */
                         notification_ids: string[];
                     };
                 };
@@ -8266,12 +8283,14 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Invalid body (`VALIDATION_ERROR`). */
+                /** @description Invalid body (`VALIDATION_ERROR`) — missing, empty or over 100 `notification_ids`, or a non-uuid id. */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 401: components["responses"]["UnauthorizedError"];
             };
@@ -8291,7 +8310,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Mark every unread notification as read */
+        /**
+         * Mark every unread notification as read
+         * @description Idempotent. Marks all the caller's unread notifications of the current tenant as read; the realtime `notifications.read` event (`all: true`) syncs other tabs/devices only when something changed. **Authentication**: Bearer token + x-tenant-id header.
+         *
+         */
         post: {
             parameters: {
                 query?: never;
@@ -8339,14 +8362,15 @@ export interface paths {
          * Issue a realtime subscription token
          * @description Token for the realtime SDK (`authCallback`). `channels` lists the exact
          *     channel names the token grants — the personal channel plus one per
-         *     accessible wallet. Every channel is subscribe-only; the personal channel
+         *     wallet the user is an active `owner`, `admin` or `auditor` of (the
+         *     scoped `user` role gets no wallet channel). Every channel is subscribe-only; the personal channel
          *     additionally grants `push-subscribe`, so a mobile client can activate
          *     the device for push and subscribe it to that channel (the one native
          *     pushes are published on) without any server-side registration step.
          *     The token's `clientId` is the user's id — subscribe by client
          *     (`subscribeClient`) to cover every device of the user at once, and
          *     deactivate push on logout. Tokens expire after ~1 hour; the SDK
-         *     re-requests through the same endpoint.
+         *     re-requests through the same endpoint. **Authentication**: Bearer token + x-tenant-id header.
          *
          */
         post: {
@@ -8368,21 +8392,28 @@ export interface paths {
                             /** @example true */
                             success?: boolean;
                             data?: {
-                                token?: string;
-                                /** Format: date-time */
-                                expires_at?: string;
-                                channels?: string[];
+                                /** @description Subscription token for the realtime SDK. */
+                                token: string;
+                                /**
+                                 * Format: date-time
+                                 * @description Token expiry (~1 hour after issue).
+                                 */
+                                expires_at: string;
+                                /** @description Exact channel names the token grants — the personal channel first, then one per accessible wallet. */
+                                channels: string[];
                             };
                         };
                     };
                 };
                 401: components["responses"]["UnauthorizedError"];
-                /** @description Realtime delivery is disabled for this deployment (`REALTIME_DISABLED`). */
+                /** @description Realtime delivery is disabled for this deployment (`REALTIME_DISABLED`); retryable, not a client error. */
                 503: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -18506,11 +18537,17 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            type: "DEPOSIT_RECEIVED" | "DEPOSIT_NOT_ACCEPTED" | "TRANSFER_RECEIVED" | "ORDER_STATUS_CHANGED" | "KYC_STATUS_CHANGED" | "ANNOUNCEMENT" | "SYSTEM_MESSAGE" | "MASS_PAYOUT_STATUS_CHANGED" | "CARD_OTP" | "RFI_REQUESTED" | "RFI_RESOLVED" | "REPORT_READY" | "SCHEDULED_PAYMENT_REMINDER" | "SCHEDULED_PAYMENT_LOW_BALANCE" | "SCHEDULED_PAYMENT_APPROVAL_REQUIRED";
+            type: "DEPOSIT_RECEIVED" | "DEPOSIT_NOT_ACCEPTED" | "TRANSFER_RECEIVED" | "ORDER_STATUS_CHANGED" | "KYC_STATUS_CHANGED" | "ANNOUNCEMENT" | "SYSTEM_MESSAGE" | "MASS_PAYOUT_STATUS_CHANGED" | "CARD_OTP" | "RFI_REQUESTED" | "RFI_RESOLVED" | "REPORT_READY" | "SCHEDULED_PAYMENT_REMINDER" | "SCHEDULED_PAYMENT_LOW_BALANCE" | "SCHEDULED_PAYMENT_APPROVAL_REQUIRED" | "SCHEDULED_PAYMENT_APPROVAL_CLOSING";
+            /** @description Title of the item, rendered server-side from `payload` with the same template as the push and Telegram copy. `null` when the type has no texts (historical `CARD_OTP` rows) or when the texts could not be built from `payload`. */
+            title: string | null;
+            /** @description Text of the item, rendered like `title`; `null` in the same cases. */
+            body: string | null;
             /** @description Structured fact snapshot; the client renders the presentation. Shape depends on `type`; evolution is additive-only. */
             payload: Record<string, never>;
             /** Format: uuid */
             wallet_id: string | null;
+            /** @description The wallet's current display name (what `GET /frontend/wallets` returns as `display_name`), resolved when the item is read, so it follows a rename. `null` for notifications not scoped to a wallet, for a wallet the user can no longer access (the inbox keeps the notifications of a wallet the user has left) and for a wallet that no longer exists. */
+            wallet_name: string | null;
             /** Format: date-time */
             read_at: string | null;
             /** Format: date-time */
