@@ -6240,7 +6240,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Cardholder is live at the vendor, or its review is still running */
+                /** @description Cardholder is live at the vendor, or its review is still running. On a program that issues under the wallet's company: `WALLET_BUSINESS_NOT_ONBOARDED` (the wallet's business has not been registered with the card issuer) or `WALLET_BUSINESS_NOT_APPROVED` (its review is not approved yet). */
                 409: {
                     headers: {
                         [name: string]: unknown;
