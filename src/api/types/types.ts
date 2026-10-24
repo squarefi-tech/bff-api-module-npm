@@ -1,3 +1,5 @@
+import type { AxiosRequestConfig } from 'axios';
+
 import {
   APIKeyRole,
   CardFormFactor,
@@ -1116,11 +1118,185 @@ export namespace API {
       export namespace Submit {
         export type Request = RailRoot['post']['parameters']['path'];
         export type Response = RailRoot['post']['responses'][200]['content']['application/json'];
+        // `RAIL_REQUIREMENTS_INCOMPLETE` only: the keys of the rail form's required fields with nothing saved yet.
+        export type ErrorDetails = NonNullable<
+          NonNullable<componentsV1Frontend['schemas']['WalletKycRailSubmitErrorResponse']['error']>['details']
+        >;
       }
 
       export namespace ConfirmTerms {
         export type Request = TermsRoot['post']['parameters']['path'];
         export type Response = TermsRoot['post']['responses'][200]['content']['application/json'];
+      }
+    }
+
+    export namespace KycForms {
+      type EntitiesRoot = pathsV1Frontend['/frontend/kyc/entities'];
+      type EntityRoot = pathsV1Frontend['/frontend/kyc/entities/{entity_id}'];
+      type OverviewRoot = pathsV1Frontend['/frontend/kyc/entities/{entity_id}/overview'];
+      type EntityTargetsRoot = pathsV1Frontend['/frontend/kyc/entities/{entity_id}/targets'];
+      type TypeTargetsRoot = pathsV1Frontend['/frontend/kyc/targets'];
+      type FormsRoot = pathsV1Frontend['/frontend/kyc/entities/{entity_id}/forms'];
+      type DraftRoot = pathsV1Frontend['/frontend/kyc/entities/{entity_id}/forms/draft'];
+      type UploadsRoot = pathsV1Frontend['/frontend/kyc/entities/{entity_id}/forms/uploads'];
+      type UploadRoot = pathsV1Frontend['/frontend/kyc/entities/{entity_id}/forms/uploads/{upload_id}'];
+      type SubmitRoot = pathsV1Frontend['/frontend/kyc/entities/{entity_id}/forms/submit'];
+      type SessionRoot = pathsV1Frontend['/frontend/kyc/entities/{entity_id}/verification/session'];
+      type OwnerLinkRoot = pathsV1Frontend['/frontend/kyc/entities/{entity_id}/verification/owners/{owner_id}/link'];
+      type OwnerSessionRoot =
+        pathsV1Frontend['/frontend/kyc/entities/{entity_id}/verification/owners/{owner_id}/session'];
+      type OwnerDocumentRoot =
+        pathsV1Frontend['/frontend/kyc/entities/{entity_id}/verification/owners/{owner_id}/document'];
+      type OwnersInviteRoot = pathsV1Frontend['/frontend/kyc/entities/{entity_id}/verification/owners/invite'];
+      type Schemas = componentsV1Frontend['schemas'];
+
+      // Per-call axios options of the multipart routes: a file goes up to 20 MB, past the client's default timeout.
+      type UploadOptions = Pick<AxiosRequestConfig, 'signal' | 'timeout' | 'onUploadProgress'>;
+
+      export type Entity = Schemas['KycFormsEntity'];
+      export type EntityStatus = Schemas['KycFormsEntityStatus'];
+      export type EntityType = Entity['type'];
+
+      export type Overview = Schemas['KycFormsOverview']['data'];
+      export type Stage = Overview['stage'];
+      export type NextStep = Overview['next_step'];
+      export type WaitingOn = Overview['waiting_on'];
+      export type OverviewOwner = Overview['verification']['owners'][number];
+      export type OwnerType = OverviewOwner['type'];
+      export type OwnerRole = NonNullable<OverviewOwner['role']>;
+      export type VerificationState = Schemas['KycFormsVerificationState'];
+
+      export type EntityTargets = Schemas['KycFormsTargets']['data'];
+      export type TypeTargets = Schemas['KycFormsTypeTargets']['data'];
+      export type TargetForm = Schemas['KycFormsTargetForm'];
+      export type ProgramLevel = TypeTargets['programs'][number]['level'];
+
+      export type Form = Schemas['KycFormsForm'];
+      export type FormScope = Form['scope'];
+      export type FormSection = Form['sections'][number];
+      export type FormState = Schemas['KycFormsFormState'];
+      export type Field = Schemas['KycFormsField'];
+      export type FieldType = Field['type'];
+      export type FieldOption = NonNullable<Field['options']>[number];
+      export type LockReason = NonNullable<Field['lock_reason']>;
+      export type Condition = Schemas['KycFormsCondition'];
+      export type ConditionRule = Schemas['KycFormsConditionRule'];
+      export type ConditionAll = Schemas['KycFormsConditionAll'];
+      export type ConditionAny = Schemas['KycFormsConditionAny'];
+      export type ConditionOp = ConditionRule['op'];
+      export type Submission = NonNullable<Schemas['KycFormsSubmission']>;
+      export type SubmissionStatus = Submission['status'];
+      export type FieldValue = Schemas['KycFormsFieldValue'];
+      export type AnswerValue = Schemas['KycFormsAnswerValue'];
+      export type FileValue = Schemas['KycFormsFileValue'];
+      export type ListItemValue = Schemas['KycFormsListItemValue'];
+      export type ErrorDetails = Schemas['KycFormsErrorDetails'];
+
+      export namespace Entities {
+        export namespace Create {
+          export type Request = EntitiesRoot['post']['requestBody']['content']['application/json'];
+          export type Response = EntitiesRoot['post']['responses'][201]['content']['application/json'];
+        }
+
+        export namespace List {
+          export type Response = EntitiesRoot['get']['responses'][200]['content']['application/json'];
+        }
+
+        export namespace Get {
+          export type Request = EntityRoot['get']['parameters']['path'];
+          export type Response = EntityRoot['get']['responses'][200]['content']['application/json'];
+        }
+
+        export namespace Overview {
+          export type Request = OverviewRoot['get']['parameters']['path'] &
+            NonNullable<OverviewRoot['get']['parameters']['query']>;
+          export type Response = OverviewRoot['get']['responses'][200]['content']['application/json'];
+        }
+
+        export namespace Targets {
+          export type Request = EntityTargetsRoot['get']['parameters']['path'] &
+            NonNullable<EntityTargetsRoot['get']['parameters']['query']>;
+          export type Response = EntityTargetsRoot['get']['responses'][200]['content']['application/json'];
+        }
+      }
+
+      export namespace Targets {
+        export namespace List {
+          export type Request = TypeTargetsRoot['get']['parameters']['query'];
+          export type Response = TypeTargetsRoot['get']['responses'][200]['content']['application/json'];
+        }
+      }
+
+      export namespace Forms {
+        export type Target = NonNullable<FormsRoot['get']['parameters']['query']>;
+
+        export namespace Get {
+          export type Request = FormsRoot['get']['parameters']['path'] & Target;
+          export type Response = FormsRoot['get']['responses'][200]['content']['application/json'];
+        }
+
+        export namespace SaveDraft {
+          export type Request = DraftRoot['put']['parameters']['path'] &
+            NonNullable<DraftRoot['put']['parameters']['query']> &
+            DraftRoot['put']['requestBody']['content']['application/json'];
+          export type Response = DraftRoot['put']['responses'][200]['content']['application/json'];
+        }
+
+        export namespace Upload {
+          type Body = UploadsRoot['post']['requestBody']['content']['multipart/form-data'];
+
+          export type Request = UploadsRoot['post']['parameters']['path'] &
+            NonNullable<UploadsRoot['post']['parameters']['query']> &
+            Omit<Body, 'file'> & { file: File | Blob } & UploadOptions;
+          export type Response = UploadsRoot['post']['responses'][201]['content']['application/json'];
+        }
+
+        export namespace RemoveUpload {
+          export type Request = UploadRoot['delete']['parameters']['path'] &
+            NonNullable<UploadRoot['delete']['parameters']['query']>;
+          export type Response = UploadRoot['delete']['responses'][200]['content']['application/json'];
+        }
+
+        export namespace Submit {
+          export type Request = SubmitRoot['post']['parameters']['path'] &
+            NonNullable<SubmitRoot['post']['parameters']['query']> &
+            SubmitRoot['post']['requestBody']['content']['application/json'];
+          export type Response = SubmitRoot['post']['responses'][200]['content']['application/json'];
+        }
+      }
+
+      export namespace Verification {
+        export namespace Session {
+          export type Request = SessionRoot['post']['parameters']['path'];
+          export type Response = SessionRoot['post']['responses'][200]['content']['application/json'];
+        }
+
+        export namespace Owners {
+          export namespace Link {
+            export type Request = OwnerLinkRoot['post']['parameters']['path'];
+            export type Response = OwnerLinkRoot['post']['responses'][200]['content']['application/json'];
+          }
+
+          export namespace Session {
+            export type Request = OwnerSessionRoot['post']['parameters']['path'];
+            export type Response = OwnerSessionRoot['post']['responses'][200]['content']['application/json'];
+          }
+
+          export namespace Document {
+            type Body = OwnerDocumentRoot['post']['requestBody']['content']['multipart/form-data'];
+
+            export type Side = Body['side'];
+            export type Type = NonNullable<Body['type']>;
+            export type Request = OwnerDocumentRoot['post']['parameters']['path'] &
+              Omit<Body, 'file'> & { file: File | Blob } & UploadOptions;
+            export type Response = OwnerDocumentRoot['post']['responses'][201]['content']['application/json'];
+          }
+
+          export namespace Invite {
+            export type Request = OwnersInviteRoot['post']['parameters']['path'];
+            export type Response = OwnersInviteRoot['post']['responses'][200]['content']['application/json'];
+          }
+        }
       }
     }
 
