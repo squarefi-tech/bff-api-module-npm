@@ -1436,6 +1436,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
+                        /** @description Legal name. Latin characters only (printable ASCII - letters A-Z without diacritics, digits, spaces, punctuation); anything else is refused with `400 VALIDATION_ERROR`. Transliterate other scripts before sending. */
                         name: string;
                         /** @enum {string} */
                         type: "BUSINESS" | "INDIVIDUAL";
@@ -1467,7 +1468,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error (missing name/type, invalid fields) or wallet not found */
+                /** @description `VALIDATION_ERROR`: missing or invalid `name` / `type`, `name` has characters outside printable ASCII (the message names the field), or wallet not found */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -1842,6 +1843,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
+                        /** @description User-friendly alias for this destination. Latin characters only (printable ASCII - letters A-Z without diacritics, digits, spaces, punctuation); anything else is refused with `400 VALIDATION_ERROR`. */
                         nickname?: string;
                     };
                 };
@@ -1860,6 +1862,15 @@ export interface paths {
                                 destination: components["schemas"]["CounterpartyDestination"];
                             };
                         };
+                    };
+                };
+                /** @description `VALIDATION_ERROR`: no updatable field, or `nickname` has characters outside printable ASCII */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
                 /** @description Access denied, or (Clerk tenants) the second-factor verification is
@@ -1973,7 +1984,7 @@ export interface paths {
          * Create destination
          * @description counterparty_account_id in body. Caller must be owner or admin of the account's wallet and the wallet's KYC must be APPROVED; other members receive 403.
          *
-         *     **Banking types**: banking_data required. `banking_data.address` (the bank address) is mandatory; `banking_data.beneficiary_address` (the recipient's own postal address, same shape) is optional — when present it must be complete (city, country_id, postcode, street1; state_id on US rails), is never overwritten by bank-directory enrichment, is exempt from the bank-country check, and payouts use it in place of the bank address.
+         *     **Banking types**: banking_data required. `banking_data.address` (the bank address) is mandatory; `banking_data.beneficiary_address` (the recipient's own postal address, same shape) is optional — when present it must be complete (city, country_id, postcode, street1; state_id on US rails), is never overwritten by bank-directory enrichment, is exempt from the bank-country check, and payouts use it in place of the bank address. `banking_data.intermediary_bic` (optional) is the BIC of the intermediary (correspondent) bank, accepted on SWIFT only.
          *     **Crypto types**: crypto_data required
          *     **Internal type**: internal_data required (target wallet on the same platform)
          *
@@ -1992,6 +2003,7 @@ export interface paths {
                         counterparty_account_id: string;
                         /** @enum {string} */
                         type: "ACH" | "RTP" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
+                        /** @description User-friendly alias for this destination. Latin characters only (printable ASCII - letters A-Z without diacritics, digits, spaces, punctuation); anything else is refused with `400 VALIDATION_ERROR`. */
                         nickname?: string;
                         banking_data?: Record<string, never>;
                         crypto_data?: Record<string, never>;
@@ -2026,7 +2038,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error: type-specific payload missing or invalid, target wallet inactive, or the address country contradicts the bank code country (`BANK_COUNTRY_MISMATCH`).
+                /** @description Validation error: type-specific payload missing or invalid, `nickname` has characters outside printable ASCII (`VALIDATION_ERROR`, the message names the field), target wallet inactive, or the address country contradicts the bank code country (`BANK_COUNTRY_MISMATCH`).
                  *
                  *     Bank details are checked per payment method — IBAN (country, length, account format, check digits), SWIFT/BIC, ABA routing number, US/UK account number, sort code, IBAN inside the SEPA zone on SEPA. Every problem is listed in `error.details.issues` (`field`, `code`, `message`, optional `country` / `detected`), so a form can mark each field; `POST /frontend/counterparty/destinations/validate` returns the same list without saving.
                  *      */
@@ -3327,80 +3339,93 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Bad Request - One of the following:
-                 *     - Missing program_id
-                 *     - Missing required fields based on program type
-                 *     - Unsupported program type
-                 *     - `INITIAL_TOPUP_BELOW_OPENING_LOAD` — `initial_topup` less the issuing fee is below the
-                 *       program's mandatory opening balance; the message names the total accepted at the current rate
-                 *     - `OPENING_LOAD_NOT_PAID` — the program's cards open holding a mandatory balance and
-                 *       this issuance charges nothing for it (issuance not billed here, or no issuance tariff
-                 *       for the wallet on the program), or the card spends from a sub-account, whose top-up
-                 *       funds the sub-account rather than the card
+                /** @description The card was refused; `error.code` says why (`CardIssuanceRefusalCode`, one line per code
+                 *     there). **Nothing is debited from the wallet on a `400`**: either nothing was charged, or the
+                 *     issuer refused the card after the charge and the charge was returned before this answer.
+                 *
+                 *     A shortage on the top-up after the card is created is not a `400`: the card is issued and
+                 *     `201` reports `initial_topup_status: topup_failed`.
                  *      */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            error?: string;
-                        };
+                        "application/json": components["schemas"]["CardIssuanceRefusalResponse"];
                     };
                 };
-                /** @description Forbidden - One of the following:
-                 *     - Sub-account not found
-                 *     - Wallet not found or access denied
-                 *     - Program not available for this tenant
-                 *     - Program vendor ID is not configured
+                /** @description `UNAUTHORIZED` — missing or invalid Bearer token, `x-tenant-id` or session */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not allowed. `error.code`:
+                 *     - `ACCESS_DENIED` — not a member of the wallet, or the role is below admin
+                 *     - `FORBIDDEN` — wallet, sub-account or program not available here, no right to issue cards on the wallet, program not open to the user's group, program vendor not configured
+                 *     - `LIMIT_EXCEEDED` — the maximum, daily or monthly card limit is reached
+                 *     - `KYC_REQUIREMENTS_NOT_MET` — the wallet's KYC is not approved
+                 *     - `RAIL_NOT_CONFIGURED`, `RAIL_NOT_ENABLED`, `WALLET_RAIL_NOT_ONBOARDED`, `WALLET_RAIL_NOT_APPROVED` — the card rail is not open to the wallet
+                 *     - `USER_NOT_REGISTERED`, `ACCOUNT_BLOCKED` — the user is not registered in the workspace or is blocked
                  *      */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            error?: string;
-                        };
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description Program not found */
+                /** @description `NOT_FOUND` — program, sub-account, cardholder or workspace not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            /** @example Program not found */
-                            error?: string;
-                        };
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description `request_id` was already used by another card request (replay refused) */
+                /** @description `error.code`:
+                 *     - `CONFLICT` — `request_id` was already used by another card request
+                 *     - `WALLET_DORMANT` — the wallet is dormant; only support reactivates it
+                 *     - `REPLAY_CONFLICT` — the same charge was already posted with different content
+                 *      */
                 409: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
-                /** @description Internal Server Error */
+                /** @description `CARDHOLDER_REFUSED` — the card issuer refused the cardholder; anything charged was returned */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `RATE_LIMIT_EXCEEDED` — too many requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `INTERNAL_ERROR` — the card could not be created */
                 500: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": {
-                            /** @example false */
-                            success?: boolean;
-                            /** @example Failed to create card */
-                            error?: string;
-                        };
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
             };
@@ -5681,7 +5706,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Bad Request — missing/invalid fields, or a `user_data_id` precondition not met (user not verified, no KYC applicant, or the applicant is unknown to the KYC provider). Code `INVALID_REQUEST`; the message names the failed precondition.
+                /** @description Bad Request — missing/invalid fields, or a `user_data_id` precondition not met (user not verified, no KYC applicant, or the applicant is unknown to the KYC provider). Code `INVALID_REQUEST`; the message names the failed precondition. On a tenant of the KYC forms flow the member's personal KYC entity is the dossier and the program's card form the gate (`GET /frontend/kyc/entities/{entity_id}/forms?programs=&wallet_id=`): `CARD_REQUIREMENTS_INCOMPLETE` with `details.fields` (the catalog keys still empty), `CARD_VERIFICATION_REQUIRED` (the level needs the verified document and face), `CARD_KYC_REFUSED` (the member's application, or their identity check, was refused for good), `KYC_PERSONAL_ENTITY_MISSING` (the member has no personal entity yet).
                  *      */
                 400: {
                     headers: {
@@ -5696,14 +5721,14 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description `user_data_id` does not resolve to a user */
+                /** @description `user_data_id` does not resolve to a user, or `issuing_program_id` names no program */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content?: never;
                 };
-                /** @description A cardholder already exists for this person in this wallet + issuing_program — the member named by `user_data_id` already holds one, or one carries this email. `error.details.cardholder_id` names it (when it could be resolved) so the client can adopt it instead of dead-ending. When `user_data_id` names a member who may adopt the row, the row is first completed from that member's KYC dossier: empty identity fields and document photos of a type it does not hold are filled in, and nothing already on it is changed. Re-read the row for its refreshed `missing_kyc_fields`.
+                /** @description On a tenant of the KYC forms flow, `KYC_INDIVIDUAL_AMBIGUOUS` when the member has several personal KYC entities (compliance untangles them), or `CARD_REQUIREMENTS_PENDING_REVIEW` with `details.fields` when the card form's required fields are answered but wait in a submission compliance has not decided. Otherwise `DUPLICATE_CARDHOLDER`: a cardholder already exists for this person in this wallet + issuing_program — the member named by `user_data_id` already holds one, or one carries this email. `error.details.cardholder_id` names it (when it could be resolved) so the client can adopt it instead of dead-ending. When `user_data_id` names a member who may adopt the row, the row is first completed from that member's KYC dossier: empty identity fields and document photos of a type it does not hold are filled in, and nothing already on it is changed. Re-read the row for its refreshed `missing_kyc_fields`.
                  *      */
                 409: {
                     headers: {
@@ -6037,12 +6062,23 @@ export interface paths {
          *       app is not possible (support resets it), so never render a "verify now" action.
          *     - `NOT_MEMBER` — the uuid is not an active member of this wallet.
          *
+         *     **On a tenant of the KYC forms flow** (SFI-2544) the verdict comes from the member's personal
+         *     KYC entity and the program's card form, not from the profile statuses: `CAN_CREATE` with
+         *     `will_require` = the required fields of the card form still empty in the entity (catalog
+         *     keys such as `first_name`, `email`, `phone`), `NEEDS_VERIFICATION` while the level needs the
+         *     identity check and it has not passed, `REJECTED` for an application refused for good,
+         *     `PENDING` while compliance untangles several personal entities of the member or while every
+         *     required field is answered but some wait in a submission under review. A member without a
+         *     personal entity is `CAN_CREATE` with every required field of the form in `will_require`.
+         *
          *     **`will_require`**: fields the client should expect to collect BY HAND (same vocabulary
          *     as the submit 400 `missing` list, e.g. `address.line1`, `tax_identification_number`,
          *     `email or phone`). For `DRAFT` it is the draft's actual leftovers; for `NEEDS_COMPLETION`
          *     it is what the card create refuses the row over; for `CAN_CREATE` it
          *     is a projection that assumes the KYC dossier covers what it usually covers — the created
-         *     draft's `missing_kyc_fields` is the authoritative version.
+         *     draft's `missing_kyc_fields` is the authoritative version. The dossier never carries
+         *     contacts, so a `CAN_CREATE` member without a valid `email` or `phone` on their profile
+         *     always gets that field listed: send it in the create body.
          *
          *     **Authentication**: Bearer token with x-tenant-id header; wallet ADMIN role required.
          *
@@ -6562,6 +6598,10 @@ export interface paths {
          *     the Auth API; access requires the caller to be a member of the wallet
          *     (ownership/membership is enforced by the standard wallet-access check).
          *
+         *     **KYC forms flow**: on a tenant switched to the KYC forms (SFI-2544) this route is closed and
+         *     answers `400 KYC_LEGACY_FLOW_DISABLED` before anything else is checked — the client uses
+         *     `/frontend/kyc/entities*` instead.
+         *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
          *     **Access Control**: Any user with access to the wallet (scoped card-users excluded)
@@ -6617,7 +6657,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error (`type` missing or not in [individual, business]) */
+                /** @description `VALIDATION_ERROR` — `type` missing or not in [individual, business]; `KYC_LEGACY_FLOW_DISABLED` — the tenant runs the KYC forms flow, this route is closed */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -6687,6 +6727,10 @@ export interface paths {
          *     forwarded to the Auth API; access requires the caller to be a member of
          *     the wallet (ownership/membership is enforced by the standard wallet-access check).
          *
+         *     **KYC forms flow**: on a tenant switched to the KYC forms (SFI-2544) this route is closed and
+         *     answers `400 KYC_LEGACY_FLOW_DISABLED` before anything else is checked — the client uses
+         *     `/frontend/kyc/entities*` instead.
+         *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
          *     **Access Control**: Any user with access to the wallet (scoped card-users excluded)
@@ -6742,7 +6786,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error (`inquiry_id` missing or empty) */
+                /** @description `VALIDATION_ERROR` — `inquiry_id` missing or empty; `KYC_LEGACY_FLOW_DISABLED` — the tenant runs the KYC forms flow, this route is closed */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -6818,6 +6862,10 @@ export interface paths {
          *     Provider-agnostic replacement for the deprecated
          *     `GET /frontend/kyc_persona/{wallet_id}/init`.
          *
+         *     **KYC forms flow**: on a tenant switched to the KYC forms (SFI-2544) this route is closed and
+         *     answers `400 KYC_LEGACY_FLOW_DISABLED` before anything else is checked — the client uses
+         *     `/frontend/kyc/entities*` instead.
+         *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
          *     **Access Control**: Any user with access to the wallet (scoped card-users excluded)
@@ -6870,7 +6918,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error (`type` missing or not in [individual, business]) */
+                /** @description `VALIDATION_ERROR` — `type` missing or not in [individual, business]; `KYC_LEGACY_FLOW_DISABLED` — the tenant runs the KYC forms flow, this route is closed */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -6944,6 +6992,10 @@ export interface paths {
          *     Provider-agnostic replacement for the deprecated
          *     `GET /frontend/kyc_persona/{wallet_id}/resume`.
          *
+         *     **KYC forms flow**: on a tenant switched to the KYC forms (SFI-2544) this route is closed and
+         *     answers `400 KYC_LEGACY_FLOW_DISABLED` before anything else is checked — the client uses
+         *     `/frontend/kyc/entities*` instead.
+         *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
          *     **Access Control**: Any user with access to the wallet (scoped card-users excluded)
@@ -6995,7 +7047,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error (`verification_ref` missing or empty) */
+                /** @description `VALIDATION_ERROR` — `verification_ref` missing or empty; `KYC_LEGACY_FLOW_DISABLED` — the tenant runs the KYC forms flow, this route is closed */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -12082,6 +12134,10 @@ export interface paths {
          *     User-scoped: no wallet is involved, unlike
          *     `/frontend/kyc_verification/{wallet_id}/init`.
          *
+         *     **KYC forms flow**: on a tenant switched to the KYC forms (SFI-2544) this route is closed and
+         *     answers `400 KYC_LEGACY_FLOW_DISABLED` before anything else is checked — the client uses
+         *     `/frontend/kyc/entities*` instead.
+         *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
          */
@@ -12127,7 +12183,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error (`flow` missing or not in [data, documents, face]) */
+                /** @description `VALIDATION_ERROR` — `flow` missing or not in [data, documents, face]; `KYC_LEGACY_FLOW_DISABLED` — the tenant runs the KYC forms flow, this route is closed */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -12195,6 +12251,10 @@ export interface paths {
          *     is already on, for the SDK's token-expiry callback. The caller's
          *     Bearer token is forwarded to the Auth API.
          *
+         *     **KYC forms flow**: on a tenant switched to the KYC forms (SFI-2544) this route is closed and
+         *     answers `400 KYC_LEGACY_FLOW_DISABLED` before anything else is checked — the client uses
+         *     `/frontend/kyc/entities*` instead.
+         *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
          */
@@ -12225,6 +12285,15 @@ export interface paths {
                                 verification_token?: string | null;
                             };
                         };
+                    };
+                };
+                /** @description `KYC_LEGACY_FLOW_DISABLED` — the tenant runs the KYC forms flow, this route is closed */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
                 /** @description Missing or invalid Bearer token */
@@ -12890,8 +12959,9 @@ export interface paths {
          *        `is_main` wallet, else the oldest one.
          *
          *     The selection cannot outlive the access it rides on: the flag sits on
-         *     the membership row, so revoking membership drops it. A deleted wallet
-         *     or a deactivated membership falls back to the default.
+         *     the membership row, so revoking membership drops it. A deleted wallet,
+         *     a deactivated membership or a wallet whose owner deleted their account
+         *     falls back to the default.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -12933,7 +13003,9 @@ export interface paths {
          *     The choice is per user, not per wallet: selecting a wallet shared with
          *     the caller changes nothing for its owner or for the other members.
          *     Any wallet the caller is an **active member** of may be selected —
-         *     ownership is not required.
+         *     ownership is not required. A wallet whose owner has deleted their
+         *     account cannot be selected: the request answers `403`, the same as
+         *     every other endpoint of that wallet.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -12972,16 +13044,46 @@ export interface paths {
                         };
                     };
                 };
-                /** @description wallet_id missing or blank */
+                /** @description `wallet_id` is missing, blank or not a string —
+                 *     `{ success: false, error: { code: 'VALIDATION_ERROR', message: 'wallet_id must be a non-empty string' } }`.
+                 *      */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-                404: components["responses"]["NotFoundError"];
+                /** @description `ACCESS_DENIED` (`You do not have access to this wallet`) — the caller is not an active
+                 *     member of the wallet, or the wallet is closed because its owner deleted their account.
+                 *     The answer is the same in both cases and does not reveal why. The stored selection is not changed.
+                 *      */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        /** @example {
+                         *       "success": false,
+                         *       "error": {
+                         *         "code": "ACCESS_DENIED",
+                         *         "message": "You do not have access to this wallet"
+                         *       }
+                         *     } */
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `NOT_FOUND` — the caller is a member, but the wallet itself is deleted. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         post?: never;
@@ -13275,15 +13377,17 @@ export interface paths {
          *     Wallets where the caller holds the scoped `user` role are returned as a reduced shell
          *     (`uuid`, `name`, `display_name`, `tenant_id`, `kyc_entity_id`, `kyc_info`, `created_at` + the role fields) — no `logo_url`.
          *
+         *     A wallet whose owner has deleted their account is closed for every member and is not listed.
+         *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
          */
         get: {
             parameters: {
                 query?: {
-                    /** @description Number of items to skip */
+                    /** @description Number of items to skip (negative values are raised to 0) */
                     offset?: number;
-                    /** @description Number of items to return */
+                    /** @description Number of items to return (values above 100 are lowered to 100, below 1 raised to 1) */
                     limit?: number;
                     /** @description Filter wallets by user's access role */
                     role?: "owner" | "admin" | "user" | "auditor";
@@ -13341,9 +13445,10 @@ export interface paths {
                                 is_owner: boolean;
                                 /**
                                  * Format: uuid
-                                 * @description KYC entity the wallet was opened for (`GET /kyc/entities`) — group the
-                                 *     list by it to see which accounts an entity already has. `null` for a
-                                 *     wallet created without one.
+                                 * @description KYC entity the wallet was opened for (`GET /frontend/kyc/entities` on a
+                                 *     tenant of the KYC forms flow, the BFF `GET /kyc/entities` on the old flow) —
+                                 *     group the list by it to see which accounts an entity already has. `null`
+                                 *     for a wallet created without one.
                                  *
                                  */
                                 kyc_entity_id: string | null;
@@ -13359,6 +13464,17 @@ export interface paths {
                                 has_more: boolean;
                             };
                         };
+                    };
+                };
+                /** @description `VALIDATION_ERROR` — `offset` or `limit` is not an integer, `sort_by` is not one of
+                 *     `created_at`, `name`, or `sort_order` is not `ASC`/`DESC`.
+                 *      */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
                 /** @description Missing or invalid bearer token */
@@ -13421,8 +13537,9 @@ export interface paths {
                         /**
                          * Format: uuid
                          * @description Optional KYC entity to link (entity-first KYC model). Must be
-                         *     an entity of the current user (`GET /kyc/entities`); its type
-                         *     must be enabled for the tenant. The link is set once at
+                         *     an entity of the current user (`GET /frontend/kyc/entities` on a
+                         *     tenant of the KYC forms flow, the BFF `GET /kyc/entities` on the
+                         *     old flow); its type must be enabled for the tenant. The link is set once at
                          *     creation and is immutable. Omitted → wallet is created
                          *     without a linked entity (legacy behaviour).
                          *
@@ -14880,7 +14997,7 @@ export interface paths {
                                      *
                                      * @enum {string}
                                      */
-                                    identity_verification_status?: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
+                                    identity_verification_status?: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW" | "EXPIRED" | "OFFBOARDED";
                                     /** @description The member deleted their account. They keep their row and role in the
                                      *     team, but have no access and receive no notifications.
                                      *      */
@@ -15658,7 +15775,10 @@ export interface paths {
          * KYC rails of the wallet
          * @description The tenant's KYC rails of the wallet's entity type and the universal ones, each with the wallet's
          *     application on it. A rail is listed while it is active; an archived rail stays listed only when the
-         *     wallet is approved on it. `can_submit` tells whether `POST …/kyc-rails/{rail_id}` would be accepted now.
+         *     wallet is approved on it. `can_submit` tells whether the rail would take the wallet now; it does not look at
+         *     the rail's form — on the KYC forms flow that is `form_state` / `missing_required` of the rail in
+         *     `GET /frontend/kyc/entities/{entity_id}/targets`. Offer `POST …/kyc-rails/{rail_id}` when `can_submit` is `true`
+         *     and the rail's form is `complete`: a form not complete answers `400 RAIL_REQUIREMENTS_INCOMPLETE`.
          *
          *     Replaces the BFF `GET /kyc/{wallet_id}/rails`; items have its shape plus `can_submit`, without the
          *     rail's `code` and `name` — match a rail to a program by `id` (`kyc_rails_id`).
@@ -15693,12 +15813,14 @@ export interface paths {
                 };
                 401: components["responses"]["UnauthorizedError"];
                 403: components["responses"]["ForbiddenError"];
-                /** @description Wallet not found (NOT_FOUND) */
+                /** @description `NOT_FOUND` — wallet not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -15748,22 +15870,10 @@ export interface paths {
                         "application/json": components["schemas"]["WalletKycRailResponse"];
                     };
                 };
-                /** @description `rail_id` is not a UUID (VALIDATION_ERROR) */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
+                400: components["responses"]["WalletKycRailBadId"];
                 401: components["responses"]["UnauthorizedError"];
                 403: components["responses"]["ForbiddenError"];
-                /** @description No such rail on the wallet's tenant, or an archived rail the wallet is not approved on (RAIL_NOT_FOUND) */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
+                404: components["responses"]["WalletKycRailNotFound"];
             };
         };
         put?: never;
@@ -15773,6 +15883,10 @@ export interface paths {
          *     itself is submitted here, any other goes through the KYC-admin service. A manual rail waits for
          *     compliance (`WAITING_ON_REVIEW`); a universal rail is approved on the spot. An application the vendor
          *     sent back (`HOLD`, `SOFT_REJECT`) is resubmitted. No body.
+         *
+         *     On the KYC forms flow CORE makes this submission itself for a rail the client sent a rail or multi
+         *     form for, once the form is accepted and the entity is `APPROVED`, when the form was sent by a wallet `admin` or `owner` and the wallet has no application
+         *     on the rail yet; the route stays for a rail CORE could not submit and for a resubmission.
          *
          *     Refused unless the rail has an onboarding implementation (retired rails never do), takes submissions,
          *     fits the entity type, and the entity's KYC is `APPROVED` — an entity still under review
@@ -15806,48 +15920,67 @@ export interface paths {
                         "application/json": components["schemas"]["WalletKycRailResponse"];
                     };
                 };
-                /** @description `rail_id` is not a UUID (VALIDATION_ERROR); the rail has no onboarding implementation, or is a universal
-                 *     rail other than the tenant's default on a tenant without KYC (RAIL_NOT_AVAILABLE); the rail takes no
-                 *     submissions (RAIL_SUBMIT_UNAVAILABLE); the rail is of the other entity type (RAIL_TYPE_MISMATCH); the
-                 *     onboarding behind the rail refused the submission (RAIL_SUBMISSION_REJECTED — the vendor's reason is
-                 *     logged, never returned)
+                /** @description `VALIDATION_ERROR` — `rail_id` is not a UUID (a message only); `RAIL_NOT_AVAILABLE` — the rail has no
+                 *     onboarding implementation, or is a universal rail other than the tenant's default on a tenant without
+                 *     KYC; `RAIL_SUBMIT_UNAVAILABLE` — the rail takes no submissions; `RAIL_TYPE_MISMATCH` — the rail is of
+                 *     the other entity type; `RAIL_SUBMISSION_REJECTED` — the onboarding behind the rail refused the
+                 *     submission (the vendor's reason is logged, never returned); `RAIL_REQUIREMENTS_INCOMPLETE` — on a
+                 *     tenant of the KYC forms flow, the KYC entity misses saved values of required fields of the rail's form
+                 *     (a draft does not count): `details.fields` lists their keys, open
+                 *     `GET /frontend/kyc/entities/{entity_id}/forms?rails={rail_id}` and fill them
                  *      */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["WalletKycRailSubmitErrorResponse"];
+                    };
                 };
                 401: components["responses"]["UnauthorizedError"];
-                /** @description Not an admin of the wallet (ACCESS_DENIED), or the entity's KYC is not approved — under review included (KYC_NOT_APPROVED) */
+                /** @description `ACCESS_DENIED` — not an admin or owner of the wallet; `KYC_NOT_APPROVED` — the entity's KYC is not approved, under review included */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        /** @example {
+                         *       "success": false,
+                         *       "correlationId": "8f14e45f-ceea-4e67-a7a2-5f5a1f0b9c1d",
+                         *       "error": {
+                         *         "code": "KYC_NOT_APPROVED",
+                         *         "message": "Your KYC should be approved"
+                         *       }
+                         *     } */
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
-                /** @description No such rail on the wallet's tenant, or an archived one (RAIL_NOT_FOUND) */
+                /** @description `RAIL_NOT_FOUND` — no such rail on the wallet's tenant, or an archived one */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
-                /** @description Already approved on the rail (RAIL_ALREADY_APPROVED), an application is with the vendor
-                 *     (RAIL_SUBMISSION_IN_PROGRESS), or the same submission is being processed (OPERATION_IN_PROGRESS)
-                 *      */
+                /** @description `RAIL_ALREADY_APPROVED` — already approved on the rail; `RAIL_SUBMISSION_IN_PROGRESS` — an application is with the vendor; `OPERATION_IN_PROGRESS` — the same submission is being processed */
                 409: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
-                /** @description The onboarding behind the rail failed or is unreachable (RAIL_SUBMISSION_FAILED), or the lock service is down (SERVICE_UNAVAILABLE) */
+                /** @description `RAIL_SUBMISSION_FAILED` — the onboarding behind the rail failed or is unreachable; `SERVICE_UNAVAILABLE` — the lock service is down */
                 503: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -15898,21 +16031,1247 @@ export interface paths {
                         "application/json": components["schemas"]["WalletKycRailResponse"];
                     };
                 };
-                /** @description `rail_id` is not a UUID (VALIDATION_ERROR) */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
+                400: components["responses"]["WalletKycRailBadId"];
                 401: components["responses"]["UnauthorizedError"];
                 403: components["responses"]["ForbiddenError"];
-                /** @description No such rail (RAIL_NOT_FOUND), or the wallet never submitted to it (RAIL_NOT_SUBMITTED) */
+                /** @description `RAIL_NOT_FOUND` — no such rail; `RAIL_NOT_SUBMITTED` — the wallet never submitted to it */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/kyc/entities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The caller's KYC entities (forms flow)
+         * @description The caller's own entities, oldest first, as the BFF `GET /kyc/entities` answered them. An entity shared through a wallet is not listed here: an owner or admin of the wallet reaches it by id. Authorization: Bearer token and `x-tenant-id`.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Entities of the caller */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["KycFormsEntity"][];
+                        };
+                    };
+                };
+                /** @description `KYC_FORMS_NOT_ENABLED` — the tenant still runs KYC through the BFF */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+            };
+        };
+        put?: never;
+        /**
+         * Create the caller's KYC entity (forms flow)
+         * @description Same path and shape as the BFF `POST /kyc/entities`. For `individual` the call is idempotent and answers the caller's personal entity; a `business` entity is created on every call. `201` also when an existing personal entity is returned. The type must be one the tenant enabled (`403 ACCESS_DENIED` otherwise). Authorization: Bearer token and `x-tenant-id`. One creation per user at a time (`409 OPERATION_IN_PROGRESS`).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    /** @example {
+                     *       "type": "individual"
+                     *     } */
+                    "application/json": components["schemas"]["KycFormsCreateEntityRequest"];
+                };
+            };
+            responses: {
+                /** @description The entity */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["KycFormsEntity"];
+                        };
+                    };
+                };
+                /** @description `VALIDATION_ERROR` — `type` is missing or not `individual` / `business` (a message only); `KYC_FORMS_NOT_ENABLED` — the tenant still runs KYC through the BFF */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description `ACCESS_DENIED` — the entity type is not enabled for the tenant */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `KYC_INDIVIDUAL_AMBIGUOUS` — the user has several personal entities, contact support; `OPERATION_IN_PROGRESS` — another creation by the same user is running */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                503: components["responses"]["KycFormsLockUnavailable"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/kyc/targets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What a client of a type can be put on, before any entity or wallet
+         * @description For the screen before KYC: the rails a client of `type` can apply for — the active rails of the type and the universal ones, as a new wallet of that type will list them — each with the account programs it opens and the card programs it makes visible, and, for `individual`, those card programs with the level their vendor demands. The ids are the `rails` / `programs` of `GET /frontend/kyc/entities/{entity_id}/forms`: pick them here, then create the entity (`POST /frontend/kyc/entities`) and its wallet (`POST /frontend/wallets` with `kyc_entity_id` — the link is set once, at creation), and open the form with `wallet_id`: CORE puts that wallet on the form's rails and programs once the form is accepted and the KYC `APPROVED`. A rail with a non-empty `account_programs` carries payments. Once the entity and wallet exist, `GET …/entities/{entity_id}/targets` tells the state of each form and application. Authorization: Bearer token and `x-tenant-id`; any user of the tenant.
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description The client type: the type of the KYC entity the client is going to create. */
+                    type: "individual" | "business";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The rails and the card programs */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KycFormsTypeTargets"];
+                    };
+                };
+                /** @description `VALIDATION_ERROR` — `type` is missing or not `individual` / `business` (a message only); `KYC_FORMS_NOT_ENABLED` — the tenant still runs KYC through the BFF */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description `ACCESS_DENIED` — the type is not enabled for the tenant */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/kyc/entities/{entity_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A KYC entity (forms flow)
+         * @description One entity with its addresses, beneficial owners and documents, as the BFF `GET /kyc/entities/{id}` answered it. Access: the owner of the entity, or an owner / admin of a wallet it is linked to.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description `kyc_entity.id` of the caller, or of an entity linked to a wallet the caller owns or administers */
+                    entity_id: components["parameters"]["KycFormsEntityId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The entity */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["KycFormsEntity"];
+                        };
+                    };
+                };
+                400: components["responses"]["KycFormsBadRequest"];
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["KycFormsAccessDenied"];
+                /** @description `NOT_FOUND` — the entity does not exist or belongs to another tenant */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/kyc/entities/{entity_id}/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What to show next for an entity
+         * @description The stage of the application, whose move it is and the next step, with the state of the base form, the identity verification and — for an entity linked to a wallet — the rails. Build the screen by `stage`, `waiting_on` and `next_step`, not by the raw `status`. A business entity's `verification.applicant` is the filler's own check — the owner of the business entity, whoever reads the overview — `verification.owners[]` the checks of its beneficial owners — the persons, and the companies the identity provider checks (`type`). Access: the owner of the entity, or an owner / admin of a wallet it is linked to; `cards[]` only for the owner.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Language of the texts (labels, hints, options, section titles, general messages); takes precedence over `Accept-Language`. A language outside the tenant's list is served in English. */
+                    locale?: components["parameters"]["KycFormsLocale"];
+                };
+                header?: {
+                    /** @description Language of the texts when `locale` is not given. A language outside the tenant's list is served in English. */
+                    "Accept-Language"?: components["parameters"]["KycFormsAcceptLanguage"];
+                };
+                path: {
+                    /** @description `kyc_entity.id` of the caller, or of an entity linked to a wallet the caller owns or administers */
+                    entity_id: components["parameters"]["KycFormsEntityId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The overview */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KycFormsOverview"];
+                    };
+                };
+                400: components["responses"]["KycFormsBadRequest"];
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["KycFormsAccessDenied"];
+                /** @description `NOT_FOUND` — the entity does not exist or belongs to another tenant */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                409: components["responses"]["KycFormsConditionsCycle"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/kyc/entities/{entity_id}/targets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What a multi form can be made of for an entity and a wallet
+         * @description One read before composing `GET …/forms?rails=…&programs=…&wallet_id=…`: the base form, the active rails the wallet sees for this entity — with the wallet's application on each, as `GET /frontend/wallets/{wallet_id}/kyc-rails` shows it, without the terms — and, for a personal entity, the card programs the wallet may ask a card of, with the level their vendor demands. Every target carries the state of its form (`form_state`, `missing_required`, `submission`), so the client learns in one read what is still to be filled where. Access as the forms: the owner, or an owner / admin of a linked wallet.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description The wallet the rails and the card programs are read for. Optional: without it the first linked wallet (main wallet first) that the entity's owner and the caller are both members of is used; when there is none — no linked wallet, or none the two share — the answer has `wallet_id: null` and empty `rails` and `programs`. With it, the entity's owner must be an active member of the wallet, and so must the caller when it is someone else, else `403 ACCESS_DENIED`. */
+                    wallet_id?: components["parameters"]["KycFormsTargetsWalletId"];
+                };
+                header?: never;
+                path: {
+                    /** @description `kyc_entity.id` of the caller, or of an entity linked to a wallet the caller owns or administers */
+                    entity_id: components["parameters"]["KycFormsEntityId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The targets */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KycFormsTargets"];
+                    };
+                };
+                /** @description `VALIDATION_ERROR` — `entity_id` or `wallet_id` is not a uuid (a message only); `KYC_FORMS_NOT_ENABLED` — the tenant still runs KYC through the BFF */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["KycFormsAccessDenied"];
+                /** @description `NOT_FOUND` — the entity does not exist or belongs to another tenant */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                409: components["responses"]["KycFormsConditionsCycle"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/kyc/entities/{entity_id}/forms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The form of an entity for a set of purposes
+         * @description Built on every call from the tenant's requirement profiles and the entity. Without `rails` and `programs` it is the base form. With one rail it is that rail's form: the base profile, the tenant's rail profile and the vendor's minimum merged: a field required by any of them is required, `review` wins over `auto`, and a field is shown when any of them shows it (one asking it without a condition — the vendor's minimum always — shows it always); profiles whose conditions read each other in a circle answer `409 KYC_FORM_CONDITIONS_CYCLE`. Sections are the groups to draw, `visible_when` the show logic, `required_by` the purposes a field is required for, the locks (`saved`, `from_document`, `pending`, `status`) what the client cannot change, `schema_version` what to echo back. Fields that come from the identity document (names, date of birth, citizenship, the document number and dates) are left out until the document is verified; the document itself is asked: its type `gov_id_type` (`PASSPORT`, `ID_CARD`, `RESIDENCE_PERMIT`, `DRIVERS` — the codes `…/owners/{owner_id}/document` takes as `type` too), issuing country `gov_id_country` and photos `gov_id_front` and `gov_id_back` (shown unless a passport) — saved, and no longer asked, once it is verified; `state: complete` on a rail form means nothing is left to ask and the client goes straight to the rail's terms. With one program and `wallet_id` it is the form before a card: the level the program's vendor demands (`minimal`: name, email, phone; `basic`: plus date of birth, citizenship, gender, identity document type and number, residential address; `declared` / `full`: plus the identity document and the face, verified after the form) merged with the tenant's binding for the program, without the base form; what the personal entity already holds is locked `saved`, so `state: complete` means the card can be asked for at once. Several rails and programs at once is the multi form: the base form, every rail and every program merged, each field once with `required_by` naming the purposes. Access: the owner of the entity, or an owner / admin of a wallet it is linked to.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description `kyc_rails.id` of the tenant the form is for, as a native query array: `rails[]=a&rails[]=b` or `rails=a&rails=b` (a comma-separated string is not a list). Empty with `programs`: the base form. One rail alone: that rail's form. Several, or together with `programs`: the multi form over the whole set (`scope: multi`), whatever the order of the ids. A rail of another client type than the entity's (and not universal), or one the tenant does not have, is `404 NOT_FOUND`; a value that is not a uuid is `400 VALIDATION_ERROR`. */
+                    rails?: components["parameters"]["KycFormsRails"];
+                    /** @description `issuing_programs.id` of the tenant the form is for, as a native query array: `programs[]=a&programs[]=b` or `programs=a&programs=b`. One program alone: the form before a card of that program (`scope: card`). Together with `rails` or several at once: the multi form. Only a personal entity has card forms (`400 FORM_TARGET_UNSUPPORTED` on a business entity); `wallet_id` is required whenever programs are named. A program the tenant does not have is `404 NOT_FOUND`. */
+                    programs?: components["parameters"]["KycFormsPrograms"];
+                    /** @description The wallet the form is filled for; the draft and the submission carry it, and CORE puts this wallet on the form's rails and programs once the form is accepted and the KYC is `APPROVED`. Required when `programs` are named (`400 INVALID_REQUEST` without it): the entity's owner must be an active member of it (any role; the cardholder is theirs), and so must the caller when it is someone else, else `403 ACCESS_DENIED`. Optional when only `rails` are named: a rail is opened per wallet, so it must be a wallet of this entity (`400 KYC_FORM_WALLET_NOT_LINKED` otherwise) with the same membership rule; without it the entity's main wallet. Ignored on the base form. Not a uuid: `400 VALIDATION_ERROR`. */
+                    wallet_id?: components["parameters"]["KycFormsWalletId"];
+                    /** @description Language of the texts (labels, hints, options, section titles, general messages); takes precedence over `Accept-Language`. A language outside the tenant's list is served in English. */
+                    locale?: components["parameters"]["KycFormsLocale"];
+                };
+                header?: {
+                    /** @description Language of the texts when `locale` is not given. A language outside the tenant's list is served in English. */
+                    "Accept-Language"?: components["parameters"]["KycFormsAcceptLanguage"];
+                };
+                path: {
+                    /** @description `kyc_entity.id` of the caller, or of an entity linked to a wallet the caller owns or administers */
+                    entity_id: components["parameters"]["KycFormsEntityId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The form and its values */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KycFormsFormResponse"];
+                    };
+                };
+                /** @description `VALIDATION_ERROR` — `entity_id`, `wallet_id` or an id in `rails` / `programs` is not a uuid (a message only); `FORM_TARGET_UNSUPPORTED` — a card program named on a business entity; `INVALID_REQUEST` — `wallet_id` missing for a form over card programs; `KYC_FORM_WALLET_NOT_LINKED` — `wallet_id` of a form over rails is not a wallet of this entity; `KYC_BASE_BINDING_MISSING` — the tenant has no base form for this client type; `KYC_FORMS_NOT_ENABLED` — the tenant still runs KYC through the BFF */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KycFormsErrorResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["KycFormsAccessDenied"];
+                /** @description `NOT_FOUND` — the entity does not exist or belongs to another tenant, or a rail / program of the query does not exist for the tenant (a rail of another client type than the entity's included) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                409: components["responses"]["KycFormsConditionsCycle"];
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/kyc/entities/{entity_id}/forms/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Save the draft of a form
+         * @description The form is the one `rails` and `programs` name, as for `GET …/forms`. Replaces the draft as a whole with the given values of open fields. Types are checked, rules and requiredness are not — except that owner shares over 100% in total and a value whose condition reads an empty required source are refused here too. Nothing is written to the KYC entity. The first draft of a business form moves the application to `PENDING`. The entity's owner, or an owner or admin of a linked wallet.
+         */
+        put: {
+            parameters: {
+                query?: {
+                    /** @description `kyc_rails.id` of the tenant the form is for, as a native query array: `rails[]=a&rails[]=b` or `rails=a&rails=b` (a comma-separated string is not a list). Empty with `programs`: the base form. One rail alone: that rail's form. Several, or together with `programs`: the multi form over the whole set (`scope: multi`), whatever the order of the ids. A rail of another client type than the entity's (and not universal), or one the tenant does not have, is `404 NOT_FOUND`; a value that is not a uuid is `400 VALIDATION_ERROR`. */
+                    rails?: components["parameters"]["KycFormsRails"];
+                    /** @description `issuing_programs.id` of the tenant the form is for, as a native query array: `programs[]=a&programs[]=b` or `programs=a&programs=b`. One program alone: the form before a card of that program (`scope: card`). Together with `rails` or several at once: the multi form. Only a personal entity has card forms (`400 FORM_TARGET_UNSUPPORTED` on a business entity); `wallet_id` is required whenever programs are named. A program the tenant does not have is `404 NOT_FOUND`. */
+                    programs?: components["parameters"]["KycFormsPrograms"];
+                    /** @description The wallet the form is filled for; the draft and the submission carry it, and CORE puts this wallet on the form's rails and programs once the form is accepted and the KYC is `APPROVED`. Required when `programs` are named (`400 INVALID_REQUEST` without it): the entity's owner must be an active member of it (any role; the cardholder is theirs), and so must the caller when it is someone else, else `403 ACCESS_DENIED`. Optional when only `rails` are named: a rail is opened per wallet, so it must be a wallet of this entity (`400 KYC_FORM_WALLET_NOT_LINKED` otherwise) with the same membership rule; without it the entity's main wallet. Ignored on the base form. Not a uuid: `400 VALIDATION_ERROR`. */
+                    wallet_id?: components["parameters"]["KycFormsWalletId"];
+                    /** @description Language of the texts (labels, hints, options, section titles, general messages); takes precedence over `Accept-Language`. A language outside the tenant's list is served in English. */
+                    locale?: components["parameters"]["KycFormsLocale"];
+                };
+                header?: {
+                    /** @description Language of the texts when `locale` is not given. A language outside the tenant's list is served in English. */
+                    "Accept-Language"?: components["parameters"]["KycFormsAcceptLanguage"];
+                };
+                path: {
+                    /** @description `kyc_entity.id` of the caller, or of an entity linked to a wallet the caller owns or administers */
+                    entity_id: components["parameters"]["KycFormsEntityId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["KycFormsAnswersRequest"];
+                };
+            };
+            responses: {
+                /** @description Saved: the new state of the form and how many required fields are still empty */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KycFormsDraftSaved"];
+                    };
+                };
+                400: components["responses"]["KycFormsFieldErrors"];
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["KycFormsAccessDenied"];
+                /** @description `NOT_FOUND` — the entity does not exist or belongs to another tenant, or a rail / program of the query does not exist for the tenant */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `FORM_LOCKED` — the form is read-only by the application status, or its last submission waits on the verification or the review; `FORM_OUTDATED` — `schema_version` is not the one the form has now, reload it (`GET …/forms`) and send again; `KYC_FORM_CONDITIONS_CYCLE` — the tenant's form settings show fields on conditions that read each other in a circle */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KycFormsErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/kyc/entities/{entity_id}/forms/uploads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload a file into a file field of a form
+         * @description The form is the one `rails` and `programs` name. Multipart: `field` (the key of an open file field: shown, not locked) and `file`. PDF, JPEG or PNG up to 20 MB, told by the bytes — a renamed file is refused with `DOCUMENT_REJECTED`; a field whose `file.accept` lists only images (the photos of the identity document, `gov_id_front` / `gov_id_back`) refuses a PDF the same way. A field that takes no files now — unknown, not a file field, locked (a form read-only by the application status locks every field), or hidden by its condition — is refused with `FORM_FIELD_NOT_ALLOWED`, whatever the file. The file stays in the draft until the submission is applied; a file of a field hidden by its condition stays in the draft's storage (removable by its `id`), is not listed in the form's `values` while hidden, and does not go with the submission. The photos of the identity document go to the identity provider once the submission waits on the verification. The entity's owner, or an owner or admin of a linked wallet.
+         */
+        post: {
+            parameters: {
+                query?: {
+                    /** @description `kyc_rails.id` of the tenant the form is for, as a native query array: `rails[]=a&rails[]=b` or `rails=a&rails=b` (a comma-separated string is not a list). Empty with `programs`: the base form. One rail alone: that rail's form. Several, or together with `programs`: the multi form over the whole set (`scope: multi`), whatever the order of the ids. A rail of another client type than the entity's (and not universal), or one the tenant does not have, is `404 NOT_FOUND`; a value that is not a uuid is `400 VALIDATION_ERROR`. */
+                    rails?: components["parameters"]["KycFormsRails"];
+                    /** @description `issuing_programs.id` of the tenant the form is for, as a native query array: `programs[]=a&programs[]=b` or `programs=a&programs=b`. One program alone: the form before a card of that program (`scope: card`). Together with `rails` or several at once: the multi form. Only a personal entity has card forms (`400 FORM_TARGET_UNSUPPORTED` on a business entity); `wallet_id` is required whenever programs are named. A program the tenant does not have is `404 NOT_FOUND`. */
+                    programs?: components["parameters"]["KycFormsPrograms"];
+                    /** @description The wallet the form is filled for; the draft and the submission carry it, and CORE puts this wallet on the form's rails and programs once the form is accepted and the KYC is `APPROVED`. Required when `programs` are named (`400 INVALID_REQUEST` without it): the entity's owner must be an active member of it (any role; the cardholder is theirs), and so must the caller when it is someone else, else `403 ACCESS_DENIED`. Optional when only `rails` are named: a rail is opened per wallet, so it must be a wallet of this entity (`400 KYC_FORM_WALLET_NOT_LINKED` otherwise) with the same membership rule; without it the entity's main wallet. Ignored on the base form. Not a uuid: `400 VALIDATION_ERROR`. */
+                    wallet_id?: components["parameters"]["KycFormsWalletId"];
+                    /** @description Language of the texts (labels, hints, options, section titles, general messages); takes precedence over `Accept-Language`. A language outside the tenant's list is served in English. */
+                    locale?: components["parameters"]["KycFormsLocale"];
+                };
+                header?: {
+                    /** @description Language of the texts when `locale` is not given. A language outside the tenant's list is served in English. */
+                    "Accept-Language"?: components["parameters"]["KycFormsAcceptLanguage"];
+                };
+                path: {
+                    /** @description `kyc_entity.id` of the caller, or of an entity linked to a wallet the caller owns or administers */
+                    entity_id: components["parameters"]["KycFormsEntityId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        /**
+                         * @description The key of the file field the file goes into.
+                         * @example document.proof_of_address
+                         */
+                        field: string;
+                        /**
+                         * Format: binary
+                         * @description One file, up to 20 MB.
+                         */
+                        file: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description The uploaded file as the form lists it */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KycFormsUploadedFile"];
+                    };
+                };
+                /** @description `FORM_FIELD_NOT_ALLOWED` with `details.fields = [field]` — the field takes no files now (unknown, not a file field, locked, or hidden by its condition); `DOCUMENT_REJECTED` — the file: empty, over 20 MB, not PDF / JPEG / PNG by its bytes, a PDF for a field that takes photos only, or one more than the field takes (`file.max_files`); `VALIDATION_ERROR` — no `field` part, a `field` that is not a catalog key, or an id (`entity_id`, `wallet_id`, `rails`, `programs`) that is not a uuid; `INVALID_REQUEST` — no `file` part (or more than one), an unreadable multipart body, or `wallet_id` missing for a form over card programs; `FORM_TARGET_UNSUPPORTED` — a card program named on a business entity; `KYC_BASE_BINDING_MISSING` — the tenant has no base form for this client type; `KYC_FORMS_NOT_ENABLED`. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KycFormsErrorResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["KycFormsAccessDenied"];
+                /** @description `NOT_FOUND` — the entity does not exist or belongs to another tenant, or a rail / program of the query does not exist for the tenant */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `FORM_LOCKED` — the last submission of the form waits on the verification or the review (a form read-only by the application status answers `400 FORM_FIELD_NOT_ALLOWED` instead); `KYC_FORM_CONDITIONS_CYCLE` — the tenant's form settings show fields on conditions that read each other in a circle. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KycFormsErrorResponse"];
+                    };
+                };
+                /** @description File storage is not configured on this server (SERVICE_UNAVAILABLE) */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/kyc/entities/{entity_id}/forms/uploads/{upload_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove a file from the draft of a form
+         * @description The form is the one `rails` and `programs` name. Only a file of the draft (`saved: false`) can be removed; a document already in the KYC entity never is. The entity's owner, or an owner or admin of a linked wallet.
+         */
+        delete: {
+            parameters: {
+                query?: {
+                    /** @description `kyc_rails.id` of the tenant the form is for, as a native query array: `rails[]=a&rails[]=b` or `rails=a&rails=b` (a comma-separated string is not a list). Empty with `programs`: the base form. One rail alone: that rail's form. Several, or together with `programs`: the multi form over the whole set (`scope: multi`), whatever the order of the ids. A rail of another client type than the entity's (and not universal), or one the tenant does not have, is `404 NOT_FOUND`; a value that is not a uuid is `400 VALIDATION_ERROR`. */
+                    rails?: components["parameters"]["KycFormsRails"];
+                    /** @description `issuing_programs.id` of the tenant the form is for, as a native query array: `programs[]=a&programs[]=b` or `programs=a&programs=b`. One program alone: the form before a card of that program (`scope: card`). Together with `rails` or several at once: the multi form. Only a personal entity has card forms (`400 FORM_TARGET_UNSUPPORTED` on a business entity); `wallet_id` is required whenever programs are named. A program the tenant does not have is `404 NOT_FOUND`. */
+                    programs?: components["parameters"]["KycFormsPrograms"];
+                    /** @description The wallet the form is filled for; the draft and the submission carry it, and CORE puts this wallet on the form's rails and programs once the form is accepted and the KYC is `APPROVED`. Required when `programs` are named (`400 INVALID_REQUEST` without it): the entity's owner must be an active member of it (any role; the cardholder is theirs), and so must the caller when it is someone else, else `403 ACCESS_DENIED`. Optional when only `rails` are named: a rail is opened per wallet, so it must be a wallet of this entity (`400 KYC_FORM_WALLET_NOT_LINKED` otherwise) with the same membership rule; without it the entity's main wallet. Ignored on the base form. Not a uuid: `400 VALIDATION_ERROR`. */
+                    wallet_id?: components["parameters"]["KycFormsWalletId"];
+                };
+                header?: never;
+                path: {
+                    /** @description `kyc_entity.id` of the caller, or of an entity linked to a wallet the caller owns or administers */
+                    entity_id: components["parameters"]["KycFormsEntityId"];
+                    /** @description The `id` of a file in the draft (`saved: false`) */
+                    upload_id: components["parameters"]["KycFormsUploadId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Removed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                /** @example true */
+                                removed: boolean;
+                            };
+                        };
+                    };
+                };
+                /** @description `VALIDATION_ERROR` — an id (`entity_id`, `upload_id`, `wallet_id`, `rails`, `programs`) is not a uuid; `INVALID_REQUEST` — `wallet_id` missing for a form over card programs; `KYC_FORMS_NOT_ENABLED`. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["KycFormsAccessDenied"];
+                /** @description The entity does not exist or belongs to another tenant, or the upload is not in the draft of this form — a saved document is never removed here (`NOT_FOUND`). */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/kyc/entities/{entity_id}/forms/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send a form
+         * @description The form is the one `rails` and `programs` name. The full check of every open field (all errors in one `VALIDATION_ERROR`), then a submission: `awaiting_verification` when the identity document and face are still needed, `applied` when every profile of the form writes the answers into the KYC entity at once, `in_review` when compliance decides (any profile of the form in review mode). Answers `200` with the form in its new state. One submission of a form at a time. A form over rails or programs that brings nothing new — no value and no file, every required field already saved in the entity (not just waiting in another submission under review) — is `applied` at once whatever the review mode: there is nothing for compliance to decide. A rail form does not change the application status. A card form is `auto` unless a profile of it says otherwise and never changes the application status. A multi form moves the application like the base form it includes; once applied, every rail and program of the set is satisfied from the shared data. Once a rail, card or multi form is accepted (`applied`, or `approved` by compliance) and the wallet's KYC is `APPROVED` — whichever comes second — when the form was sent by an owner or admin of the wallet (the role those routes ask for), CORE submits the wallet itself: to each rail of the form the wallet has no application on yet — only for a form of the wallet's own KYC entity, a member's form never puts the wallet on a rail — (as `POST /frontend/wallets/{wallet_id}/kyc-rails/{rail_id}` would; it then shows in `GET …/kyc-rails`), and to each program the member has no cardholder in yet (as `POST /frontend/issuing/cardholders` with `user_data_id` and its submit would). The latest form sent for a rail or program decides: returned, rejected or still in review, nothing is submitted. A submission CORE could not make — refused by the rail or the vendor, a program at its limit, a form sent by a member without that role — is left for the client to make with those routes, as before. The entity's owner, or an owner or admin of a linked wallet.
+         */
+        post: {
+            parameters: {
+                query?: {
+                    /** @description `kyc_rails.id` of the tenant the form is for, as a native query array: `rails[]=a&rails[]=b` or `rails=a&rails=b` (a comma-separated string is not a list). Empty with `programs`: the base form. One rail alone: that rail's form. Several, or together with `programs`: the multi form over the whole set (`scope: multi`), whatever the order of the ids. A rail of another client type than the entity's (and not universal), or one the tenant does not have, is `404 NOT_FOUND`; a value that is not a uuid is `400 VALIDATION_ERROR`. */
+                    rails?: components["parameters"]["KycFormsRails"];
+                    /** @description `issuing_programs.id` of the tenant the form is for, as a native query array: `programs[]=a&programs[]=b` or `programs=a&programs=b`. One program alone: the form before a card of that program (`scope: card`). Together with `rails` or several at once: the multi form. Only a personal entity has card forms (`400 FORM_TARGET_UNSUPPORTED` on a business entity); `wallet_id` is required whenever programs are named. A program the tenant does not have is `404 NOT_FOUND`. */
+                    programs?: components["parameters"]["KycFormsPrograms"];
+                    /** @description The wallet the form is filled for; the draft and the submission carry it, and CORE puts this wallet on the form's rails and programs once the form is accepted and the KYC is `APPROVED`. Required when `programs` are named (`400 INVALID_REQUEST` without it): the entity's owner must be an active member of it (any role; the cardholder is theirs), and so must the caller when it is someone else, else `403 ACCESS_DENIED`. Optional when only `rails` are named: a rail is opened per wallet, so it must be a wallet of this entity (`400 KYC_FORM_WALLET_NOT_LINKED` otherwise) with the same membership rule; without it the entity's main wallet. Ignored on the base form. Not a uuid: `400 VALIDATION_ERROR`. */
+                    wallet_id?: components["parameters"]["KycFormsWalletId"];
+                    /** @description Language of the texts (labels, hints, options, section titles, general messages); takes precedence over `Accept-Language`. A language outside the tenant's list is served in English. */
+                    locale?: components["parameters"]["KycFormsLocale"];
+                };
+                header?: {
+                    /** @description Language of the texts when `locale` is not given. A language outside the tenant's list is served in English. */
+                    "Accept-Language"?: components["parameters"]["KycFormsAcceptLanguage"];
+                };
+                path: {
+                    /** @description `kyc_entity.id` of the caller, or of an entity linked to a wallet the caller owns or administers */
+                    entity_id: components["parameters"]["KycFormsEntityId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["KycFormsAnswersRequest"];
+                };
+            };
+            responses: {
+                /** @description The form after the submission */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KycFormsFormResponse"];
+                    };
+                };
+                400: components["responses"]["KycFormsFieldErrors"];
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["KycFormsAccessDenied"];
+                /** @description `NOT_FOUND` — the entity does not exist or belongs to another tenant, or a rail / program of the query does not exist for the tenant */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `FORM_LOCKED` — the form is read-only by the application status, or its last submission waits on the verification or the review; `FORM_OUTDATED` — `schema_version` is not the one the form has now, reload it (`GET …/forms`) and send again; `OPERATION_IN_PROGRESS` — a submission of this form is already running; `KYC_FORM_CONDITIONS_CYCLE` — the tenant's form settings show fields on conditions that read each other in a circle */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KycFormsErrorResponse"];
+                    };
+                };
+                503: components["responses"]["KycFormsLockUnavailable"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/kyc/entities/{entity_id}/verification/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start or continue the identity verification; a widget token
+         * @description The owner of a personal entity passes the identity check in the identity verification widget after sending a form whose purpose needs it (the submission is `awaiting_verification`), or again when the overview says `retry`. CORE finds or creates the applicant of the personal entity on the tenant's individual verification level — an applicant from the old flow is moved to that level, its passed steps kept — hands it the photos of the identity document uploaded with the waiting form (once per file; not when the provider already accepted a document of the applicant), and answers a token for the widget. With the document handed over, the widget asks only for the face; it asks for the document itself when the form carried none, when the provider could not take it, or to retake a photo the provider refused. Called on a business entity, it verifies the filler — the owner of the business entity, who alone may call it: the token is for their own personal entity (created when missing), whose id comes back in `entity_id`. An admin of the wallet fills and sends a business form, the owner passes the check (the overview answers the admin `waiting_on: applicant`). The token expires after `expires_in` seconds; the widget's expiry handler calls this route again. The result of the check arrives later through the provider's webhook; until then the overview shows `in_progress` (the widget is open, or the document was handed over and the face is due) and then `in_review` (the provider is looking). One start per entity at a time: a parallel call gets `409 OPERATION_IN_PROGRESS`; a handover of the document already running in the background is waited for a few seconds first. Takes no body.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description `kyc_entity.id` of the caller, or of an entity linked to a wallet the caller owns or administers */
+                    entity_id: components["parameters"]["KycFormsEntityId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The widget token */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            /** @example {
+                             *       "provider": "kyc_widget",
+                             *       "token": "eyJhbGciOiJIUzI1NiJ9.example",
+                             *       "expires_in": 600,
+                             *       "entity_id": "5e6f7081-9203-4b4c-8d5e-6f708192a3b4",
+                             *       "applicant_id": "64a1b2c3d4e5f60718293a4b"
+                             *     } */
+                            data: {
+                                /**
+                                 * @description Which widget to open.
+                                 * @enum {string}
+                                 */
+                                provider: "kyc_widget";
+                                /** @description The widget access token; a credential — never log it. */
+                                token: string;
+                                /**
+                                 * @description Seconds the token lives.
+                                 * @example 600
+                                 */
+                                expires_in: number;
+                                /**
+                                 * Format: uuid
+                                 * @description The personal entity the verification belongs to — the business owner's own when a business entity started it.
+                                 */
+                                entity_id: string;
+                                /** @description The identity provider's applicant id. */
+                                applicant_id: string;
+                            };
+                        };
+                    };
+                };
+                /** @description `VALIDATION_ERROR` — `entity_id` is not a uuid; `KYC_FORMS_NOT_ENABLED`; `KYC_VERIFICATION_LEVEL_MISSING` — the tenant has no individual verification level configured; `VERIFICATION_PROVIDER_UNAVAILABLE` — the identity provider refused or did not answer, try later; `VERIFICATION_PROVIDER_NOT_CONFIGURED` — the identity verification is not configured on this server. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description `ACCESS_DENIED` — not the owner of the entity, personal or business: an admin of a linked wallet fills and sends the forms but never passes the owner's identity check. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `NOT_FOUND` — the entity does not exist or belongs to another tenant */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `KYC_INDIVIDUAL_AMBIGUOUS` — the owner has several personal entities (a business entity started the verification), contact support; `OPERATION_IN_PROGRESS` — a start for this entity is already running. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                503: components["responses"]["KycFormsLockUnavailable"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/kyc/entities/{entity_id}/verification/owners/invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Email the owners their identity check links again
+         * @description A business entity whose base form was sent (step 8/8 of the KYC forms). Asks the identity provider to email the owners the link to their identity check once more. The provider writes every person linked to the company who has an email with it and has not passed the check — one addressee at a time is not offered: the owners whose item has `invite_by_email: true` and an email, and the person filling the form (their applicant carries the email of their account; they can still pass the check from the app through `POST …/verification/session`). An owner who has passed, or whose check is with the provider, is not written; a company among the owners (`type: company`) never is. The first mailing goes on its own right after the form is sent — this route repeats it, at most once in 10 minutes per business, the first mailing counted: `GET …/overview` shows `verification.invites.sent_at` and `next_at`, and `verification.owners[].invited_at` per owner. Nobody left to email (`400 KYC_NO_OWNER_TO_INVITE`): hand the link over through `…/owners/{owner_id}/link` or `/session`. Takes no body. Access: the owner of the business entity, or an owner / admin of a wallet it is linked to. One mailing per entity at a time, and none while the set-up after the sent form is running (`409 OPERATION_IN_PROGRESS`).
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description `kyc_entity.id` of the caller, or of an entity linked to a wallet the caller owns or administers */
+                    entity_id: components["parameters"]["KycFormsEntityId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The provider was asked */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            /** @example {
+                             *       "sent_at": "2026-10-22T09:30:00.000Z",
+                             *       "next_at": "2026-10-22T09:40:00.000Z",
+                             *       "owners": [
+                             *         "2d7c1b9e-4f30-4a8c-9e21-7b6a5c4d3e2f",
+                             *         "9b1f6c3a-2e4d-4f7a-8c5b-1d2e3f4a5b6c"
+                             *       ]
+                             *     } */
+                            data: {
+                                /**
+                                 * Format: date-time
+                                 * @description When the identity provider was asked — the new `verification.invites.sent_at` of the overview.
+                                 */
+                                sent_at: string;
+                                /**
+                                 * Format: date-time
+                                 * @description From when this route is taken again: 10 minutes after `sent_at`.
+                                 */
+                                next_at: string;
+                                /** @description The owners the mailing reaches by what CORE knows — the `owner_id`s whose `invited_at` was set now, the filler's own row included. */
+                                owners: string[];
+                            };
+                        };
+                    };
+                };
+                /** @description `KYC_NO_OWNER_TO_INVITE` — nobody is left to email: every owner with an email at the identity provider has passed the check, or none has an email there (hand the link over: `…/owners/{owner_id}/link` or `/session`); `VALIDATION_ERROR` — `entity_id` is not a uuid; `KYC_FORMS_NOT_ENABLED`; `VERIFICATION_PROVIDER_UNAVAILABLE` — the identity provider refused or did not answer, try later; `VERIFICATION_PROVIDER_NOT_CONFIGURED`. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["KycFormsAccessDenied"];
+                /** @description `NOT_FOUND` — the entity does not exist or belongs to another tenant */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                409: components["responses"]["KycFormsOwnerInviteConflict"];
+                503: components["responses"]["KycFormsLockUnavailable"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/kyc/entities/{entity_id}/verification/owners/{owner_id}/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * The identity check link of a beneficial owner, to hand over yourself
+         * @description A business entity whose base form was sent (step 8/8 of the KYC forms). CORE makes sure the owner has an applicant with the identity provider — created from what the form declared about them, so the provider compares it with the document — and answers a link to the provider's own check page for it, for the filler to pass on by their own channel. After the form is sent the identity provider itself emails the link to the owners whose item has `invite_by_email: true` and an email (and to the filler), and `POST …/verification/owners/invite` has it email them again, at most once in 10 minutes; this route is for an owner without an email, or to pass the link on by your own channel. Valid 7 days; every call makes a new link for the same applicant, the previous one keeps working until it expires. The outcome arrives through the provider's webhook: `GET …/overview` shows it under `verification.owners[]`. Takes no body. Access: the owner of the business entity, or an owner / admin of a wallet it is linked to.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description `kyc_entity.id` of the caller, or of an entity linked to a wallet the caller owns or administers */
+                    entity_id: components["parameters"]["KycFormsEntityId"];
+                    /** @description The `id` of a beneficial owner of the business entity — an item of `beneficial_owners` as `GET …/forms` lists it after the base form was sent (every saved item carries its `id`; `verification.owners[].id` of the overview is the same id). A person, not a company; not the owner the filler marked as themselves (`is_applicant`). */
+                    owner_id: components["parameters"]["KycFormsOwnerId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The link */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            /** @example {
+                             *       "url": "https://verify.example.com/idCheck/abc123",
+                             *       "expires_at": "2026-10-26T09:30:00Z"
+                             *     } */
+                            data: {
+                                /**
+                                 * Format: uri
+                                 * @description The identity check page of the owner; a credential — show it to the owner only.
+                                 */
+                                url: string;
+                                /**
+                                 * Format: date-time
+                                 * @description Seven days from the call.
+                                 */
+                                expires_at: string;
+                            };
+                        };
+                    };
+                };
+                400: components["responses"]["KycFormsOwnerErrors"];
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["KycFormsAccessDenied"];
+                404: components["responses"]["KycFormsOwnerNotFound"];
+                409: components["responses"]["KycFormsOwnerConflict"];
+                503: components["responses"]["KycFormsLockUnavailable"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/kyc/entities/{entity_id}/verification/owners/{owner_id}/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * A widget token for a beneficial owner's identity check
+         * @description Like `POST …/verification/session`, for an owner who is with the filler: the identity verification widget opens for the owner's applicant (created when missing). No email is needed — the filler can pass every owner's check on this device, one owner after another. The token lets its holder pass the check as that owner — hand it to the owner only. It expires after `expires_in` seconds; call again for a new one. Takes no body. Access: the owner of the business entity, or an owner / admin of a wallet it is linked to.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description `kyc_entity.id` of the caller, or of an entity linked to a wallet the caller owns or administers */
+                    entity_id: components["parameters"]["KycFormsEntityId"];
+                    /** @description The `id` of a beneficial owner of the business entity — an item of `beneficial_owners` as `GET …/forms` lists it after the base form was sent (every saved item carries its `id`; `verification.owners[].id` of the overview is the same id). A person, not a company; not the owner the filler marked as themselves (`is_applicant`). */
+                    owner_id: components["parameters"]["KycFormsOwnerId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The widget token */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                /**
+                                 * @description Which widget to open.
+                                 * @enum {string}
+                                 */
+                                provider: "kyc_widget";
+                                /** @description The widget access token; a credential — never log it. */
+                                token: string;
+                                /**
+                                 * @description Seconds the token lives.
+                                 * @example 600
+                                 */
+                                expires_in: number;
+                                /**
+                                 * Format: uuid
+                                 * @description The business entity.
+                                 */
+                                entity_id: string;
+                                /** Format: uuid */
+                                owner_id: string;
+                                /** @description The identity provider's applicant id of the owner. */
+                                applicant_id: string;
+                            };
+                        };
+                    };
+                };
+                400: components["responses"]["KycFormsOwnerErrors"];
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["KycFormsAccessDenied"];
+                404: components["responses"]["KycFormsOwnerNotFound"];
+                409: components["responses"]["KycFormsOwnerConflict"];
+                503: components["responses"]["KycFormsLockUnavailable"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/kyc/entities/{entity_id}/verification/owners/{owner_id}/document": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload a beneficial owner's identity document for them
+         * @description Multipart: `file` (JPEG or PNG up to 20 MB, told by the bytes — the provider takes photos only, a PDF is refused), `side` (`front` or `back`; a passport has only a front side, so `back` needs a `type` other than `passport`), optional `type` (`passport` by default) and `country` (alpha-2 from the country directory — `DE`, not `DEU` or `Germany`; the owner's citizenship by default). The file is filed as the owner's `gov_id_front` / `gov_id_back` document (`source: client`, not verified) and handed to the identity provider as the owner's document; the owner still passes the face check by the link or the widget. The owner's applicant is created when missing. A file of another format is refused with `DOCUMENT_REJECTED`. Access: the owner of the business entity, or an owner / admin of a wallet it is linked to.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description `kyc_entity.id` of the caller, or of an entity linked to a wallet the caller owns or administers */
+                    entity_id: components["parameters"]["KycFormsEntityId"];
+                    /** @description The `id` of a beneficial owner of the business entity — an item of `beneficial_owners` as `GET …/forms` lists it after the base form was sent (every saved item carries its `id`; `verification.owners[].id` of the overview is the same id). A person, not a company; not the owner the filler marked as themselves (`is_applicant`). */
+                    owner_id: components["parameters"]["KycFormsOwnerId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        /**
+                         * Format: binary
+                         * @description One JPEG or PNG photo, up to 20 MB.
+                         */
+                        file: string;
+                        /**
+                         * @description `back` only for a type other than `passport`.
+                         * @enum {string}
+                         */
+                        side: "front" | "back";
+                        /**
+                         * @description The kind of document: the codes of the form's `gov_id_type` dictionary (`PASSPORT`, `ID_CARD`, `RESIDENCE_PERMIT`, `DRIVERS`). The lowercase codes are the same kinds under their older names — `passport` = `PASSPORT`, `id_card` = `ID_CARD`, `residence_permit` = `RESIDENCE_PERMIT`, `driving_license` = `DRIVERS` — and are still taken.
+                         * @default PASSPORT
+                         * @enum {string}
+                         */
+                        type?: "PASSPORT" | "ID_CARD" | "RESIDENCE_PERMIT" | "DRIVERS" | "passport" | "id_card" | "residence_permit" | "driving_license";
+                        /**
+                         * @description Alpha-2 of the issuing country, a code the country directory knows; the owner's citizenship when omitted.
+                         * @example DE
+                         */
+                        country?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description The document as filed */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                /**
+                                 * Format: uuid
+                                 * @description The `kyc_documents` row.
+                                 */
+                                document_id: string;
+                                /** @enum {string} */
+                                type: "gov_id_front" | "gov_id_back";
+                            };
+                        };
+                    };
+                };
+                /** @description The errors of `KycFormsOwnerErrors`; `VALIDATION_ERROR` — a `side` or `type` outside the list, `side: back` of a passport (the default type), or a `country` that is not a known alpha-2 code; `DOCUMENT_REJECTED` — a file that is not JPEG or PNG (a PDF included), empty, or over 20 MB; `INVALID_REQUEST` — no `file` part (or more than one), or an unreadable multipart body. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["KycFormsAccessDenied"];
+                404: components["responses"]["KycFormsOwnerNotFound"];
+                409: components["responses"]["KycFormsOwnerConflict"];
+                /** @description `SERVICE_UNAVAILABLE` — file storage is not configured on this server, or the locking service is unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -16000,7 +17359,7 @@ export interface components {
          * @example EXCHANGE_OMNI
          * @enum {string}
          */
-        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE" | "MONTHLY_FEE" | "REFERRAL_PAYOUT";
+        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_FEDNOW_ONRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE" | "MONTHLY_FEE" | "REFERRAL_PAYOUT";
         OrderCalculation: {
             /**
              * Format: uuid
@@ -16121,7 +17480,7 @@ export interface components {
          * @description Rail an order type pays through (`order_types.payment_method`)
          * @enum {string}
          */
-        OrderPaymentMethod: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "RTP" | "INTERNAL" | "CARD";
+        OrderPaymentMethod: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "RTP" | "INTERNAL" | "CARD" | "FEDNOW";
         /** @description The tenant's markup for the order type (`tenant_order_type_rates`) */
         OrderTypeTenantRates: {
             markup_percent: number | null;
@@ -16177,16 +17536,38 @@ export interface components {
             documents_required_from_amount: number | null;
             tenant_rates: components["schemas"]["OrderTypeTenantRates"];
         };
+        /** @description The error envelope of every non-2xx answer, whatever the status: `success` is always `false`, `error.code` is the machine-readable code to match on, `error.message` the text for people. `details` is present only when the error carries a structured payload. */
         ErrorResponse: {
-            /** @example false */
-            success?: boolean;
-            /** @description Request correlation id — quote it in support requests */
+            /** @enum {boolean} */
+            success: false;
+            /**
+             * Format: uuid
+             * @description Request correlation id — quote it in support requests
+             */
             correlationId?: string;
-            error?: {
-                code?: string;
-                message?: string;
+            error: {
+                /** @example VALIDATION_ERROR */
+                code: string;
+                /** @example Invalid request */
+                message: string;
                 /** @description Structured payload (validation issues, missing fields) when the error carries one */
                 details?: Record<string, never> | null;
+            };
+        };
+        /**
+         * @description Why `POST /frontend/issuing/cards` refused the card with `400`. Nothing is debited from the wallet on such a refusal: either nothing was charged, or the charge was returned before the answer.
+         * @enum {string}
+         */
+        CardIssuanceRefusalCode: "INITIAL_TOPUP_BELOW_MINIMUM" | "INITIAL_TOPUP_BELOW_FEE" | "INITIAL_TOPUP_BELOW_OPENING_LOAD" | "OPENING_LOAD_NOT_PAID" | "INSUFFICIENT_FUNDS" | "TENANT_FEE_NOT_CONFIGURED" | "CARDHOLDER_NOT_LINKED" | "CARDHOLDER_CARD_LIMIT_REACHED" | "CARD_VENDOR_VALIDATION" | "CARD_VENDOR_UNSUPPORTED" | "INVALID_REQUEST" | "INVALID_AMOUNT" | "MALFORMED_TRANSACTION_BATCH" | "OVERDRAFT_ORDER_TYPE" | "EXTERNAL_SERVICE_ERROR";
+        CardIssuanceRefusalResponse: {
+            /** @enum {boolean} */
+            success: false;
+            error: {
+                code: components["schemas"]["CardIssuanceRefusalCode"];
+                /** @description Human-readable reason; not meant for matching — use `code` */
+                message: string;
+                /** @description Present only on `CARDHOLDER_CARD_LIMIT_REACHED` */
+                details?: Record<string, never>;
             };
         };
         /** @description Counterparty account (beneficiary). Wallet-scoped. */
@@ -16262,6 +17643,8 @@ export interface components {
             bank_name: string | null;
             /** @description SWIFT/BIC (ISO 9362) */
             swift_bic?: string | null;
+            /** @description BIC of the intermediary (correspondent) bank, SWIFT payment method only; 8 or 11 characters, ISO 9362 */
+            intermediary_bic?: string | null;
             /** @description IBAN (ISO 13616) */
             iban?: string | null;
             /** @description Sort code (6 digits, UK banking) */
@@ -16772,7 +18155,11 @@ export interface components {
             }[];
             /** @description Units of billing currency per unit of transaction currency, so `transaction_amount * conversion_rate ≈ billing_amount`. 1 when the currencies match. */
             conversion_rate?: number;
-            failure_reason?: string;
+            /**
+             * @description Neutral reason of a declined operation, derived from its decline code (e.g. 'Insufficient funds', 'Card spending limit exceeded'; 'Declined' when no specific reason applies). Never the card issuer's own text. Empty or null when the operation was not declined.
+             * @example Insufficient funds
+             */
+            failure_reason?: string | null;
             has_receipt?: boolean;
             merchant?: components["schemas"]["TransactionMerchant"];
             /** Format: date-time */
@@ -17560,7 +18947,7 @@ export interface components {
             amount_to: number | null;
             order_type: string;
             /**
-             * @description Complete set for these routes — a failure is always `FAILED`, there is no second failure status. `EXPECTED` is a scheduled payment waiting for its `scheduled_at`; `REFUNDED` is a failed order whose funds were paid back, as opposed to `CANCELED`, where nothing ever moved.
+             * @description Complete set for these routes — a failure is always `FAILED`, there is no second failure status. `EXPECTED` is a scheduled payment waiting for its `scheduled_at`; `REFUNDED` is an order whose funds moved and were paid back (a failed order refunded, or the fee and initial top-up of a card that was not issued), as opposed to `CANCELED`, where nothing ever moved.
              * @enum {string}
              */
             status: "NEW" | "PENDING" | "EXPECTED" | "PROCESSING" | "COMPLETE" | "FAILED" | "CANCELED" | "REFUNDED";
@@ -17917,10 +19304,10 @@ export interface components {
              */
             type: "individual" | "business" | "universal";
             /**
-             * @description KYC verification status. A refusal is one of three values: `DECLINED`, `REJECT` or `SOFT_REJECT`. Only `APPROVED` (full access) and `HOLD` (read-only) open the wallet.
+             * @description KYC verification status. A refusal is one of three values: `DECLINED`, `REJECT` or `SOFT_REJECT`. Only `APPROVED` (full access) and `HOLD` (read-only) open the wallet. `OFFBOARDED` — final: the work with this company or person is over; `EXPIRED` — the verification lapsed and the client passes it again.
              * @enum {string}
              */
-            status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
+            status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW" | "EXPIRED" | "OFFBOARDED";
             business_name: string | null;
             first_name: string | null;
             last_name: string | null;
@@ -17945,7 +19332,7 @@ export interface components {
         /** @description The wallet's application on the rail. `null` on the rail while the wallet never submitted to it. */
         WalletKycRailApplication: {
             /**
-             * @description `APPROVED` — onboarded. `PROCESSING` / `PENDING` — with the vendor. `HOLD` / `SOFT_REJECT` — the vendor asked for a resubmission. `WAITING_ON_REVIEW` — a manual rail waiting for compliance.
+             * @description `APPROVED` — onboarded. `PROCESSING` / `PENDING` — with the vendor. `HOLD` / `SOFT_REJECT` — the vendor asked for a resubmission. `WAITING_ON_REVIEW` — a manual rail waiting for compliance. An application is never `EXPIRED` or `OFFBOARDED`: those belong to the KYC entity (`kyc_info.status`).
              * @enum {string}
              */
             status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
@@ -17966,7 +19353,7 @@ export interface components {
             id: string;
             /** @description The rail takes submissions at all. */
             is_submit_available: boolean;
-            /** @description The wallet can submit to the rail right now: it has an onboarding implementation, is of the entity's type or universal, the entity's KYC is approved (not merely under review), and no application is approved or with the vendor. */
+            /** @description The rail would take the wallet now: it has an onboarding implementation, is of the entity's type or universal, the entity's KYC is approved (not merely under review), and no application is approved or with the vendor. The rail's form is not looked at: on the KYC forms flow its state is `form_state` / `missing_required` of the rail in `GET /frontend/kyc/entities/{entity_id}/targets`, and a submission while it is not `complete` answers `400 RAIL_REQUIREMENTS_INCOMPLETE`. */
             can_submit: boolean;
             /** @description The rail's active terms, in display order. */
             terms_and_conditions: components["schemas"]["WalletKycRailTerms"][];
@@ -18003,7 +19390,7 @@ export interface components {
             created_at: string;
             /**
              * Format: uuid
-             * @description KYC entity the wallet was opened for (`GET /kyc/entities`). `null` for a wallet created without one.
+             * @description KYC entity the wallet was opened for: `GET /frontend/kyc/entities` on a tenant of the KYC forms flow, the BFF `GET /kyc/entities` on the old flow. `null` for a wallet created without one.
              */
             kyc_entity_id: string | null;
             kyc_info: components["schemas"]["WalletKycInfo"] | null;
@@ -18054,7 +19441,7 @@ export interface components {
             created_at: string;
             /**
              * Format: uuid
-             * @description KYC entity the wallet was opened for (`GET /kyc/entities`). `null` for a wallet created without one.
+             * @description KYC entity the wallet was opened for: `GET /frontend/kyc/entities` on a tenant of the KYC forms flow, the BFF `GET /kyc/entities` on the old flow. `null` for a wallet created without one.
              */
             kyc_entity_id: string | null;
             kyc_info: components["schemas"]["WalletKycInfo"] | null;
@@ -18537,7 +19924,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            type: "DEPOSIT_RECEIVED" | "DEPOSIT_NOT_ACCEPTED" | "TRANSFER_RECEIVED" | "ORDER_STATUS_CHANGED" | "KYC_STATUS_CHANGED" | "ANNOUNCEMENT" | "SYSTEM_MESSAGE" | "MASS_PAYOUT_STATUS_CHANGED" | "CARD_OTP" | "RFI_REQUESTED" | "RFI_RESOLVED" | "REPORT_READY" | "SCHEDULED_PAYMENT_REMINDER" | "SCHEDULED_PAYMENT_LOW_BALANCE" | "SCHEDULED_PAYMENT_APPROVAL_REQUIRED" | "SCHEDULED_PAYMENT_APPROVAL_CLOSING";
+            type: "DEPOSIT_RECEIVED" | "DEPOSIT_NOT_ACCEPTED" | "TRANSFER_RECEIVED" | "ORDER_STATUS_CHANGED" | "KYC_STATUS_CHANGED" | "ANNOUNCEMENT" | "SYSTEM_MESSAGE" | "MASS_PAYOUT_STATUS_CHANGED" | "CARD_OTP" | "RFI_REQUESTED" | "RFI_RESOLVED" | "REPORT_READY" | "SCHEDULED_PAYMENT_REMINDER" | "SCHEDULED_PAYMENT_LOW_BALANCE" | "SCHEDULED_PAYMENT_APPROVAL_REQUIRED" | "SCHEDULED_PAYMENT_APPROVAL_CLOSING" | "WALLET_INACTIVITY";
             /** @description Title of the item, rendered server-side from `payload` with the same template as the push and Telegram copy. `null` when the type has no texts (historical `CARD_OTP` rows) or when the texts could not be built from `payload`. */
             title: string | null;
             /** @description Text of the item, rendered like `title`; `null` in the same cases. */
@@ -18939,54 +20326,849 @@ export interface components {
             success: boolean;
             data: components["schemas"]["WalletKycRail"];
         };
+        /** @description The error envelope of a rail submission: `ErrorResponse`, with `details` only on `RAIL_REQUIREMENTS_INCOMPLETE`. */
+        WalletKycRailSubmitErrorResponse: components["schemas"]["ErrorResponse"] & {
+            error?: {
+                /** @description `RAIL_REQUIREMENTS_INCOMPLETE` only (absent on every other code): `fields` lists the keys of the required fields of the rail's form with nothing saved in the KYC entity yet, in form order — the `key` of the fields `GET /frontend/kyc/entities/{entity_id}/forms?rails={rail_id}` answers (`address.city`, `document.proof_of_address`, `beneficial_owners`, …). Open that form and highlight them; a draft or a submission still in review does not count until it is applied. */
+                details?: {
+                    /** @example [
+                     *       "expected_monthly_volume",
+                     *       "document.proof_of_address"
+                     *     ] */
+                    fields: string[];
+                } | null;
+            };
+        };
+        /**
+         * @description Raw application status of the KYC entity (`kyc_entity.status`) — the same value the wallet shows as `kyc_info.status` (`WalletKycInfo`); a rail application (`wallet_rail.status`) has its own status of the same set. Build screens by the overview `stage`, not by this value: a status can be added without a release. `PROCESSING` is not set by the forms flow — a vendor sync of the old flow leaves it on an entity — and the overview answers `stage: unknown` for it, as for any status it does not know. `EXPIRED` (a lapsed verification; nothing sets it yet) and `OFFBOARDED` (compliance ended the relationship; final) are set in CORE, never by the identity provider, and no form or provider event moves them — but one: an `EXPIRED` application whose applicant passes the identity check again goes on to its owners (`WAITING_ON_UBOS`) or to compliance (`WAITING_ON_REVIEW`).
+         * @enum {string}
+         */
+        KycFormsEntityStatus: "UNVERIFIED" | "PENDING" | "PROCESSING" | "WAITING_ON_REVIEW" | "WAITING_ON_UBOS" | "NEEDS_ATTENTION" | "HOLD" | "APPROVED" | "SOFT_REJECT" | "REJECT" | "DECLINED" | "DOUBLE" | "EXPIRED" | "OFFBOARDED";
+        /**
+         * @description State of one form. `draft` — a draft with values or files exists (checked first, even when everything is already saved); `complete` — every required visible field has a saved value (also when the form has none); `in_review` — nothing is left to fill, the rest of the required values wait in a sent submission of this or another form (`awaiting_verification` or `in_review`: the identity check or compliance still has to let them through into the KYC entity); `not_started` — otherwise.
+         * @enum {string}
+         */
+        KycFormsFormState: "not_started" | "draft" | "in_review" | "complete";
+        /**
+         * @description State of an identity check, computed on every read. `not_started` — no applicant yet; `in_progress` — the check is set up with the identity provider and not finished: the widget may not have been opened yet (an owner whose check the background set up), be open, or the document was handed over and the face is due; `in_review` — the identity provider is looking (also right after a row nobody has read yet, and for an owner whose declared data does not match the document); `passed`; `retry` — the provider asks to go again, call the session route for a new token; `failed` — a final refusal (the application is not rejected by it: it goes to compliance, so build a refusal screen by this value, not by `stage`).
+         * @enum {string}
+         */
+        KycFormsVerificationState: "not_started" | "in_progress" | "in_review" | "passed" | "retry" | "failed";
+        /**
+         * @description A KYC entity as `GET /kyc/entities` of the BFF has always answered it: the `kyc_entity` columns plus `address`, `physical_address`, `beneficial_owners` and `documents`. Additional properties are the entity columns.
+         * @example {
+         *       "id": "5e6f7081-9203-4b4c-8d5e-6f708192a3b4",
+         *       "user_data_uuid": "1a2b3c4d-5e6f-4708-9192-a3b4c5d6e7f8",
+         *       "type": "individual",
+         *       "status": "UNVERIFIED",
+         *       "created_at": "2026-10-19T09:00:00Z",
+         *       "address": null,
+         *       "physical_address": null,
+         *       "beneficial_owners": [],
+         *       "documents": []
+         *     }
+         */
+        KycFormsEntity: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * Format: uuid
+             * @description The owner of the entity.
+             */
+            user_data_uuid: string;
+            /** @enum {string} */
+            type: "individual" | "business";
+            status: components["schemas"]["KycFormsEntityStatus"];
+            /** Format: date-time */
+            created_at: string;
+            /** @description Registered address (`kyc_address` columns, `country` joined). */
+            address: {
+                [key: string]: unknown;
+            } | null;
+            /** @description Business address of a company when it differs from the registered one. */
+            physical_address: {
+                [key: string]: unknown;
+            } | null;
+            /** @description The `kyc_beneficial_owner` rows of a business entity with their `address`; empty for a personal entity. The `id` of a row is the `owner_id` of the owner routes. */
+            beneficial_owners: {
+                [key: string]: unknown;
+            }[];
+            documents: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                kyc_entity_id: string;
+                /**
+                 * Format: uuid
+                 * @description The beneficial owner the document belongs to; null for the entity's own document.
+                 */
+                ubo_id: string | null;
+                /** @example proof_of_address */
+                type: string;
+                /** Format: uri */
+                link: string;
+                /** Format: date */
+                issuance_date: string | null;
+                /** Format: date */
+                expiration_date: string | null;
+                /**
+                 * @description `client` — uploaded through a form; `kyc_provider` — filed from the identity check.
+                 * @enum {string}
+                 */
+                source: "backfill" | "panel" | "admin_api" | "kyc_provider" | "bff" | "client";
+                /** Format: uuid */
+                batch_id: string;
+                position: number;
+                /** Format: date-time */
+                created_at: string;
+            }[];
+        } & {
+            [key: string]: unknown;
+        };
+        KycFormsCreateEntityRequest: {
+            /**
+             * @description Individual is idempotent: the caller's personal entity is returned when it exists. A business entity is created on every call. The type must be enabled for the tenant, else `403 ACCESS_DENIED`.
+             * @enum {string}
+             */
+            type: "individual" | "business";
+        };
+        /** @description The newest sent submission of the form (never a draft); null when none was sent. */
+        KycFormsSubmission: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description `awaiting_verification` — sent, the identity document and face are still needed; `in_review` — compliance decides; `returned` — sent back with `comment`, the form is open again; `approved` / `rejected` — compliance decided (an approval does not set the application status by itself); `applied` — the answers are written into the KYC entity.
+             * @enum {string}
+             */
+            status: "awaiting_verification" | "in_review" | "returned" | "approved" | "rejected" | "applied";
+            /** @description Compliance comment of a returned or rejected submission. */
+            comment: string | null;
+        } | null;
+        /** @description One rule: the value of another field of the form (inside a list item — of the same item) compared with `value`. */
+        KycFormsConditionRule: {
+            /** @example expected_monthly_volume */
+            field: string;
+            /**
+             * @description `eq` / `neq` / `in` — for a multi value the match is any chosen value; an empty value (null, empty string, empty array) matches only null. `gt` / `gte` / `lt` / `lte` — numbers, `YYYY-MM-DD` dates (by the day), or an `enum` field: the `numeric` of the chosen option is compared; an empty value or an option without `numeric` fails the rule. `filled` — the value is not empty when `value` is absent or `true`; with `value: false` the rule holds when the value IS empty.
+             * @enum {string}
+             */
+            op: "eq" | "neq" | "in" | "gt" | "gte" | "lt" | "lte" | "filled";
+            /** @description A literal or a list of literals, never a reference to another field. For `filled` it is absent or a boolean: absent / `true` — the field must be filled, `false` — it must be empty. */
+            value?: (string | number | boolean | (string | number | boolean)[]) | null;
+        };
+        KycFormsConditionAll: {
+            /** @description Holds when every condition does. */
+            all: components["schemas"]["KycFormsCondition"][];
+        };
+        KycFormsConditionAny: {
+            /** @description Holds when any of the conditions does. */
+            any: components["schemas"]["KycFormsCondition"][];
+        };
+        /**
+         * @description A show condition: a rule, or `{ all: [...] }` / `{ any: [...] }` of conditions. Evaluate it on the client against the current values on every change (see `visible_when` of the field).
+         * @example {
+         *       "all": [
+         *         {
+         *           "field": "purpose",
+         *           "op": "eq",
+         *           "value": "other"
+         *         },
+         *         {
+         *           "field": "expected_monthly_volume",
+         *           "op": "gte",
+         *           "value": 25000
+         *         }
+         *       ]
+         *     }
+         */
+        KycFormsCondition: components["schemas"]["KycFormsConditionRule"] | components["schemas"]["KycFormsConditionAll"] | components["schemas"]["KycFormsConditionAny"];
+        /** @description A file of a file field as `values` lists it. */
+        KycFormsFileValue: {
+            /**
+             * Format: uuid
+             * @description For a file in the draft the `upload_id` of the delete route.
+             */
+            id: string;
+            file_name: string | null;
+            /** Format: date-time */
+            uploaded_at: string;
+            /** @description false — in the draft, deletable; true — already a KYC document, never removed here. */
+            saved: boolean;
+        };
+        /**
+         * @description One item of a `list` field (`beneficial_owners`): an object keyed by the `item.fields[].key` of the field, each value shaped by that item field's `type` (an item field never takes files). `id` is set on a row already saved in the KYC entity (for an owner, the `owner_id` of the owner routes); send it back to keep the row, leave it out for a new one.
+         * @example {
+         *       "id": "2d7c1b9e-4f30-4a8c-9e21-7b6a5c4d3e2f",
+         *       "owner_type": "individual",
+         *       "first_name": "Anna",
+         *       "last_name": "Berg",
+         *       "role": "UBO",
+         *       "share_proportion": 40,
+         *       "is_applicant": false,
+         *       "invite_by_email": true,
+         *       "email": "anna@example.com"
+         *     }
+         */
+        KycFormsListItemValue: {
+            /**
+             * Format: uuid
+             * @description The saved row; absent on an item that is not saved yet.
+             */
+            id?: string;
+        } & {
+            [key: string]: unknown;
+        };
+        /** @description The value of one field in `values`, shaped by the field's `type`: `text`, `textarea`, `email`, `phone` (E.164), `date` (`YYYY-MM-DD`), `enum` (an `options[].value`), `country` (alpha-2) — a string; `number`, `integer` — a number; `bool`, `consent` — a boolean; `multi_enum`, `country_multi` — an array of strings; `file` — an array of `KycFormsFileValue`; `list` — an array of `KycFormsListItemValue`. Empty is null. */
+        KycFormsFieldValue: (string | number | boolean | string[] | components["schemas"]["KycFormsFileValue"][] | components["schemas"]["KycFormsListItemValue"][]) | null;
+        /** @description The value of one open field in the draft or the submission, shaped by the field's `type` as `KycFormsFieldValue` — except a `file` field, whose files travel through the uploads routes only (its key is refused with `FORM_FIELD_NOT_ALLOWED`). `null` clears the field. */
+        KycFormsAnswerValue: (string | number | boolean | string[] | components["schemas"]["KycFormsListItemValue"][]) | null;
+        KycFormsField: {
+            /**
+             * @description Stable key in the API: `email`, `address.city`, `physical_address.city`, `document.proof_of_address`, `beneficial_owners` (a list).
+             * @example purpose_other
+             */
+            key: string;
+            /**
+             * @description The control, and the shape of the value in `values` and in the draft: `text`, `textarea`, `email` — string; `phone` — E.164 string; `number`, `integer` — number; `date` — `YYYY-MM-DD`; `bool` — boolean; `consent` — only `true` is accepted; `enum` — one `options[].value`; `multi_enum` — an array of them; `country` — alpha-2; `country_multi` — an array of alpha-2; `file` — files travel through the uploads routes, `values` lists them as `KycFormsFileValue`; `list` — an array of items, each an object keyed by `item.fields[].key` (plus `id` for a saved row).
+             * @enum {string}
+             */
+            type: "text" | "textarea" | "number" | "integer" | "date" | "bool" | "consent" | "enum" | "multi_enum" | "country" | "country_multi" | "email" | "phone" | "file" | "list";
+            label: string;
+            hint: string | null;
+            placeholder: string | null;
+            /** @description Required while the field is shown; a hidden field is neither required nor accepted. */
+            required: boolean;
+            /** @description The purposes of the form that require the field, in form order: `{ scope: base }`, `{ scope: rail, id }`, `{ scope: card, id }` — for a field shown on a condition, the purposes whose settings require it while shown. Empty for an optional field. */
+            required_by: {
+                /** @enum {string} */
+                scope: "base" | "rail" | "card";
+                /**
+                 * Format: uuid
+                 * @description The rail or program id; null for the base form.
+                 */
+                id: string | null;
+            }[];
+            /** @description A locked field is shown with its value and not accepted by the draft or the submission. */
+            locked: boolean;
+            /**
+             * @description Why the field is locked; null when it is not. `saved` — the value is already in the KYC entity, only compliance changes it; `from_document` — taken from the verified identity document; `pending` — the value waits in a submission of this or another form of the entity: shown, locked, not asked again; `status` — the whole form is read-only by the application status.
+             * @enum {string|null}
+             */
+            lock_reason: "saved" | "from_document" | "pending" | "status" | null;
+            /** @description When the field is shown; null — always. The conditions come from the tenant's form settings and change without a release: evaluate `visible_when` against the current values on every change, and treat `required` as "required while shown" — a hidden field is neither required nor accepted. In a list item it combines the item structure (a person or a company, the filler's own item) with the settings. */
+            visible_when: components["schemas"]["KycFormsCondition"] | null;
+            /** @description Rules checked on submit (the draft checks the type only); null — none. `min` / `max` are numbers, or `YYYY-MM-DD` for a date; the text of a broken rule is the matching `form.messages` entry (`{value}` stands for the bound) or the `message` of a pattern. */
+            validation: {
+                min?: number | string;
+                max?: number | string;
+                min_length?: number;
+                max_length?: number;
+                patterns?: {
+                    regex: string;
+                    message: string;
+                }[];
+            } | null;
+            /** @description `enum` and `multi_enum`: the values the field takes, in display order. `country` and `country_multi`: the countries the field takes — `value` alpha-2, `label` the full name (English), by name; each country field carries its own list (it may be narrowed per field later), send only a `value` from it. No other type has options. */
+            options?: {
+                value: string;
+                label: string;
+                /**
+                 * @description The number the option stands for in a `gt` / `gte` / `lt` / `lte` condition — a volume range carries its upper bound. Present only on the options of a dictionary that gives numbers: compare it with the condition's `value` to evaluate `visible_when` on an `enum` field.
+                 * @example 50000
+                 */
+                numeric?: number;
+            }[];
+            /** @description `file` fields only. */
+            file?: {
+                max_files: number;
+                /** @example 20 */
+                max_size_mb: number;
+                /** @description MIME types the field takes, told by the bytes. The photos of the identity document (`gov_id_front`, `gov_id_back`) take JPEG and PNG only; other document fields also take `application/pdf`. */
+                accept: string[];
+            };
+            /** @description List fields only: the fields of one item, and the bounds of the list. */
+            item?: {
+                /** @description The fields of one item with their own `required`, `required_by` and `visible_when`; a `visible_when` inside an item reads the other fields of the same item. */
+                fields: components["schemas"]["KycFormsField"][];
+                min_items: number;
+                max_items: number;
+                add_label: string;
+            };
+        };
+        KycFormsForm: {
+            /**
+             * @description What the form is for: the base form, a rail, a card program (`card`), or one form over several rails and programs (`multi`).
+             * @enum {string}
+             */
+            scope: "base" | "rail" | "card" | "multi";
+            /** @description The rails the form is built for; empty for the base form. */
+            rails: string[];
+            /** @description The card programs the form is built for; empty for the base form. */
+            programs: string[];
+            /**
+             * Format: uuid
+             * @description The wallet the form is built for: the `wallet_id` of the query for a form over card programs or rails; otherwise the entity's first linked wallet (main wallet first), null when the entity is linked to none. The draft and the submission carry it.
+             */
+            wallet_id: string | null;
+            /** @enum {string} */
+            entity_type: "individual" | "business";
+            /**
+             * @description The language the texts are in (English when the requested one is not in the tenant's list).
+             * @example en
+             */
+            locale: string;
+            /**
+             * @description Hash of the form composition (keys, requiredness, conditions, list item fields; not the texts); echo it back in the draft and the submission. It can change between the load and the send: `409 FORM_OUTDATED`.
+             * @example b3f1c2a9
+             */
+            schema_version: string;
+            state: components["schemas"]["KycFormsFormState"];
+            submission: components["schemas"]["KycFormsSubmission"];
+            /** @description false while the application status (HOLD, REJECT, DECLINED, DOUBLE) makes the whole form read-only, or while the last submission of the form waits on the verification or the review. Then the draft and a new submission answer 409 FORM_LOCKED; an upload answers 409 FORM_LOCKED while a submission waits, and 400 FORM_FIELD_NOT_ALLOWED under the status lock (every field is locked with `status`). */
+            editable: boolean;
+            /** @description How many required visible fields are still empty (saved, pending and draft values together). */
+            missing_required: number;
+            /**
+             * @description General validation messages by code (`required`, `min`, `max`, `min_length`, `max_length`, `invalid`); `{value}` stands for the bound.
+             * @example {
+             *       "required": "This field is required",
+             *       "min": "The value must be at least {value}",
+             *       "invalid": "Check the value"
+             *     }
+             */
+            messages: {
+                [key: string]: string;
+            };
+            /** @description The groups to draw, in order; each field is in exactly one section. */
+            sections: {
+                /** @example purpose */
+                key: string;
+                title: string;
+                description: string | null;
+                fields: components["schemas"]["KycFormsField"][];
+            }[];
+        };
+        KycFormsFormResponse: {
+            /** @example true */
+            success: boolean;
+            data: {
+                form: components["schemas"]["KycFormsForm"];
+                /**
+                 * @description Current value per field key (saved in KYC first, then pending, then the draft), each shaped by the field's `type` (`KycFormsFieldValue`): strings, numbers, booleans, `YYYY-MM-DD` dates, alpha-2 countries, arrays of strings; files as `KycFormsFileValue[]`; lists as `KycFormsListItemValue[]` with an `id` on saved rows. Every field of the form has a key here; empty is null.
+                 * @example {
+                 *       "email": "user@example.com",
+                 *       "citizenship": "DE",
+                 *       "gov_id_front": [
+                 *         {
+                 *           "id": "3f2a9c1e-5b7d-4e0a-9c11-2d8f6a4b7e90",
+                 *           "file_name": "front.jpg",
+                 *           "uploaded_at": "2026-10-19T09:30:00Z",
+                 *           "saved": false
+                 *         }
+                 *       ],
+                 *       "phone": null
+                 *     }
+                 */
+                values: {
+                    [key: string]: components["schemas"]["KycFormsFieldValue"];
+                };
+            };
+        };
+        KycFormsAnswersRequest: {
+            /**
+             * @description `form.schema_version` of the form as loaded.
+             * @example b3f1c2a9
+             */
+            schema_version: string;
+            /**
+             * @description Values of open visible fields only, by key (keys 1–120 characters), each shaped by the field's `type` (`KycFormsAnswerValue`), the whole set every time: the draft is replaced as a whole. Any other key (unknown, locked, hidden, a file field) refuses the whole request with `FORM_FIELD_NOT_ALLOWED` — except a field hidden only because a source of its condition is empty (and required) or wrong: then `VALIDATION_ERROR` names the source and the value is dropped. Files travel through the uploads routes, never here.
+             * @default {}
+             * @example {
+             *       "email": "user@example.com",
+             *       "citizenship": "DE"
+             *     }
+             */
+            values: {
+                [key: string]: components["schemas"]["KycFormsAnswerValue"];
+            };
+        };
+        KycFormsDraftSaved: {
+            /** @example true */
+            success: boolean;
+            data: {
+                state: components["schemas"]["KycFormsFormState"];
+                missing_required: number;
+            };
+        };
+        KycFormsUploadedFile: {
+            /** @example true */
+            success: boolean;
+            data: {
+                /**
+                 * Format: uuid
+                 * @description The `upload_id` of the delete route.
+                 */
+                id: string;
+                file_name: string;
+                /** Format: date-time */
+                uploaded_at: string;
+                /**
+                 * @description false: in the draft, deletable; it becomes a KYC document when the submission is applied.
+                 * @example false
+                 */
+                saved: boolean;
+            };
+        };
+        /** @description The base form in the overview. */
+        KycFormsFormSummary: {
+            state: components["schemas"]["KycFormsFormState"];
+            missing_required: number;
+            submission: components["schemas"]["KycFormsSubmission"];
+        };
+        KycFormsOverview: {
+            /** @example true */
+            success: boolean;
+            /** @example {
+             *       "entity_type": "individual",
+             *       "status": "PENDING",
+             *       "stage": "action_required",
+             *       "waiting_on": "you",
+             *       "next_step": "verification",
+             *       "base_form": {
+             *         "state": "in_review",
+             *         "missing_required": 0,
+             *         "submission": {
+             *           "id": "7b0f3c52-1d2e-4a6b-8f90-3c4d5e6f7a81",
+             *           "status": "awaiting_verification",
+             *           "comment": null
+             *         }
+             *       },
+             *       "verification": {
+             *         "applicant": {
+             *           "state": "in_progress"
+             *         },
+             *         "owners": [],
+             *         "invites": null
+             *       },
+             *       "rails": [],
+             *       "cards": []
+             *     } */
+            data: {
+                /** @enum {string} */
+                entity_type: "individual" | "business";
+                status: components["schemas"]["KycFormsEntityStatus"];
+                /**
+                 * @description Build the screen by this, not by `status`. `not_required` — the tenant asks nothing of this client type (`base_form` is null); `not_started` — the base form was not started; `incomplete` — a draft exists; `action_required` — the client's move: pass the identity check (`next_step: verification`), or, for a business, get the owners through theirs (`next_step: owners`); `in_review` — the identity provider or compliance is looking; `resubmit` — returned by compliance, the form is open again with `submission.comment`; `on_hold` — frozen by compliance; `verified` — approved; `expired` — the verification lapsed: the applicant passes the identity check again (`next_step: verification`), then compliance looks again; `rejected` — refused, the form is read-only; `offboarded` — compliance ended the relationship, final; `unknown` — a status this contract does not know. The stage of each `status`: `APPROVED` → `verified`; `REJECT`, `DECLINED`, `DOUBLE` → `rejected`; `OFFBOARDED` → `offboarded`; `EXPIRED` → `expired`; `HOLD` → `on_hold`; `WAITING_ON_REVIEW` → `in_review`; `NEEDS_ATTENTION` → `resubmit`; `WAITING_ON_UBOS` → `action_required` while an owner other than the filler's row has a check to start, finish or redo (`next_step: owners`), else `in_review`; `UNVERIFIED`, `PENDING`, `SOFT_REJECT` → by the base form and the identity check: `not_required` (no base form), `not_started`, `incomplete` (a draft), `action_required` (the check is the move), `in_review` (sent, with compliance or the provider), `resubmit` (the latest submission was returned) — the forms flow never sets `SOFT_REJECT`, one left by the old flow shows the screen of its form like `PENDING`; `PROCESSING` → `unknown` (the forms flow never sets it, an old-flow vendor sync may leave it).
+                 * @enum {string}
+                 */
+                stage: "not_required" | "not_started" | "incomplete" | "action_required" | "in_review" | "resubmit" | "on_hold" | "verified" | "expired" | "rejected" | "offboarded" | "unknown";
+                /**
+                 * @description `you` — the client's move; `applicant` — the identity check is the entity owner's to pass (`verification.applicant`, for a business the filler) and the reader is someone else, an admin of the wallet: `next_step` is `wait` where the owner gets `verification` — show who is awaited; `compliance` — also while the identity provider looks (`verification.applicant.state: in_review`); `nobody` — nothing to wait for (verified or rejected).
+                 * @enum {string}
+                 */
+                waiting_on: "you" | "applicant" | "compliance" | "nobody";
+                /**
+                 * @description `form` — show the base form (`GET …/forms`); `verification` — open the identity check (`POST …/verification/session`); `owners` — a business under `WAITING_ON_UBOS` with an owner whose check is not started, not finished or asked again: show `verification.owners[]` and move each one along through the owner routes (`…/verification/owners/{owner_id}/session`, `/link`, `/document`), or have the identity provider email them again (`…/verification/owners/invite`, see `verification.invites`); `wait` — nothing to do now (also a business whose owners' checks are all with the identity provider); `none` — nothing more.
+                 * @enum {string}
+                 */
+                next_step: "form" | "verification" | "owners" | "wait" | "none";
+                /** @description null when the tenant asks nothing of this client type. */
+                base_form: components["schemas"]["KycFormsFormSummary"] | null;
+                verification: {
+                    /** @description The identity check of the person: of the entity's owner for a personal entity, of the filler (their own personal entity) for a business. `passed` also when the entity holds a verified identity document, unless the provider asks to go again. */
+                    applicant: {
+                        state: components["schemas"]["KycFormsVerificationState"];
+                    };
+                    /** @description A business with a base form only (empty otherwise): one item per individual beneficial owner — the filler's own row included, told by `is_applicant` in the form's `values.beneficial_owners` — and per company among the owners whose check the identity provider runs (the tenant's company level checks companies; CORE requests the check on the company data of the item, there is no session, link or document for it). A company the provider does not check is not listed. `state` is that owner's own check; `not_started` while a person has no applicant. */
+                    owners: {
+                        /**
+                         * Format: uuid
+                         * @description The `owner_id` of the owner routes (a person only).
+                         */
+                        id: string;
+                        /**
+                         * @description `individual` — a person who passes the check themselves (the owner routes apply); `company` — a company among the owners, checked on the company data the form declared, nothing for the client to do (the owner routes answer `400 KYC_OWNER_NOT_INDIVIDUAL`), and never an addressee of the provider's mailing.
+                         * @enum {string}
+                         */
+                        type: "individual" | "company";
+                        /** @description The owner as the form names them: a person's first and last name, a company's name; null when the form gave none. The filler's own row is null until they pass the identity check — then the name comes from their document. */
+                        name: string | null;
+                        /**
+                         * @description The owner's `role` as sent in the form — a code of the `ubo_role` dictionary, its labels in the `options` of the form's role field; null when none.
+                         * @enum {string|null}
+                         */
+                        role: "UBO" | "OWNER_OR_OPERATOR" | "PARTNER" | "DIRECTOR_CONTROL_PERSON_OR_LEGAL_REP" | "AGENT_OR_AUTHORISED_PERSON" | null;
+                        /** @description The filler's own row — the item the filler marked as themselves (`is_applicant` in the form), or the one CORE added for them from `applicant_role`. Draw it without the owner actions: the owner routes answer it `400 KYC_OWNER_IS_FILLER`. Its `state` is the filler's own check on their personal entity — the same as `verification.applicant.state` for the owner of the business — and it never counts towards `next_step: owners`. */
+                        is_applicant: boolean;
+                        state: components["schemas"]["KycFormsVerificationState"];
+                        /**
+                         * Format: date-time
+                         * @description When the identity provider last emailed this owner their link — after the form was sent and on each `POST …/verification/owners/invite`, to the persons whose item has `invite_by_email: true` and an email; the filler's row too (through the email of their account); null = never (the owner gets the link by hand: `…/owners/{owner_id}/link` or `/session`); always null for a company.
+                         */
+                        invited_at: string | null;
+                    }[];
+                    /** @description The mailing of the owners' links of a business with a base form; null for a personal entity. */
+                    invites: {
+                        /**
+                         * Format: date-time
+                         * @description When the identity provider was last asked to email the owners — right after the form was sent, or by `POST …/verification/owners/invite`; null = never.
+                         */
+                        sent_at: string | null;
+                        /**
+                         * Format: date-time
+                         * @description From when `POST …/verification/owners/invite` is taken again (10 minutes after `sent_at`); null = now.
+                         */
+                        next_at: string | null;
+                    } | null;
+                };
+                /** @description Only for an entity linked to a wallet and with a base form: one item per active rail of the tenant of the entity's client type (and the universal ones) — not filtered by what the wallet sees (`GET …/targets` does that); empty otherwise. */
+                rails: {
+                    /** Format: uuid */
+                    rail_id: string;
+                    form_state: components["schemas"]["KycFormsFormState"];
+                    missing_required: number;
+                    submission: components["schemas"]["KycFormsSubmission"];
+                }[];
+                /** @description A personal entity, the owner's own screen only (empty for a business entity and for any other caller): the forms before a card the owner has saved or sent, one per program and wallet; nothing is listed before a card form is opened and saved. */
+                cards: {
+                    /** Format: uuid */
+                    program_id: string;
+                    /** Format: uuid */
+                    wallet_id: string;
+                    form_state: components["schemas"]["KycFormsFormState"];
+                    missing_required: number;
+                    submission: components["schemas"]["KycFormsSubmission"];
+                }[];
+            };
+        };
+        /** @description The state of the form of one target, as `GET …/forms` would build it. */
+        KycFormsTargetForm: {
+            form_state: components["schemas"]["KycFormsFormState"];
+            missing_required: number;
+            submission: components["schemas"]["KycFormsSubmission"];
+        };
+        KycFormsTargets: {
+            /** @example true */
+            success: boolean;
+            /** @example {
+             *       "entity_id": "9d1e6a40-2b3c-4d5e-8f70-a1b2c3d4e5f6",
+             *       "wallet_id": "4c5d6e7f-8091-4a2b-b3c4-d5e6f7081920",
+             *       "base": {
+             *         "form_state": "complete",
+             *         "missing_required": 0,
+             *         "submission": null
+             *       },
+             *       "rails": [
+             *         {
+             *           "id": "0a1b2c3d-4e5f-4061-8293-a4b5c6d7e8f9",
+             *           "is_submit_available": true,
+             *           "can_submit": true,
+             *           "application": null,
+             *           "form": {
+             *             "form_state": "not_started",
+             *             "missing_required": 4,
+             *             "submission": null
+             *           }
+             *         }
+             *       ],
+             *       "programs": []
+             *     } */
+            data: {
+                /** Format: uuid */
+                entity_id: string;
+                /**
+                 * Format: uuid
+                 * @description The wallet the rails and the programs are read for; null when the entity has none and the query named none.
+                 */
+                wallet_id: string | null;
+                /** @description The base form; null when the tenant asks nothing of this client type. */
+                base: components["schemas"]["KycFormsTargetForm"] | null;
+                /** @description The active rails the wallet sees for this entity (its type and the universal ones), each with the wallet's application and the state of the rail's form. Empty without a wallet, and when the tenant asks nothing of this client type (a rail form includes the base form). A rail is known by `id` alone. */
+                rails: {
+                    /**
+                     * Format: uuid
+                     * @description The `rails` value for `GET …/forms`.
+                     */
+                    id: string;
+                    /** @description The rail takes submissions at all. */
+                    is_submit_available: boolean;
+                    /** @description The rail would take the wallet now, as `can_submit` of `GET /frontend/wallets/{wallet_id}/kyc-rails` says: an onboarding behind it, the entity's type, the KYC `APPROVED`, no application approved or with the vendor. The rail's form is not looked at: it is `form` here (`form_state`, `missing_required`). Offer `POST …/kyc-rails/{rail_id}` when `can_submit` is `true` and `form.form_state` is `complete`; with the form not complete the submission answers `400 RAIL_REQUIREMENTS_INCOMPLETE` — show the form first. */
+                    can_submit: boolean;
+                    /** @description The wallet's application on the rail; null before the first submission. */
+                    application: {
+                        /**
+                         * @description As `wallet_rail.status` of `GET /frontend/wallets/{wallet_id}/kyc-rails`: an application is never `EXPIRED` or `OFFBOARDED`, those belong to the KYC entity.
+                         * @example PENDING
+                         * @enum {string}
+                         */
+                        status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
+                        /** @description A neutral text for the status. */
+                        message: string | null;
+                        terms_confirmed: boolean;
+                    } | null;
+                    form: components["schemas"]["KycFormsTargetForm"];
+                }[];
+                /** @description A personal entity with a wallet only: the card programs the wallet may ask a card of, as `GET /frontend/issuing/config/programs?wallet_id=` lists them, each with the level its vendor demands and the state of the card form built for the wallet. Empty for a business entity and without a wallet. */
+                programs: {
+                    /**
+                     * Format: uuid
+                     * @description The `programs` value for `GET …/forms`.
+                     */
+                    id: string;
+                    name: string;
+                    /**
+                     * @description The cardholder KYC bar of the program: `minimal` and `basic` are typed in, `declared` and `full` end in the identity check.
+                     * @enum {string}
+                     */
+                    level: "minimal" | "basic" | "declared" | "full";
+                    /** @description The card form ends in the identity check (the document or the face is required). */
+                    needs_identity_verification: boolean;
+                    form: components["schemas"]["KycFormsTargetForm"];
+                }[];
+            };
+        };
+        KycFormsTypeTargets: {
+            /** @example true */
+            success: boolean;
+            /** @example {
+             *       "type": "business",
+             *       "rails": [
+             *         {
+             *           "id": "0a1b2c3d-4e5f-4061-8293-a4b5c6d7e8f9",
+             *           "is_submit_available": true,
+             *           "account_programs": [
+             *             {
+             *               "id": "5e6f7081-9a0b-4c1d-8e2f-a3b4c5d6e7f8",
+             *               "name": "EUR account"
+             *             }
+             *           ],
+             *           "card_program_ids": []
+             *         },
+             *         {
+             *           "id": "1b2c3d4e-5f60-4172-93a4-b5c6d7e8f901",
+             *           "is_submit_available": true,
+             *           "account_programs": [],
+             *           "card_program_ids": [
+             *             "2c3d4e5f-6071-4283-a4b5-c6d7e8f90123"
+             *           ]
+             *         }
+             *       ],
+             *       "programs": []
+             *     } */
+            data: {
+                /** @enum {string} */
+                type: "individual" | "business";
+                /** @description The active rails of the type and the universal ones — those a new wallet of this type lists in `GET /frontend/wallets/{wallet_id}/kyc-rails`. A rail is known by `id` alone. */
+                rails: {
+                    /**
+                     * Format: uuid
+                     * @description The `rails` value for `GET …/forms`.
+                     */
+                    id: string;
+                    /** @description The rail takes submissions at all. */
+                    is_submit_available: boolean;
+                    /** @description The active account programs on the rail — the programs the wallet will be able to open accounts of once approved on it. Non-empty: the rail carries payments (accounts to send and receive); empty: it opens no account. */
+                    account_programs: {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                    }[];
+                    /** @description The active card programs on the rail that the caller's group lets them ask a card of — the `id` of `programs[]` for a person (a business gets the ids, the programs are a person's). */
+                    card_program_ids: string[];
+                }[];
+                /** @description A person only (empty for `business`: the cardholder is a person, asked for through their own entity): the card programs the caller's group lets them ask a card of on these rails, each with the level its vendor demands. */
+                programs: {
+                    /**
+                     * Format: uuid
+                     * @description The `programs` value for `GET …/forms`.
+                     */
+                    id: string;
+                    name: string;
+                    /**
+                     * Format: uuid
+                     * @description The rail that makes the program visible.
+                     */
+                    rail_id: string;
+                    /**
+                     * @description The cardholder KYC bar of the program: `minimal` and `basic` are typed in, `declared` and `full` end in the identity check.
+                     * @enum {string}
+                     */
+                    level: "minimal" | "basic" | "declared" | "full";
+                    /** @description The card form ends in the identity check (the document or the face is required). */
+                    needs_identity_verification: boolean;
+                }[];
+            };
+        };
+        /** @description The structured payload of an error that carries one (absent otherwise — an invalid uuid or a malformed body is a message only). `VALIDATION_ERROR`: `fields` is a map from the field key to its messages (a list item field is `beneficial_owners[0].role`, the list as a whole `beneficial_owners`). `FORM_FIELD_NOT_ALLOWED`, `KYC_FORM_CONDITIONS_CYCLE`: `fields` is a list of keys. */
+        KycFormsErrorDetails: {
+            fields: {
+                [key: string]: string[];
+            } | string[];
+        };
+        /** @description The error envelope of the KYC forms: `ErrorResponse` with the `details` of the field errors spelled out. */
+        KycFormsErrorResponse: components["schemas"]["ErrorResponse"] & {
+            error?: {
+                details?: components["schemas"]["KycFormsErrorDetails"];
+            };
+        };
     };
     responses: {
-        /** @description Authentication credentials are missing or invalid */
+        /** @description `UNAUTHORIZED` — authentication credentials are missing or invalid (the standard error envelope) */
         UnauthorizedError: {
             headers: {
                 [name: string]: unknown;
             };
             content: {
-                "application/json": {
-                    error?: {
-                        /** @example UNAUTHORIZED */
-                        code?: string;
-                        /** @example Authorization header is missing */
-                        message?: string;
-                    };
-                };
+                /** @example {
+                 *       "success": false,
+                 *       "correlationId": "8f14e45f-ceea-4e67-a7a2-5f5a1f0b9c1d",
+                 *       "error": {
+                 *         "code": "UNAUTHORIZED",
+                 *         "message": "Authorization header is missing"
+                 *       }
+                 *     } */
+                "application/json": components["schemas"]["ErrorResponse"];
             };
         };
-        /** @description User does not have permission to access this resource */
+        /** @description `ACCESS_DENIED` — the user has no permission to access this resource (the standard error envelope) */
         ForbiddenError: {
             headers: {
                 [name: string]: unknown;
             };
             content: {
-                "application/json": {
-                    error?: {
-                        /** @example ACCESS_DENIED */
-                        code?: string;
-                        /** @example You don't have permission to access this resource */
-                        message?: string;
-                    };
-                };
+                /** @example {
+                 *       "success": false,
+                 *       "correlationId": "8f14e45f-ceea-4e67-a7a2-5f5a1f0b9c1d",
+                 *       "error": {
+                 *         "code": "ACCESS_DENIED",
+                 *         "message": "You don't have permission to access this resource"
+                 *       }
+                 *     } */
+                "application/json": components["schemas"]["ErrorResponse"];
             };
         };
-        /** @description The requested resource was not found */
+        /** @description `NOT_FOUND` — the requested resource was not found (the standard error envelope) */
         NotFoundError: {
             headers: {
                 [name: string]: unknown;
             };
             content: {
-                "application/json": {
-                    error?: {
-                        /** @example NOT_FOUND */
-                        code?: string;
-                        /** @example Resource not found */
-                        message?: string;
-                    };
-                };
+                /** @example {
+                 *       "success": false,
+                 *       "correlationId": "8f14e45f-ceea-4e67-a7a2-5f5a1f0b9c1d",
+                 *       "error": {
+                 *         "code": "NOT_FOUND",
+                 *         "message": "Resource not found"
+                 *       }
+                 *     } */
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description `RAIL_NOT_FOUND` — no such rail on the wallet's tenant, or an archived rail the wallet is not approved on */
+        WalletKycRailNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                /** @example {
+                 *       "success": false,
+                 *       "correlationId": "8f14e45f-ceea-4e67-a7a2-5f5a1f0b9c1d",
+                 *       "error": {
+                 *         "code": "RAIL_NOT_FOUND",
+                 *         "message": "KYC rail not found"
+                 *       }
+                 *     } */
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description `VALIDATION_ERROR` — `rail_id` is not a UUID (a message only) */
+        WalletKycRailBadId: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description `VALIDATION_ERROR` — field errors in `details.fields[key] = [message]` (on a business form the owner list the KYC tables refuse, and owner shares adding up to more than 100%, come back under `beneficial_owners`; a value sent for a field whose condition reads a source left empty or wrong comes back as the error of the source, e.g. `beneficial_owners[0].role`), or a message only for a malformed body (`schema_version` missing or longer than 64, `values` not an object) and a path id that is not a uuid; `FORM_FIELD_NOT_ALLOWED` — a key the form does not accept (unknown, locked, hidden, a file field), `details.fields = [key]`, the whole request refused; `FORM_TARGET_UNSUPPORTED` — a card program named on a business entity; `INVALID_REQUEST` — `wallet_id` missing for a form over card programs; `KYC_FORM_WALLET_NOT_LINKED` — `wallet_id` of a form over rails is not a wallet of this entity; `KYC_BASE_BINDING_MISSING` — the tenant has no base form for this client type; `KYC_FORMS_NOT_ENABLED` — the tenant is not on the forms flow */
+        KycFormsFieldErrors: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["KycFormsErrorResponse"];
+            };
+        };
+        /** @description `KYC_FORM_CONDITIONS_CYCLE` — the tenant's form settings show fields on conditions that read each other in a circle (`details.fields` lists the keys); nothing the client can fix, report it to support */
+        KycFormsConditionsCycle: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["KycFormsErrorResponse"];
+            };
+        };
+        /** @description `SERVICE_UNAVAILABLE` — the locking service is unavailable, the operation cannot be done safely; retry later */
+        KycFormsLockUnavailable: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description `KYC_FORMS_NOT_ENABLED` — the tenant still runs KYC through the BFF; `VALIDATION_ERROR` — a path id or a query value that is not a uuid (a message only) */
+        KycFormsBadRequest: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description `ACCESS_DENIED` — the caller is not the owner of the entity, nor an owner or admin of a wallet it is linked to (other wallet roles see nothing of the dossier); with `wallet_id` named: the entity's owner or the caller is no member of that wallet */
+        KycFormsAccessDenied: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description `KYC_BUSINESS_FORM_NOT_SENT` — the base form of the business was not sent yet (also on a personal entity: it has no owners); `KYC_OWNER_INVITES_NOT_AVAILABLE` — the owners are not emailed now, `details.reason` says why: `with_compliance` — the application is no longer the client's (`status` other than `PENDING` / `WAITING_ON_UBOS`), `not_ready` — the company is still being set up with the identity provider right after the form was sent, try again in a minute; `KYC_OWNER_INVITES_TOO_SOON` — the owners were emailed less than 10 minutes ago, `details.retry_at` (date-time) says from when the route is taken again (the overview's `verification.invites.next_at`); `OPERATION_IN_PROGRESS` — a mailing of this entity is already being asked for, or the set-up after the sent form is running right now: try again in a few seconds. */
+        KycFormsOwnerInviteConflict: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description `VALIDATION_ERROR` — `entity_id` or `owner_id` is not a uuid, or the body is malformed; `KYC_FORMS_NOT_ENABLED`; `KYC_OWNER_IS_FILLER` — the owner is the person filling the form: they verify their identity on their own profile (`POST …/verification/session`); `KYC_OWNER_NOT_INDIVIDUAL` — the owner is a company: it has nothing to pass itself, its check is requested on its behalf (`verification.owners[]` of the overview shows it with `type: company`); `KYC_VERIFICATION_LEVEL_MISSING` — the tenant has no individual verification level configured; `VERIFICATION_PROVIDER_UNAVAILABLE` — the identity provider refused or did not answer, try later; `VERIFICATION_PROVIDER_NOT_CONFIGURED`. */
+        KycFormsOwnerErrors: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description `NOT_FOUND` — the entity does not exist or belongs to another tenant; `KYC_OWNER_NOT_FOUND` — the owner is not a beneficial owner of this entity (also when the entity is a personal one). */
+        KycFormsOwnerNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
+            };
+        };
+        /** @description `KYC_BUSINESS_FORM_NOT_SENT` — the base form of the business was not sent yet: the owners are set up once it is; `OPERATION_IN_PROGRESS` — a request for this owner is already running. */
+        KycFormsOwnerConflict: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorResponse"];
             };
         };
     };
@@ -19017,6 +21199,24 @@ export interface components {
         KycRailsWalletId: string;
         /** @description `kyc_rails.id` of the wallet's tenant */
         KycRailId: string;
+        /** @description `kyc_entity.id` of the caller, or of an entity linked to a wallet the caller owns or administers */
+        KycFormsEntityId: string;
+        /** @description `kyc_rails.id` of the tenant the form is for, as a native query array: `rails[]=a&rails[]=b` or `rails=a&rails=b` (a comma-separated string is not a list). Empty with `programs`: the base form. One rail alone: that rail's form. Several, or together with `programs`: the multi form over the whole set (`scope: multi`), whatever the order of the ids. A rail of another client type than the entity's (and not universal), or one the tenant does not have, is `404 NOT_FOUND`; a value that is not a uuid is `400 VALIDATION_ERROR`. */
+        KycFormsRails: string[];
+        /** @description `issuing_programs.id` of the tenant the form is for, as a native query array: `programs[]=a&programs[]=b` or `programs=a&programs=b`. One program alone: the form before a card of that program (`scope: card`). Together with `rails` or several at once: the multi form. Only a personal entity has card forms (`400 FORM_TARGET_UNSUPPORTED` on a business entity); `wallet_id` is required whenever programs are named. A program the tenant does not have is `404 NOT_FOUND`. */
+        KycFormsPrograms: string[];
+        /** @description The wallet the form is filled for; the draft and the submission carry it, and CORE puts this wallet on the form's rails and programs once the form is accepted and the KYC is `APPROVED`. Required when `programs` are named (`400 INVALID_REQUEST` without it): the entity's owner must be an active member of it (any role; the cardholder is theirs), and so must the caller when it is someone else, else `403 ACCESS_DENIED`. Optional when only `rails` are named: a rail is opened per wallet, so it must be a wallet of this entity (`400 KYC_FORM_WALLET_NOT_LINKED` otherwise) with the same membership rule; without it the entity's main wallet. Ignored on the base form. Not a uuid: `400 VALIDATION_ERROR`. */
+        KycFormsWalletId: string;
+        /** @description The wallet the rails and the card programs are read for. Optional: without it the first linked wallet (main wallet first) that the entity's owner and the caller are both members of is used; when there is none — no linked wallet, or none the two share — the answer has `wallet_id: null` and empty `rails` and `programs`. With it, the entity's owner must be an active member of the wallet, and so must the caller when it is someone else, else `403 ACCESS_DENIED`. */
+        KycFormsTargetsWalletId: string;
+        /** @description The `id` of a file in the draft (`saved: false`) */
+        KycFormsUploadId: string;
+        /** @description Language of the texts (labels, hints, options, section titles, general messages); takes precedence over `Accept-Language`. A language outside the tenant's list is served in English. */
+        KycFormsLocale: string;
+        /** @description Language of the texts when `locale` is not given. A language outside the tenant's list is served in English. */
+        KycFormsAcceptLanguage: string;
+        /** @description The `id` of a beneficial owner of the business entity — an item of `beneficial_owners` as `GET …/forms` lists it after the base form was sent (every saved item carries its `id`; `verification.owners[].id` of the overview is the same id). A person, not a company; not the owner the filler marked as themselves (`is_applicant`). */
+        KycFormsOwnerId: string;
     };
     requestBodies: never;
     headers: never;

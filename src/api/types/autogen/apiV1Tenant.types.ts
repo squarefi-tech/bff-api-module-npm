@@ -346,6 +346,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
+                        /** @description Legal name. Latin characters only (printable ASCII - letters A-Z without diacritics, digits, spaces, punctuation); anything else is refused with `400 VALIDATION_ERROR`. Transliterate other scripts before sending. */
                         name: string;
                         /** @enum {string} */
                         type: "BUSINESS" | "INDIVIDUAL";
@@ -379,12 +380,32 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error */
+                /** @description `VALIDATION_ERROR`: `name` or `type` missing or invalid, or `name` has characters outside printable ASCII (the message names the field) */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `WALLET_ACCESS_DENIED`: the wallet does not belong to the tenant of the key */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `WALLET_NOT_FOUND` */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -577,7 +598,8 @@ export interface paths {
          * @description counterparty_account_id is required in the body.
          *
          *     **Banking types** (ACH, SWIFT, SEPA, CHAPS, FPS, FEDWIRE):
-         *     banking_data: { account_number, routing_number, bank_name, swift_bic, iban, sort_code, note, address }
+         *     banking_data: { account_number, routing_number, bank_name, swift_bic, intermediary_bic, iban, sort_code, note, address }
+         *     — `intermediary_bic` is optional and accepted on SWIFT only.
          *
          *     **Crypto types** (CRYPTO_EXTERNAL, CRYPTO_INTERNAL):
          *     crypto_data: { address, currency_id, memo }
@@ -600,12 +622,15 @@ export interface paths {
                         counterparty_account_id: string;
                         /** @enum {string} */
                         type: "ACH" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
+                        /** @description User-friendly alias for this destination. Latin characters only (printable ASCII - letters A-Z without diacritics, digits, spaces, punctuation); anything else is refused with `400 VALIDATION_ERROR`. */
                         nickname?: string;
                         banking_data?: {
                             account_number?: string;
                             routing_number?: string;
                             bank_name?: string;
                             swift_bic?: string;
+                            /** @description BIC of the intermediary (correspondent) bank, SWIFT payment method only; 8 or 11 characters, ISO 9362 */
+                            intermediary_bic?: string | null;
                             iban?: string;
                             /** @description Sort code (6 digits, UK banking) */
                             sort_code?: string;
@@ -663,7 +688,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error. Bank-details problems come as `VALIDATION_ERROR` with every problem in `error.details.issues` (`field`, `code`, `message`, optional `country` / `detected`).
+                /** @description Validation error. Bank-details problems come as `VALIDATION_ERROR` with every problem in `error.details.issues` (`field`, `code`, `message`, optional `country` / `detected`). A `nickname` with characters outside printable ASCII is refused with `VALIDATION_ERROR` too; the message names the field.
                  *
                  *     **Until 2026-10-12 00:00 UTC** the stricter bank-details rules (per-country IBAN checks, SEPA-zone IBAN, BIC details, ABA check digit, account formats) are reported by `POST /admin/counterparty/destinations/validate` but do not refuse this request; from then on they do.
                  *      */
@@ -671,7 +696,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description Account not found */
                 404: {
@@ -785,6 +812,7 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
+                        /** @description User-friendly alias for this destination. Latin characters only (printable ASCII - letters A-Z without diacritics, digits, spaces, punctuation); anything else is refused with `400 VALIDATION_ERROR`. */
                         nickname?: string;
                     };
                 };
@@ -803,6 +831,15 @@ export interface paths {
                                 destination?: components["schemas"]["CounterpartyDestination"];
                             };
                         };
+                    };
+                };
+                /** @description `VALIDATION_ERROR`: no updatable field, or `nickname` has characters outside printable ASCII */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
                 /** @description Not found */
@@ -1491,7 +1528,7 @@ export interface paths {
                     /** @description Filter by wallet UUID */
                     wallet_id?: string;
                     /** @description Filter by KYC status */
-                    status?: "UNVERIFIED" | "PENDING" | "WAITING_ON_REVIEW" | "WAITING_ON_UBOS" | "HOLD" | "APPROVED" | "SOFT_REJECT" | "REJECT" | "DECLINED" | "DOUBLE";
+                    status?: "UNVERIFIED" | "PENDING" | "WAITING_ON_REVIEW" | "WAITING_ON_UBOS" | "HOLD" | "APPROVED" | "SOFT_REJECT" | "REJECT" | "DECLINED" | "DOUBLE" | "EXPIRED" | "OFFBOARDED";
                     /** @description Filter by entity type */
                     type?: "individual" | "business";
                     offset?: number;
@@ -4265,14 +4302,12 @@ export interface paths {
          * List order types
          * @description Returns order types with KYC rails.
          *
-         *     - When the request is scoped to a tenant (via `x-tenant-id` header or session),
-         *       the list is **filtered** to order types enabled for that tenant —
-         *       i.e. those having a row in `tenant_order_type_rates`. Each returned item is
-         *       enriched with `tenant_rates` (`markup_percent`, `markup_fixed`, `mon_min_usd`)
-         *       and may expose product-facing guardrails such as `min_amount`,
-         *       `max_amount`, `first_party_only` and `documents_required_from_amount`.
-         *     - Without a tenant scope (admin global view), the full catalogue is returned
-         *       and `tenant_rates` is omitted.
+         *     The list is **filtered** to order types enabled for the workspace of the
+         *     API key — i.e. those having a row in `tenant_order_type_rates`. Each returned
+         *     item is enriched with `tenant_rates` (`markup_percent`, `markup_fixed`,
+         *     `mon_min_usd`) and may expose product-facing guardrails such as `min_amount`,
+         *     `max_amount`, `first_party_only` and `documents_required_from_amount`.
+         *     The workspace comes from the key only; an `x-tenant-id` header is ignored.
          *
          */
         get: {
@@ -8747,6 +8782,8 @@ export interface components {
             routing_number?: string | null;
             bank_name: string | null;
             swift_bic?: string | null;
+            /** @description BIC of the intermediary (correspondent) bank, SWIFT payment method only; 8 or 11 characters, ISO 9362 */
+            intermediary_bic?: string | null;
             iban?: string | null;
             /** @description Sort code (6 digits, UK banking) */
             sort_code?: string | null;
@@ -8897,7 +8934,7 @@ export interface components {
             /** @enum {string} */
             type?: "individual" | "business";
             /** @enum {string} */
-            status?: "UNVERIFIED" | "PENDING" | "WAITING_ON_REVIEW" | "WAITING_ON_UBOS" | "HOLD" | "APPROVED" | "SOFT_REJECT" | "REJECT" | "DECLINED" | "DOUBLE";
+            status?: "UNVERIFIED" | "PENDING" | "WAITING_ON_REVIEW" | "WAITING_ON_UBOS" | "HOLD" | "APPROVED" | "SOFT_REJECT" | "REJECT" | "DECLINED" | "DOUBLE" | "EXPIRED" | "OFFBOARDED";
             email?: string | null;
             phone?: string | null;
             first_name?: string | null;
@@ -8960,11 +8997,11 @@ export interface components {
                  */
                 ubo_id?: string | null;
                 /**
-                 * @description Who filed the document: `admin_api` — this API, `panel` — an operator, `bff` — the client application, `kyc_provider` — received from the KYC provider, `backfill` — carried over from the former `*_url` fields.
+                 * @description Who filed the document: `admin_api` — this API, `panel` — an operator, `bff` — the client application, `kyc_provider` — received from the KYC provider, `backfill` — carried over from the former `*_url` fields, `client` — uploaded by the client through a KYC form.
                  * @example admin_api
                  * @enum {string}
                  */
-                source?: "admin_api" | "panel" | "bff" | "kyc_provider" | "backfill";
+                source?: "admin_api" | "panel" | "bff" | "kyc_provider" | "backfill" | "client";
                 /**
                  * Format: uuid
                  * @description Shared by the files sent in one request (one submission).
@@ -9126,7 +9163,7 @@ export interface components {
          * @example EXCHANGE_OMNI
          * @enum {string}
          */
-        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE" | "MONTHLY_FEE" | "REFERRAL_PAYOUT";
+        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_FEDNOW_ONRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE" | "MONTHLY_FEE" | "REFERRAL_PAYOUT";
         OrderCalculation: {
             /**
              * Format: uuid

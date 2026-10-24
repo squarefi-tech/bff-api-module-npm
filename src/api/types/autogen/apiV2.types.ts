@@ -1062,17 +1062,17 @@ export interface components {
              * @default UNVERIFIED
              * @enum {string|null}
              */
-            kyc_status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW" | null;
+            kyc_status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW" | "EXPIRED" | "OFFBOARDED" | null;
             /**
              * @default UNVERIFIED
              * @enum {string}
              */
-            identity_verification_status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
+            identity_verification_status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW" | "EXPIRED" | "OFFBOARDED";
             /**
              * @default UNVERIFIED
              * @enum {string}
              */
-            face_verification_status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
+            face_verification_status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW" | "EXPIRED" | "OFFBOARDED";
             readonly profile_source: string | null;
             readonly profile_synced_at: string | null;
             referral_name: string | null;
@@ -1349,7 +1349,7 @@ export interface components {
              * @default UNVERIFIED
              * @enum {string}
              */
-            status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
+            status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW" | "EXPIRED" | "OFFBOARDED";
             readonly business_name?: string;
             readonly first_name?: string;
             readonly last_name?: string;
@@ -1763,7 +1763,7 @@ export interface components {
              * @default UNVERIFIED
              * @enum {string}
              */
-            status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
+            status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW" | "EXPIRED" | "OFFBOARDED";
             /** @enum {string|null} */
             employment_status?: "EMPLOYEE" | "SELF_EMPLOYED" | "RETIRED" | "UNEMPLOYED" | "STUDENT" | "OTHER" | null;
             employment_description?: string | null;
@@ -1831,7 +1831,7 @@ export interface components {
         WalletKycRailDto: {
             message: string | null;
             /** @enum {string} */
-            readonly status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW";
+            readonly status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW" | "EXPIRED" | "OFFBOARDED";
             /** @default false */
             terms_confirmed: boolean;
             extra_actions?: components["schemas"]["WalletKycRailExtraActionDto"][];
@@ -2178,6 +2178,8 @@ export interface components {
             readonly supported_locales?: components["schemas"]["SupportedLocalesEntity"] | null;
             /** @enum {string} */
             auth_provider: "supabase" | "clerk";
+            /** @default false */
+            kyc_forms_enabled: boolean;
             base_currency: string;
             mass_payouts: components["schemas"]["SystemMassPayoutsConfigDto"];
             aml_check: components["schemas"]["SystemAmlCheckConfigDto"];

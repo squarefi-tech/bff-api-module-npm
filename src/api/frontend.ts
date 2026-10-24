@@ -1,6 +1,11 @@
+import type { AxiosRequestConfig } from 'axios';
+
 import { apiClientV1, apiClientV1Frontend } from '../utils/apiClientFactory';
 import { makeSecureRequest } from '../utils/encrypt';
 import { API } from './types/types';
+
+// `rails` and `programs` go as repeated keys (`rails=a&rails=b`); a comma-separated string is not a list.
+const KYC_FORMS_ARRAY_PARAMS: AxiosRequestConfig['paramsSerializer'] = { indexes: null };
 
 export const frontend = {
   access: {
@@ -377,6 +382,182 @@ export const frontend = {
       apiClientV1Frontend.postRequest<API.Frontend.KycRails.ConfirmTerms.Response>(
         `/frontend/wallets/${wallet_id}/kyc-rails/${rail_id}/terms-and-conditions`,
       ),
+  },
+  // KYC forms (CORE). Personal entity creation is idempotent, a business entity is new on every call. A form is
+  // picked by `rails` / `programs` (none — the base form); `wallet_id` is required with `programs`.
+  kycForms: {
+    entities: {
+      create: (
+        data: API.Frontend.KycForms.Entities.Create.Request,
+      ): Promise<API.Frontend.KycForms.Entities.Create.Response> =>
+        apiClientV1Frontend.postRequest<API.Frontend.KycForms.Entities.Create.Response>('/frontend/kyc/entities', {
+          data,
+        }),
+      list: (): Promise<API.Frontend.KycForms.Entities.List.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.KycForms.Entities.List.Response>('/frontend/kyc/entities'),
+      get: ({
+        entity_id,
+      }: API.Frontend.KycForms.Entities.Get.Request): Promise<API.Frontend.KycForms.Entities.Get.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.KycForms.Entities.Get.Response>(
+          `/frontend/kyc/entities/${entity_id}`,
+        ),
+      overview: ({
+        entity_id,
+        ...params
+      }: API.Frontend.KycForms.Entities.Overview.Request): Promise<API.Frontend.KycForms.Entities.Overview.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.KycForms.Entities.Overview.Response>(
+          `/frontend/kyc/entities/${entity_id}/overview`,
+          { params },
+        ),
+      targets: ({
+        entity_id,
+        ...params
+      }: API.Frontend.KycForms.Entities.Targets.Request): Promise<API.Frontend.KycForms.Entities.Targets.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.KycForms.Entities.Targets.Response>(
+          `/frontend/kyc/entities/${entity_id}/targets`,
+          { params },
+        ),
+    },
+    targets: {
+      list: (
+        params: API.Frontend.KycForms.Targets.List.Request,
+      ): Promise<API.Frontend.KycForms.Targets.List.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.KycForms.Targets.List.Response>('/frontend/kyc/targets', {
+          params,
+        }),
+    },
+    forms: {
+      get: ({
+        entity_id,
+        ...params
+      }: API.Frontend.KycForms.Forms.Get.Request): Promise<API.Frontend.KycForms.Forms.Get.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.KycForms.Forms.Get.Response>(
+          `/frontend/kyc/entities/${entity_id}/forms`,
+          { params, paramsSerializer: KYC_FORMS_ARRAY_PARAMS },
+        ),
+      // The draft is replaced as a whole: send every open visible field, `null` clears one. Files go through `upload`.
+      saveDraft: ({
+        entity_id,
+        rails,
+        programs,
+        wallet_id,
+        locale,
+        ...data
+      }: API.Frontend.KycForms.Forms.SaveDraft.Request): Promise<API.Frontend.KycForms.Forms.SaveDraft.Response> =>
+        apiClientV1Frontend.putRequest<API.Frontend.KycForms.Forms.SaveDraft.Response>(
+          `/frontend/kyc/entities/${entity_id}/forms/draft`,
+          { data, params: { rails, programs, wallet_id, locale }, paramsSerializer: KYC_FORMS_ARRAY_PARAMS },
+        ),
+      // One file per request into the file field `field`; Content-Type is left to the browser (FormData).
+      upload: ({
+        entity_id,
+        rails,
+        programs,
+        wallet_id,
+        locale,
+        field,
+        file,
+        signal,
+        timeout,
+        onUploadProgress,
+      }: API.Frontend.KycForms.Forms.Upload.Request): Promise<API.Frontend.KycForms.Forms.Upload.Response> => {
+        const formData = new FormData();
+
+        formData.append('field', field);
+        formData.append('file', file);
+
+        return apiClientV1Frontend.postRequest<API.Frontend.KycForms.Forms.Upload.Response>(
+          `/frontend/kyc/entities/${entity_id}/forms/uploads`,
+          {
+            data: formData,
+            params: { rails, programs, wallet_id, locale },
+            paramsSerializer: KYC_FORMS_ARRAY_PARAMS,
+            signal,
+            timeout,
+            onUploadProgress,
+          },
+        );
+      },
+      // Only a file still in the draft (`saved: false`); a saved KYC document is never removed here.
+      removeUpload: ({
+        entity_id,
+        upload_id,
+        ...params
+      }: API.Frontend.KycForms.Forms.RemoveUpload.Request): Promise<API.Frontend.KycForms.Forms.RemoveUpload.Response> =>
+        apiClientV1Frontend.deleteRequest(`/frontend/kyc/entities/${entity_id}/forms/uploads/${upload_id}`, {
+          params,
+          paramsSerializer: KYC_FORMS_ARRAY_PARAMS,
+        }),
+      submit: ({
+        entity_id,
+        rails,
+        programs,
+        wallet_id,
+        locale,
+        ...data
+      }: API.Frontend.KycForms.Forms.Submit.Request): Promise<API.Frontend.KycForms.Forms.Submit.Response> =>
+        apiClientV1Frontend.postRequest<API.Frontend.KycForms.Forms.Submit.Response>(
+          `/frontend/kyc/entities/${entity_id}/forms/submit`,
+          { data, params: { rails, programs, wallet_id, locale }, paramsSerializer: KYC_FORMS_ARRAY_PARAMS },
+        ),
+    },
+    verification: {
+      // A widget token of the identity provider for the owner of the entity (the filler of a business).
+      session: ({
+        entity_id,
+      }: API.Frontend.KycForms.Verification.Session.Request): Promise<API.Frontend.KycForms.Verification.Session.Response> =>
+        apiClientV1Frontend.postRequest<API.Frontend.KycForms.Verification.Session.Response>(
+          `/frontend/kyc/entities/${entity_id}/verification/session`,
+        ),
+      owners: {
+        link: ({
+          entity_id,
+          owner_id,
+        }: API.Frontend.KycForms.Verification.Owners.Link.Request): Promise<API.Frontend.KycForms.Verification.Owners.Link.Response> =>
+          apiClientV1Frontend.postRequest<API.Frontend.KycForms.Verification.Owners.Link.Response>(
+            `/frontend/kyc/entities/${entity_id}/verification/owners/${owner_id}/link`,
+          ),
+        session: ({
+          entity_id,
+          owner_id,
+        }: API.Frontend.KycForms.Verification.Owners.Session.Request): Promise<API.Frontend.KycForms.Verification.Owners.Session.Response> =>
+          apiClientV1Frontend.postRequest<API.Frontend.KycForms.Verification.Owners.Session.Response>(
+            `/frontend/kyc/entities/${entity_id}/verification/owners/${owner_id}/session`,
+          ),
+        // One JPEG or PNG photo per request; `back` only for a document type other than a passport.
+        document: ({
+          entity_id,
+          owner_id,
+          file,
+          side,
+          type,
+          country,
+          signal,
+          timeout,
+          onUploadProgress,
+        }: API.Frontend.KycForms.Verification.Owners.Document.Request): Promise<API.Frontend.KycForms.Verification.Owners.Document.Response> => {
+          const formData = new FormData();
+
+          formData.append('file', file);
+          formData.append('side', side);
+          if (type) formData.append('type', type);
+          if (country) formData.append('country', country);
+
+          return apiClientV1Frontend.postRequest<API.Frontend.KycForms.Verification.Owners.Document.Response>(
+            `/frontend/kyc/entities/${entity_id}/verification/owners/${owner_id}/document`,
+            { data: formData, signal, timeout, onUploadProgress },
+          );
+        },
+        // The provider emails every owner still to pass the check; taken once in 10 minutes
+        // (409 KYC_OWNER_INVITES_TOO_SOON, `verification.invites.next_at` of the overview).
+        invite: ({
+          entity_id,
+        }: API.Frontend.KycForms.Verification.Owners.Invite.Request): Promise<API.Frontend.KycForms.Verification.Owners.Invite.Response> =>
+          apiClientV1Frontend.postRequest<API.Frontend.KycForms.Verification.Owners.Invite.Response>(
+            `/frontend/kyc/entities/${entity_id}/verification/owners/invite`,
+          ),
+      },
+    },
   },
   reference: {
     // Frontend twin of `exchange.byOrderType.*` (legacy `GET /exchange/`): the same tenant pairs, but paged in

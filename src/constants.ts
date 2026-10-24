@@ -383,6 +383,8 @@ export enum KYCStatuses {
   UNVERIFIED = 'UNVERIFIED',
   WAITING_ON_UBOS = 'WAITING_ON_UBOS',
   WAITING_ON_REVIEW = 'WAITING_ON_REVIEW',
+  EXPIRED = 'EXPIRED',
+  OFFBOARDED = 'OFFBOARDED',
 }
 
 export const KYCStatusCheck: IsEnumEqualToUnion<KYCStatuses, API.KYC.KYCStatus> = true;
