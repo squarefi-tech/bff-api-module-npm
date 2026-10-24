@@ -526,7 +526,10 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        /** @example Acme Corp. */
+                        /**
+                         * @description Legal name. Latin characters only (printable ASCII - letters A-Z without diacritics, digits, spaces, punctuation); anything else is refused with `400 VALIDATION_ERROR`. Transliterate other scripts before sending.
+                         * @example Acme Corp.
+                         */
                         name: string;
                         /**
                          * @example BUSINESS
@@ -573,7 +576,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error */
+                /** @description `VALIDATION_ERROR`: `name` or `type` missing or invalid, or `name` has characters outside printable ASCII (the message names the field) */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -806,7 +809,7 @@ export interface paths {
                          * @enum {string}
                          */
                         type: "ACH" | "RTP" | "SWIFT" | "SEPA" | "CRYPTO_EXTERNAL" | "CRYPTO_INTERNAL" | "CHAPS" | "FPS" | "FEDWIRE" | "INTERNAL";
-                        /** @description User-friendly alias for this destination */
+                        /** @description User-friendly alias for this destination. Latin characters only (printable ASCII - letters A-Z without diacritics, digits, spaces, punctuation); anything else is refused with `400 VALIDATION_ERROR`. */
                         nickname?: string;
                         /** @description Required for banking types (ACH, RTP, SWIFT, SEPA, CHAPS, FPS, FEDWIRE). What each rail needs:
                          *
@@ -814,10 +817,10 @@ export interface paths {
                          *     | --- | --- | --- |
                          *     | ACH, RTP, FEDWIRE | `routing_number`, `account_number` | ABA routing number (9 digits, valid check digit); account 4–17 letters or digits |
                          *     | SEPA | `iban` | IBAN of a SEPA-zone country; length, account format and check digits per country; `swift_bic` optional |
-                         *     | SWIFT | `swift_bic`, `account_number` (or `iban`) | valid SWIFT/BIC (not a test BIC); an IBAN-shaped account must be a valid IBAN; for a US bank `routing_number` is optional and must be valid when given |
+                         *     | SWIFT | `swift_bic`, `account_number` (or `iban`) | valid SWIFT/BIC (not a test BIC); an IBAN-shaped account must be a valid IBAN; for a US bank `routing_number` is optional and must be valid when given; `intermediary_bic` optional, a valid SWIFT/BIC when given |
                          *     | CHAPS, FPS | `sort_code`, `account_number` | UK: 6-digit sort code and 8-digit account; FPS in HKD: 3-digit bank clearing code |
                          *
-                         *     Every problem is returned at once in `error.details.issues`. `POST /api/counterparty/destinations/validate` checks a payload without saving it.
+                         *     `intermediary_bic` is refused on every rail but SWIFT. Every problem is returned at once in `error.details.issues`. `POST /api/counterparty/destinations/validate` checks a payload without saving it.
                          *      */
                         banking_data?: {
                             /** @description Bank account number (on SWIFT, the IBAN where the bank's country uses one) */
@@ -828,6 +831,8 @@ export interface paths {
                             bank_name?: string;
                             /** @description SWIFT/BIC code */
                             swift_bic?: string;
+                            /** @description BIC of the intermediary (correspondent) bank, SWIFT payment method only; 8 or 11 characters, ISO 9362 */
+                            intermediary_bic?: string | null;
                             /** @description IBAN */
                             iban?: string;
                             /** @description Sort code (6 digits, UK banking) */
@@ -894,7 +899,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error. Bank-details problems come as `VALIDATION_ERROR` with every problem in `error.details.issues` (`field`, `code`, `message`, optional `country` / `detected`).
+                /** @description Validation error. Bank-details problems come as `VALIDATION_ERROR` with every problem in `error.details.issues` (`field`, `code`, `message`, optional `country` / `detected`). A `nickname` with characters outside printable ASCII is refused with `VALIDATION_ERROR` too; the message names the field.
                  *
                  *     **Until 2026-10-12 00:00 UTC** the stricter bank-details rules (per-country IBAN checks, SEPA-zone IBAN, BIC format, ABA check digit, account formats) are reported by the validation endpoint but do not refuse this request; from then on they do.
                  *      */
@@ -1024,7 +1029,10 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        /** @example Acme — primary */
+                        /**
+                         * @description User-friendly alias for this destination. Latin characters only (printable ASCII - letters A-Z without diacritics, digits, spaces, punctuation); anything else is refused with `400 VALIDATION_ERROR`.
+                         * @example Acme primary
+                         */
                         nickname?: string;
                     };
                 };
@@ -1045,12 +1053,14 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error */
+                /** @description `VALIDATION_ERROR`: no updatable field, or `nickname` has characters outside printable ASCII */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
                 };
                 /** @description Not found */
                 404: {
@@ -3235,6 +3245,114 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/issuing/cards/{card_id}/3ds-challenges/{challenge_id}/respond": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve or reject a purchase held for 3DS
+         * @description Answers an out-of-band 3DS challenge announced by the `CARD_3DS_CHALLENGE` / `CREATED`
+         *     webhook event. Instead of an SMS code the cardholder confirms the online purchase in your
+         *     app (biometrics, PIN or any step-up you choose) and you send the verdict here before
+         *     `expires_at` (about 5 minutes). No code is generated or checked.
+         *
+         *     On approve the purchase continues to authorization and the usual card transaction events
+         *     follow. On reject, or when nobody answers in time, the purchase fails and no transaction
+         *     is created.
+         *
+         *     **Authentication**: x-api-key header required
+         *
+         *     **Access Control**: User must have access to the card
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    card_id: string;
+                    /** @description `data.challenge_id` of the `CARD_3DS_CHALLENGE` event */
+                    challenge_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @description true lets the purchase through, false declines it */
+                        approve: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Answer accepted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                challenge_id?: string;
+                                /** @enum {string} */
+                                status?: "APPROVED" | "REJECTED";
+                            };
+                            /** @example Purchase approved */
+                            message?: string;
+                        };
+                    };
+                };
+                /** @description `VALIDATION_ERROR` — `approve` is missing or not a boolean */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Access denied to this card */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description `THREE_DS_CHALLENGE_NOT_FOUND` — no such challenge on this card */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description `THREE_DS_CHALLENGE_CLOSED` — already answered or expired; `error.details.status` tells which */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/issuing/cards/{card_id}/unfreeze": {
         parameters: {
             query?: never;
@@ -4450,6 +4568,90 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/issuing/sub-accounts/{sub_account_id}/top-up/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Check whether a top-up would be accepted
+         * @description Answers whether a top-up of `amount` to this sub-account would be accepted right now,
+         *     from the liquidity of the card provider behind it — the same check a deposit runs
+         *     before it debits the wallet. Nothing is debited or reserved, so a later deposit can
+         *     still be refused if the provider's liquidity changes in between.
+         *
+         *     **Authentication**: x-api-key header required
+         *
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Amount the sub-account is to be credited, in its own currency. */
+                    amount: number;
+                };
+                header?: never;
+                path: {
+                    sub_account_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The provider's verdict */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /** @description Whether the provider would take a top-up of `amount` now. */
+                                allowed?: boolean;
+                            };
+                        };
+                    };
+                };
+                /** @description Missing or non-positive `amount` */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Access denied to this sub-account */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description The provider gave no verdict (`TOPUP_CHECK_UNAVAILABLE`); a deposit would be refused the same way. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -7304,7 +7506,7 @@ export interface components {
          * @example EXCHANGE_OMNI
          * @enum {string}
          */
-        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE" | "MONTHLY_FEE" | "REFERRAL_PAYOUT";
+        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_FEDNOW_ONRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE" | "MONTHLY_FEE" | "REFERRAL_PAYOUT";
         OrderCalculation: {
             /**
              * Format: uuid
@@ -8034,6 +8236,8 @@ export interface components {
             bank_name: string | null;
             /** @description SWIFT/BIC code */
             swift_bic?: string | null;
+            /** @description BIC of the intermediary (correspondent) bank, SWIFT payment method only; 8 or 11 characters, ISO 9362 */
+            intermediary_bic?: string | null;
             /** @description IBAN */
             iban?: string | null;
             /** @description Sort code (6 digits, UK banking) */
