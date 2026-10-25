@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.97] - 2026-10-25
+
 ### Added
 
 - **`API.Frontend.KycForms.Terms` and `TermsItem` (SFI-2912).** One group of terms documents per rail of a KYC form — `rail_id`, `program_ids` (the card programs of the form that go through the rail; empty when only the rail is named) and `items` (the rail's active terms documents in display order: `id`, `title`, `description`, `link`; empty when the rail has none). Both are read off the generated `KycFormsTerms`.
