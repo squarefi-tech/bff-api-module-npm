@@ -1174,6 +1174,8 @@ export namespace API {
       export type Form = Schemas['KycFormsForm'];
       export type FormScope = Form['scope'];
       export type FormSection = Form['sections'][number];
+      export type Terms = Schemas['KycFormsTerms'];
+      export type TermsItem = Terms['items'][number];
       export type FormState = Schemas['KycFormsFormState'];
       export type Field = Schemas['KycFormsField'];
       export type FieldType = Field['type'];
