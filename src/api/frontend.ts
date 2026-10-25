@@ -488,6 +488,7 @@ export const frontend = {
           params,
           paramsSerializer: KYC_FORMS_ARRAY_PARAMS,
         }),
+      // `accepted_terms`: all document ids of `form.terms` (`[]` if none); missing ones come back in `details.terms`.
       submit: ({
         entity_id,
         rails,
