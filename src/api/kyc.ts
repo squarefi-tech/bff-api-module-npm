@@ -37,7 +37,10 @@ export const kyc = {
         `/kyc/entities/${kyc_entity_id}/resume/${verification_ref}`,
       ),
   },
-  /** @deprecated BFF rails are replaced by CORE `/frontend/wallets/{wallet_id}/kyc-rails` (SFI-2614). Use `frontend.kycRails`. */
+  /**
+   * @deprecated BFF rails are replaced by CORE `/frontend/wallets/{wallet_id}/kyc-rails` (SFI-2614). Use `frontend.kycRails`:
+   * only its `submit` takes the rail's terms ticked before the submission (`accepted_terms`, SFI-2865).
+   */
   rails: {
     info: {
       getAll: ({ wallet_id }: API.KYC.Rails.RailInfo.List.Request): Promise<API.KYC.Rails.RailInfo.List.Response> =>

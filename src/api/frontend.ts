@@ -368,12 +368,16 @@ export const frontend = {
       apiClientV1Frontend.getRequest<API.Frontend.KycRails.Get.Response>(
         `/frontend/wallets/${wallet_id}/kyc-rails/${rail_id}`,
       ),
+    // No `data` without `accepted_terms`, so both clients keep the old request (the fetch one sends no body). On a
+    // rail with terms an empty list is a refusal, not an absence (SFI-2865).
     submit: ({
       wallet_id,
       rail_id,
+      accepted_terms,
     }: API.Frontend.KycRails.Submit.Request): Promise<API.Frontend.KycRails.Submit.Response> =>
       apiClientV1Frontend.postRequest<API.Frontend.KycRails.Submit.Response>(
         `/frontend/wallets/${wallet_id}/kyc-rails/${rail_id}`,
+        accepted_terms == null ? undefined : { data: { accepted_terms } },
       ),
     confirmTerms: ({
       wallet_id,

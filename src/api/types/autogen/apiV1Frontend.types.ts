@@ -6059,7 +6059,10 @@ export interface paths {
          *       and poll. Only programs whose vendor reviews the person before issuance ever return
          *       this; vendors that issue inline go straight to `READY`.
          *     - `REJECTED` — a verification came back with a FINAL rejection; re-running it from the
-         *       app is not possible (support resets it), so never render a "verify now" action.
+         *       app is not possible (support resets it), so never render a "verify now" action. Also
+         *       a linked cardholder (`cardholder_id`, `reject_reason`) whose VENDOR rejection is final
+         *       — a forged document, fraud, a liveness bypass, a regulatory bar: its submit answers
+         *       `409 CARDHOLDER_REJECTION_FINAL`, so never render "fix and resubmit" for it.
          *     - `NOT_MEMBER` — the uuid is not an active member of this wallet.
          *
          *     **On a tenant of the KYC forms flow** (SFI-2544) the verdict comes from the member's personal
@@ -6140,8 +6143,9 @@ export interface paths {
                                  */
                                 required_level?: "minimal" | "basic" | "declared" | "full" | null;
                                 /** @description What the vendor disliked, on a NEEDS_RESUBMIT verdict — show it before
-                                 *     asking for a correction. Null when the vendor named no reason, or the
-                                 *     verdict is not a rejection.
+                                 *     asking for a correction — or on a REJECTED one with a linked
+                                 *     cardholder, why the rejection is final. Null when the vendor named no
+                                 *     reason, or the verdict is not a rejection.
                                  *      */
                                 reject_reason?: string | null;
                             }[];
@@ -6216,6 +6220,12 @@ export interface paths {
          *     the person already has: the same document cannot be registered twice at the vendor, so
          *     a fresh cardholder is NOT the way to retry.
          *
+         *     **Final rejection**: a rejection no corrected dossier answers — a forged document,
+         *     fraud, an attempt to bypass the liveness check, or a regulatory bar (age, region, a
+         *     duplicate applicant) — is final. The submit is refused with
+         *     `409 CARDHOLDER_REJECTION_FINAL`, and `error.details.reject_reason` carries the
+         *     vendor's reason; no card can be issued for this identity.
+         *
          *     **Idempotency**: while a review is running, or once the cardholder is live, another
          *     submit returns `409 CARDHOLDER_NOT_DRAFT` rather than spending a second review.
          *
@@ -6276,7 +6286,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Cardholder is live at the vendor, or its review is still running. On a program that issues under the wallet's company: `WALLET_BUSINESS_NOT_ONBOARDED` (the wallet's business has not been registered with the card issuer) or `WALLET_BUSINESS_NOT_APPROVED` (its review is not approved yet). */
+                /** @description Cardholder is live at the vendor, or its review is still running (`CARDHOLDER_NOT_DRAFT`). Its rejection is final and cannot be answered by a resubmit (`CARDHOLDER_REJECTION_FINAL`, `error.details.reject_reason`). On a program that issues under the wallet's company: `WALLET_BUSINESS_NOT_ONBOARDED` (the wallet's business has not been registered with the card issuer) or `WALLET_BUSINESS_NOT_APPROVED` (its review is not approved yet). */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -11419,7 +11429,8 @@ export interface paths {
          *
          *     The same report (type, format and params) asked again while the first one is
          *     still being generated returns that first report with 200 instead of starting
-         *     another. Up to 3 reports of a wallet are generated at once.
+         *     another. The order of `card_ids` counts: the same cards in another order are
+         *     another report. Up to 3 reports of a wallet are generated at once.
          *
          */
         post: {
@@ -15882,7 +15893,15 @@ export interface paths {
          * @description Puts the wallet on the rail, the way compliance does from the panel: a rail whose vendor CORE onboards
          *     itself is submitted here, any other goes through the KYC-admin service. A manual rail waits for
          *     compliance (`WAITING_ON_REVIEW`); a universal rail is approved on the spot. An application the vendor
-         *     sent back (`HOLD`, `SOFT_REJECT`) is resubmitted. No body.
+         *     sent back (`HOLD`, `SOFT_REJECT`) is resubmitted.
+         *
+         *     Terms: show the rail's `terms_and_conditions` before the submission and send the ids the client ticked as
+         *     `accepted_terms`. Every active document of the rail must be among them, or nothing is submitted
+         *     (`400 TERMS_NOT_ACCEPTED`). The acceptance is recorded on the application at the time of the submission
+         *     (`wallet_rail.terms_confirmed`, the documents in `wallet_rail.terms_and_conditions`), and a vendor that takes
+         *     an acceptance date is sent the same time; an account the vendor already holds may keep the date it recorded
+         *     first. Without `accepted_terms` (or without a body, or `null`) the submission goes as before and the terms are
+         *     accepted later with `POST …/terms-and-conditions`.
          *
          *     On the KYC forms flow CORE makes this submission itself for a rail the client sent a rail or multi
          *     form for, once the form is accepted and the entity is `APPROVED`, when the form was sent by a wallet `admin` or `owner` and the wallet has no application
@@ -15909,7 +15928,16 @@ export interface paths {
                 };
                 cookie?: never;
             };
-            requestBody?: never;
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @description Ids of the rail's `terms_and_conditions` the client accepted with this submission. On a rail with
+                         *     terms an empty list is a refusal (`400 TERMS_NOT_ACCEPTED`), not an absence of the field.
+                         *      */
+                        accepted_terms?: string[] | null;
+                    };
+                };
+            };
             responses: {
                 /** @description The rail after the submission */
                 200: {
@@ -15920,14 +15948,16 @@ export interface paths {
                         "application/json": components["schemas"]["WalletKycRailResponse"];
                     };
                 };
-                /** @description `VALIDATION_ERROR` — `rail_id` is not a UUID (a message only); `RAIL_NOT_AVAILABLE` — the rail has no
-                 *     onboarding implementation, or is a universal rail other than the tenant's default on a tenant without
-                 *     KYC; `RAIL_SUBMIT_UNAVAILABLE` — the rail takes no submissions; `RAIL_TYPE_MISMATCH` — the rail is of
+                /** @description `VALIDATION_ERROR` — `rail_id` is not a UUID (a message only), or `accepted_terms` is not an array of uuids
+                 *     (`details.issues`);
+                 *     `RAIL_NOT_AVAILABLE` — the rail has no onboarding implementation, or is a universal rail other than the
+                 *     tenant's default on a tenant without KYC; `RAIL_SUBMIT_UNAVAILABLE` — the rail takes no submissions; `RAIL_TYPE_MISMATCH` — the rail is of
                  *     the other entity type; `RAIL_SUBMISSION_REJECTED` — the onboarding behind the rail refused the
                  *     submission (the vendor's reason is logged, never returned); `RAIL_REQUIREMENTS_INCOMPLETE` — on a
                  *     tenant of the KYC forms flow, the KYC entity misses saved values of required fields of the rail's form
                  *     (a draft does not count): `details.fields` lists their keys, open
-                 *     `GET /frontend/kyc/entities/{entity_id}/forms?rails={rail_id}` and fill them
+                 *     `GET /frontend/kyc/entities/{entity_id}/forms?rails={rail_id}` and fill them; `TERMS_NOT_ACCEPTED` —
+                 *     `accepted_terms` misses an active terms document of the rail, nothing was submitted
                  *      */
                 400: {
                     headers: {
@@ -19304,7 +19334,7 @@ export interface components {
              */
             type: "individual" | "business" | "universal";
             /**
-             * @description KYC verification status. A refusal is one of three values: `DECLINED`, `REJECT` or `SOFT_REJECT`. Only `APPROVED` (full access) and `HOLD` (read-only) open the wallet. `OFFBOARDED` — final: the work with this company or person is over; `EXPIRED` — the verification lapsed and the client passes it again.
+             * @description KYC verification status. A refusal is one of three values: `DECLINED`, `REJECT` or `SOFT_REJECT`. Only `APPROVED` (full access) and `HOLD` (read-only) open the wallet. `OFFBOARDED` — final: the work with this company or person is over; `EXPIRED` — no activity on the application for over three months; a check passed on it brings it back.
              * @enum {string}
              */
             status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW" | "EXPIRED" | "OFFBOARDED";
@@ -19316,6 +19346,11 @@ export interface components {
         };
         /** @description A terms-and-conditions document of a KYC rail. */
         WalletKycRailTerms: {
+            /**
+             * Format: uuid
+             * @description Send it in `accepted_terms` of `POST /frontend/wallets/{wallet_id}/kyc-rails/{rail_id}` once the client ticked the document.
+             */
+            id: string;
             title: string;
             description: string | null;
             link: string | null;
@@ -20136,7 +20171,7 @@ export interface components {
             source: "DEBIT_CARD";
             from: components["schemas"]["ReportPeriodFrom"];
             to: components["schemas"]["ReportPeriodTo"];
-            /** @description Cards of the wallet (the id the card endpoints take), in the order their rows follow one another. A card of another wallet → 404 REPORT_SUBJECT_NOT_FOUND. */
+            /** @description Cards of the wallet (the id the card endpoints take), in the order their rows follow one another; the order is kept as asked and a repeated id is dropped (the first stays). The same cards in another order are another report. A card of another wallet → 404 REPORT_SUBJECT_NOT_FOUND. */
             card_ids: string[];
         };
         /** @description Transaction statement → Account cards — the transactions of a sub-account (card program) of the wallet. Formats CSV, XLSX. Period up to 100 days. */
@@ -20200,7 +20235,7 @@ export interface components {
             status?: "PENDING" | "GENERATING" | "READY" | "FAILED";
             params?: components["schemas"]["WalletReportParams"];
             /**
-             * @description TIMEOUT — the attempt was still generating 30 minutes after it was queued; it is failed on the wallet's next report request.
+             * @description GENERATION_ERROR — the run failed, or the report has nothing to show (e.g. Account details of an account with no deposit details); TIMEOUT — the attempt was still generating 30 minutes after it was queued; it is failed on the wallet's next report request.
              * @enum {string|null}
              */
             failure_code?: "GENERATION_ERROR" | "QUEUE_ERROR" | "TIMEOUT" | null;
@@ -20326,21 +20361,27 @@ export interface components {
             success: boolean;
             data: components["schemas"]["WalletKycRail"];
         };
-        /** @description The error envelope of a rail submission: `ErrorResponse`, with `details` only on `RAIL_REQUIREMENTS_INCOMPLETE`. */
+        /** @description The error envelope of a rail submission: `ErrorResponse`, with `details` only on `RAIL_REQUIREMENTS_INCOMPLETE` (`fields`) and on a `VALIDATION_ERROR` of `accepted_terms` (`issues`). */
         WalletKycRailSubmitErrorResponse: components["schemas"]["ErrorResponse"] & {
             error?: {
-                /** @description `RAIL_REQUIREMENTS_INCOMPLETE` only (absent on every other code): `fields` lists the keys of the required fields of the rail's form with nothing saved in the KYC entity yet, in form order — the `key` of the fields `GET /frontend/kyc/entities/{entity_id}/forms?rails={rail_id}` answers (`address.city`, `document.proof_of_address`, `beneficial_owners`, …). Open that form and highlight them; a draft or a submission still in review does not count until it is applied. */
+                /** @description Absent on every other code. `RAIL_REQUIREMENTS_INCOMPLETE`: `fields` lists the keys of the required fields of the rail's form with nothing saved in the KYC entity yet, in form order — the `key` of the fields `GET /frontend/kyc/entities/{entity_id}/forms?rails={rail_id}` answers (`address.city`, `document.proof_of_address`, `beneficial_owners`, …). Open that form and highlight them; a draft or a submission still in review does not count until it is applied. `VALIDATION_ERROR` of `accepted_terms`: `issues` names each problem (`field`, e.g. `accepted_terms.0`, and `message`); a bad `rail_id` carries a message only. */
                 details?: {
                     /** @example [
                      *       "expected_monthly_volume",
                      *       "document.proof_of_address"
                      *     ] */
-                    fields: string[];
+                    fields?: string[];
+                    issues?: {
+                        /** @example accepted_terms.0 */
+                        field?: string;
+                        /** @example accepted_terms must hold terms ids (UUID) */
+                        message?: string;
+                    }[];
                 } | null;
             };
         };
         /**
-         * @description Raw application status of the KYC entity (`kyc_entity.status`) — the same value the wallet shows as `kyc_info.status` (`WalletKycInfo`); a rail application (`wallet_rail.status`) has its own status of the same set. Build screens by the overview `stage`, not by this value: a status can be added without a release. `PROCESSING` is not set by the forms flow — a vendor sync of the old flow leaves it on an entity — and the overview answers `stage: unknown` for it, as for any status it does not know. `EXPIRED` (a lapsed verification; nothing sets it yet) and `OFFBOARDED` (compliance ended the relationship; final) are set in CORE, never by the identity provider, and no form or provider event moves them — but one: an `EXPIRED` application whose applicant passes the identity check again goes on to its owners (`WAITING_ON_UBOS`) or to compliance (`WAITING_ON_REVIEW`).
+         * @description Raw application status of the KYC entity (`kyc_entity.status`) — the same value the wallet shows as `kyc_info.status` (`WalletKycInfo`); a rail application (`wallet_rail.status`) has its own status of the same set. Build screens by the overview `stage`, not by this value: a status can be added without a release. `PROCESSING` is not set by the forms flow — a vendor sync of the old flow leaves it on an entity — and the overview answers `stage: unknown` for it, as for any status it does not know. `EXPIRED` (no activity on the application for over three months) and `OFFBOARDED` (compliance ended the relationship; final) are set in CORE, never by the identity provider. No form moves either, and no provider event moves `OFFBOARDED`. An `EXPIRED` application comes back once its verification is heard from again — a person's when their identity check passes, a business's on any check outcome of the filler or an owner while the filler's own check stands passed — and goes on to its owners (`WAITING_ON_UBOS`) or to compliance (`WAITING_ON_REVIEW`), never approved by itself.
          * @enum {string}
          */
         KycFormsEntityStatus: "UNVERIFIED" | "PENDING" | "PROCESSING" | "WAITING_ON_REVIEW" | "WAITING_ON_UBOS" | "NEEDS_ATTENTION" | "HOLD" | "APPROVED" | "SOFT_REJECT" | "REJECT" | "DECLINED" | "DOUBLE" | "EXPIRED" | "OFFBOARDED";
@@ -20810,7 +20851,7 @@ export interface components {
                 entity_type: "individual" | "business";
                 status: components["schemas"]["KycFormsEntityStatus"];
                 /**
-                 * @description Build the screen by this, not by `status`. `not_required` — the tenant asks nothing of this client type (`base_form` is null); `not_started` — the base form was not started; `incomplete` — a draft exists; `action_required` — the client's move: pass the identity check (`next_step: verification`), or, for a business, get the owners through theirs (`next_step: owners`); `in_review` — the identity provider or compliance is looking; `resubmit` — returned by compliance, the form is open again with `submission.comment`; `on_hold` — frozen by compliance; `verified` — approved; `expired` — the verification lapsed: the applicant passes the identity check again (`next_step: verification`), then compliance looks again; `rejected` — refused, the form is read-only; `offboarded` — compliance ended the relationship, final; `unknown` — a status this contract does not know. The stage of each `status`: `APPROVED` → `verified`; `REJECT`, `DECLINED`, `DOUBLE` → `rejected`; `OFFBOARDED` → `offboarded`; `EXPIRED` → `expired`; `HOLD` → `on_hold`; `WAITING_ON_REVIEW` → `in_review`; `NEEDS_ATTENTION` → `resubmit`; `WAITING_ON_UBOS` → `action_required` while an owner other than the filler's row has a check to start, finish or redo (`next_step: owners`), else `in_review`; `UNVERIFIED`, `PENDING`, `SOFT_REJECT` → by the base form and the identity check: `not_required` (no base form), `not_started`, `incomplete` (a draft), `action_required` (the check is the move), `in_review` (sent, with compliance or the provider), `resubmit` (the latest submission was returned) — the forms flow never sets `SOFT_REJECT`, one left by the old flow shows the screen of its form like `PENDING`; `PROCESSING` → `unknown` (the forms flow never sets it, an old-flow vendor sync may leave it).
+                 * @description Build the screen by this, not by `status`. `not_required` — the tenant asks nothing of this client type (`base_form` is null); `not_started` — the base form was not started; `incomplete` — a draft exists; `action_required` — the client's move: pass the identity check (`next_step: verification`), or, for a business, get the owners through theirs (`next_step: owners`); `in_review` — the identity provider or compliance is looking; `resubmit` — returned by compliance, the form is open again with `submission.comment`; `on_hold` — frozen by compliance; `verified` — approved; `expired` — no activity on the application for over three months: a passed identity check brings it back (`next_step: verification`), then compliance looks again; `rejected` — refused, the form is read-only; `offboarded` — compliance ended the relationship, final; `unknown` — a status this contract does not know. The stage of each `status`: `APPROVED` → `verified`; `REJECT`, `DECLINED`, `DOUBLE` → `rejected`; `OFFBOARDED` → `offboarded`; `EXPIRED` → `expired`; `HOLD` → `on_hold`; `WAITING_ON_REVIEW` → `in_review`; `NEEDS_ATTENTION` → `resubmit`; `WAITING_ON_UBOS` → `action_required` while an owner other than the filler's row has a check to start, finish or redo (`next_step: owners`), else `in_review`; `UNVERIFIED`, `PENDING`, `SOFT_REJECT` → by the base form and the identity check: `not_required` (no base form), `not_started`, `incomplete` (a draft), `action_required` (the check is the move), `in_review` (sent, with compliance or the provider), `resubmit` (the latest submission was returned) — the forms flow never sets `SOFT_REJECT`, one left by the old flow shows the screen of its form like `PENDING`; `PROCESSING` → `unknown` (the forms flow never sets it, an old-flow vendor sync may leave it).
                  * @enum {string}
                  */
                 stage: "not_required" | "not_started" | "incomplete" | "action_required" | "in_review" | "resubmit" | "on_hold" | "verified" | "expired" | "rejected" | "offboarded" | "unknown";

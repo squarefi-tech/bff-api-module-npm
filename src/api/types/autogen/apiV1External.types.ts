@@ -2524,6 +2524,12 @@ export interface paths {
          *     fresh cardholder is NOT the way to retry. While a review is running, another submit is
          *     refused with `409`.
          *
+         *     **Final rejection**: a rejection no corrected dossier answers — a forged document,
+         *     fraud, an attempt to bypass the liveness check, or a regulatory bar (age, region, a
+         *     duplicate applicant) — is final. The submit is refused with
+         *     `409 CARDHOLDER_REJECTION_FINAL`, and `error.details.reject_reason` carries the
+         *     vendor's reason; no card can be issued for this identity.
+         *
          *     **Authentication**: x-api-key header required
          *
          */
@@ -2583,7 +2589,7 @@ export interface paths {
                         "application/json": components["schemas"]["ApiErrorResponse"];
                     };
                 };
-                /** @description Cardholder is live at the vendor, or its review is still running. On a program that issues under the wallet's company: `WALLET_BUSINESS_NOT_ONBOARDED` (the wallet's business has not been registered with the card issuer) or `WALLET_BUSINESS_NOT_APPROVED` (its review is not approved yet). */
+                /** @description Cardholder is live at the vendor, or its review is still running (`CARDHOLDER_NOT_DRAFT`). Its rejection is final and cannot be answered by a resubmit (`CARDHOLDER_REJECTION_FINAL`, `error.details.reject_reason`). On a program that issues under the wallet's company: `WALLET_BUSINESS_NOT_ONBOARDED` (the wallet's business has not been registered with the card issuer) or `WALLET_BUSINESS_NOT_APPROVED` (its review is not approved yet). */
                 409: {
                     headers: {
                         [name: string]: unknown;
