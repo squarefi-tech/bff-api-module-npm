@@ -368,9 +368,8 @@ export const frontend = {
       apiClientV1Frontend.getRequest<API.Frontend.KycRails.Get.Response>(
         `/frontend/wallets/${wallet_id}/kyc-rails/${rail_id}`,
       ),
-    // `accepted_terms` (SFI-2865): the ids of the rail's `terms_and_conditions` the client ticked before the
-    // submission; CORE records the acceptance on the application. Left out (or `null`), the body stays empty as
-    // before; on a rail with terms an empty list is a refusal, not an absence.
+    // No `data` without `accepted_terms`, so both clients keep the old request (the fetch one sends no body). On a
+    // rail with terms an empty list is a refusal, not an absence (SFI-2865).
     submit: ({
       wallet_id,
       rail_id,

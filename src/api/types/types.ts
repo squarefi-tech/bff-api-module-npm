@@ -1116,7 +1116,6 @@ export namespace API {
       }
 
       export namespace Submit {
-        // The path ids plus the optional body: `accepted_terms`, the rail's terms ticked before the submission (SFI-2865).
         export type Request = RailRoot['post']['parameters']['path'] &
           NonNullable<NonNullable<RailRoot['post']['requestBody']>['content']['application/json']>;
         export type Response = RailRoot['post']['responses'][200]['content']['application/json'];
