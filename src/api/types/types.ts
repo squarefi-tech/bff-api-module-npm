@@ -1116,9 +1116,12 @@ export namespace API {
       }
 
       export namespace Submit {
-        export type Request = RailRoot['post']['parameters']['path'];
+        // The path ids plus the optional body: `accepted_terms`, the rail's terms ticked before the submission (SFI-2865).
+        export type Request = RailRoot['post']['parameters']['path'] &
+          NonNullable<NonNullable<RailRoot['post']['requestBody']>['content']['application/json']>;
         export type Response = RailRoot['post']['responses'][200]['content']['application/json'];
-        // `RAIL_REQUIREMENTS_INCOMPLETE` only: the keys of the rail form's required fields with nothing saved yet.
+        // `RAIL_REQUIREMENTS_INCOMPLETE`: `fields`, the keys of the rail form's required fields with nothing saved yet.
+        // `VALIDATION_ERROR` of `accepted_terms` (SFI-2865): `issues`, each problem's `field` and `message`.
         export type ErrorDetails = NonNullable<
           NonNullable<componentsV1Frontend['schemas']['WalletKycRailSubmitErrorResponse']['error']>['details']
         >;

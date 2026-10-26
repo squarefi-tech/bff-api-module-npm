@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`frontend.kycRails.submit` takes `accepted_terms` (SFI-2865).** The ids of the rail's `terms_and_conditions` the client ticked before the submission, sent as the body `{ accepted_terms }`; CORE records the acceptance on the application (`wallet_rail.terms_confirmed: true`, the accepted documents in `wallet_rail.terms_and_conditions`), so the terms are no longer accepted with `confirmTerms` after the submission. Every active terms document of the rail must be among them, or nothing is submitted and the answer is `400 TERMS_NOT_ACCEPTED`; extra ids are ignored, and on a rail without terms the field changes nothing. Left out or `null`, the body stays empty and the submission works as before — on a rail with terms an empty list is a refusal, not an absence. An id that is not a uuid answers `400 VALIDATION_ERROR`. `accepted_terms` is optional in `API.Frontend.KycRails.Submit.Request`.
+- **`API.Frontend.KycRails.WalletKycRailTerms` carries `id` (SFI-2865).** Every terms document of a rail — the rail's and `wallet_rail`'s alike, in `getAll`, `getById`, `submit` and `confirmTerms` — has its `id`, the value `accepted_terms` takes.
+- **`API.Frontend.KycRails.Submit.ErrorDetails`: `fields` is optional, and `issues` is new (SFI-2865).** `fields` is still set on `400 RAIL_REQUIREMENTS_INCOMPLETE`; a `400 VALIDATION_ERROR` of a malformed `accepted_terms` carries `issues` instead — each problem's `field` (e.g. `accepted_terms.0`) and `message`. Code that reads `details.fields` as always present must now check it.
+- **Generated types regenerated from the dev specs (Frontend API 28.1.0, Developer API 24.0.0, Tenant API 22.0.0; Legacy API 14.0.0 and the V2 spec produce no change; the last regeneration was Frontend 27.3.0, Developer 23.0.0 and Tenant 21.0.0).** The only type changes are the entries above. The rest is descriptions: the cardholder submit of the Developer and Tenant APIs names `409 CARDHOLDER_REJECTION_FINAL` (a final vendor rejection — a forged document, fraud, a liveness bypass, a regulatory bar — with the vendor's reason in `error.details.reject_reason`, and no card can be issued for that identity), the eligibility verdict of the frontend says such a cardholder is never offered "fix and resubmit", and a card report keeps `card_ids` in the order asked (the same cards in another order are another report) and fails with `GENERATION_ERROR` when it has nothing to show.
+
 ## [1.36.97] - 2026-10-25
 
 ### Added

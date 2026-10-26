@@ -368,12 +368,17 @@ export const frontend = {
       apiClientV1Frontend.getRequest<API.Frontend.KycRails.Get.Response>(
         `/frontend/wallets/${wallet_id}/kyc-rails/${rail_id}`,
       ),
+    // `accepted_terms` (SFI-2865): the ids of the rail's `terms_and_conditions` the client ticked before the
+    // submission; CORE records the acceptance on the application. Left out (or `null`), the body stays empty as
+    // before; on a rail with terms an empty list is a refusal, not an absence.
     submit: ({
       wallet_id,
       rail_id,
+      accepted_terms,
     }: API.Frontend.KycRails.Submit.Request): Promise<API.Frontend.KycRails.Submit.Response> =>
       apiClientV1Frontend.postRequest<API.Frontend.KycRails.Submit.Response>(
         `/frontend/wallets/${wallet_id}/kyc-rails/${rail_id}`,
+        accepted_terms == null ? undefined : { data: { accepted_terms } },
       ),
     confirmTerms: ({
       wallet_id,
