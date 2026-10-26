@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.98] - 2026-10-26
+
 ### Added
 
 - **`frontend.kycRails.submit` takes `accepted_terms` (SFI-2865).** The ids of the rail's `terms_and_conditions` the client ticked before the submission, sent as the body `{ accepted_terms }`; CORE records the acceptance on the application (`wallet_rail.terms_confirmed: true`, the accepted documents in `wallet_rail.terms_and_conditions`), so a submission with them needs no `confirmTerms` afterwards. `confirmTerms` stays for a submission without `accepted_terms` and for terms the rail changes after the submission. Every active terms document of the rail must be among them, or nothing is submitted and the answer is `400 TERMS_NOT_ACCEPTED`; extra ids are ignored, and on a rail without terms the field changes nothing. Left out or `null`, the request is the old one and the submission works as before — on a rail with terms an empty list is a refusal, not an absence. An id that is not a uuid answers `400 VALIDATION_ERROR`. `accepted_terms` is optional in `API.Frontend.KycRails.Submit.Request`.
