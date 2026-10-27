@@ -1047,6 +1047,7 @@ export interface components {
     schemas: {
         InviteDto: {
             invite_code?: string;
+            promo_code?: string;
             referrer?: string;
         };
         UserDataRefEntity: {
@@ -1127,6 +1128,7 @@ export interface components {
         };
         SignUpByTypeDto: {
             invite_code?: string;
+            promo_code?: string;
             referrer?: string;
             /** @enum {string} */
             type: "email" | "phone";
@@ -1167,6 +1169,7 @@ export interface components {
             auth_date: string;
             hash: string;
             invite_code?: string;
+            promo_code?: string;
             referrer?: string;
         };
         TelegramSignInByTgIdDto: {
@@ -1175,12 +1178,14 @@ export interface components {
         };
         SignInByEmailDto: {
             invite_code?: string;
+            promo_code?: string;
             referrer?: string;
             email: string;
             redirect_url?: string;
         };
         SignInByPhoneDto: {
             invite_code?: string;
+            promo_code?: string;
             referrer?: string;
             phone: string;
         };
@@ -4212,7 +4217,7 @@ export interface operations {
                     "application/json": components["schemas"]["WalletKycRailTypeDto"];
                 };
             };
-            /** @description KYC verification already processed */
+            /** @description KYC verification already processed; or TERMS_NOT_ACCEPTED — the rail requires its terms with the submission (kyc_rails.terms_required), submit it with CORE POST /frontend/wallets/{wallet_id}/kyc-rails/{rail_id} and accepted_terms */
             400: {
                 headers: {
                     [name: string]: unknown;

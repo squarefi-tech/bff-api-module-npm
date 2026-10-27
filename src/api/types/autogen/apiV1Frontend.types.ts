@@ -10474,6 +10474,125 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/frontend/promo-codes/redeem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply a promo code
+         * @description Moves the user to the user group (tariff) of the tenant's promo code, records the redemption and counts one use of the code. If a step fails, the earlier ones are undone and the request fails.
+         *     A user applies the same code once; another code can be applied later and moves the user again.
+         *     A code of another tenant, or a deleted one, is reported as not found.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description The promo code; case does not matter, surrounding spaces are trimmed. 3–32 characters `A–Z`, `0–9`, `-`, `_`.
+                         * @example summer-26
+                         */
+                        code: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description The code was applied. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        /** @example {
+                         *       "success": true,
+                         *       "data": {
+                         *         "code": "SUMMER-26",
+                         *         "user_group": {
+                         *           "id": "4b1c0a52-7d0e-4f0b-9a55-2f4f3c6a1e10",
+                         *           "name": "Partners"
+                         *         },
+                         *         "redeemed_at": "2026-10-26T13:05:00.000Z"
+                         *       }
+                         *     } */
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["PromoCodeRedemption"];
+                        };
+                    };
+                };
+                /** @description No `code`, or a code of the wrong format (`VALIDATION_ERROR`). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description The tenant has no such promo code, or it was deleted (`PROMO_CODE_NOT_FOUND`). */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The code cannot be applied:
+                 *     - `PROMO_CODE_NOT_ACTIVE` — `error.details.reason` says why: `PAUSED` (paused by the operator), `EXPIRED` (past its expiry), `EXHAUSTED` (no uses left), `NO_GROUP` (its user group was deleted);
+                 *     - `PROMO_CODE_ALREADY_REDEEMED` — the user has applied this code before;
+                 *     - `PROMO_CODE_GROUP_ALREADY_ASSIGNED` — the user is already in the code's user group (a user without a group of their own is in the tenant's default group);
+                 *     - `OPERATION_IN_PROGRESS` or `CONFLICT` — another application for the user, or many for the code, ran at the same moment; retry.
+                 *      */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        /** @example {
+                         *       "success": false,
+                         *       "error": {
+                         *         "code": "PROMO_CODE_NOT_ACTIVE",
+                         *         "message": "This promo code has been used up",
+                         *         "details": {
+                         *           "reason": "EXHAUSTED"
+                         *         }
+                         *       }
+                         *     } */
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description More than 10 failed attempts in an hour (`RATE_LIMIT_EXCEEDED`); a successful redemption does not count. Retry after the window ends. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/frontend/reference/currencies": {
         parameters: {
             query?: never;
@@ -15901,11 +16020,9 @@ export interface paths {
          *     (`wallet_rail.terms_confirmed`, the documents in `wallet_rail.terms_and_conditions`), and a vendor that takes
          *     an acceptance date is sent the same time; an account the vendor already holds may keep the date it recorded
          *     first. Without `accepted_terms` (or without a body, or `null`) the submission goes as before and the terms are
-         *     accepted later with `POST …/terms-and-conditions`.
-         *
-         *     On the KYC forms flow CORE makes this submission itself for a rail the client sent a rail or multi
-         *     form for, once the form is accepted and the entity is `APPROVED`, when the form was sent by a wallet `admin` or `owner` and the wallet has no application
-         *     on the rail yet; the route stays for a rail CORE could not submit and for a resubmission.
+         *     accepted later with `POST …/terms-and-conditions` — except on a rail that requires the terms with the
+         *     submission (set per rail by the operator): there it is refused (`400 TERMS_NOT_ACCEPTED`). Always send
+         *     `accepted_terms` to a rail with terms.
          *
          *     Refused unless the rail has an onboarding implementation (retired rails never do), takes submissions,
          *     fits the entity type, and the entity's KYC is `APPROVED` — an entity still under review
@@ -15932,7 +16049,8 @@ export interface paths {
                 content: {
                     "application/json": {
                         /** @description Ids of the rail's `terms_and_conditions` the client accepted with this submission. On a rail with
-                         *     terms an empty list is a refusal (`400 TERMS_NOT_ACCEPTED`), not an absence of the field.
+                         *     terms an empty list is a refusal (`400 TERMS_NOT_ACCEPTED`), not an absence of the field; on a
+                         *     rail that requires the terms, so is the absence.
                          *      */
                         accepted_terms?: string[] | null;
                     };
@@ -15957,7 +16075,8 @@ export interface paths {
                  *     tenant of the KYC forms flow, the KYC entity misses saved values of required fields of the rail's form
                  *     (a draft does not count): `details.fields` lists their keys, open
                  *     `GET /frontend/kyc/entities/{entity_id}/forms?rails={rail_id}` and fill them; `TERMS_NOT_ACCEPTED` —
-                 *     `accepted_terms` misses an active terms document of the rail, nothing was submitted
+                 *     `accepted_terms` misses an active terms document of the rail, or is absent on a rail that requires the
+                 *     terms; nothing was submitted
                  *      */
                 400: {
                     headers: {
@@ -16452,7 +16571,7 @@ export interface paths {
         };
         /**
          * The form of an entity for a set of purposes
-         * @description Built on every call from the tenant's requirement profiles and the entity. Without `rails` and `programs` it is the base form. With one rail it is that rail's form: the base profile, the tenant's rail profile and the vendor's minimum merged: a field required by any of them is required, `review` wins over `auto`, and a field is shown when any of them shows it (one asking it without a condition — the vendor's minimum always — shows it always); profiles whose conditions read each other in a circle answer `409 KYC_FORM_CONDITIONS_CYCLE`. Sections are the groups to draw, `visible_when` the show logic, `required_by` the purposes a field is required for, the locks (`saved`, `from_document`, `pending`, `status`) what the client cannot change, `schema_version` what to echo back. Fields that come from the identity document (names, date of birth, citizenship, the document number and dates) are left out until the document is verified; the document itself is asked: its type `gov_id_type` (`PASSPORT`, `ID_CARD`, `RESIDENCE_PERMIT`, `DRIVERS` — the codes `…/owners/{owner_id}/document` takes as `type` too), issuing country `gov_id_country` and photos `gov_id_front` and `gov_id_back` (shown unless a passport) — saved, and no longer asked, once it is verified; `state: complete` on a rail form means no field is left to ask. The terms of the form's rails — a rail it names and the rail of each of its card programs — come with the form in `terms`, to be accepted with the submission (`accepted_terms`). With one program and `wallet_id` it is the form before a card: the level the program's vendor demands (`minimal`: name, email, phone; `basic`: plus date of birth, citizenship, gender, identity document type and number, residential address; `declared` / `full`: plus the identity document and the face, verified after the form) merged with the tenant's binding for the program, without the base form; what the personal entity already holds is locked `saved`, so `state: complete` means the card can be asked for at once. Several rails and programs at once is the multi form: the base form, every rail and every program merged, each field once with `required_by` naming the purposes. Access: the owner of the entity, or an owner / admin of a wallet it is linked to.
+         * @description Built on every call from the tenant's requirement profiles and the entity. Without `rails` and `programs` it is the base form. With one rail it is that rail's form: the base profile, the tenant's rail profile and the vendor's minimum merged: a field required by any of them is required, `review` wins over `auto`, and a field is shown when any of them shows it (one asking it without a condition — the vendor's minimum always — shows it always); profiles whose conditions read each other in a circle answer `409 KYC_FORM_CONDITIONS_CYCLE`. Sections are the groups to draw, `visible_when` the show logic, `required_by` the purposes a field is required for, the locks (`saved`, `from_document`, `pending`, `status`) what the client cannot change, `schema_version` what to echo back. Fields that come from the identity document (names, date of birth, citizenship, the document number and dates) are left out until the document is verified; the document itself is asked: its type `gov_id_type` (`PASSPORT`, `ID_CARD`, `RESIDENCE_PERMIT`, `DRIVERS` — the codes `…/owners/{owner_id}/document` takes as `type` too), issuing country `gov_id_country` and photos `gov_id_front` and `gov_id_back` (shown unless a passport) — saved, and no longer asked, once it is verified; `state: complete` on a rail form means nothing is left to ask and the client goes straight to the rail's terms. With one program and `wallet_id` it is the form before a card: the level the program's vendor demands (`minimal`: name, email, phone; `basic`: plus date of birth, citizenship, gender, identity document type and number, residential address; `declared` / `full`: plus the identity document and the face, verified after the form) merged with the tenant's binding for the program, without the base form; what the personal entity already holds is locked `saved`, so `state: complete` means the card can be asked for at once. Several rails and programs at once is the multi form: the base form, every rail and every program merged, each field once with `required_by` naming the purposes. Access: the owner of the entity, or an owner / admin of a wallet it is linked to.
          */
         get: {
             parameters: {
@@ -16461,7 +16580,7 @@ export interface paths {
                     rails?: components["parameters"]["KycFormsRails"];
                     /** @description `issuing_programs.id` of the tenant the form is for, as a native query array: `programs[]=a&programs[]=b` or `programs=a&programs=b`. One program alone: the form before a card of that program (`scope: card`). Together with `rails` or several at once: the multi form. Only a personal entity has card forms (`400 FORM_TARGET_UNSUPPORTED` on a business entity); `wallet_id` is required whenever programs are named. A program the tenant does not have is `404 NOT_FOUND`. */
                     programs?: components["parameters"]["KycFormsPrograms"];
-                    /** @description The wallet the form is filled for; the draft and the submission carry it, and CORE puts this wallet on the form's rails and programs once the form is accepted and the KYC is `APPROVED`. Required when `programs` are named (`400 INVALID_REQUEST` without it): the entity's owner must be an active member of it (any role; the cardholder is theirs), and so must the caller when it is someone else, else `403 ACCESS_DENIED`. Optional when only `rails` are named: a rail is opened per wallet, so it must be a wallet of this entity (`400 KYC_FORM_WALLET_NOT_LINKED` otherwise) with the same membership rule; without it the entity's main wallet. Ignored on the base form. Not a uuid: `400 VALIDATION_ERROR`. */
+                    /** @description The wallet the card is for — required when `programs` are named (`400 INVALID_REQUEST` without it), ignored otherwise. The entity's owner must be an active member of it (any role; the cardholder is theirs), and so must the caller when it is someone else, else `403 ACCESS_DENIED`. The form is built for this wallet, and the draft and the submission carry it. Not a uuid: `400 VALIDATION_ERROR`. */
                     wallet_id?: components["parameters"]["KycFormsWalletId"];
                     /** @description Language of the texts (labels, hints, options, section titles, general messages); takes precedence over `Accept-Language`. A language outside the tenant's list is served in English. */
                     locale?: components["parameters"]["KycFormsLocale"];
@@ -16487,7 +16606,7 @@ export interface paths {
                         "application/json": components["schemas"]["KycFormsFormResponse"];
                     };
                 };
-                /** @description `VALIDATION_ERROR` — `entity_id`, `wallet_id` or an id in `rails` / `programs` is not a uuid (a message only); `FORM_TARGET_UNSUPPORTED` — a card program named on a business entity; `INVALID_REQUEST` — `wallet_id` missing for a form over card programs; `KYC_FORM_WALLET_NOT_LINKED` — `wallet_id` of a form over rails is not a wallet of this entity; `KYC_BASE_BINDING_MISSING` — the tenant has no base form for this client type; `KYC_FORMS_NOT_ENABLED` — the tenant still runs KYC through the BFF */
+                /** @description `VALIDATION_ERROR` — `entity_id`, `wallet_id` or an id in `rails` / `programs` is not a uuid (a message only); `FORM_TARGET_UNSUPPORTED` — a card program named on a business entity; `INVALID_REQUEST` — `wallet_id` missing for a form over card programs; `KYC_BASE_BINDING_MISSING` — the tenant has no base form for this client type; `KYC_FORMS_NOT_ENABLED` — the tenant still runs KYC through the BFF */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -16528,7 +16647,7 @@ export interface paths {
         get?: never;
         /**
          * Save the draft of a form
-         * @description The form is the one `rails` and `programs` name, as for `GET …/forms`. Replaces the draft as a whole with the given values of open fields. Types are checked, rules and requiredness are not — except that owner shares over 100% in total and a value whose condition reads an empty required source are refused here too. Nothing is written to the KYC entity. The terms of the form's rails (`form.terms` of `GET …/forms`) are accepted with the submission only: a draft takes no `accepted_terms` (a key of that name is ignored, nothing about the terms is stored) and its answer carries no `terms`. The first draft of a business form moves the application to `PENDING`. The entity's owner, or an owner or admin of a linked wallet.
+         * @description The form is the one `rails` and `programs` name, as for `GET …/forms`. Replaces the draft as a whole with the given values of open fields. Types are checked, rules and requiredness are not — except that owner shares over 100% in total and a value whose condition reads an empty required source are refused here too. Nothing is written to the KYC entity. The first draft of a business form moves the application to `PENDING`. The entity's owner, or an owner or admin of a linked wallet.
          */
         put: {
             parameters: {
@@ -16537,7 +16656,7 @@ export interface paths {
                     rails?: components["parameters"]["KycFormsRails"];
                     /** @description `issuing_programs.id` of the tenant the form is for, as a native query array: `programs[]=a&programs[]=b` or `programs=a&programs=b`. One program alone: the form before a card of that program (`scope: card`). Together with `rails` or several at once: the multi form. Only a personal entity has card forms (`400 FORM_TARGET_UNSUPPORTED` on a business entity); `wallet_id` is required whenever programs are named. A program the tenant does not have is `404 NOT_FOUND`. */
                     programs?: components["parameters"]["KycFormsPrograms"];
-                    /** @description The wallet the form is filled for; the draft and the submission carry it, and CORE puts this wallet on the form's rails and programs once the form is accepted and the KYC is `APPROVED`. Required when `programs` are named (`400 INVALID_REQUEST` without it): the entity's owner must be an active member of it (any role; the cardholder is theirs), and so must the caller when it is someone else, else `403 ACCESS_DENIED`. Optional when only `rails` are named: a rail is opened per wallet, so it must be a wallet of this entity (`400 KYC_FORM_WALLET_NOT_LINKED` otherwise) with the same membership rule; without it the entity's main wallet. Ignored on the base form. Not a uuid: `400 VALIDATION_ERROR`. */
+                    /** @description The wallet the card is for — required when `programs` are named (`400 INVALID_REQUEST` without it), ignored otherwise. The entity's owner must be an active member of it (any role; the cardholder is theirs), and so must the caller when it is someone else, else `403 ACCESS_DENIED`. The form is built for this wallet, and the draft and the submission carry it. Not a uuid: `400 VALIDATION_ERROR`. */
                     wallet_id?: components["parameters"]["KycFormsWalletId"];
                     /** @description Language of the texts (labels, hints, options, section titles, general messages); takes precedence over `Accept-Language`. A language outside the tenant's list is served in English. */
                     locale?: components["parameters"]["KycFormsLocale"];
@@ -16579,7 +16698,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description `FORM_LOCKED` — the form is read-only by the application status, or its last submission waits on the verification or the review; `FORM_OUTDATED` — `schema_version` is not the one the form has now (its fields or the terms documents of its rails changed), reload it (`GET …/forms`) and send again; `KYC_FORM_CONDITIONS_CYCLE` — the tenant's form settings show fields on conditions that read each other in a circle */
+                /** @description `FORM_LOCKED` — the form is read-only by the application status, or its last submission waits on the verification or the review; `FORM_OUTDATED` — `schema_version` is not the one the form has now, reload it (`GET …/forms`) and send again; `KYC_FORM_CONDITIONS_CYCLE` — the tenant's form settings show fields on conditions that read each other in a circle */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -16617,7 +16736,7 @@ export interface paths {
                     rails?: components["parameters"]["KycFormsRails"];
                     /** @description `issuing_programs.id` of the tenant the form is for, as a native query array: `programs[]=a&programs[]=b` or `programs=a&programs=b`. One program alone: the form before a card of that program (`scope: card`). Together with `rails` or several at once: the multi form. Only a personal entity has card forms (`400 FORM_TARGET_UNSUPPORTED` on a business entity); `wallet_id` is required whenever programs are named. A program the tenant does not have is `404 NOT_FOUND`. */
                     programs?: components["parameters"]["KycFormsPrograms"];
-                    /** @description The wallet the form is filled for; the draft and the submission carry it, and CORE puts this wallet on the form's rails and programs once the form is accepted and the KYC is `APPROVED`. Required when `programs` are named (`400 INVALID_REQUEST` without it): the entity's owner must be an active member of it (any role; the cardholder is theirs), and so must the caller when it is someone else, else `403 ACCESS_DENIED`. Optional when only `rails` are named: a rail is opened per wallet, so it must be a wallet of this entity (`400 KYC_FORM_WALLET_NOT_LINKED` otherwise) with the same membership rule; without it the entity's main wallet. Ignored on the base form. Not a uuid: `400 VALIDATION_ERROR`. */
+                    /** @description The wallet the card is for — required when `programs` are named (`400 INVALID_REQUEST` without it), ignored otherwise. The entity's owner must be an active member of it (any role; the cardholder is theirs), and so must the caller when it is someone else, else `403 ACCESS_DENIED`. The form is built for this wallet, and the draft and the submission carry it. Not a uuid: `400 VALIDATION_ERROR`. */
                     wallet_id?: components["parameters"]["KycFormsWalletId"];
                     /** @description Language of the texts (labels, hints, options, section titles, general messages); takes precedence over `Accept-Language`. A language outside the tenant's list is served in English. */
                     locale?: components["parameters"]["KycFormsLocale"];
@@ -16725,7 +16844,7 @@ export interface paths {
                     rails?: components["parameters"]["KycFormsRails"];
                     /** @description `issuing_programs.id` of the tenant the form is for, as a native query array: `programs[]=a&programs[]=b` or `programs=a&programs=b`. One program alone: the form before a card of that program (`scope: card`). Together with `rails` or several at once: the multi form. Only a personal entity has card forms (`400 FORM_TARGET_UNSUPPORTED` on a business entity); `wallet_id` is required whenever programs are named. A program the tenant does not have is `404 NOT_FOUND`. */
                     programs?: components["parameters"]["KycFormsPrograms"];
-                    /** @description The wallet the form is filled for; the draft and the submission carry it, and CORE puts this wallet on the form's rails and programs once the form is accepted and the KYC is `APPROVED`. Required when `programs` are named (`400 INVALID_REQUEST` without it): the entity's owner must be an active member of it (any role; the cardholder is theirs), and so must the caller when it is someone else, else `403 ACCESS_DENIED`. Optional when only `rails` are named: a rail is opened per wallet, so it must be a wallet of this entity (`400 KYC_FORM_WALLET_NOT_LINKED` otherwise) with the same membership rule; without it the entity's main wallet. Ignored on the base form. Not a uuid: `400 VALIDATION_ERROR`. */
+                    /** @description The wallet the card is for — required when `programs` are named (`400 INVALID_REQUEST` without it), ignored otherwise. The entity's owner must be an active member of it (any role; the cardholder is theirs), and so must the caller when it is someone else, else `403 ACCESS_DENIED`. The form is built for this wallet, and the draft and the submission carry it. Not a uuid: `400 VALIDATION_ERROR`. */
                     wallet_id?: components["parameters"]["KycFormsWalletId"];
                 };
                 header?: never;
@@ -16793,7 +16912,7 @@ export interface paths {
         put?: never;
         /**
          * Send a form
-         * @description The form is the one `rails` and `programs` name. The full check of every open field (all errors in one `VALIDATION_ERROR`) and of the terms — a form with terms documents (`form.terms`) is sent only with every one of their ids in `accepted_terms` (`400 KYC_TERMS_NOT_ACCEPTED` otherwise, nothing written) — then a submission: `awaiting_verification` when the identity document and face are still needed, `applied` when every profile of the form writes the answers into the KYC entity at once, `in_review` when compliance decides (any profile of the form in review mode). Answers `200` with the form in its new state. One submission of a form at a time. A form over rails or programs that brings nothing new — no value and no file, every required field already saved in the entity (not just waiting in another submission under review) — is `applied` at once whatever the review mode: there is nothing for compliance to decide. A rail form does not change the application status. A card form is `auto` unless a profile of it says otherwise and never changes the application status. A multi form moves the application like the base form it includes; once applied, every rail and program of the set is satisfied from the shared data. Once a rail, card or multi form is accepted (`applied`, or `approved` by compliance) and the wallet's KYC is `APPROVED` — whichever comes second — when the form was sent by an owner or admin of the wallet (the role those routes ask for), CORE submits the wallet itself: to each rail of the form the wallet has no application on yet — only for a form of the wallet's own KYC entity, a member's form never puts the wallet on a rail — (as `POST /frontend/wallets/{wallet_id}/kyc-rails/{rail_id}` would; it then shows in `GET …/kyc-rails`), and to each program the member has no cardholder in yet (as `POST /frontend/issuing/cardholders` with `user_data_id` and its submit would). The latest form sent for a rail or program decides: returned, rejected or still in review, nothing is submitted. A rail opened so, or opened before with its terms unconfirmed — a rail of the form, or the rail of one of its programs — gets its terms confirmed (`terms_confirmed: true`) at the time the form was sent, when the form accepted every terms document the application holds; terms changed since the form was sent are left for the client to confirm with `POST …/kyc-rails/{rail_id}/terms-and-conditions`. A submission CORE could not make — refused by the rail or the vendor, a program at its limit, a form sent by a member without that role — is left for the client to make with those routes, as before. The entity's owner, or an owner or admin of a linked wallet.
+         * @description The form is the one `rails` and `programs` name. The full check of every open field (all errors in one `VALIDATION_ERROR`), then a submission: `awaiting_verification` when the identity document and face are still needed, `applied` when every profile of the form writes the answers into the KYC entity at once, `in_review` when compliance decides (any profile of the form in review mode). Answers `200` with the form in its new state. One submission of a form at a time. A rail form does not change the application status; once its submission is approved, the rail is submitted through the wallet's existing `POST /frontend/wallets/{wallet_id}/kyc-rails/{rail_id}`. A card form is `auto` unless a profile of it says otherwise and never changes the application status; once applied, the cardholder is created through `POST /frontend/issuing/cardholders` with `user_data_id`. A multi form moves the application like the base form it includes; once applied, every rail and program of the set is satisfied from the shared data. The entity's owner, or an owner or admin of a linked wallet.
          */
         post: {
             parameters: {
@@ -16802,7 +16921,7 @@ export interface paths {
                     rails?: components["parameters"]["KycFormsRails"];
                     /** @description `issuing_programs.id` of the tenant the form is for, as a native query array: `programs[]=a&programs[]=b` or `programs=a&programs=b`. One program alone: the form before a card of that program (`scope: card`). Together with `rails` or several at once: the multi form. Only a personal entity has card forms (`400 FORM_TARGET_UNSUPPORTED` on a business entity); `wallet_id` is required whenever programs are named. A program the tenant does not have is `404 NOT_FOUND`. */
                     programs?: components["parameters"]["KycFormsPrograms"];
-                    /** @description The wallet the form is filled for; the draft and the submission carry it, and CORE puts this wallet on the form's rails and programs once the form is accepted and the KYC is `APPROVED`. Required when `programs` are named (`400 INVALID_REQUEST` without it): the entity's owner must be an active member of it (any role; the cardholder is theirs), and so must the caller when it is someone else, else `403 ACCESS_DENIED`. Optional when only `rails` are named: a rail is opened per wallet, so it must be a wallet of this entity (`400 KYC_FORM_WALLET_NOT_LINKED` otherwise) with the same membership rule; without it the entity's main wallet. Ignored on the base form. Not a uuid: `400 VALIDATION_ERROR`. */
+                    /** @description The wallet the card is for — required when `programs` are named (`400 INVALID_REQUEST` without it), ignored otherwise. The entity's owner must be an active member of it (any role; the cardholder is theirs), and so must the caller when it is someone else, else `403 ACCESS_DENIED`. The form is built for this wallet, and the draft and the submission carry it. Not a uuid: `400 VALIDATION_ERROR`. */
                     wallet_id?: components["parameters"]["KycFormsWalletId"];
                     /** @description Language of the texts (labels, hints, options, section titles, general messages); takes precedence over `Accept-Language`. A language outside the tenant's list is served in English. */
                     locale?: components["parameters"]["KycFormsLocale"];
@@ -16819,7 +16938,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["KycFormsSubmitRequest"];
+                    "application/json": components["schemas"]["KycFormsAnswersRequest"];
                 };
             };
             responses: {
@@ -16832,7 +16951,7 @@ export interface paths {
                         "application/json": components["schemas"]["KycFormsFormResponse"];
                     };
                 };
-                400: components["responses"]["KycFormsSubmitErrors"];
+                400: components["responses"]["KycFormsFieldErrors"];
                 401: components["responses"]["UnauthorizedError"];
                 403: components["responses"]["KycFormsAccessDenied"];
                 /** @description `NOT_FOUND` — the entity does not exist or belongs to another tenant, or a rail / program of the query does not exist for the tenant */
@@ -16844,7 +16963,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description `FORM_LOCKED` — the form is read-only by the application status, or its last submission waits on the verification or the review; `FORM_OUTDATED` — `schema_version` is not the one the form has now (its fields or the terms documents of its rails changed), reload it (`GET …/forms`) and send again; `OPERATION_IN_PROGRESS` — a submission of this form is already running; `KYC_FORM_CONDITIONS_CYCLE` — the tenant's form settings show fields on conditions that read each other in a circle */
+                /** @description `FORM_LOCKED` — the form is read-only by the application status, or its last submission waits on the verification or the review; `FORM_OUTDATED` — `schema_version` is not the one the form has now, reload it (`GET …/forms`) and send again; `OPERATION_IN_PROGRESS` — a submission of this form is already running; `KYC_FORM_CONDITIONS_CYCLE` — the tenant's form settings show fields on conditions that read each other in a circle */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -19985,6 +20104,25 @@ export interface components {
             category: "TRANSACTIONS" | "COMPLIANCE" | "ANNOUNCEMENTS" | "SYSTEM" | "SECURITY";
             enabled: boolean;
         };
+        PromoCodeRedemption: {
+            /**
+             * @description The code as stored — upper case.
+             * @example SUMMER-26
+             */
+            code: string;
+            /** @description The user group (tariff) the user is in now. */
+            user_group: {
+                /** Format: uuid */
+                id: string;
+                /** @example Partners */
+                name: string;
+            };
+            /**
+             * Format: date-time
+             * @description When the code was applied.
+             */
+            redeemed_at: string;
+        };
         ReferralLevelRate: {
             /** @example TRANSFER_CARD_SUBACCOUNT */
             order_type?: string;
@@ -20636,23 +20774,6 @@ export interface components {
                 add_label: string;
             };
         };
-        /** @description The terms of one rail of the form: a rail the form names, or the rail of one of its card programs — one group per rail, the programs that go through it listed with it. Draw one checkbox per group that accepts all of its `items`; send their ids in `accepted_terms` of `POST …/forms/submit`. */
-        KycFormsTerms: {
-            /** Format: uuid */
-            rail_id: string;
-            /** @description The card programs of the form that go through this rail; empty when only the rail itself is named. */
-            program_ids: string[];
-            /** @description The rail's active terms documents in display order; empty when the rail has none — nothing to accept. */
-            items: {
-                /** Format: uuid */
-                id: string;
-                /** @example Cardholder Agreement */
-                title: string;
-                description: string | null;
-                /** @example https://example.com/terms.pdf */
-                link: string | null;
-            }[];
-        };
         KycFormsForm: {
             /**
              * @description What the form is for: the base form, a rail, a card program (`card`), or one form over several rails and programs (`multi`).
@@ -20665,7 +20786,7 @@ export interface components {
             programs: string[];
             /**
              * Format: uuid
-             * @description The wallet the form is built for: the `wallet_id` of the query for a form over card programs or rails; otherwise the entity's first linked wallet (main wallet first), null when the entity is linked to none. The draft and the submission carry it.
+             * @description The wallet the form is built for: the `wallet_id` of the query for a form over card programs; for any other form the entity's first linked wallet (main wallet first), null when the entity is linked to none. The draft and the submission carry it.
              */
             wallet_id: string | null;
             /** @enum {string} */
@@ -20676,7 +20797,7 @@ export interface components {
              */
             locale: string;
             /**
-             * @description Hash of the form composition (keys, requiredness, conditions, list item fields, the ids of the terms documents in `terms`; not the texts); echo it back in the draft and the submission. It can change between the load and the send: `409 FORM_OUTDATED`.
+             * @description Hash of the form composition (keys, requiredness, conditions, list item fields; not the texts); echo it back in the draft and the submission. It can change between the load and the send: `409 FORM_OUTDATED`.
              * @example b3f1c2a9
              */
             schema_version: string;
@@ -20705,31 +20826,6 @@ export interface components {
                 description: string | null;
                 fields: components["schemas"]["KycFormsField"][];
             }[];
-            /**
-             * @description The terms the client accepts with the form, one group per rail of the form: the rails named first, then the rail of each card program. Empty for the base form; a program without a rail adds none. The documents are those in force now: a change after the load answers the submission `409 FORM_OUTDATED`.
-             * @example [
-             *       {
-             *         "rail_id": "a38b9a0c-5d1e-4f2a-8b3c-4d5e6f708192",
-             *         "program_ids": [
-             *           "d94ef320-1a2b-4c3d-8e4f-5a6b7c8d9e0f"
-             *         ],
-             *         "items": [
-             *           {
-             *             "id": "0c1d2e3f-4a5b-4c6d-8e7f-90a1b2c3d4e5",
-             *             "title": "Cardholder Agreement",
-             *             "description": null,
-             *             "link": "https://example.com/terms.pdf"
-             *           }
-             *         ]
-             *       },
-             *       {
-             *         "rail_id": "c1d7fac1-2b3c-4d5e-9f60-718293a4b5c6",
-             *         "program_ids": [],
-             *         "items": []
-             *       }
-             *     ]
-             */
-            terms: components["schemas"]["KycFormsTerms"][];
         };
         KycFormsFormResponse: {
             /** @example true */
@@ -20774,16 +20870,6 @@ export interface components {
             values: {
                 [key: string]: components["schemas"]["KycFormsAnswerValue"];
             };
-        };
-        KycFormsSubmitRequest: components["schemas"]["KycFormsAnswersRequest"] & {
-            /**
-             * @description The ids of every terms document of the form (`form.terms[].items[].id`) — the client ticked the checkbox of each group. Required in full when the form has any: one left out answers `400 KYC_TERMS_NOT_ACCEPTED`, an id that is not a uuid or not of this form `400 VALIDATION_ERROR`. A form without terms documents is sent without it. The terms are checked after the fields: while a field is wrong, only the `VALIDATION_ERROR` comes back.
-             * @default []
-             * @example [
-             *       "0c1d2e3f-4a5b-4c6d-8e7f-90a1b2c3d4e5"
-             *     ]
-             */
-            accepted_terms: string[];
         };
         KycFormsDraftSaved: {
             /** @example true */
@@ -21092,18 +21178,11 @@ export interface components {
                 }[];
             };
         };
-        /** @description The structured payload of an error that carries one (absent otherwise — an invalid uuid or a malformed body is a message only). `VALIDATION_ERROR`: `fields` is a map from the field key to its messages (a list item field is `beneficial_owners[0].role`, the list as a whole `beneficial_owners`). `FORM_FIELD_NOT_ALLOWED`, `KYC_FORM_CONDITIONS_CYCLE`: `fields` is a list of keys. `KYC_TERMS_NOT_ACCEPTED`: `terms` — and no `fields`. */
+        /** @description The structured payload of an error that carries one (absent otherwise — an invalid uuid or a malformed body is a message only). `VALIDATION_ERROR`: `fields` is a map from the field key to its messages (a list item field is `beneficial_owners[0].role`, the list as a whole `beneficial_owners`). `FORM_FIELD_NOT_ALLOWED`, `KYC_FORM_CONDITIONS_CYCLE`: `fields` is a list of keys. */
         KycFormsErrorDetails: {
-            fields?: {
+            fields: {
                 [key: string]: string[];
             } | string[];
-            /**
-             * @description The ids of the terms documents of the form left out of `accepted_terms`.
-             * @example [
-             *       "0c1d2e3f-4a5b-4c6d-8e7f-90a1b2c3d4e5"
-             *     ]
-             */
-            terms?: string[];
         };
         /** @description The error envelope of the KYC forms: `ErrorResponse` with the `details` of the field errors spelled out. */
         KycFormsErrorResponse: components["schemas"]["ErrorResponse"] & {
@@ -21190,17 +21269,8 @@ export interface components {
                 "application/json": components["schemas"]["ErrorResponse"];
             };
         };
-        /** @description `VALIDATION_ERROR` — field errors in `details.fields[key] = [message]` (on a business form the owner list the KYC tables refuse, and owner shares adding up to more than 100%, come back under `beneficial_owners`; a value sent for a field whose condition reads a source left empty or wrong comes back as the error of the source, e.g. `beneficial_owners[0].role`), or a message only for a malformed body (`schema_version` missing or longer than 64, `values` not an object) and a path id that is not a uuid; `FORM_FIELD_NOT_ALLOWED` — a key the form does not accept (unknown, locked, hidden, a file field), `details.fields = [key]`, the whole request refused; `FORM_TARGET_UNSUPPORTED` — a card program named on a business entity; `INVALID_REQUEST` — `wallet_id` missing for a form over card programs; `KYC_FORM_WALLET_NOT_LINKED` — `wallet_id` of a form over rails is not a wallet of this entity; `KYC_BASE_BINDING_MISSING` — the tenant has no base form for this client type; `KYC_FORMS_NOT_ENABLED` — the tenant is not on the forms flow */
+        /** @description `VALIDATION_ERROR` — field errors in `details.fields[key] = [message]` (on a business form the owner list the KYC tables refuse, and owner shares adding up to more than 100%, come back under `beneficial_owners`; a value sent for a field whose condition reads a source left empty or wrong comes back as the error of the source, e.g. `beneficial_owners[0].role`), or a message only for a malformed body (`schema_version` missing or longer than 64, `values` not an object) and a path id that is not a uuid; `FORM_FIELD_NOT_ALLOWED` — a key the form does not accept (unknown, locked, hidden, a file field), `details.fields = [key]`, the whole request refused; `FORM_TARGET_UNSUPPORTED` — a card program named on a business entity; `INVALID_REQUEST` — `wallet_id` missing for a form over card programs; `KYC_BASE_BINDING_MISSING` — the tenant has no base form for this client type; `KYC_FORMS_NOT_ENABLED` — the tenant is not on the forms flow */
         KycFormsFieldErrors: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": components["schemas"]["KycFormsErrorResponse"];
-            };
-        };
-        /** @description `VALIDATION_ERROR` — field errors in `details.fields[key] = [message]` (on a business form the owner list the KYC tables refuse, and owner shares adding up to more than 100%, come back under `beneficial_owners`; a value sent for a field whose condition reads a source left empty or wrong comes back as the error of the source, e.g. `beneficial_owners[0].role`), or a message only for a malformed body (`schema_version` missing or longer than 64, `values` not an object, `accepted_terms` not a list of at most 200 uuids), an id in `accepted_terms` that is not a terms document of this form, and a path id that is not a uuid; `KYC_TERMS_NOT_ACCEPTED` — `accepted_terms` leaves out a terms document of the form, `details.terms` lists the ids left out, nothing is written; `FORM_FIELD_NOT_ALLOWED` — a key the form does not accept (unknown, locked, hidden, a file field), `details.fields = [key]`, the whole request refused; `FORM_TARGET_UNSUPPORTED` — a card program named on a business entity; `INVALID_REQUEST` — `wallet_id` missing for a form over card programs; `KYC_FORM_WALLET_NOT_LINKED` — `wallet_id` of a form over rails is not a wallet of this entity; `KYC_BASE_BINDING_MISSING` — the tenant has no base form for this client type; `KYC_FORMS_NOT_ENABLED` — the tenant is not on the forms flow */
-        KycFormsSubmitErrors: {
             headers: {
                 [name: string]: unknown;
             };
@@ -21314,7 +21384,7 @@ export interface components {
         KycFormsRails: string[];
         /** @description `issuing_programs.id` of the tenant the form is for, as a native query array: `programs[]=a&programs[]=b` or `programs=a&programs=b`. One program alone: the form before a card of that program (`scope: card`). Together with `rails` or several at once: the multi form. Only a personal entity has card forms (`400 FORM_TARGET_UNSUPPORTED` on a business entity); `wallet_id` is required whenever programs are named. A program the tenant does not have is `404 NOT_FOUND`. */
         KycFormsPrograms: string[];
-        /** @description The wallet the form is filled for; the draft and the submission carry it, and CORE puts this wallet on the form's rails and programs once the form is accepted and the KYC is `APPROVED`. Required when `programs` are named (`400 INVALID_REQUEST` without it): the entity's owner must be an active member of it (any role; the cardholder is theirs), and so must the caller when it is someone else, else `403 ACCESS_DENIED`. Optional when only `rails` are named: a rail is opened per wallet, so it must be a wallet of this entity (`400 KYC_FORM_WALLET_NOT_LINKED` otherwise) with the same membership rule; without it the entity's main wallet. Ignored on the base form. Not a uuid: `400 VALIDATION_ERROR`. */
+        /** @description The wallet the card is for — required when `programs` are named (`400 INVALID_REQUEST` without it), ignored otherwise. The entity's owner must be an active member of it (any role; the cardholder is theirs), and so must the caller when it is someone else, else `403 ACCESS_DENIED`. The form is built for this wallet, and the draft and the submission carry it. Not a uuid: `400 VALIDATION_ERROR`. */
         KycFormsWalletId: string;
         /** @description The wallet the rails and the card programs are read for. Optional: without it the first linked wallet (main wallet first) that the entity's owner and the caller are both members of is used; when there is none — no linked wallet, or none the two share — the answer has `wallet_id: null` and empty `rails` and `programs`. With it, the entity's owner must be an active member of the wallet, and so must the caller when it is someone else, else `403 ACCESS_DENIED`. */
         KycFormsTargetsWalletId: string;
