@@ -369,7 +369,7 @@ export const frontend = {
         `/frontend/wallets/${wallet_id}/kyc-rails/${rail_id}`,
       ),
     // No `data` without `accepted_terms`, so both clients keep the old request (the fetch one sends no body). On a
-    // rail with terms an empty list is a refusal, not an absence (SFI-2865).
+    // rail with terms an empty list is a refusal, and so is no list where the rail requires its terms (SFI-2865).
     submit: ({
       wallet_id,
       rail_id,
@@ -492,7 +492,6 @@ export const frontend = {
           params,
           paramsSerializer: KYC_FORMS_ARRAY_PARAMS,
         }),
-      // `accepted_terms`: all document ids of `form.terms` (`[]` if none); missing ones come back in `details.terms`.
       submit: ({
         entity_id,
         rails,

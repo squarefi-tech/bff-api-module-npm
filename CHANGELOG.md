@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **`API.Frontend.KycForms.Terms` and `TermsItem` (SFI-2912 withdrawn).** CORE no longer sends the terms of a form's rails with the KYC form, and the generated `KycFormsTerms` they were read off is gone. Code that uses either stops compiling.
+- **`terms` of `API.Frontend.KycForms.Form` (SFI-2912 withdrawn).** Neither `frontend.kycForms.forms.get` nor the answer of `forms.submit` carries terms, and `schema_version` no longer covers terms documents. A rail's terms are accepted with the rail submission — `accepted_terms` of `frontend.kycRails.submit` (1.36.98).
+- **`accepted_terms` of `frontend.kycForms.forms.submit` (SFI-2912 withdrawn).** The submit body is the generated `KycFormsAnswersRequest` again, the same as the draft's, so `API.Frontend.KycForms.Forms.Submit.Request` has no `accepted_terms`: an object literal that passes it stops compiling, and a call without it compiles again (1.36.97 made it required). `400 KYC_TERMS_NOT_ACCEPTED` is gone, and the submission's `400` is the draft's `KycFormsFieldErrors` response again instead of `KycFormsSubmitErrors`.
+
+These removals break compilation for code that uses them, yet ship in a patch release, since CI bumps the patch on every merge. The B2B app's `develop` does not use `API.Frontend.KycForms` (checked 2026-10-27); its KYC forms branch drops the removed types when it moves to this release.
+
+### Changed
+
+- **`API.Frontend.KycForms.ErrorDetails` loses `terms`, and `fields` is required again (SFI-2912 withdrawn).** `fields` comes with every `details` of a form error: a map of messages by field key on `VALIDATION_ERROR`, a list of keys on `FORM_FIELD_NOT_ALLOWED` and `KYC_FORM_CONDITIONS_CYCLE`.
+- **`frontend.kycRails.submit` without `accepted_terms` is refused on a rail that requires its terms (SFI-2865).** The operator sets the requirement per rail; there a submission without `accepted_terms` — no field, `null`, no body — answers `400 TERMS_NOT_ACCEPTED` and nothing is submitted, while a rail without active terms, and every rail that does not require them, takes it as before. Send `accepted_terms` with every submission to a rail with terms. The deprecated BFF `kyc.rails.submit.single` cannot send them, and on such a rail it answers the same `400`. No type changes.
+- **Generated types regenerated from the dev specs (Frontend API 28.0.0 and the V2 spec; Developer API 24.0.0, Tenant API 22.0.0 and Legacy API 14.0.0 produce no change; the last regeneration was Frontend 28.1.0).** The Frontend API's changelog no longer lists the terms of the KYC forms (SFI-2912) or CORE's own submission after an accepted form (SFI-2891) — both were withdrawn — and its version is now lower than the 28.1.0 that 1.36.98 was cut from. Besides the entries above:
+  - `POST /frontend/promo-codes/redeem` applies a promo code of the tenant and moves the user to the code's user group (tariff); the answer is `PromoCodeRedemption` (`code`, `user_group: { id, name }`, `redeemed_at`). In the generated types only: no SDK method wraps it.
+  - The V2 spec adds an optional `promo_code` to the bodies of `POST /auth/register`, `/auth/sign-up`, `/auth/sign-up/telegram`, `/auth/sign-in/omni/email/{type}` and `/auth/sign-in/omni/phone/otp`. `API.Auth.Register.Request`, `API.Auth.SignUp.ByType.Request` and `API.Auth.Telegram.Signup.Request` are read off the generated operations and take it; the hand-written `API.Auth.SignIn.Omni.Email.OTP.Request` and `API.Auth.SignIn.Omni.Phone.OTP.Request` do not.
+  - Behavior that changes no type: CORE no longer submits the wallet to the rails of an accepted form or creates the member's cardholders itself, as 1.36.96 and 1.36.97 described. Once the submission of a rail form is approved, the client submits the rail with `frontend.kycRails.submit`; once a card form is applied, the cardholder is created with `frontend.issuing.cardholders.create` and `user_data_id`. `wallet_id` of a form is the wallet of the card — required with `programs`, ignored otherwise — and `400 KYC_FORM_WALLET_NOT_LINKED` is gone; `Form.wallet_id` of any form but a card form is the entity's first linked wallet. The submission no longer promises that a form over rails or programs bringing nothing new is applied at once whatever the review mode.
+
 ## [1.36.98] - 2026-10-26
 
 ### Added
