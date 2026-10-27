@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.99] - 2026-10-27
+
 ### Removed
 
 - **`API.Frontend.KycForms.Terms` and `TermsItem` (SFI-2912 withdrawn).** CORE no longer sends the terms of a form's rails with the KYC form, and the generated `KycFormsTerms` they were read off is gone. Code that uses either stops compiling.
