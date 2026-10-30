@@ -6625,6 +6625,8 @@ export interface paths {
          * List countries
          * @description Returns countries with ISO codes, phone codes, currency info, and flags.
          *
+         *     `iban` says what the country's banks take as the account of an incoming SWIFT payment: `MANDATORY` — only an IBAN (a SWIFT destination to such a bank is refused with `IBAN_REQUIRED` otherwise), `OPTIONAL` — an IBAN or a domestic account number, `NONE` — no IBANs in the country.
+         *
          *     **Authentication**: x-api-key header required
          *
          */
@@ -6654,7 +6656,12 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["ApiSuccessResponse"];
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["ReferenceCountry"][];
+                            pagination?: components["schemas"]["PaginationResponse"];
+                        };
                     };
                 };
                 401: components["responses"]["Unauthorized"];
@@ -8334,7 +8341,7 @@ export interface components {
             /** @example iban */
             field: string;
             /**
-             * @description Machine-readable reason. Bank details: `REQUIRED`, `IBAN_WRONG_FORMAT`, `IBAN_INVALID_CHARACTERS`, `IBAN_COUNTRY_NOT_SUPPORTED`, `IBAN_WRONG_LENGTH`, `IBAN_WRONG_BBAN_FORMAT`, `IBAN_WRONG_CHECKSUM`, `IBAN_WRONG_NATIONAL_CHECKSUM`, `IBAN_QR_NOT_ALLOWED`, `IBAN_NOT_SEPA`, `IBAN_BIC_COUNTRY_MISMATCH`, `BIC_WRONG_FORMAT`, `BIC_UNKNOWN_COUNTRY`, `BIC_TEST_CODE`, `ROUTING_NUMBER_INVALID`, `ACCOUNT_NUMBER_INVALID`, `SORT_CODE_INVALID`, `WRONG_IDENTIFIER_TYPE`, `INVALID_VALUE`; reference data: `BANK_COUNTRY_MISMATCH`, `VALIDATION_ERROR`; dry run only: `INVALID_TYPE`. New codes may be added — show `message` for an unknown one.
+             * @description Machine-readable reason. Bank details: `REQUIRED`, `IBAN_WRONG_FORMAT`, `IBAN_INVALID_CHARACTERS`, `IBAN_COUNTRY_NOT_SUPPORTED`, `IBAN_WRONG_LENGTH`, `IBAN_WRONG_BBAN_FORMAT`, `IBAN_WRONG_CHECKSUM`, `IBAN_WRONG_NATIONAL_CHECKSUM`, `IBAN_QR_NOT_ALLOWED`, `IBAN_NOT_SEPA`, `IBAN_REQUIRED`, `IBAN_BIC_COUNTRY_MISMATCH`, `BIC_WRONG_FORMAT`, `BIC_UNKNOWN_COUNTRY`, `BIC_TEST_CODE`, `ROUTING_NUMBER_INVALID`, `ACCOUNT_NUMBER_INVALID`, `SORT_CODE_INVALID`, `WRONG_IDENTIFIER_TYPE`, `INVALID_VALUE`; reference data: `BANK_COUNTRY_MISMATCH`, `VALIDATION_ERROR`; dry run only: `INVALID_TYPE`. New codes may be added — show `message` for an unknown one.
              * @example IBAN_NOT_SEPA
              */
             code: string;
@@ -8350,6 +8357,34 @@ export interface components {
              * @enum {string}
              */
             detected?: "IBAN" | "BIC" | "ROUTING_NUMBER";
+        };
+        /** @description A country of the reference. `id` is the `country_id` of addresses (bank and beneficiary address of a destination). `iban` says what banks of the country take as the account of an incoming SWIFT payment: `MANDATORY` — only an IBAN, a SWIFT destination to such a bank is refused with `IBAN_REQUIRED` for anything else; `OPTIONAL` — the country issues IBANs, its banks also take a domestic account number; `NONE` — the country issues no IBANs. */
+        ReferenceCountry: {
+            /** @example 231 */
+            id: number;
+            /** @example United Arab Emirates */
+            name: string;
+            /** @example AE */
+            iso2: string;
+            /** @example ARE */
+            iso3?: string | null;
+            /** @example 971 */
+            phonecode?: string | null;
+            /** @example AED */
+            currency?: string | null;
+            currency_name?: string | null;
+            currency_symbol?: string | null;
+            /** @example Asia */
+            region?: string | null;
+            /** @example Western Asia */
+            subregion?: string | null;
+            emoji?: string | null;
+            nationality?: string | null;
+            /**
+             * @example MANDATORY
+             * @enum {string}
+             */
+            iban: "MANDATORY" | "OPTIONAL" | "NONE";
         };
         DestinationValidationResult: {
             /** @description True when creating the destination with this payload would pass every check */

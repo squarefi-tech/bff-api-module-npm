@@ -1314,6 +1314,19 @@ export namespace API {
         }
       }
 
+      export namespace Countries {
+        type CountriesRoot = pathsV1Frontend['/frontend/reference/countries'];
+
+        export type Country = componentsV1Frontend['schemas']['ReferenceCountry'];
+        /** What the country's banks take as the account of an incoming SWIFT payment. */
+        export type IbanRequirement = Country['iban'];
+
+        export namespace List {
+          export type Request = NonNullable<CountriesRoot['get']['parameters']['query']>;
+          export type Response = CountriesRoot['get']['responses'][200]['content']['application/json'];
+        }
+      }
+
       export namespace OrderTypes {
         type OrderTypesRoot = pathsV1Frontend['/frontend/reference/order_types'];
 
