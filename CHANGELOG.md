@@ -9,7 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **`frontend.reference.countries.list` and `API.Frontend.Reference.Countries` (SFI-2881).** `GET /frontend/reference/countries` with every country's `iban` flag — `MANDATORY` (its banks take a SWIFT payment only to an IBAN), `OPTIONAL` or `NONE` — so a destination form can label the SWIFT account field "IBAN" by the BIC's country instead of asking for a local account number the bank would return. `Countries.IbanRequirement` is the flag's type.
+- **`frontend.reference.countries.list` and `API.Frontend.Reference.Countries` (SFI-2881).** `GET /frontend/reference/countries` with every country's `iban` flag — `MANDATORY` (its banks take a SWIFT payment only to an IBAN), `OPTIONAL` or `NONE` — so a destination form can label the SWIFT account field "IBAN" by the BIC's country instead of asking for a local account number the bank would return. `Countries.IbanRequirement` is the flag's type. `list()` asks for the whole list (`limit: 500`) unless told otherwise: the backend pages it at 50. The flag comes with the backend release of SFI-2881; until then a response has no `iban`, and treating anything but `MANDATORY` as "account number" keeps a form working.
+
+### Changed
+
+- **Types regenerated from the DEV specs.**
+  - KYC forms: `submission` of a form summary is now `KycFormsSubmission | null`, which breaks reading `base_form.submission.status` without a null check under `strictNullChecks`; a form summary gains `target` (`rails`, `programs`, `wallet_id`).
+  - Removing a draft upload answers 400 `KycFormsErrorResponse` (was `ErrorResponse`) and may answer 409 `KycFormsConditionsCycle`.
+  - The External and Tenant `GET …/reference/countries` responses are now typed (`ReferenceCountry[]`).
+
+### Removed
+
+- **`/orders/WITHDRAW_CARD_PREPAID` from the legacy spec types.** The backend retired the route (it answers 410 since 2026-10-28). `orders.create.byOrderType.WITHDRAW_CARD_PREPAID` is still in the client and will receive the 410; withdraw a closed card's balance through its sub-account instead.
 
 ## [1.36.99] - 2026-10-27
 

@@ -575,8 +575,10 @@ export const frontend = {
           { params },
         ),
     },
-    // `iban` of a country: MANDATORY — its banks take a SWIFT payment only to an IBAN (ask for one, not an account
-    // number). Paged — 50 by default, 500 at most.
+    // Core's countries with `iban`: what banks of the country take as the account of an incoming SWIFT payment.
+    // MANDATORY — only an IBAN (label the SWIFT account field "IBAN"); OPTIONAL — an IBAN or a domestic number;
+    // NONE — no IBANs. Look the bank up by the BIC's country (letters 5–6), not the beneficiary's, and join to
+    // `list.countries` by `iso2`. The backend pages it (50 by default), so the whole list is asked for by default.
     countries: {
       list: (
         params: API.Frontend.Reference.Countries.List.Request = {},
@@ -584,7 +586,7 @@ export const frontend = {
         apiClientV1Frontend.getRequest<API.Frontend.Reference.Countries.List.Response>(
           '/frontend/reference/countries',
           {
-            params,
+            params: { limit: 500, ...params },
           },
         ),
     },
