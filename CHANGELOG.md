@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`frontend.reference.countries.list` and `API.Frontend.Reference.Countries` (SFI-2881).** `GET /frontend/reference/countries` with every country's `iban` flag — `MANDATORY` (its banks take a SWIFT payment only to an IBAN), `OPTIONAL` or `NONE` — so a destination form can label the SWIFT account field "IBAN" by the BIC's country instead of asking for a local account number the bank would return. `Countries.IbanRequirement` is the flag's type.
+
 ## [1.36.99] - 2026-10-27
 
 ### Removed

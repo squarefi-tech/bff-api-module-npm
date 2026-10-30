@@ -575,6 +575,19 @@ export const frontend = {
           { params },
         ),
     },
+    // `iban` of a country: MANDATORY — its banks take a SWIFT payment only to an IBAN (ask for one, not an account
+    // number). Paged — 50 by default, 500 at most.
+    countries: {
+      list: (
+        params: API.Frontend.Reference.Countries.List.Request = {},
+      ): Promise<API.Frontend.Reference.Countries.List.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.Reference.Countries.List.Response>(
+          '/frontend/reference/countries',
+          {
+            params,
+          },
+        ),
+    },
     // Only the types enabled for the tenant (a `tenant_order_type_rates` row), paged — 50 by default, 500 at most.
     orderTypes: {
       list: (
