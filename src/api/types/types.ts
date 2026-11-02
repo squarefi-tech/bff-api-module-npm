@@ -4172,7 +4172,8 @@ export namespace API {
 
       // An account read embeds its program as the raw row plus the enabled order-type ids under `order_types` —
       // not the program-read shape (`Programs.Program`): no vendor or currency joins, no
-      // `virtual_accounts_programs_order_types`. The list read also carries the program's KYC rail.
+      // `virtual_accounts_programs_order_types`. The list read also carries the program's KYC rail, minus
+      // `is_deposit_enabled` (stripped before the response, though the generated type still lists it).
       export type EmbeddedProgram = NonNullable<
         componentsV1Frontend['schemas']['VirtualAccount']['virtual_accounts_program']
       >;
@@ -4214,6 +4215,7 @@ export namespace API {
         deposit_instructions?: API.VirtualAccounts.VirtualAccount.DepositInstruction.DepositInstruction[];
         id: string;
         integration_vendor_id: string;
+        // The same ids as `virtual_accounts_program.order_types`, flattened; only this single-account read has it.
         order_types: string[];
         status: string;
         total_balance: number;
