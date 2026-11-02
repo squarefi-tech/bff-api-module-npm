@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The program embedded in a virtual account read is typed as the API sends it.** `VirtualAccountListItem.virtual_accounts_program` and `VirtualAccountDetailItem.virtual_accounts_program` were typed as `Programs.Program`, the program-read shape, which promises `virtual_accounts_programs_order_types` and the vendor and currency joins. An account read sends none of those: the program comes as the raw row with its order-type ids under `order_types` (plus the KYC rail on the list read). Code that trusted the old type read an empty order-type list for the account's program, so a first-party-only (1PP) account lost its "own account only" restriction whenever its program was missing from the separately loaded programs list (an archived program, a member without wallet-manager rights). The field is now `VirtualAccount.EmbeddedProgram` / `VirtualAccount.EmbeddedDetailProgram`, taken from the generated `VirtualAccount` / `VirtualAccountDetail` schemas. Breaking for code that read `integration_vendor`, `account_currency_details`, `destination_currency_details` or `virtual_accounts_programs_order_types` off an account's program — those were always `undefined` at runtime.
+
 ## [1.36.100] - 2026-10-30
 
 ### Added
