@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.102] - 2026-11-03
+
 ### Added
 
 - **`API.Frontend.Issuing.Cardholders.Eligibility.Verdict` gains `NEEDS_COMPLETION`, `NEEDS_CARD_FORM` and `ISSUER_REVIEW_PENDING`.** The hand-written union lagged the API, which can answer all three, so a caller could not name them. `NEEDS_COMPLETION`: an ACTIVE cardholder lacks what the program's issuance bar asks for. `NEEDS_CARD_FORM`: KYC forms flow only, the member has to fill the program's card form. `ISSUER_REVIEW_PENDING`: the issuer is still reviewing the submitted cardholder, so wait. Each value is documented from the spec, and `Item.cardholder_id` now names the verdicts that carry it. A `Record<Verdict, …>` or an exhaustive `switch` has to add the three cases.
