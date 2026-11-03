@@ -1748,8 +1748,10 @@ export namespace API {
             /**
              * An ACTIVE cardholder is linked (`cardholder_id`), but it does not hold what the
              * program's ISSUANCE bar asks for — typically one written before that bar existed.
-             * Creating a card now is refused with `400`; `will_require` names the same fields
-             * that 400 would. Nothing is submitted again: `PATCH` the fields, and for the
+             * Creating a card now is refused with `422 CARDHOLDER_REFUSED`, whose `message` lists
+             * the same missing fields as `will_require`. The refusal holds for the cardholder as
+             * it is: once completed, the same cardholder can get the card. Nothing is submitted
+             * again: `PATCH` the fields, and for the
              * document photos call `POST /cardholders` with the member's `user_data_id` — it
              * answers `409` with this `cardholder_id` after completing the row from the
              * member's KYC dossier. When the member has not passed that verification, run it first.
