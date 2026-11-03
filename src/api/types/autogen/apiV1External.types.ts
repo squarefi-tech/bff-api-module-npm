@@ -7519,7 +7519,7 @@ export interface components {
          * @example EXCHANGE_OMNI
          * @enum {string}
          */
-        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_FEDNOW_ONRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE" | "MONTHLY_FEE" | "REFERRAL_PAYOUT";
+        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_FEDNOW_ONRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "BC3_SWIFT_ONRAMP" | "BC3_SWIFT_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE" | "MONTHLY_FEE" | "REFERRAL_PAYOUT";
         OrderCalculation: {
             /**
              * Format: uuid
@@ -8709,7 +8709,7 @@ export interface components {
             info?: string | null;
             balance_before?: number | null;
             balance_after?: number | null;
-            /** @description Transaction metadata */
+            /** @description Transaction metadata. The `FEE` row of an AML check carries `screened_address`. The `REFUND` row of that fee does not: follow its `order_uuid` to the `AML_CHECK` order. */
             meta?: Record<string, never> | null;
             currency?: components["schemas"]["CurrencyRef"];
         };
@@ -8740,6 +8740,8 @@ export interface components {
             from_address?: string | null;
             to_address?: string | null;
             to_crypto_address?: string | null;
+            /** @description The screened address (`AML_CHECK` orders only) */
+            screened_address?: string | null;
             txid?: string | null;
             transaction_hash?: string | null;
             /** Format: uuid */

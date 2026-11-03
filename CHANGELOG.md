@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`API.Frontend.Issuing.Cardholders.Eligibility.Verdict` gains `NEEDS_COMPLETION`, `NEEDS_CARD_FORM` and `ISSUER_REVIEW_PENDING`.** The hand-written union lagged the API, which can answer all three, so a caller could not name them. `NEEDS_COMPLETION`: an ACTIVE cardholder lacks what the program's issuance bar asks for. `NEEDS_CARD_FORM`: KYC forms flow only, the member has to fill the program's card form. `ISSUER_REVIEW_PENDING`: the issuer is still reviewing the submitted cardholder, so wait. Each value is documented from the spec, and `Item.cardholder_id` now names the verdicts that carry it. A `Record<Verdict, …>` or an exhaustive `switch` has to add the three cases.
+
+### Changed
+
+- **Types regenerated from the dev specs: Frontend API 33.0.0, External API 25.2.2, Tenant API 23.2.1, Legacy API 15.0.5, and V2.** No SDK method changes; the newly typed routes below get no wrappers.
+  - Frontend, RFI (the breaking change of 33.0.0, and invisible to the compiler): `body` of a message with `author: compliance` in `GET /frontend/rfi/{wallet_id}/{case_id}` is safe inline HTML. It is still typed `string`. Render it through a client-side allowlist of inline tags and never unfiltered. `body` of a `client` message and `last_message.preview` stay plain text.
+  - Frontend, KYC forms: one change to a form at a time. A draft save, an upload, a removal or a submission sent while another one runs answers `409 OPERATION_IN_PROGRESS` and changes nothing. A draft save and a removal also gain the `503` response `KycFormsLockUnavailable`, and the `503` of an upload now covers the locking service as well. The descriptions of `KycFormsField.type` and `KycFormsFieldValue` no longer mention `consent`.
+  - Frontend, cardholder eligibility: the generated `verdict` gains `NEEDS_CARD_FORM`. On the KYC forms flow `CAN_CREATE` now means the card form is complete, with an empty `will_require`. The `400`, `403`, `404` and `500` responses are typed as `ErrorResponse`, and a `401` is added.
+  - Frontend, AML: `GET /frontend/aml/{wallet_id}/screenings` is typed (`offset`, `limit`, `address`, `chain_id`, answering `AmlScreening[]` with `pagination`). `POST` documents that an address not fitting the network of `currency_id` answers `400 VALIDATION_ERROR`, and the screening read and its report gain a `403`. `OrderMeta` gains `screened_address`, and `TransactionMeta` gains `screened_address`, `order_uuid` and `meta_type`.
+  - Frontend, reference: the `200` of `GET /frontend/reference/currencies` is typed (`ReferenceCurrency[]` with `pagination`; it had no content type), with the new `ReferenceCurrency` schema.
+  - Frontend, wallets: a shared wallet is now listed whatever its KYC status except `OFFBOARDED`, which closes it for its members, so a listed wallet is not necessarily readable; `GET /frontend/wallets`, `GET`/`PUT /frontend/wallets/active` and `WalletKycInfo.status` document this. The `403` of `GET /frontend/wallets/{wallet_id}` and `GET /frontend/wallets/{wallet_id}/users` is typed as `ErrorResponse`.
+  - Frontend, External, Tenant and Legacy: `OrderTypeId` gains `BC3_SWIFT_ONRAMP` and `BC3_SWIFT_OFFRAMP`. The hand-written `OrderType` enum in `constants` does not carry them yet.
+  - External: `OrderMeta` gains `screened_address`, and the description of `Transaction.meta` explains where an AML check carries it.
+  - V2: `KycEntityDto` gains `who_pays_and_how`; `SystemConfigDto` gains `enable_promo_codes` (default `false`); `POST /user/verification/init` and `POST /user/verification/resume` document a `400` for a tenant on the KYC forms flow.
+
+### Removed
+
+- **Breaking (types only): `consent` is gone from the type of a KYC form field.** `KycFormsField.type`, and so `API.Frontend.KycForms.FieldType`, no longer has the value `consent`: since Frontend API 32.0.0 the form does not ask for the terms consent. Code that names it (a `case 'consent'`, a comparison, a `Record<FieldType, …>` key) stops compiling, even though this release is a patch: CI bumps the patch version on every merge. Drop that handling. `consent_text` of card programs and the terms of a rail (`terms_and_conditions`) are different things and stay.
+
+### Fixed
+
+- **`npm run update:types` no longer fails on a YAML spec behind HTTP Basic auth.** The V2 document is YAML and is now served behind Basic auth too. The generator fetched it with the credentials, then handed the bare URL to `openapi-typescript`, which sends none and got a 401, so the script and the husky pre-commit hook that runs it failed. A spec that is not patched as JSON now reaches `openapi-typescript` from the body already fetched.
+
 ## [1.36.101] - 2026-11-02
 
 ### Fixed

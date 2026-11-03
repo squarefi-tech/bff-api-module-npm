@@ -1746,6 +1746,25 @@ export namespace API {
              */
             | 'NEEDS_VERIFICATION_UPGRADE'
             /**
+             * An ACTIVE cardholder is linked (`cardholder_id`), but it does not hold what the
+             * program's ISSUANCE bar asks for — typically one written before that bar existed.
+             * Creating a card now is refused with `400`; `will_require` names the same fields
+             * that 400 would. Nothing is submitted again: `PATCH` the fields, and for the
+             * document photos call `POST /cardholders` with the member's `user_data_id` — it
+             * answers `409` with this `cardholder_id` after completing the row from the
+             * member's KYC dossier. When the member has not passed that verification, run it first.
+             */
+            | 'NEEDS_COMPLETION'
+            /**
+             * KYC forms flow only: required fields of the program's card form are still empty.
+             * Only the member fills that form in their personal KYC entity; the create is refused
+             * until they do (`400 CARD_REQUIREMENTS_INCOMPLETE`, or `400 KYC_PERSONAL_ENTITY_MISSING`
+             * for a member with no personal entity), and fields in the request body do not help.
+             * `will_require` names what the member has left: tell them to fill the card form, do
+             * not ask the caller for these fields.
+             */
+            | 'NEEDS_CARD_FORM'
+            /**
              * A verification came back with a FINAL rejection — only support can
              * reset it. Never render an actionable "verify now" for this state.
              */
@@ -1757,6 +1776,16 @@ export namespace API {
              * has, so a fresh cardholder is NOT the way to retry.
              */
             | 'NEEDS_RESUBMIT'
+            /**
+             * The cardholder is submitted (`cardholder_id` is set) and the ISSUER is still
+             * reviewing the person. Nothing is wrong and nothing can be done but wait:
+             * re-submitting would only spend another review (the submit endpoint refuses it with
+             * `409 CARDHOLDER_NOT_DRAFT`), and creating a card now is refused with
+             * `400 INVALID_REQUEST`. Show the member as pending and poll. Only programs whose
+             * vendor reviews the person before issuance ever return this; vendors that issue
+             * inline go straight to READY.
+             */
+            | 'ISSUER_REVIEW_PENDING'
             /** Not an active member of this wallet. */
             | 'NOT_MEMBER';
 
@@ -1770,7 +1799,7 @@ export namespace API {
           export type Item = {
             user_data_id: string;
             verdict: Verdict;
-            /** The linked cardholder for READY/DRAFT verdicts, null otherwise. */
+            /** The linked cardholder for READY / DRAFT / NEEDS_COMPLETION / NEEDS_RESUBMIT / ISSUER_REVIEW_PENDING verdicts. */
             cardholder_id: string | null;
             /** Fields to collect by hand (submit `missing` vocabulary). */
             will_require: string[];

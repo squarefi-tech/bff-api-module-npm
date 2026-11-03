@@ -1812,6 +1812,7 @@ export interface components {
             source_of_wealth_ubo?: string | null;
             customer_acquisition_and_location?: string | null;
             funds_senders_and_recipients?: string | null;
+            who_pays_and_how?: string | null;
             purposes?: string[] | null;
             payment_flows?: string[] | null;
             source_of_funds_list?: string[] | null;
@@ -2185,6 +2186,8 @@ export interface components {
             auth_provider: "supabase" | "clerk";
             /** @default false */
             kyc_forms_enabled: boolean;
+            /** @default false */
+            enable_promo_codes: boolean;
             base_currency: string;
             mass_payouts: components["schemas"]["SystemMassPayoutsConfigDto"];
             aml_check: components["schemas"]["SystemAmlCheckConfigDto"];
@@ -3739,6 +3742,13 @@ export interface operations {
                     "application/json": components["schemas"]["InitUserVerificationResponseDto"];
                 };
             };
+            /** @description The tenant runs the KYC forms flow: the user verifies through the KYC forms of CORE */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             /** @description Unauthorized */
             401: {
                 headers: {
@@ -3771,6 +3781,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ResumeUserVerificationResponseDto"];
                 };
+            };
+            /** @description The tenant runs the KYC forms flow: the user verifies through the KYC forms of CORE */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Unauthorized */
             401: {
