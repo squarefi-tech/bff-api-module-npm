@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.104] - 2026-11-03
+
 ### Changed
 
 - **Breaking in the API, not in the types: card creation answers `422 CARDHOLDER_REFUSED` on a cardholder who does not qualify (SFI-3068).** The API already behaves this way; this release only brings the types and docs up to date. `POST /api/issuing/cards` and `POST /frontend/issuing/cards` (`frontend.issuing.cards.create`) used to refuse a card with `400 INVALID_REQUEST` when the cardholder has no email, is not submitted, is short of the program's KYC requirements, or has an identity review that came back rejected. They now answer `422 CARDHOLDER_REFUSED`. On some programs, a rejection of the cardholder's data that answered `400 CARD_VENDOR_VALIDATION` now answers `422 CARDHOLDER_REFUSED` too. Anything charged is returned, and `message` keeps its wording and says which reason applies. A review still in progress, or one sent back for more documents, keeps answering `400 INVALID_REQUEST`. The Frontend spec's `CardIssuanceRefusalCode` schema stays the union of the `400` codes and does not carry `CARDHOLDER_REFUSED`.
