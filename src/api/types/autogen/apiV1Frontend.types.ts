@@ -967,7 +967,80 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * List the wallet's screenings, newest first
+         * @description Every screening of the wallet whose fee was charged, whoever in the
+         *     wallet ran it: running, completed and failed ones. Any member of the
+         *     wallet can read it. A request refused
+         *     before the charge (for example `INSUFFICIENT_FUNDS`) is not listed.
+         *     `report_available` says whether the report can be downloaded.
+         *
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Number of screenings to skip */
+                    offset?: number;
+                    /** @description Page size */
+                    limit?: number;
+                    /** @description Only screenings whose address contains this value, in any case. A whole address finds that address, a part of one works as a search */
+                    address?: string;
+                    /** @description Only screenings on this network — `asset.chain_id` of a screening, `id` in `GET /frontend/reference/chains` */
+                    chain_id?: number;
+                };
+                header?: never;
+                path: {
+                    /** @description Wallet the screening belongs to (and is paid from) */
+                    wallet_id: components["parameters"]["AmlWalletId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description A page of screenings */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["AmlScreening"][];
+                            pagination: components["schemas"]["PaginationResponse"];
+                        };
+                    };
+                };
+                /** @description Validation error (`offset`, `limit`, `address`, `chain_id`; `VALIDATION_ERROR`, `details.issues[].field`) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description Feature not enabled for the tenant (AML_CHECK_NOT_ENABLED), no access to the wallet (ACCESS_DENIED) or the wallet's KYC is not approved (KYC_REQUIREMENTS_NOT_MET; a wallet on hold can still read) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Too many requests (RATE_LIMIT_EXCEEDED) */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
         put?: never;
         /**
          * Pay for and start an AML screening of a crypto address
@@ -978,6 +1051,12 @@ export interface paths {
          *     with `entity: WALLET_AML_SCREENINGS`, then read
          *     `GET /frontend/aml/{wallet_id}/screenings/{id}` for the verdict
          *     (`COMPLETED` or `FAILED`). A failed screening refunds the fee in full.
+         *
+         *     An address that does not fit the network of `currency_id` answers
+         *     `400 VALIDATION_ERROR` (`details.issues[].field: address`) and charges
+         *     nothing. Networks of one family share a format: an Ethereum address
+         *     passes on BSC. A network whose format cannot be checked is not
+         *     validated here.
          *
          *     Send an `Idempotency-Key` header to make a retry return the screening
          *     the first call created instead of charging again.
@@ -1005,7 +1084,10 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        /** @example TAX544wj9oDmAqWLzuAnYLU9GfS8XncsJ9 */
+                        /**
+                         * @description Must fit the network of `currency_id`
+                         * @example TAX544wj9oDmAqWLzuAnYLU9GfS8XncsJ9
+                         */
                         address: string;
                         /**
                          * Format: uuid
@@ -1034,7 +1116,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error, unsupported asset (AML_ASSET_NOT_SUPPORTED), insufficient funds (INSUFFICIENT_FUNDS) or a fee that cannot be priced (AML_FEE_NOT_PRICEABLE) */
+                /** @description Validation error (an address that does not fit the network of `currency_id` included), unsupported asset (AML_ASSET_NOT_SUPPORTED), insufficient funds (INSUFFICIENT_FUNDS) or a fee that cannot be priced (AML_FEE_NOT_PRICEABLE) */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -1112,6 +1194,15 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Feature not enabled for the tenant (AML_CHECK_NOT_ENABLED) or no access to the wallet */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
                 /** @description Not found in this wallet (SCREENING_NOT_FOUND) */
                 404: {
                     headers: {
@@ -1170,6 +1261,15 @@ export interface paths {
                 };
                 /** @description The analytics provider cannot hand the report over right now — retry later (AML_REPORT_PROVIDER_UNAVAILABLE) */
                 400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Feature not enabled for the tenant (AML_CHECK_NOT_ENABLED) or no access to the wallet */
+                403: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -6046,6 +6146,12 @@ export interface paths {
          *       document photos call `POST /cardholders` with the member's `user_data_id` — it answers
          *       `409` with this `cardholder_id` after completing the row from the member's KYC
          *       dossier. When the member has not passed that verification, run it first.
+         *     - `NEEDS_CARD_FORM` — KYC forms flow only: required fields of the program's card form are
+         *       still empty. Only the member fills that form in their personal KYC entity; the create is
+         *       refused until they do (`400 CARD_REQUIREMENTS_INCOMPLETE`, or `400 KYC_PERSONAL_ENTITY_MISSING`
+         *       for a member with no personal entity), and fields in the request body do not help.
+         *       `will_require` names what the member has left: tell them to fill the card form, do not
+         *       ask the caller for these fields.
          *     - `NEEDS_RESUBMIT` — the VENDOR's review of the cardholder came back rejected (or asked
          *       for part of the dossier again). Not a dead end: fix what `reject_reason` names —
          *       `PATCH` the field, or re-upload and re-attach the document — then call
@@ -6066,22 +6172,24 @@ export interface paths {
          *     - `NOT_MEMBER` — the uuid is not an active member of this wallet.
          *
          *     **On a tenant of the KYC forms flow** (SFI-2544) the verdict comes from the member's personal
-         *     KYC entity and the program's card form, not from the profile statuses: `CAN_CREATE` with
-         *     `will_require` = the required fields of the card form still empty in the entity (catalog
-         *     keys such as `first_name`, `email`, `phone`), `NEEDS_VERIFICATION` while the level needs the
-         *     identity check and it has not passed, `REJECTED` for an application refused for good,
-         *     `PENDING` while compliance untangles several personal entities of the member or while every
-         *     required field is answered but some wait in a submission under review. A member without a
-         *     personal entity is `CAN_CREATE` with every required field of the form in `will_require`.
+         *     KYC entity and the program's card form, not from the profile statuses: `CAN_CREATE` when the
+         *     form is complete, with nothing in `will_require`; `NEEDS_CARD_FORM` with `will_require` = the
+         *     required fields of the card form still empty in the entity (catalog keys such as `first_name`,
+         *     `email`, `phone`), `NEEDS_VERIFICATION` while the level needs the identity check and it has
+         *     not passed, `REJECTED` for an application refused for good, `PENDING` while compliance
+         *     untangles several personal entities of the member or while every required field is answered
+         *     but some wait in a submission under review. A member without a personal entity is
+         *     `NEEDS_CARD_FORM` with every required field of the form in `will_require` — or
+         *     `NEEDS_VERIFICATION` when the level needs the identity check, which such a member has not passed.
          *
          *     **`will_require`**: fields the client should expect to collect BY HAND (same vocabulary
          *     as the submit 400 `missing` list, e.g. `address.line1`, `tax_identification_number`,
          *     `email or phone`). For `DRAFT` it is the draft's actual leftovers; for `NEEDS_COMPLETION`
          *     it is what the card create refuses the row over; for `CAN_CREATE` it
          *     is a projection that assumes the KYC dossier covers what it usually covers — the created
-         *     draft's `missing_kyc_fields` is the authoritative version. The dossier never carries
-         *     contacts, so a `CAN_CREATE` member without a valid `email` or `phone` on their profile
-         *     always gets that field listed: send it in the create body.
+         *     draft's `missing_kyc_fields` is the authoritative version. Outside the KYC forms flow the
+         *     dossier never carries contacts, so a `CAN_CREATE` member without a valid `email` or `phone`
+         *     on their profile always gets that field listed: send it in the create body.
          *
          *     **Authentication**: Bearer token with x-tenant-id header; wallet ADMIN role required.
          *
@@ -6125,7 +6233,7 @@ export interface paths {
                                 /** Format: uuid */
                                 user_data_id: string;
                                 /** @enum {string} */
-                                verdict: "READY" | "DRAFT" | "CAN_CREATE" | "PENDING" | "NEEDS_VERIFICATION" | "NEEDS_VERIFICATION_UPGRADE" | "NEEDS_COMPLETION" | "NEEDS_RESUBMIT" | "ISSUER_REVIEW_PENDING" | "REJECTED" | "NOT_MEMBER";
+                                verdict: "READY" | "DRAFT" | "CAN_CREATE" | "PENDING" | "NEEDS_VERIFICATION" | "NEEDS_VERIFICATION_UPGRADE" | "NEEDS_COMPLETION" | "NEEDS_CARD_FORM" | "NEEDS_RESUBMIT" | "ISSUER_REVIEW_PENDING" | "REJECTED" | "NOT_MEMBER";
                                 /**
                                  * Format: uuid
                                  * @description The linked cardholder for READY / DRAFT / NEEDS_COMPLETION / NEEDS_RESUBMIT / ISSUER_REVIEW_PENDING verdicts
@@ -6152,34 +6260,51 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Invalid input (missing program, empty/oversized/malformed id list), or the program is not available for the caller's user group — the same "This program is not available for your user group" failure cardholder creation gives.
+                /** @description `INVALID_REQUEST` — missing program, empty/oversized/malformed id list, or the program is not available for the caller's user group — the same "This program is not available for your user group" failure cardholder creation gives.
                  *      */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `UNAUTHORIZED` — missing or invalid Bearer token, `x-tenant-id` or session */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description Access denied to this wallet */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description Issuing program not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description Server error */
                 500: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -10633,7 +10758,14 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["ReferenceCurrency"][];
+                            pagination: components["schemas"]["PaginationResponse"];
+                        };
+                    };
                 };
                 401: components["responses"]["UnauthorizedError"];
             };
@@ -11987,6 +12119,8 @@ export interface paths {
         /**
          * Get a compliance request with its conversation and covered transactions
          * @description The conversation holds compliance's questions and the client's answers, oldest first.
+         *     The `body` of a compliance message is safe inline HTML, so a link can be a hyperlink; the
+         *     `body` of the client's own answer is plain text. `author` tells them apart.
          *     A request of another account answers 404, and so does every request of a workspace
          *     that still works RFI by email. Works at any KYC status of the account.
          *
@@ -12102,7 +12236,7 @@ export interface paths {
                 };
             };
             responses: {
-                /** @description The message as stored */
+                /** @description The message as stored. It is the client's own answer, so `body` is the text as sent, not HTML. */
                 201: {
                     headers: {
                         [name: string]: unknown;
@@ -13099,8 +13233,11 @@ export interface paths {
          *
          *     The selection cannot outlive the access it rides on: the flag sits on
          *     the membership row, so revoking membership drops it. A deleted wallet,
-         *     a deactivated membership or a wallet whose owner deleted their account
-         *     falls back to the default.
+         *     a deactivated membership or a wallet closed for its members falls back
+         *     to the default. A shared wallet is closed when its owner deleted their
+         *     account or, on a KYC-enabled tenant, when its KYC status is `OFFBOARDED`.
+         *     Any other KYC status can be the active wallet: read it from `kyc_info.status`,
+         *     the KYC-gated endpoints answer `403 KYC_REQUIREMENTS_NOT_MET` until it opens.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -13144,7 +13281,8 @@ export interface paths {
          *     Any wallet the caller is an **active member** of may be selected —
          *     ownership is not required. A wallet whose owner has deleted their
          *     account cannot be selected: the request answers `403`, the same as
-         *     every other endpoint of that wallet.
+         *     every other endpoint of that wallet. On a KYC-enabled tenant a member
+         *     cannot select a wallet whose KYC status is `OFFBOARDED` either: `403`.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -13196,8 +13334,9 @@ export interface paths {
                 };
                 401: components["responses"]["UnauthorizedError"];
                 /** @description `ACCESS_DENIED` (`You do not have access to this wallet`) — the caller is not an active
-                 *     member of the wallet, or the wallet is closed because its owner deleted their account.
-                 *     The answer is the same in both cases and does not reveal why. The stored selection is not changed.
+                 *     member of the wallet, or the wallet is closed for its members: its owner deleted their account
+                 *     or, on a KYC-enabled tenant, its KYC status is `OFFBOARDED` (the owner can still select it).
+                 *     The answer is the same in every case and does not reveal why. The stored selection is not changed.
                  *      */
                 403: {
                     headers: {
@@ -13517,6 +13656,10 @@ export interface paths {
          *     (`uuid`, `name`, `display_name`, `tenant_id`, `kyc_entity_id`, `kyc_info`, `created_at` + the role fields) — no `logo_url`.
          *
          *     A wallet whose owner has deleted their account is closed for every member and is not listed.
+         *
+         *     On a KYC-enabled tenant a shared wallet is listed whatever its KYC status, except `OFFBOARDED`:
+         *     that wallet is closed for its members and is listed only for its owner. Read the status from
+         *     `kyc_info.status`; the KYC-gated endpoints answer `403 KYC_REQUIREMENTS_NOT_MET` until it opens.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -13993,12 +14136,17 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Access denied to this wallet */
+                /** @description `ACCESS_DENIED` (`Access denied to this wallet`) — the caller is not an active member of the wallet.
+                 *     On a KYC-enabled tenant the same answer is given to a member (not the owner) of a wallet whose KYC
+                 *     status is `OFFBOARDED`; it does not reveal why. The owner is not refused by this check.
+                 *      */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description Wallet not found */
                 404: {
@@ -15147,12 +15295,17 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Access denied to this wallet */
+                /** @description `ACCESS_DENIED` (`Access denied to this wallet`) — the caller is not an active member of the wallet, or the caller is a scoped `user` member (this endpoint is closed to that role).
+                 *     On a KYC-enabled tenant the same answer is given to a member (not the owner) of a wallet whose KYC
+                 *     status is `OFFBOARDED`; it does not reveal why. The owner is not refused by this check.
+                 *      */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description Wallet not found */
                 404: {
@@ -16656,7 +16809,7 @@ export interface paths {
         get?: never;
         /**
          * Save the draft of a form
-         * @description The form is the one `rails` and `programs` name, as for `GET …/forms`. Replaces the draft as a whole with the given values of open fields; the files of the draft stay, and so do those of a `returned` last submission (they carry over into the draft, those removed excepted). Types are checked, rules and requiredness are not — except that owner shares over 100% in total, a value whose condition reads an empty required source, and a change to a saved owner the form does not allow (left out of the list, its value cleared, or changed outside a `returned` form) are refused here too, as on the submission: the draft is not saved. Nothing is written to the KYC entity. The first draft of a business form moves the application to `PENDING`. The entity's owner, or an owner or admin of a linked wallet.
+         * @description The form is the one `rails` and `programs` name, as for `GET …/forms`. Replaces the draft as a whole with the given values of open fields; the files of the draft stay, and so do those of a `returned` last submission (they carry over into the draft, those removed excepted). Types are checked, rules and requiredness are not — except that owner shares over 100% in total, a value whose condition reads an empty required source, and a change to a saved owner the form does not allow (left out of the list, its value cleared, or changed outside a `returned` form) are refused here too, as on the submission: the draft is not saved. Nothing is written to the KYC entity. The first draft of a business form moves the application to `PENDING`. One change to a form at a time — a draft save, an upload, a removal or the submission: another one sent meanwhile, from any tab or member, answers `409 OPERATION_IN_PROGRESS` and changes nothing; send the changes of one form one after another. The entity's owner, or an owner or admin of a linked wallet.
          */
         put: {
             parameters: {
@@ -16707,7 +16860,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description `FORM_LOCKED` — the form is read-only by the application status, or its last submission waits on the verification or the review; `FORM_OUTDATED` — `schema_version` is not the one the form has now, reload it (`GET …/forms`) and send again; `KYC_FORM_CONDITIONS_CYCLE` — the tenant's form settings show fields on conditions that read each other in a circle */
+                /** @description `FORM_LOCKED` — the form is read-only by the application status, or its last submission waits on the verification or the review; `FORM_OUTDATED` — `schema_version` is not the one the form has now, reload it (`GET …/forms`) and send again; `OPERATION_IN_PROGRESS` — another change to this form (a draft save, an upload, a removal, the submission) is running: nothing was changed, try again once it answers; `KYC_FORM_CONDITIONS_CYCLE` — the tenant's form settings show fields on conditions that read each other in a circle */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -16716,6 +16869,7 @@ export interface paths {
                         "application/json": components["schemas"]["KycFormsErrorResponse"];
                     };
                 };
+                503: components["responses"]["KycFormsLockUnavailable"];
             };
         };
         post?: never;
@@ -16736,7 +16890,7 @@ export interface paths {
         put?: never;
         /**
          * Upload a file into a file field of a form
-         * @description The form is the one `rails` and `programs` name. Multipart: `field` (the key of an open file field: shown, not locked) and `file`. PDF, JPEG or PNG up to 20 MB, told by the bytes — a renamed file is refused with `DOCUMENT_REJECTED`; a field whose `file.accept` lists only images (the photos of the identity document, `gov_id_front` / `gov_id_back`) refuses a PDF the same way. A field that takes no files now — unknown, not a file field, locked (a form read-only by the application status locks every field), or hidden by its condition — is refused with `FORM_FIELD_NOT_ALLOWED`, whatever the file. The file stays in the draft until the submission is applied; a file of a field hidden by its condition stays in the draft's storage (removable by its `id`), is not listed in the form's `values` while hidden, and does not go with the submission. The photos of the identity document go to the identity provider once the submission waits on the verification. On a form whose last submission is `returned` the files of that submission count toward `file.max_files` of the field and carry over into the draft with the new file. The entity's owner, or an owner or admin of a linked wallet.
+         * @description The form is the one `rails` and `programs` name. Multipart: `field` (the key of an open file field: shown, not locked) and `file`. PDF, JPEG or PNG up to 20 MB, told by the bytes — a renamed file is refused with `DOCUMENT_REJECTED`; a field whose `file.accept` lists only images (the photos of the identity document, `gov_id_front` / `gov_id_back`) refuses a PDF the same way. A field that takes no files now — unknown, not a file field, locked (a form read-only by the application status locks every field), or hidden by its condition — is refused with `FORM_FIELD_NOT_ALLOWED`, whatever the file. The file stays in the draft until the submission is applied; a file of a field hidden by its condition stays in the draft's storage (removable by its `id`), is not listed in the form's `values` while hidden, and does not go with the submission. The photos of the identity document go to the identity provider once the submission waits on the verification. On a form whose last submission is `returned` the files of that submission count toward `file.max_files` of the field and carry over into the draft with the new file. One change to a form at a time: an upload sent while another change to the form runs answers `409 OPERATION_IN_PROGRESS` and stores nothing — upload the files of one form one after another. The entity's owner, or an owner or admin of a linked wallet.
          */
         post: {
             parameters: {
@@ -16806,7 +16960,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description `FORM_LOCKED` — the last submission of the form waits on the verification or the review (a form read-only by the application status answers `400 FORM_FIELD_NOT_ALLOWED` instead); `KYC_FORM_CONDITIONS_CYCLE` — the tenant's form settings show fields on conditions that read each other in a circle. */
+                /** @description `FORM_LOCKED` — the last submission of the form waits on the verification or the review (a form read-only by the application status answers `400 FORM_FIELD_NOT_ALLOWED` instead); `OPERATION_IN_PROGRESS` — another change to this form (a draft save, an upload, a removal, the submission) is running: nothing was changed, try again once it answers; `KYC_FORM_CONDITIONS_CYCLE` — the tenant's form settings show fields on conditions that read each other in a circle. */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -16815,7 +16969,7 @@ export interface paths {
                         "application/json": components["schemas"]["KycFormsErrorResponse"];
                     };
                 };
-                /** @description File storage is not configured on this server (SERVICE_UNAVAILABLE) */
+                /** @description `SERVICE_UNAVAILABLE` — file storage is not configured on this server, or the locking service is unavailable */
                 503: {
                     headers: {
                         [name: string]: unknown;
@@ -16844,7 +16998,7 @@ export interface paths {
         post?: never;
         /**
          * Remove a file from the draft of a form
-         * @description The form is the one `rails` and `programs` name. Only a file of the draft (`saved: false`) can be removed — a file of a returned submission is one too: the submission opens as the draft without it, its own record keeps the file; a document already in the KYC entity never is. The entity's owner, or an owner or admin of a linked wallet.
+         * @description The form is the one `rails` and `programs` name. Only a file of the draft (`saved: false`) can be removed — a file of a returned submission is one too: the submission opens as the draft without it, its own record keeps the file; a document already in the KYC entity never is. One change to a form at a time: a removal sent while another change to the form runs (a draft save, an upload, another removal, the submission) answers `409 OPERATION_IN_PROGRESS` and removes nothing — remove the files of one form one after another. The entity's owner, or an owner or admin of a linked wallet.
          */
         delete: {
             parameters: {
@@ -16903,7 +17057,16 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                409: components["responses"]["KycFormsConditionsCycle"];
+                /** @description `OPERATION_IN_PROGRESS` — another change to this form (a draft save, an upload, a removal, the submission) is running: nothing was changed, try again once it answers; `KYC_FORM_CONDITIONS_CYCLE` — the tenant's form settings show fields on conditions that read each other in a circle */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KycFormsErrorResponse"];
+                    };
+                };
+                503: components["responses"]["KycFormsLockUnavailable"];
             };
         };
         options?: never;
@@ -16922,7 +17085,7 @@ export interface paths {
         put?: never;
         /**
          * Send a form
-         * @description The form is the one `rails` and `programs` name. The full check of every open field (all errors in one `VALIDATION_ERROR`), then a submission: `awaiting_verification` when the identity document and face are still needed, `applied` when every profile of the form writes the answers into the KYC entity at once, `in_review` when compliance decides (any profile of the form in review mode). Answers `200` with the form in its new state. One submission of a form at a time. A rail form does not change the application status; once its submission is approved, the rail is submitted through the wallet's existing `POST /frontend/wallets/{wallet_id}/kyc-rails/{rail_id}`. A card form is `auto` unless a profile of it says otherwise and never changes the application status; once applied, the cardholder is created through `POST /frontend/issuing/cardholders` with `user_data_id`. A multi form moves the application like the base form it includes; once applied, every rail and program of the set is satisfied from the shared data. A `returned` submission sent again keeps its files that were not removed. A saved beneficial owner (an item of `beneficial_owners` with an `id`) is the entity's: a list without one, a changed saved value outside a `returned` form, and a saved value sent empty are refused with `VALIDATION_ERROR`, as in the draft. The entity's owner, or an owner or admin of a linked wallet.
+         * @description The form is the one `rails` and `programs` name. The full check of every open field (all errors in one `VALIDATION_ERROR`), then a submission: `awaiting_verification` when the identity document and face are still needed, `applied` when every profile of the form writes the answers into the KYC entity at once, `in_review` when compliance decides (any profile of the form in review mode). Answers `200` with the form in its new state. One change to a form at a time: a submission sent while a draft save, an upload, a removal or another submission of the form runs answers `409 OPERATION_IN_PROGRESS` and changes nothing; send it again once the others answer. A rail form does not change the application status; once its submission is approved, the rail is submitted through the wallet's existing `POST /frontend/wallets/{wallet_id}/kyc-rails/{rail_id}`. A card form is `auto` unless a profile of it says otherwise and never changes the application status; once applied, the cardholder is created through `POST /frontend/issuing/cardholders` with `user_data_id`. A multi form moves the application like the base form it includes; once applied, every rail and program of the set is satisfied from the shared data. A `returned` submission sent again keeps its files that were not removed. A saved beneficial owner (an item of `beneficial_owners` with an `id`) is the entity's: a list without one, a changed saved value outside a `returned` form, and a saved value sent empty are refused with `VALIDATION_ERROR`, as in the draft. The entity's owner, or an owner or admin of a linked wallet.
          */
         post: {
             parameters: {
@@ -16973,7 +17136,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description `FORM_LOCKED` — the form is read-only by the application status, or its last submission waits on the verification or the review; `FORM_OUTDATED` — `schema_version` is not the one the form has now, reload it (`GET …/forms`) and send again; `OPERATION_IN_PROGRESS` — a submission of this form is already running; `KYC_FORM_CONDITIONS_CYCLE` — the tenant's form settings show fields on conditions that read each other in a circle */
+                /** @description `FORM_LOCKED` — the form is read-only by the application status, or its last submission waits on the verification or the review; `FORM_OUTDATED` — `schema_version` is not the one the form has now, reload it (`GET …/forms`) and send again; `OPERATION_IN_PROGRESS` — a submission of this form, or another change to it (a draft save, an upload, a removal), is running; `KYC_FORM_CONDITIONS_CYCLE` — the tenant's form settings show fields on conditions that read each other in a circle */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -17518,7 +17681,7 @@ export interface components {
          * @example EXCHANGE_OMNI
          * @enum {string}
          */
-        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_FEDNOW_ONRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE" | "MONTHLY_FEE" | "REFERRAL_PAYOUT";
+        OrderTypeId: "EXCHANGE_OMNI" | "EXCHANGE_OMNI_ONRAMP" | "EXCHANGE_OMNI_OFFRAMP" | "EXCHANGE_OMNI_CRYPTO" | "EXCHANGE_CRYPTO_INTERNAL" | "L2F_ACH_ONRAMP" | "L2F_ACH_OFFRAMP" | "L2F_SEPA_ONRAMP" | "L2F_SEPA_OFFRAMP" | "L2F_SWIFT_ONRAMP" | "L2F_SWIFT_OFFRAMP" | "L2F_WIRE_ONRAMP" | "L2F_WIRE_OFFRAMP" | "L2F_CHAPS_ONRAMP" | "L2F_CHAPS_OFFRAMP" | "L2F_FPS_ONRAMP" | "L2F_FPS_OFFRAMP" | "BRL_WIRE_ONRAMP" | "BRL_WIRE_OFFRAMP" | "BRL_ACH_ONRAMP" | "BRL_ACH_OFFRAMP" | "BRL_FEDNOW_ONRAMP" | "BRL_RTP_OFFRAMP" | "DLS_WIRE_ONRAMP" | "DLS_WIRE_OFFRAMP" | "DLS_ACH_ONRAMP" | "DLS_ACH_OFFRAMP" | "DLS_SEPA_ONRAMP" | "DLS_SEPA_OFFRAMP" | "DLS_SWIFT_ONRAMP" | "DLS_SWIFT_OFFRAMP" | "BC1_SEPA_ONRAMP" | "BC1_SEPA_OFFRAMP" | "BC1_SWIFT_ONRAMP" | "BC1_SWIFT_OFFRAMP" | "BC3_SEPA_ONRAMP" | "BC3_SEPA_OFFRAMP" | "BC3_SWIFT_ONRAMP" | "BC3_SWIFT_OFFRAMP" | "RPP_SWIFT_OFFRAMP" | "RPP_SEPA_OFFRAMP" | "RPP_FPS_OFFRAMP" | "RPP_ACH_OFFRAMP" | "OMNIBUS_CRYPTO_TRANSFER" | "OMNIBUS_CRYPTO_WITHDRAWAL" | "OMNIBUS_INTERNAL_TRANSFER" | "SEGREGATED_CRYPTO_TRANSFER" | "TRANSFER_INTERNAL" | "TRANSFER_CARD_PREPAID" | "TRANSFER_CARD_SUBACCOUNT" | "TRANSFER_CARD_WHOLESALE" | "WITHDRAW_CARD_PREPAID" | "WITHDRAW_CARD_SUBACCOUNT" | "REFUND_CARD_PREPAID" | "REFUND_CARD_SUBACCOUNT" | "RN_CARDS_OFFRAMP" | "CARD_ISSUING_FEE" | "MONTHLY_FEE" | "REFERRAL_PAYOUT";
         OrderCalculation: {
             /**
              * Format: uuid
@@ -18544,6 +18707,39 @@ export interface components {
             /** @description Whether the tenant's AML provider can screen addresses on this network (chains list only) */
             aml_supported?: boolean;
         };
+        /** @description A currency on `GET /frontend/reference/currencies`. */
+        ReferenceCurrency: {
+            /**
+             * Format: uuid
+             * @description The `currency_id` other endpoints take
+             */
+            uuid: string;
+            /** @example Tether USD */
+            name: string;
+            /** @example USDT */
+            symbol: string;
+            icon?: string | null;
+            /** @enum {string|null} */
+            type?: "token" | "native" | "fiat" | null;
+            is_crypto: boolean;
+            is_stablecoin?: boolean;
+            is_memo?: boolean | null;
+            /** @example 6 */
+            decimal: number;
+            /** @example 2 */
+            render_decimal: number;
+            /** @description Raw reference data, not a stable contract */
+            meta?: {
+                [key: string]: unknown;
+            } | null;
+            enabled: boolean;
+            /** @description The network of the token; null for a fiat currency */
+            chain?: components["schemas"]["ReferenceChain"] | null;
+            /** @description Whether the currency is enabled for the tenant of the session */
+            is_tenant_enabled: boolean;
+            /** @description Whether an address on this token's network can be screened (`POST /frontend/aml/{wallet_id}/screenings`); always false while AML screening is off for the tenant */
+            aml_supported: boolean;
+        };
         /** @description Blockchain network as stored in the `chain` reference table. Embedded whole into every item of `GET /frontend/wallets/{wallet_id}/addresses`; `GET /frontend/reference/chains` returns the `ReferenceChain` subset of the same rows. Rely on `id` / `name` / `symbol` / `enabled` / `display_name` — the rest is the raw reference row and is not a stable contract. `name` and `symbol` are keys: match on them, show `display_name`. */
         Chain: {
             /**
@@ -19044,6 +19240,8 @@ export interface components {
             to_address?: string | null;
             /** @description Destination crypto address (crypto transfers) */
             to_crypto_address?: string | null;
+            /** @description The screened address (`AML_CHECK` orders only) */
+            screened_address?: string | null;
             /** @description Blockchain transaction id (when settled on-chain) */
             txid?: string | null;
             /** @description Blockchain transaction hash (when settled on-chain) */
@@ -19491,7 +19689,7 @@ export interface components {
              */
             type: "individual" | "business" | "universal";
             /**
-             * @description KYC verification status. A refusal is one of three values: `DECLINED`, `REJECT` or `SOFT_REJECT`. Only `APPROVED` (full access) and `HOLD` (read-only) open the wallet. `OFFBOARDED` — final: the work with this company or person is over; `EXPIRED` — no activity on the application for over three months; a check passed on it brings it back.
+             * @description KYC verification status. A refusal is one of three values: `DECLINED`, `REJECT` or `SOFT_REJECT`. Only `APPROVED` (full access) and `HOLD` (read-only) open the wallet's data endpoints; any other status except `OFFBOARDED` stays listed for members. `OFFBOARDED` — final: the work with this company or person is over, and the wallet is closed for its members: every wallet endpoint answers them `403 ACCESS_DENIED` (its owner still sees it); `EXPIRED` — no activity on the application for over three months; a check passed on it brings it back.
              * @enum {string}
              */
             status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW" | "EXPIRED" | "OFFBOARDED";
@@ -19687,6 +19885,8 @@ export interface components {
             exchange_rate?: number;
             from_address?: string;
             to_address?: string;
+            /** @description The screened address of an AML check, on its `FEE` row next to `meta_type: AML_CHECK`. The `REFUND` row of that fee does not carry it: follow `order_uuid` to the `AML_CHECK` order. */
+            screened_address?: string;
             /** Format: uuid */
             from_user_data?: string;
             /** Format: uuid */
@@ -19703,6 +19903,13 @@ export interface components {
             direction?: "in" | "out";
             /** Format: uuid */
             order_id?: string;
+            /**
+             * Format: uuid
+             * @description The order this row belongs to. On the `REFUND` row of an AML check it leads to the `AML_CHECK` order.
+             */
+            order_uuid?: string;
+            /** @description What the row pays for, when the order type sets it: `AML_CHECK` on the `FEE` row of an AML check. The `REFUND` row of that fee does not carry it. */
+            meta_type?: string;
         } & {
             [key: string]: unknown;
         };
@@ -20477,7 +20684,7 @@ export interface components {
             last_message: {
                 /** @enum {string} */
                 author: "compliance" | "client";
-                /** @description One line of the message, up to 140 characters, cut at a word; null when the message has no text — an answer of files only */
+                /** @description One line of the message as plain text (no markup; a link reads `label (url)`), up to 140 characters, cut at a word; null when the message has no text — an answer of files only */
                 preview: string | null;
                 /** Format: date-time */
                 created_at: string;
@@ -20507,7 +20714,7 @@ export interface components {
              * @enum {string}
              */
             author: "compliance" | "client";
-            /** @description The text of the message. An empty string when the client answered with files only — show the attachments alone. */
+            /** @description Depends on `author`. `compliance`: safe inline HTML, render it as HTML with `white-space: pre-wrap` (line breaks stay `\n`). A message published in the app may use only `b`, `strong`, `i`, `em`, `u`, `s`, `strike`, `del`, `code` and `a` with an `http(s)` or `mailto` `href`; any other compliance message (sent by email before the workspace moved to the app, or not valid HTML) comes as its text with `<`, `>`, `&`, `"` and `'` escaped, so it renders as the same text. `client`: the text as the client sent it, render it as text and never as HTML; an empty string when the client answered with files only — show the attachments alone. */
             body: string;
             attachments: components["schemas"]["RfiAttachment"][];
             /** Format: date-time */
@@ -20735,7 +20942,7 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
-        /** @description The value of one field in `values`, shaped by the field's `type`: `text`, `textarea`, `email`, `phone` (E.164), `date` (`YYYY-MM-DD`), `enum` (an `options[].value`), `country` (alpha-2) — a string; `number`, `integer` — a number; `bool`, `consent` — a boolean; `multi_enum`, `country_multi` — an array of strings; `file` — an array of `KycFormsFileValue`; `list` — an array of `KycFormsListItemValue`. Empty is null. */
+        /** @description The value of one field in `values`, shaped by the field's `type`: `text`, `textarea`, `email`, `phone` (E.164), `date` (`YYYY-MM-DD`), `enum` (an `options[].value`), `country` (alpha-2) — a string; `number`, `integer` — a number; `bool` — a boolean; `multi_enum`, `country_multi` — an array of strings; `file` — an array of `KycFormsFileValue`; `list` — an array of `KycFormsListItemValue`. Empty is null. */
         KycFormsFieldValue: (string | number | boolean | string[] | components["schemas"]["KycFormsFileValue"][] | components["schemas"]["KycFormsListItemValue"][]) | null;
         /** @description The value of one open field in the draft or the submission, shaped by the field's `type` as `KycFormsFieldValue` — except a `file` field, whose files travel through the uploads routes only (its key is refused with `FORM_FIELD_NOT_ALLOWED`). `null` clears the field. */
         KycFormsAnswerValue: (string | number | boolean | string[] | components["schemas"]["KycFormsListItemValue"][]) | null;
@@ -20746,10 +20953,10 @@ export interface components {
              */
             key: string;
             /**
-             * @description The control, and the shape of the value in `values` and in the draft: `text`, `textarea`, `email` — string; `phone` — E.164 string; `number`, `integer` — number; `date` — `YYYY-MM-DD`; `bool` — boolean; `consent` — only `true` is accepted; `enum` — one `options[].value`; `multi_enum` — an array of them; `country` — alpha-2; `country_multi` — an array of alpha-2; `file` — files travel through the uploads routes, `values` lists them as `KycFormsFileValue`; `list` — an array of items, each an object keyed by `item.fields[].key` (plus `id` for a saved row).
+             * @description The control, and the shape of the value in `values` and in the draft: `text`, `textarea`, `email` — string; `phone` — E.164 string; `number`, `integer` — number; `date` — `YYYY-MM-DD`; `bool` — boolean; `enum` — one `options[].value`; `multi_enum` — an array of them; `country` — alpha-2; `country_multi` — an array of alpha-2; `file` — files travel through the uploads routes, `values` lists them as `KycFormsFileValue`; `list` — an array of items, each an object keyed by `item.fields[].key` (plus `id` for a saved row).
              * @enum {string}
              */
-            type: "text" | "textarea" | "number" | "integer" | "date" | "bool" | "consent" | "enum" | "multi_enum" | "country" | "country_multi" | "email" | "phone" | "file" | "list";
+            type: "text" | "textarea" | "number" | "integer" | "date" | "bool" | "enum" | "multi_enum" | "country" | "country_multi" | "email" | "phone" | "file" | "list";
             label: string;
             hint: string | null;
             placeholder: string | null;
