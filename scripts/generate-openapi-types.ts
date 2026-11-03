@@ -150,6 +150,14 @@ const generateDocs = async (apiDoc: ApiDocsData) => {
     }
   }
 
+  // openapi-typescript fetches a URL on its own, without the Basic auth header,
+  // so a spec that was not patched above goes to it from the body already fetched.
+  if (!tempDir) {
+    tempDir = mkdtempSync(join(tmpdir(), `${apiDoc.name}-`));
+    inputArg = join(tempDir, 'spec.yaml');
+    writeFileSync(inputArg, raw);
+  }
+
   try {
     const { stdout, stderr } = await execAsync(`npx openapi-typescript "${inputArg}"`, { maxBuffer: 50 * 1024 * 1024 });
     if (stderr) {

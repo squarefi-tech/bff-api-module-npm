@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`npm run update:types` no longer fails on a YAML spec behind HTTP Basic auth.** The V2 document is YAML and is now served behind Basic auth too. The generator fetched it with the credentials, then handed the bare URL to `openapi-typescript`, which sends none and got a 401, so the script and the husky pre-commit hook that runs it failed. A spec that is not patched as JSON now reaches `openapi-typescript` from the body already fetched.
+
 ## [1.36.101] - 2026-11-02
 
 ### Fixed
