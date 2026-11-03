@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.103] - 2026-11-03
+
 ### Added
 
 - **`options[].exclusive` on a KYC form field (SFI-3041).** `KycFormsField.options[]`, and so `API.Frontend.KycForms.FieldOption`, gains `exclusive?: boolean`. It is present only on a `multi_enum` option that cannot be chosen together with another one (today `NONE` of `engage_in_activities`); the other options do not carry it. Alone such an option is accepted. Together with others, both the draft (`PUT /frontend/kyc/entities/{entity_id}/forms/draft`) and the submission (`POST /frontend/kyc/entities/{entity_id}/forms/submit`) answer `400 VALIDATION_ERROR` on that field (`details.fields[key]`), with «This option cannot be combined with others» in the language of the form, and the draft is not saved.
