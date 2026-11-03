@@ -2897,6 +2897,19 @@ export interface paths {
                         "application/json": components["schemas"]["ApiErrorResponse"];
                     };
                 };
+                /** @description `CARDHOLDER_REFUSED` — no card can be issued on this cardholder; anything charged was returned. Either the card
+                 *     issuer refused the person, or the cardholder does not qualify: no email, not submitted, short of the program's
+                 *     KYC requirements, or their identity review came back rejected; `message` says which. A review still in
+                 *     progress is not a refusal: it answers `400 INVALID_REQUEST`.
+                 *      */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
                 /** @description Internal Server Error */
                 500: {
                     headers: {

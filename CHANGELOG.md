@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Types regenerated from the dev specs: Frontend API 34.0.0 (was 33.1.0) and External API 26.0.0 (was 25.2.2), for the card refusal on a cardholder (SFI-3068).** Tenant API 23.2.1 and V2 did not change. Legacy API 15.0.6 (was 15.0.5) regenerates with no diff: its bump comes from the card CSV export fix (SUPPORT-620), which changes no type. No SDK method or hand-written type changes.
+  - External, `POST /api/issuing/cards`: gains the `422` response `CARDHOLDER_REFUSED` (`ApiErrorResponse`). It is the only change the compiler sees.
+  - Frontend, `POST /frontend/issuing/cards`: the description of the `422` response `CARDHOLDER_REFUSED` (`ErrorResponse`) now covers a cardholder who does not qualify, not only a refusal by the card issuer.
+  - Behaviour of both routes (breaking in the API, invisible to the compiler): a card on a cardholder who does not qualify (no email, not submitted, short of the program's KYC requirements, or an identity review that came back rejected) is refused with `422 CARDHOLDER_REFUSED` instead of `400 INVALID_REQUEST`, and on some programs a rejection of the cardholder's data that answered `400 CARD_VENDOR_VALIDATION` now answers `422 CARDHOLDER_REFUSED` too. Anything charged is returned, and `message` keeps its wording and says which. A review still in progress keeps answering `400 INVALID_REQUEST`. `CardIssuanceRefusalCode` stays the union of the `400` codes and does not carry `CARDHOLDER_REFUSED`: branch on status `422` with `error.code` `CARDHOLDER_REFUSED` where you branched on `400 INVALID_REQUEST` or on its message, and do not repeat the request on the same cardholder.
+
 ## [1.36.103] - 2026-11-03
 
 ### Added
