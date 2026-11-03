@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`options[].exclusive` on a KYC form field (SFI-3041).** `KycFormsField.options[]`, and so `API.Frontend.KycForms.FieldOption`, gains `exclusive?: boolean`. It is present only on a `multi_enum` option that cannot be chosen together with another one (today `NONE` of `engage_in_activities`); the other options do not carry it. Alone such an option is accepted. Together with others, both the draft (`PUT /frontend/kyc/entities/{entity_id}/forms/draft`) and the submission (`POST /frontend/kyc/entities/{entity_id}/forms/submit`) answer `400 VALIDATION_ERROR` on that field (`details.fields[key]`), with «This option cannot be combined with others» in the language of the form, and the draft is not saved.
+
+### Changed
+
+- **Types regenerated from the dev specs: Frontend API 33.1.0 (was 33.0.0).** External API 25.2.2, Tenant API 23.2.1, Legacy API 15.0.5 and V2 did not change and regenerate with no diff. No SDK method changes. `exclusive` above is the only change to a type: everything below is in descriptions, so the compiler shows none of it.
+  - Frontend, KYC forms: the draft and submission routes and `KycFormsFieldErrors` document the refusal of an `exclusive` option chosen together with another one.
+  - Frontend, KYC forms: an item of a `list` field (`KycFormsListItemValue`) with `owner_type: business` requires `corporate_name`, `corporate_country` and `corporate_registration_number`, which the form marks `required` on the item fields. Without them the submission is refused with `VALIDATION_ERROR` on the item field.
+  - Frontend, KYC forms: `stage` of `KycFormsOverview` under `WAITING_ON_UBOS` is spelled out further. While the filler's own identity check is asked again (`verification.applicant.state: retry`) it is `action_required` with `next_step: verification`, ahead of the owners, who cannot finish without it; an admin of the wallet reading sees `waiting_on: applicant` and `next_step: wait`. Otherwise it is `action_required` with `next_step: owners` while another owner has a check to start, finish or redo, else `in_review`, also when the filler's check is with the provider or an owner's declared data does not match the document.
+  - Frontend, cardholder eligibility (`POST /frontend/issuing/cardholders/eligibility`), KYC forms flow: `NEEDS_VERIFICATION` now holds only while the identity check the level needs is not started or has to be redone. While that check is under review at the identity provider the verdict is `PENDING`: nothing to do but wait, and the create is refused until it passes.
+
 ## [1.36.102] - 2026-11-03
 
 ### Added
