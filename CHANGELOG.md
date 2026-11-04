@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.105] - 2026-11-04
+
 ### Added
 
 - **`verification.owners[].documents` in `GET /frontend/kyc/entities/{entity_id}/overview` (SFI-3041).** `KycFormsOverview`, and so `API.Frontend.KycForms.OverviewOwner`, gains `documents`: the files of the owner's identity document on record, uploaded through `POST /frontend/kyc/entities/{entity_id}/verification/owners/{owner_id}/document` or read from the identity provider after the owner passed. There is one item per side, however many times it was uploaded. An item is `{ key, label }`: `key` is `gov_id_front` or `gov_id_back`, and `label` is the name of the field in the language of the request.
