@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`verification.owners[].documents` in `GET /frontend/kyc/entities/{entity_id}/overview` (SFI-3041).** `KycFormsOverview`, and so `API.Frontend.KycForms.OverviewOwner`, gains `documents`: the files of the owner's identity document on record, uploaded through `POST /frontend/kyc/entities/{entity_id}/verification/owners/{owner_id}/document` or read from the identity provider after the owner passed. There is one item per side, however many times it was uploaded. An item is `{ key, label }`: `key` is `gov_id_front` or `gov_id_back`, and `label` is the name of the field in the language of the request.
+  - An item says a file is there, not that the provider accepted it. `state` tells that, and the item stays after a refusal. Neither the file nor the kind of document (a passport or an ID card) is given.
+  - The array is empty for a company and for the filler's own row.
+  - The field is required in the type, so code that builds such an owner by hand (a fixture, a mock) stops compiling until it adds `documents`, even though this release is a patch: CI bumps the patch version on every merge.
+
+### Changed
+
+- **Types regenerated from the dev specs: Frontend API 34.1.0 (was 34.0.0).** External API 26.0.0, Tenant API 23.2.1, Legacy API 15.0.6 and V2 did not change and regenerate with no diff. No SDK method changes. `documents` above is the only change to a type: everything below is in descriptions, so the compiler shows none of it. Frontend 34.0.1 has no diff of its own: it fixes the order counts of `GET /frontend/wallets/{wallet_id}/dashboard` (`orders.active`, `orders.completed_mtd` and `orders.failed_mtd` read `0` whatever the wallet had), which changes no type.
+  - Frontend, KYC forms (34.0.3): `email` of an item of `beneficial_owners` is now `required: true` on the form for every individual owner but the filler, whatever `invite_by_email` and the tenant's profiles say. A submission without it, a saved owner of a returned form included, is refused with `VALIDATION_ERROR` on `beneficial_owners[i].email`; the draft still takes it empty. The filler's own item (`is_applicant: true`) has no `email` field: the email of their account is used. `KycFormsListItemValue` and `KycFormsFieldErrors` document this. `required` is a value the form answers on the item field, so no generated type carries it. The spec's release notes add that `schema_version` of the business forms with owners changes, so a form opened before this answers `409 FORM_OUTDATED`.
+  - Frontend, owners' identity check links: `POST /frontend/kyc/entities/{entity_id}/verification/owners/invite` and `verification.owners[].invited_at` now name `invite_by_email: true` alone as what has the identity provider email an owner, since the form requires the email; an owner saved before that may still have none. `400 KYC_NO_OWNER_TO_INVITE` documents that an owner whose item has no `invite_by_email: true` has no email at the provider, whatever email the form holds. `POST /frontend/kyc/entities/{entity_id}/verification/owners/{owner_id}/link` is for such an owner, or to pass the link on by your own channel.
+  - Frontend, `POST /frontend/kyc/entities/{entity_id}/verification/owners/{owner_id}/document` (34.0.2): an owner without a citizenship needs `country`. Without it the upload answers `400 VALIDATION_ERROR` with `details.fields.country`, and nothing reaches the identity provider. By the spec's release notes it used to answer `400 VERIFICATION_PROVIDER_UNAVAILABLE`.
+
 ## [1.36.104] - 2026-11-03
 
 ### Changed
