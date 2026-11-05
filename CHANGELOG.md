@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.106] - 2026-11-05
+
 ### Added
 
 - **`frontend.kycForms.verification.owners.authorityDocument` uploads the letter of authority of an owner (SFI-3090).** It wraps `POST /frontend/kyc/entities/{entity_id}/verification/owners/{owner_id}/authority-document`, with its types in `API.Frontend.KycForms.Verification.Owners.AuthorityDocument`. The body is multipart with `file` only: one PDF, JPEG or PNG up to 20 MB. `signal`, `timeout` and `onUploadProgress` go to the upload, as on `owners.document`. It answers `201` with `{ success, data: { document_id, type: 'auth_letter' } }`.
