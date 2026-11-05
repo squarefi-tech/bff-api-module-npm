@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.107] - 2026-11-05
+
 ### Added
 
 - **`verification.rejected_documents` in `GET /frontend/kyc/entities/{entity_id}/overview` (SFI-3090).** `KycFormsOverview`, and so `API.Frontend.KycForms.Overview`, gains `verification.rejected_documents[]`: the papers of a business's sent form that did not get to the identity provider, because the provider refused the file or the file is not one that can be sent. An item is `{ key, label }`: `key` is the key of the file field of the form (such as `document.formation_doc`), and `label` is the name of that field in the language of the request.
