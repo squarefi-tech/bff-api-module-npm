@@ -932,7 +932,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error, or the fee cannot be priced in this currency (AML_FEE_NOT_PRICEABLE) */
+                /** @description Validation error, the fee cannot be priced in this currency (AML_FEE_NOT_PRICEABLE) or the tenant's AML screening settings are unusable (AML_CHECK_MISCONFIGURED) */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -1116,7 +1116,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error (an address that does not fit the network of `currency_id` included), unsupported asset (AML_ASSET_NOT_SUPPORTED), insufficient funds (INSUFFICIENT_FUNDS) or a fee that cannot be priced (AML_FEE_NOT_PRICEABLE) */
+                /** @description Validation error (an address that does not fit the network of `currency_id` included), unsupported asset (AML_ASSET_NOT_SUPPORTED), insufficient funds (INSUFFICIENT_FUNDS), a fee that cannot be priced (AML_FEE_NOT_PRICEABLE) or unusable AML screening settings of the tenant (AML_CHECK_MISCONFIGURED) */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -1259,7 +1259,7 @@ export interface paths {
                         "application/pdf": string;
                     };
                 };
-                /** @description The analytics provider cannot hand the report over right now — retry later (AML_REPORT_PROVIDER_UNAVAILABLE) */
+                /** @description The analytics provider cannot hand the report over right now — retry later (AML_REPORT_PROVIDER_UNAVAILABLE); or the tenant's AML screening settings are unusable (AML_CHECK_MISCONFIGURED) */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -16738,7 +16738,7 @@ export interface paths {
         };
         /**
          * The form of an entity for a set of purposes
-         * @description Built on every call from the tenant's requirement profiles and the entity. Without `rails` and `programs` it is the base form. With one rail it is that rail's form: the base profile, the tenant's rail profile and the vendor's minimum merged: a field required by any of them is required, `review` wins over `auto`, and a field is shown when any of them shows it (one asking it without a condition — the vendor's minimum always — shows it always); profiles whose conditions read each other in a circle answer `409 KYC_FORM_CONDITIONS_CYCLE`. Sections are the groups to draw, `visible_when` the show logic, `required_by` the purposes a field is required for, the locks (`saved`, `from_document`, `pending`, `status`) what the client cannot change, `schema_version` what to echo back. Fields that come from the identity document (names, date of birth, citizenship, the document number and dates) are left out until the document is verified; the document itself is asked: its type `gov_id_type` (`PASSPORT`, `ID_CARD`, `RESIDENCE_PERMIT`, `DRIVERS` — the codes `…/owners/{owner_id}/document` takes as `type` too), issuing country `gov_id_country` and photos `gov_id_front` and `gov_id_back` (shown unless a passport) — saved, and no longer asked, once it is verified; `state: complete` on a rail form means nothing is left to ask and the client goes straight to the rail's terms. With one program and `wallet_id` it is the form before a card: the level the program's vendor demands (`minimal`: name, email, phone; `basic`: plus date of birth, citizenship, gender, identity document type and number, residential address; `declared` / `full`: plus the identity document and the face, verified after the form) merged with the tenant's binding for the program, without the base form; what the personal entity already holds is locked `saved`, so `state: complete` means the card can be asked for at once. Several rails and programs at once is the multi form: the base form, every rail and every program merged, each field once with `required_by` naming the purposes. A form whose last submission is `returned` comes back with that submission's answers in `values` — its files too, as files of the draft (`saved: false`, removable by `DELETE …/forms/uploads/{upload_id}`) — until the client saves, uploads or sends again. Access: the owner of the entity, or an owner / admin of a wallet it is linked to.
+         * @description Built on every call from the tenant's requirement profiles and the entity. Without `rails` and `programs` it is the base form. With one rail it is that rail's form: the base profile, the tenant's rail profile and the vendor's minimum merged: a field required by any of them is required, `review` wins over `auto`, and a field is shown when any of them shows it (one asking it without a condition — the vendor's minimum always — shows it always); profiles whose conditions read each other in a circle answer `409 KYC_FORM_CONDITIONS_CYCLE`. Sections are the groups to draw, `visible_when` the show logic, `required_by` the purposes a field is required for, the locks (`saved`, `from_document`, `pending`, `status`) what the client cannot change, `schema_version` what to echo back. Fields that come from the identity document (names, date of birth, citizenship, the document number and dates) are left out until the document is verified; the document itself is asked: its type `gov_id_type` (`PASSPORT`, `ID_CARD`, `RESIDENCE_PERMIT`, `DRIVERS` — the codes `…/owners/{owner_id}/document` takes as `type` too), issuing country `gov_id_country` and photos `gov_id_front` and `gov_id_back` (shown unless a passport) — saved, and no longer asked, once it is verified; `state: complete` on a rail form means nothing is left to ask and the client goes straight to the rail's terms. With one program and `wallet_id` it is the form before a card: the level the program's vendor demands (`minimal`: name, email, phone; `basic`: plus date of birth, citizenship, gender, identity document type and number, residential address; `declared` / `full`: plus the identity document and the face, verified after the form) merged with the tenant's binding for the program, without the base form; what the personal entity already holds is locked `saved`, so `state: complete` means the card can be asked for at once. Several rails and programs at once is the multi form: the base form, every rail and every program merged, each field once with `required_by` naming the purposes. A form whose last submission is `returned` comes back with that submission's answers in `values` — its files too, as files of the draft (`saved: false`, removable by `DELETE …/forms/uploads/{upload_id}`) — until the client saves, uploads or sends again. On a personal entity's form (base, rail, card or multi) that is editable and shows an open `email` nobody has given yet — not saved, not pending, not in the draft — `values.email` carries the email of the entity owner's account as a suggestion: it is not saved until a draft or a submission sends it, the field stays unlocked, `missing_required` and `state` still count it as empty, and a saved, pending or draft value wins over it; a business form gets none, and only the owner of the entity gets it (a wallet admin reading the form does not). Access: the owner of the entity, or an owner / admin of a wallet it is linked to.
          */
         get: {
             parameters: {
@@ -16814,7 +16814,7 @@ export interface paths {
         get?: never;
         /**
          * Save the draft of a form
-         * @description The form is the one `rails` and `programs` name, as for `GET …/forms`. Replaces the draft as a whole with the given values of open fields; the files of the draft stay, and so do those of a `returned` last submission (they carry over into the draft, those removed excepted). Types are checked, rules and requiredness are not — except that an option chosen together with another one while it excludes the others (`options[].exclusive` of a `multi_enum` field), owner shares over 100% in total, a value whose condition reads an empty required source, and a change to a saved owner the form does not allow (left out of the list, its value cleared, or changed outside a `returned` form) are refused here too, as on the submission: the draft is not saved. Nothing is written to the KYC entity. The first draft of a business form moves the application to `PENDING`. One change to a form at a time — a draft save, an upload, a removal or the submission: another one sent meanwhile, from any tab or member, answers `409 OPERATION_IN_PROGRESS` and changes nothing; send the changes of one form one after another. The entity's owner, or an owner or admin of a linked wallet.
+         * @description The form is the one `rails` and `programs` name, as for `GET …/forms`. Replaces the draft as a whole with the given values of open fields; the files of the draft stay, and so do those of a `returned` last submission (they carry over into the draft, those removed excepted). Types are checked, rules and requiredness are not — except that an option chosen together with another one while it excludes the others (`options[].exclusive` of a `multi_enum` field), owner shares over 100% in total, a value whose condition reads an empty required source, and a change to a saved owner the form does not allow (left out of the list, its value cleared, or changed outside a `returned` form) are refused here too, as on the submission: the draft is not saved. The rules of `validation` (`max_items`, `min_age`, patterns such as Latin letters only) and the owners' roles (`owner_role_missing`, `company_owner_role`) wait for the submission; a PEP detail sent with a value while `pep_declaration` is `false` is refused here as there, with `FORM_FIELD_NOT_ALLOWED`. Nothing is written to the KYC entity. The first draft of a business form moves the application to `PENDING`. One change to a form at a time — a draft save, an upload, a removal or the submission: another one sent meanwhile, from any tab or member, answers `409 OPERATION_IN_PROGRESS` and changes nothing; send the changes of one form one after another. The entity's owner, or an owner or admin of a linked wallet.
          */
         put: {
             parameters: {
@@ -17090,7 +17090,7 @@ export interface paths {
         put?: never;
         /**
          * Send a form
-         * @description The form is the one `rails` and `programs` name. The full check of every open field (all errors in one `VALIDATION_ERROR`, an option chosen together with another one that `options[].exclusive` says it excludes included), then a submission: `awaiting_verification` when the identity document and face are still needed, `applied` when every profile of the form writes the answers into the KYC entity at once, `in_review` when compliance decides (any profile of the form in review mode). Answers `200` with the form in its new state. One change to a form at a time: a submission sent while a draft save, an upload, a removal or another submission of the form runs answers `409 OPERATION_IN_PROGRESS` and changes nothing; send it again once the others answer. A rail form does not change the application status; once its submission is approved, the rail is submitted through the wallet's existing `POST /frontend/wallets/{wallet_id}/kyc-rails/{rail_id}`. A card form is `auto` unless a profile of it says otherwise and never changes the application status; once applied, the cardholder is created through `POST /frontend/issuing/cardholders` with `user_data_id`. A multi form moves the application like the base form it includes; once applied, every rail and program of the set is satisfied from the shared data. A `returned` submission sent again keeps its files that were not removed. A saved beneficial owner (an item of `beneficial_owners` with an `id`) is the entity's: a list without one, a changed saved value outside a `returned` form, and a saved value sent empty are refused with `VALIDATION_ERROR`, as in the draft. The entity's owner, or an owner or admin of a linked wallet.
+         * @description The form is the one `rails` and `programs` name. The full check of every open field (all errors in one `VALIDATION_ERROR`, an option chosen together with another one that `options[].exclusive` says it excludes included; the rules of `validation` — `max_items`, `min_age`, Latin letters only — and, on a form that asks `beneficial_owners`, at least one person with the role `UBO` and one with `DIRECTOR` (the filler counts by their role), a company only as `SHAREHOLDER`), then a submission: `awaiting_verification` when the identity document and face are still needed, `applied` when every profile of the form writes the answers into the KYC entity at once, `in_review` when compliance decides (any profile of the form in review mode). Answers `200` with the form in its new state. One change to a form at a time: a submission sent while a draft save, an upload, a removal or another submission of the form runs answers `409 OPERATION_IN_PROGRESS` and changes nothing; send it again once the others answer. A rail form does not change the application status; once its submission is approved, the rail is submitted through the wallet's existing `POST /frontend/wallets/{wallet_id}/kyc-rails/{rail_id}`. A card form is `auto` unless a profile of it says otherwise and never changes the application status; once applied, the cardholder is created through `POST /frontend/issuing/cardholders` with `user_data_id`. A multi form moves the application like the base form it includes; once applied, every rail and program of the set is satisfied from the shared data. A `returned` submission sent again keeps its files that were not removed. A saved beneficial owner (an item of `beneficial_owners` with an `id`) is the entity's: a list without one, a changed saved value outside a `returned` form, and a saved value sent empty are refused with `VALIDATION_ERROR`, as in the draft. The entity's owner, or an owner or admin of a linked wallet.
          */
         post: {
             parameters: {
@@ -17579,6 +17579,98 @@ export interface paths {
                     };
                 };
                 /** @description The errors of `KycFormsOwnerErrors`; `VALIDATION_ERROR` — a `side` or `type` outside the list, `side: back` of a passport (the default type), a `country` that is not a known alpha-2 code, or no `country` for an owner without a citizenship (`details.fields.country`); `DOCUMENT_REJECTED` — a file that is not JPEG or PNG (a PDF included), empty, or over 20 MB; `INVALID_REQUEST` — no `file` part (or more than one), or an unreadable multipart body. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["KycFormsAccessDenied"];
+                404: components["responses"]["KycFormsOwnerNotFound"];
+                409: components["responses"]["KycFormsOwnerConflict"];
+                /** @description `SERVICE_UNAVAILABLE` — file storage is not configured on this server, or the locking service is unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/kyc/entities/{entity_id}/verification/owners/{owner_id}/authority-document": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload the letter of authority of a beneficial owner
+         * @description Multipart: `file` (PDF, JPEG or PNG up to 20 MB, told by the bytes). The file is filed as the owner's `auth_letter` document (`source: client`, not verified) as it arrived, and `verification.owners[].documents` of the overview lists it. It stays with CORE: the identity provider and the card vendors never get it, and no applicant is made for it. Neither the sending of the form nor any status waits on it. Unlike the other owner routes this one takes the filler's own row too (`is_applicant`), as the filler is often the representative. Whether to ask for the file (an authorised representative who is not a director) is for the client to decide: any role is taken. Sent again, it is a new row: the newest counts, the older stay on record. Access: the owner of the business entity, or an owner / admin of a wallet it is linked to.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description `kyc_entity.id` of the caller, or of an entity linked to a wallet the caller owns or administers */
+                    entity_id: components["parameters"]["KycFormsEntityId"];
+                    /** @description The `id` of a beneficial owner of the business entity — an item of `beneficial_owners` as `GET …/forms` lists it after the base form was sent (every saved item carries its `id`; `verification.owners[].id` of the overview is the same id). A person, not a company; not the owner the filler marked as themselves (`is_applicant`). */
+                    owner_id: components["parameters"]["KycFormsOwnerId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        /**
+                         * Format: binary
+                         * @description One PDF, JPEG or PNG file, up to 20 MB.
+                         */
+                        file: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description The document as filed */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            /** @example {
+                             *       "document_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+                             *       "type": "auth_letter"
+                             *     } */
+                            data: {
+                                /**
+                                 * Format: uuid
+                                 * @description The `kyc_documents` row.
+                                 */
+                                document_id: string;
+                                /** @enum {string} */
+                                type: "auth_letter";
+                            };
+                        };
+                    };
+                };
+                /** @description `VALIDATION_ERROR` — `entity_id` or `owner_id` is not a uuid; `KYC_FORMS_NOT_ENABLED`; `KYC_OWNER_NOT_INDIVIDUAL` — the owner is a company; `DOCUMENT_REJECTED` — a file that is not PDF, JPEG or PNG, empty, or over 20 MB; `INVALID_REQUEST` — no `file` part (or more than one), or an unreadable multipart body. */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -19952,7 +20044,7 @@ export interface components {
             wallet_id?: string;
         };
         AmlProvider: {
-            /** @description Name of the on-chain analytics partner, for the "Screening by …" line */
+            /** @description Neutral label of the screening provider, for the "Screening by …" line */
             display_name?: string;
         };
         AmlScreeningAsset: {
@@ -20925,14 +21017,18 @@ export interface components {
             saved: boolean;
         };
         /**
-         * @description One item of a `list` field (`beneficial_owners`): an object keyed by the `item.fields[].key` of the field, each value shaped by that item field's `type` (an item field never takes files). `id` is set on a row already saved in the KYC entity (for an owner, the `owner_id` of the owner routes); send it back to keep the row, leave it out for a new one. A saved row is the entity's: the client never removes it — a list (or a draft's list, an empty or `null` one included) without an `id` the form gave is refused with `VALIDATION_ERROR` on the list key, «A saved beneficial owner cannot be removed; contact support»; compliance removes one. Nor does its `owner_type` change, nor is a saved value of it cleared (sent empty: `VALIDATION_ERROR` on the item field, «A saved value cannot be cleared; correct it or contact support»; left out of the item: kept). On a `returned` form the client corrects the other values of the item fields the form asks; outside a return a changed saved value is refused (`VALIDATION_ERROR`, «A saved value cannot be changed; contact support»). Messages come in the language of the form. Do not offer to delete an item with an `id`, nor to change its type. An item with `owner_type: business` requires `corporate_name`, `corporate_country` and `corporate_registration_number` (the form marks them `required` on the item fields): without them the identity provider cannot set the company up, so the submission is refused with `VALIDATION_ERROR` on the item field. An item with `owner_type: individual` other than the filler's own requires `email` (the form marks it `required` on the item fields, whatever `invite_by_email` and the tenant's profiles say): a submission without it, a saved owner of a returned form included, is refused with `VALIDATION_ERROR` on `beneficial_owners[i].email` (required); the draft takes it empty. The filler's own item (`is_applicant: true`) has no `email` field — the email of their account is used. The email is kept either way; `invite_by_email: true` is what has the identity provider email the owner their link to it.
+         * @description One item of a `list` field (`beneficial_owners`): an object keyed by the `item.fields[].key` of the field, each value shaped by that item field's `type` (an item field never takes files). `id` is set on a row already saved in the KYC entity (for an owner, the `owner_id` of the owner routes); send it back to keep the row, leave it out for a new one. A saved row is the entity's: the client never removes it — a list (or a draft's list, an empty or `null` one included) without an `id` the form gave is refused with `VALIDATION_ERROR` on the list key, «A saved beneficial owner cannot be removed; contact support»; compliance removes one. Nor does its `owner_type` change, nor is a saved value of it cleared (sent empty: `VALIDATION_ERROR` on the item field, «A saved value cannot be cleared; correct it or contact support»; left out of the item: kept). On a `returned` form the client corrects the other values of the item fields the form asks; outside a return a changed saved value is refused (`VALIDATION_ERROR`, «A saved value cannot be changed; contact support»). Messages come in the language of the form. Do not offer to delete an item with an `id`, nor to change its type. An item with `owner_type: business` requires `corporate_name`, `corporate_country` and `corporate_registration_number` (the form marks them `required` on the item fields): without them the identity provider cannot set the company up, so the submission is refused with `VALIDATION_ERROR` on the item field. An item with `owner_type: individual` other than the filler's own requires `email` (the form marks it `required` on the item fields, whatever `invite_by_email` and the tenant's profiles say): a submission without it, a saved owner of a returned form included, is refused with `VALIDATION_ERROR` on `beneficial_owners[i].email` (required); the draft takes it empty. The filler's own item (`is_applicant: true`) has no `email` field — the email of their account is used. The email is kept either way; `invite_by_email: true` is what has the identity provider email the owner their link to it. An owner may hold several `roles`; `role` is not an item field: a new item that sends it is refused with `FORM_FIELD_NOT_ALLOWED`, an owner saved with one `role` comes with the `roles` it means. `has_control` is not an item field either (it follows from `roles` and `ubo_basis`): a new item that sends it with a value, `false` included, is refused the same way. `roles` is required (at least one of `UBO`, `SHAREHOLDER`, `DIRECTOR`, `REPRESENTATIVE`); a company owner takes only `SHAREHOLDER`. `share_proportion` (0.01 to 100) is asked of a `SHAREHOLDER` and of a `UBO`, but not of a `UBO` whose `ubo_basis` is `controls_otherwise` or `senior_managing_official`. `ubo_basis` (`owns_shares`, `controls_otherwise`, `senior_managing_official`) is asked of a `UBO` and required on a submission — not of an owner saved before it was asked. `ubo_control_details` (up to 2000 characters) is asked and required when `ubo_basis` is `controls_otherwise`. The names of a person are Latin letters only, up to 50 characters, and a date of birth typed in is of an adult (`validation.min_age`).
          * @example {
          *       "id": "2d7c1b9e-4f30-4a8c-9e21-7b6a5c4d3e2f",
          *       "owner_type": "individual",
          *       "first_name": "Anna",
          *       "last_name": "Berg",
-         *       "role": "UBO",
+         *       "roles": [
+         *         "UBO",
+         *         "DIRECTOR"
+         *       ],
          *       "share_proportion": 40,
+         *       "ubo_basis": "owns_shares",
          *       "is_applicant": false,
          *       "invite_by_email": true,
          *       "email": "anna@example.com"
@@ -20992,6 +21088,10 @@ export interface components {
                 max?: number | string;
                 min_length?: number;
                 max_length?: number;
+                /** @description `multi_enum`, `country_multi`: how many values the answer may hold; `form.messages.too_many_values`. */
+                max_items?: number;
+                /** @description `date` of birth: the full years the person must have reached by today (UTC); `form.messages.min_age`. */
+                min_age?: number;
                 patterns?: {
                     regex: string;
                     message: string;
@@ -21002,7 +21102,7 @@ export interface components {
                 value: string;
                 label: string;
                 /**
-                 * @description The number the option stands for in a `gt` / `gte` / `lt` / `lte` condition — a volume range carries its upper bound. Present only on the options of a dictionary that gives numbers: compare it with the condition's `value` to evaluate `visible_when` on an `enum` field.
+                 * @description The number the option stands for in a `gt` / `gte` / `lt` / `lte` condition — a range (volume, income, number of transactions, employees, turnover) carries its upper bound, the open top range its lower bound plus 1, so a range read back from the entity is the option it was chosen as. Present only on the options of a dictionary that gives numbers: compare it with the condition's `value` to evaluate `visible_when` on an `enum` field.
                  * @example 50000
                  */
                 numeric?: number;
@@ -21063,7 +21163,7 @@ export interface components {
             /** @description How many required visible fields are still empty (saved, pending and draft values together). */
             missing_required: number;
             /**
-             * @description General validation messages by code (`required`, `min`, `max`, `min_length`, `max_length`, `invalid`); `{value}` stands for the bound.
+             * @description General validation messages by code (`required`, `min`, `max`, `min_length`, `max_length`, `invalid`, `min_age`, `too_many_values`); `{value}` stands for the bound.
              * @example {
              *       "required": "This field is required",
              *       "min": "The value must be at least {value}",
@@ -21088,7 +21188,7 @@ export interface components {
             data: {
                 form: components["schemas"]["KycFormsForm"];
                 /**
-                 * @description Current value per field key (saved in KYC first, then pending, then the draft), each shaped by the field's `type` (`KycFormsFieldValue`): strings, numbers, booleans, `YYYY-MM-DD` dates, alpha-2 countries, arrays of strings; files as `KycFormsFileValue[]`; lists as `KycFormsListItemValue[]` with an `id` on saved rows. Every field of the form has a key here; empty is null.
+                 * @description Current value per field key (saved in KYC first, then pending, then the draft), each shaped by the field's `type` (`KycFormsFieldValue`): strings, numbers, booleans, `YYYY-MM-DD` dates, alpha-2 countries, arrays of strings; files as `KycFormsFileValue[]`; lists as `KycFormsListItemValue[]` with an `id` on saved rows. Every field of the form has a key here; empty is null. On a personal entity's editable form an empty, shown, unlocked `email` carries the email of the entity owner's account as a suggestion: not saved until the draft or the submission sends it, not locked, still counted in `missing_required`; a business form gets none, and only the owner of the entity gets it (a wallet admin reading the form does not).
                  * @example {
                  *       "email": "user@example.com",
                  *       "citizenship": "DE",
@@ -21241,11 +21341,13 @@ export interface components {
                         /** @description The owner as the form names them: a person's first and last name, a company's name; null when the form gave none. The filler's own row is null until they pass the identity check — then the name comes from their document. */
                         name: string | null;
                         /**
-                         * @description The owner's `role` as sent in the form — a code of the `ubo_role` dictionary, its labels in the `options` of the form's role field; null when none.
+                         * @description The highest of `roles` in the older list of one role, for those who read one value; a saved `PARTNER` stays as it is; null when none. Draw the owner by `roles`.
                          * @enum {string|null}
                          */
                         role: "UBO" | "OWNER_OR_OPERATOR" | "PARTNER" | "DIRECTOR_CONTROL_PERSON_OR_LEGAL_REP" | "AGENT_OR_AUTHORISED_PERSON" | null;
-                        /** @description The filler's own row — the item the filler marked as themselves (`is_applicant` in the form), or the one CORE added for them from `applicant_role`. Draw it without the owner actions: the owner routes answer it `400 KYC_OWNER_IS_FILLER`. Its `state` is the filler's own check on their personal entity — the same as `verification.applicant.state` for the owner of the business — and it never counts towards `next_step: owners`. */
+                        /** @description Every role of the owner, the highest first (UBO, shareholder, director, representative) — codes of the form's `roles` field, its labels in that field's `options`. An owner saved with one `role` reads as the role it means. Empty when none. */
+                        roles: ("UBO" | "SHAREHOLDER" | "DIRECTOR" | "REPRESENTATIVE")[];
+                        /** @description The filler's own row — the item the filler marked as themselves (`is_applicant` in the form), or the one CORE added for them from `applicant_role`. Draw it without the owner actions: the owner routes answer it `400 KYC_OWNER_IS_FILLER`, all but `…/authority-document`. Its `state` is the filler's own check on their personal entity — the same as `verification.applicant.state` for the owner of the business — and it never counts towards `next_step: owners`. */
                         is_applicant: boolean;
                         state: components["schemas"]["KycFormsVerificationState"];
                         /**
@@ -21253,15 +21355,15 @@ export interface components {
                          * @description When the identity provider last emailed this owner their link — after the form was sent and on each `POST …/verification/owners/invite`, to the persons whose item has `invite_by_email: true` (the email is required by the form); the filler's row too (through the email of their account); null = never (the owner gets the link by hand: `…/owners/{owner_id}/link` or `/session`); always null for a company.
                          */
                         invited_at: string | null;
-                        /** @description The files of the owner's identity document on record: uploaded through `…/owners/{owner_id}/document`, or read from the provider after the owner passed. One item per side however many times it was uploaded. It says a file is there, not that the provider accepted it: `state` tells that, and the item stays after a refusal. Neither the file nor the kind of document (a passport or an ID card) is given. Empty for a company and for the filler's own row. */
+                        /** @description The owner's files on record, one item per type however many times it was filed. `gov_id_front`, `gov_id_back` — the sides of the identity document, uploaded through `…/owners/{owner_id}/document` or read from the provider after the owner passed; not listed for the filler's own row. `proof_of_address` — read from the provider after the owner passed, when their check asks for one; on the filler's own row, for a UBO, the file of their personal form once their check passed, when its type is one of the form's list. `auth_letter` — uploaded through `…/owners/{owner_id}/authority-document`; it decides nothing, no status or step waits on it. An item says a file is there, not that the provider accepted it: `state` tells that, and the item stays after a refusal. Neither the file nor the kind of document (a passport or an ID card) is given. New keys may be added: pick the ones you draw by `key`. Empty for a company. */
                         documents: {
                             /**
-                             * @description The side, as `type` in the answer of the upload.
+                             * @description The kind of file, as `type` in the answer of the upload.
                              * @enum {string}
                              */
-                            key: "gov_id_front" | "gov_id_back";
+                            key: "gov_id_front" | "gov_id_back" | "proof_of_address" | "auth_letter";
                             /**
-                             * @description The name of the field, in the language of the request.
+                             * @description The name of the document, in the language of the request.
                              * @example Identity document photo
                              */
                             label: string;
@@ -21459,7 +21561,7 @@ export interface components {
                 }[];
             };
         };
-        /** @description The structured payload of an error that carries one (absent otherwise — an invalid uuid or a malformed body is a message only). `VALIDATION_ERROR`: `fields` is a map from the field key to its messages (a list item field is `beneficial_owners[0].role`, the list as a whole `beneficial_owners`). `FORM_FIELD_NOT_ALLOWED`, `KYC_FORM_CONDITIONS_CYCLE`: `fields` is a list of keys. */
+        /** @description The structured payload of an error that carries one (absent otherwise — an invalid uuid or a malformed body is a message only). `VALIDATION_ERROR`: `fields` is a map from the field key to its messages (a list item field is `beneficial_owners[0].roles`, the list as a whole `beneficial_owners`). `FORM_FIELD_NOT_ALLOWED`, `KYC_FORM_CONDITIONS_CYCLE`: `fields` is a list of keys. */
         KycFormsErrorDetails: {
             fields: {
                 [key: string]: string[];
@@ -21550,7 +21652,7 @@ export interface components {
                 "application/json": components["schemas"]["ErrorResponse"];
             };
         };
-        /** @description `VALIDATION_ERROR` — field errors in `details.fields[key] = [message]` (on a business form the owner list the KYC tables refuse, and owner shares adding up to more than 100%, come back under `beneficial_owners`; an individual beneficial owner other than the filler without an `email` comes back under `beneficial_owners[i].email` on a submission (the draft takes it empty); a saved beneficial owner (an item with an `id`) left out of the list — an empty or `null` list included — comes back under `beneficial_owners`, a saved value of it changed outside a `returned` form, or sent empty, under `beneficial_owners[i].<field>`, and nothing is saved; a value sent for a field whose condition reads a source left empty or wrong comes back as the error of the source, e.g. `beneficial_owners[0].role`; a `multi_enum` field with an option that excludes the others (`options[].exclusive`) chosen together with another one comes back under the field, on the draft too), or a message only for a malformed body (`schema_version` missing or longer than 64, `values` not an object) and a path id that is not a uuid; `FORM_FIELD_NOT_ALLOWED` — a key the form does not accept (unknown, locked, hidden, a file field), `details.fields = [key]`, the whole request refused; `FORM_TARGET_UNSUPPORTED` — a card program named on a business entity; `INVALID_REQUEST` — `wallet_id` missing for a form over card programs; `KYC_BASE_BINDING_MISSING` — the tenant has no base form for this client type; `KYC_FORMS_NOT_ENABLED` — the tenant is not on the forms flow */
+        /** @description `VALIDATION_ERROR` — field errors in `details.fields[key] = [message]` (on a business form the owner list the KYC tables refuse, and owner shares adding up to more than 100%, come back under `beneficial_owners`; an individual beneficial owner other than the filler without an `email` comes back under `beneficial_owners[i].email` on a submission (the draft takes it empty); a saved beneficial owner (an item with an `id`) left out of the list — an empty or `null` list included — comes back under `beneficial_owners`, a saved value of it changed outside a `returned` form, or sent empty, under `beneficial_owners[i].<field>`, and nothing is saved; a value sent for a field whose condition reads a source left empty or wrong comes back as the error of the source, e.g. `beneficial_owners[0].roles`; a `multi_enum` field with an option that excludes the others (`options[].exclusive`) chosen together with another one comes back under the field, on the draft too; on a submission only — the draft takes them: a value over the `validation` of its field comes back as the text of the rule with the bound in it — `max_items` «Choose no more than 5», `min_age` «You must be at least 18 years old», a pattern its own message, such as «Use Latin characters only…» for the names and addresses written in Latin letters; a form that asks `beneficial_owners` without a person holding the role `UBO` or `DIRECTOR` — the filler counts by their role, a company counts for none — comes back under `beneficial_owners`, «Add at least one person with the role DIRECTOR», one text for each missing role (the code of the role); a company owner with a role other than `SHAREHOLDER` comes back under `beneficial_owners[i].roles`, «A company can only be a shareholder» — a saved company keeps its roles until they change; the texts are the `message.latin_only`, `message.min_age`, `message.too_many_values`, `message.owner_role_missing` and `message.company_owner_role` of the form texts, in the language of the form), or a message only for a malformed body (`schema_version` missing or longer than 64, `values` not an object) and a path id that is not a uuid; `FORM_FIELD_NOT_ALLOWED` — a key the form does not accept (unknown, locked, hidden, a file field; on a list item a key that is not an item field of the form — `role`, `has_control` — named `beneficial_owners[0].role` in `details.fields`), and, in the draft too, any PEP detail (`pep_full_name`, `pep_relationship`, `pep_country`, `pep_position`, `pep_is_current`, `pep_end_date`, `pep_related_declaration`, `pep_related_position`, `pep_related_country`) sent with a value while `pep_declaration` is `false` (a detail hidden by its condition is refused even empty, like any hidden key: leave it out), `details.fields = [key]`, the whole request refused; `FORM_TARGET_UNSUPPORTED` — a card program named on a business entity; `INVALID_REQUEST` — `wallet_id` missing for a form over card programs; `KYC_BASE_BINDING_MISSING` — the tenant has no base form for this client type; `KYC_FORMS_NOT_ENABLED` — the tenant is not on the forms flow */
         KycFormsFieldErrors: {
             headers: {
                 [name: string]: unknown;

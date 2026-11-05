@@ -1521,6 +1521,8 @@ export interface paths {
          * @description Returns a paginated list of KYC records within the tenant.
          *     Optionally filter by `wallet_id`.
          *
+         *     Minimum role: VIEWER.
+         *
          */
         get: {
             parameters: {
@@ -1559,6 +1561,15 @@ export interface paths {
                         };
                     };
                 };
+                /** @description `WALLET_ACCESS_DENIED`: `wallet_id` is not a wallet of the tenant of the key */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
@@ -1572,6 +1583,8 @@ export interface paths {
          *     `wallets.kyc_entity_id` — a wallet without an active owner is rejected
          *     with 400.
          *
+         *     Minimum role: OPERATOR.
+         *
          */
         post: {
             parameters: {
@@ -1582,7 +1595,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": {
+                    "application/json": components["schemas"]["KycEntityComplianceInput"] & {
                         /**
                          * Format: uuid
                          * @description Wallet to attach the KYC entity to
@@ -1653,26 +1666,41 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Missing required fields, wallet already has KYC, or wallet has no active owner */
+                /** @description `INVALID_REQUEST`: `wallet_id` or `type` missing, the wallet has no active owner, or a field is malformed (the message names it): `gender`, `documents[]`, `pep_end_date` not `YYYY-MM`, `pep_related_country` not an alpha-3 code, `business_sector` outside the list, `employees_count` not a whole number from 0, `annual_turnover` below 0, a text field over 2000 characters; `INVALID_TYPE`: `type` is neither `individual` nor `business`; `KYC_ENTITY_EXISTS`: the wallet already has a KYC entity (use PATCH) */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
-                /** @description Wallet not found */
+                /** @description `INSUFFICIENT_ADMIN_ROLE`: the key is below OPERATOR; `WALLET_ACCESS_DENIED`: the wallet does not belong to the tenant of the key */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `WALLET_NOT_FOUND` */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
-                /** @description Concurrent creation for this wallet is in progress — retry later */
+                /** @description `OPERATION_IN_PROGRESS`: concurrent creation for this wallet is in progress — retry later */
                 409: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -1693,6 +1721,8 @@ export interface paths {
          * Get KYC
          * @description Returns the KYC data (individual or business) associated with the wallet,
          *     including address and beneficial owners for business entities.
+         *
+         *     Minimum role: VIEWER.
          *
          */
         get: {
@@ -1720,12 +1750,23 @@ export interface paths {
                         };
                     };
                 };
-                /** @description No KYC found for this wallet */
+                /** @description `WALLET_ACCESS_DENIED`: the wallet does not belong to the tenant of the key */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `KYC_ENTITY_NOT_FOUND`: no KYC found for this wallet */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -1756,6 +1797,9 @@ export interface paths {
          *     Once submitted (status moves to PENDING or beyond), the entity becomes immutable
          *     through this endpoint until the review process returns it to `SOFT_REJECT`.
          *
+         *     Minimum role: OPERATOR. Only the keys of the body change their columns: an absent key leaves the column
+         *     alone, `null` clears it.
+         *
          */
         patch: {
             parameters: {
@@ -1769,7 +1813,7 @@ export interface paths {
             };
             requestBody: {
                 content: {
-                    "application/json": {
+                    "application/json": components["schemas"]["KycEntityComplianceInput"] & {
                         /** @enum {string} */
                         type?: "individual" | "business";
                         /** Format: email */
@@ -1829,19 +1873,32 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Entity is not in UNVERIFIED or SOFT_REJECT status */
+                /** @description `ENTITY_NOT_EDITABLE`: the entity is not in `UNVERIFIED` or `SOFT_REJECT` status; `INVALID_TYPE`: `type` is neither `individual` nor `business`; `INVALID_REQUEST`: a field is malformed (the message names it): `gender`, `documents[]`, `pep_end_date` not `YYYY-MM`, `pep_related_country` not an alpha-3 code, `business_sector` outside the list, `employees_count` not a whole number from 0, `annual_turnover` below 0, a text field over 2000 characters */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
-                /** @description KYC entity not found */
+                /** @description `INSUFFICIENT_ADMIN_ROLE`: the key is below OPERATOR; `WALLET_ACCESS_DENIED`: the entity does not belong to the tenant of the key */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `KYC_ENTITY_NOT_FOUND` */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -1940,6 +1997,8 @@ export interface paths {
          *
          *     This is a one-way action: to cancel a submission, contact support.
          *
+         *     Minimum role: OPERATOR. At most 5 submissions per hour for one entity.
+         *
          */
         post: {
             parameters: {
@@ -1966,19 +2025,41 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Not in a submittable status */
+                /** @description `ENTITY_NOT_SUBMITTABLE`: the entity is not in `UNVERIFIED` or `SOFT_REJECT` status */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
-                /** @description KYC not found */
+                /** @description `INSUFFICIENT_ADMIN_ROLE`: the key is below OPERATOR; `WALLET_ACCESS_DENIED`: the entity does not belong to the tenant of the key */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `KYC_ENTITY_NOT_FOUND` */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `RATE_LIMIT_EXCEEDED`: too many submissions for this entity */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -8941,10 +9022,40 @@ export interface components {
             /** Format: date-time */
             updated_at?: string;
         };
+        KycEntityComplianceInput: {
+            pep_position?: string | null;
+            pep_is_current?: boolean | null;
+            /**
+             * @description Month the position ended, `YYYY-MM`; any other shape answers 400
+             * @example 2024-06
+             */
+            pep_end_date?: string | null;
+            pep_related_declaration?: boolean | null;
+            pep_related_position?: string | null;
+            /**
+             * @description ISO 3166-1 alpha-3 country code; any other value answers 400
+             * @example DEU
+             */
+            pep_related_country?: string | null;
+            acting_on_own_behalf?: boolean | null;
+            on_behalf_details?: string | null;
+            source_of_funds_other?: string | null;
+            /**
+             * @description One of the values listed on `business_sector` of the KycEntity schema; any other value answers 400
+             * @example OtherServices
+             */
+            business_sector?: string | null;
+            online_presence?: string | null;
+            employees_count?: number | null;
+            annual_turnover?: number | null;
+            third_party_payments_details?: string | null;
+            sanctions_exposure?: boolean | null;
+            sanctions_details?: string | null;
+        };
         /** @description Documents to file for the KYC entity. Each entry is stored as a document of its type; an earlier document of the same type stays on record (several documents of one type are allowed). All entries of one request form one batch in the given order, so a multi-file document (e.g. the pages of a bank statement) is sent as several entries of the same type in one request. A file already on record under its type is not filed again and keeps its dates; to change them, remove the document and file it again. A document is removed through DELETE /admin/kyc_entity/{entity_id}/documents/{document_id}. */
         KycDocumentsInput: {
             /**
-             * @description Document type: supplementary, gov_id_front, gov_id_back, gov_id_hand_hold, selfie, proof_of_address, auth_letter, formation_doc, proof_of_ownership, certificate_of_registration_doc, business_registration_doc, share_structure, constitution_or_annual_report, articles_of_association, ubo_declaration, partnership_mins_of_meeting, partnership_deed, certificate_of_incumbency, regulatory_license, state_registry_doc, good_standing_cert, business_proof_of_address, invoices, contracts, financial_statements, source_of_funds, business_bank_statement, source_of_wealth_ubo, customer_supplier_agreements.
+             * @description Document type: supplementary, gov_id_front, gov_id_back, gov_id_hand_hold, selfie, proof_of_address, auth_letter, formation_doc, proof_of_ownership, certificate_of_registration_doc, business_registration_doc, share_structure, constitution_or_annual_report, articles_of_association, ubo_declaration, partnership_mins_of_meeting, partnership_deed, certificate_of_incumbency, regulatory_license, state_registry_doc, good_standing_cert, business_proof_of_address, invoices, contracts, financial_statements, source_of_funds, business_bank_statement, source_of_wealth_ubo, customer_supplier_agreements, company_shareholder_documents.
              * @example formation_doc
              */
             type: string;
@@ -9148,6 +9259,47 @@ export interface components {
             certificate_of_registration_doc_type?: string | null;
             /** @description Certificate number (business) */
             certificate_number?: string | null;
+            /** @description Position of the politically exposed person */
+            pep_position?: string | null;
+            /** @description Whether the position is current */
+            pep_is_current?: boolean | null;
+            /**
+             * @description Month the position ended, `YYYY-MM`
+             * @example 2024-06
+             */
+            pep_end_date?: string | null;
+            /** @description Whether a relative or partner is a politically exposed person */
+            pep_related_declaration?: boolean | null;
+            /** @description Position of the related politically exposed person */
+            pep_related_position?: string | null;
+            /**
+             * @description Country of the related politically exposed person, ISO 3166-1 alpha-3
+             * @example DEU
+             */
+            pep_related_country?: string | null;
+            /** @description Whether the individual acts on their own behalf */
+            acting_on_own_behalf?: boolean | null;
+            /** @description On whose behalf the individual acts */
+            on_behalf_details?: string | null;
+            /** @description Describes a source of funds that is not listed */
+            source_of_funds_other?: string | null;
+            /**
+             * @description Industry sector of the business; `business_industry` holds its NAICS codes
+             * @enum {string|null}
+             */
+            business_sector?: "FinancialServices" | "Cryptocurrency" | "Gaming" | "LuxuryGoods" | "Defense" | "AdultEntertainment" | "ProfessionalServices" | "RealEstate" | "TechnologySoftware" | "TelecommunicationsMedia" | "Healthcare" | "Retail" | "Manufacturing" | "Food&Beverage" | "Construction" | "Energy" | "Transportation" | "Hospitality&Tourism" | "Education&Training" | "Arts" | "Agriculture&Farming" | "NonProfit" | "Government" | "Cannabiis" | "OtherServices" | null;
+            /** @description Where the business appears online */
+            online_presence?: string | null;
+            /** @description Number of employees. An answer from a KYC form holds the upper bound of the chosen range */
+            employees_count?: number | null;
+            /** @description Annual turnover, USD. An answer from a KYC form holds the upper bound of the chosen range */
+            annual_turnover?: number | null;
+            /** @description Payments from or to third parties */
+            third_party_payments_details?: string | null;
+            /** @description Whether the business has links to sanctioned countries or persons */
+            sanctions_exposure?: boolean | null;
+            /** @description Describes the links to sanctioned countries or persons */
+            sanctions_details?: string | null;
             /** Format: uuid */
             kyc_address_id?: string | null;
             /** Format: uuid */
@@ -9172,7 +9324,17 @@ export interface components {
                 first_name?: string;
                 last_name?: string;
                 email?: string | null;
+                /** @description The highest of `roles` in the older list of one role */
                 role?: string | null;
+                /** @description Every role of the owner, the highest first; empty when none */
+                roles?: ("UBO" | "SHAREHOLDER" | "DIRECTOR" | "REPRESENTATIVE")[];
+                /**
+                 * @description Why the owner is a UBO
+                 * @enum {string|null}
+                 */
+                ubo_basis?: "owns_shares" | "controls_otherwise" | "senior_managing_official" | null;
+                /** @description How the owner controls the company */
+                ubo_control_details?: string | null;
                 business_title?: string | null;
                 has_ownership?: boolean;
                 has_control?: boolean;
