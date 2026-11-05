@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`frontend.kycForms.verification.owners.authorityDocument` uploads the letter of authority of an owner (SFI-3090).** It wraps `POST /frontend/kyc/entities/{entity_id}/verification/owners/{owner_id}/authority-document`, with its types in `API.Frontend.KycForms.Verification.Owners.AuthorityDocument`. The body is multipart with `file` only: one PDF, JPEG or PNG up to 20 MB. `signal`, `timeout` and `onUploadProgress` go to the upload, as on `owners.document`. It answers `201` with `{ success, data: { document_id, type: 'auth_letter' } }`.
+  - The file stays with CORE: the identity provider and the card vendors never get it. Neither the sending of the form nor any status waits on it, and whether to ask for it is for the client to decide.
+  - Unlike the other owner routes, it takes the filler's own row (`is_applicant`) too. The generated description of the `owner_id` parameter still excludes that row, because those routes share it.
+  - Sent again, the file is a new row: the newest counts and the older ones stay on record.
+
+### Changed
+
+- **Breaking in the API, not in the types: an item of `beneficial_owners` takes `roles[]` instead of `role` (SFI-3090).** Dev serves this since Frontend 34.3.0; this release only brings the types and docs up to date. `KycFormsListItemValue` is an open object, so the compiler sees none of this.
+  - A new item that sends `role` or `has_control` with a value (`false` included) is refused with `FORM_FIELD_NOT_ALLOWED`, on `beneficial_owners[i].role` or `.has_control`. Both now follow from `roles` and `ubo_basis`. An owner saved with one `role` comes back with the `roles` it means.
+  - `roles` is required: at least one of `UBO`, `SHAREHOLDER`, `DIRECTOR`, `REPRESENTATIVE`. A company owner takes only `SHAREHOLDER`. `applicant_role` uses the same values.
+  - `ubo_basis` (`owns_shares`, `controls_otherwise`, `senior_managing_official`) is asked of a `UBO` and required on a submission, but not of an owner saved before it was asked. `ubo_control_details` (up to 2000 characters) is asked and required when `ubo_basis` is `controls_otherwise`. Neither is a typed field in the Frontend API: both are item fields of the form.
+  - `share_proportion` is 0.01 to 100. It is asked of a `SHAREHOLDER` and a `UBO`, but not of a `UBO` whose `ubo_basis` is `controls_otherwise` or `senior_managing_official`.
+  - A form that asks `beneficial_owners` is submitted only with at least one person holding `UBO` and one holding `DIRECTOR`. The filler counts by their role, and a company counts for neither.
+- **New rules on a KYC form submission (SFI-3090).** The draft is blocked by none of the first three.
+  - Names of a person and of an owner are Latin letters only and up to 50 characters (was 100). Addresses are Latin only.
+  - `validation.min_age` sets the full years a date of birth must have reached, and `validation.max_items` sets how many values a `multi_enum` or `country_multi` answer may hold. Both are new in `KycFormsField`, with the messages `min_age` and `too_many_values`.
+  - A missing owner role and the role of a company owner come back as field errors under `beneficial_owners` and `beneficial_owners[i].roles`.
+  - With `pep_declaration: false`, any other PEP detail sent with a value is refused with `FORM_FIELD_NOT_ALLOWED`, in a draft too.
+- **Types regenerated from the dev specs: Frontend API 34.3.0 (was 34.1.0) and Tenant API 23.3.0 (was 23.2.1) (SFI-3090).** External API 26.0.0, Legacy API 15.0.6 and V2 did not change and regenerate with no diff. Nothing in the types was removed or renamed.
+  - Frontend, `verification.owners[]` of `GET /frontend/kyc/entities/{entity_id}/overview`: `API.Frontend.KycForms.OverviewOwner` gains `roles`, every role of the owner with the highest first, empty when none. The field is required in the type, so code that builds such an owner by hand (a fixture, a mock) stops compiling until it adds `roles`, even though this release is a patch. `role` stays as the highest of `roles` in the older list of one role, and a saved `PARTNER` stays as it is.
+  - `API.Frontend.KycForms.OwnerRole` is read off `role`, so it keeps the older list. The new values are `OverviewOwner['roles'][number]`.
+  - Frontend, `verification.owners[].documents`: `key` gains `proof_of_address` and `auth_letter`. Code that maps every key exhaustively stops compiling until it handles them. The spec says new keys may be added, so pick the ones you draw by `key`. The filler's own row is no longer always empty: it lists the proof of address and the letter of authority, and still not the sides of the identity document.
+  - Frontend, KYC forms (34.3.0, no type change): a profile can ask new fields, such as the PEP details of a person and the sector, size and sanctions answers of a company. Income, monthly volume and transaction count are range options read back as the chosen option. `options[].numeric` of a range is its upper bound, and the open top range carries its lower bound plus 1. A `visible_when` may read a field that has a condition of its own. Sections were moved and reordered, with a new section `about_business`, and `document.share_structure` takes up to 5 files.
+  - Frontend, KYC forms (34.2.0, no type change): a business form can ask `customer_acquisition_and_location`, `funds_senders_and_recipients`, `who_pays_and_how`, `country_of_operation`, `bank_statement_absence_reason` and `document.customer_supplier_agreements` (up to 4 files). On a personal entity's editable form, an empty `email` that is shown and open carries the email of the entity owner's account in `values.email`. It is a suggestion only: nothing saves it until a draft or a submission sends it, and `state` and `missing_required` still count it as empty. Only the owner of the entity gets it.
+  - Frontend, AML screening (34.1.1, no type change): `provider.display_name` is a neutral label instead of the name of the screening provider. The quote, the screening and the report routes now document `400 AML_CHECK_MISCONFIGURED`.
+  - Tenant, `KycEntity`: gains optional columns for the same PEP and company answers, and `beneficial_owners[]` gains optional `roles`, `ubo_basis` and `ubo_control_details`. `POST /admin/kyc_entity` and `PATCH /admin/kyc_entity/{entity_id}` take those columns through `KycEntityComplianceInput`, and answer `400 INVALID_REQUEST` for a malformed value. The KYC entity routes now document their error bodies, and the submission route its `429 RATE_LIMIT_EXCEEDED`. The package does not export the Tenant types.
+
 ## [1.36.105] - 2026-11-04
 
 ### Added
