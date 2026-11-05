@@ -1149,6 +1149,8 @@ export namespace API {
         pathsV1Frontend['/frontend/kyc/entities/{entity_id}/verification/owners/{owner_id}/session'];
       type OwnerDocumentRoot =
         pathsV1Frontend['/frontend/kyc/entities/{entity_id}/verification/owners/{owner_id}/document'];
+      type OwnerAuthorityDocumentRoot =
+        pathsV1Frontend['/frontend/kyc/entities/{entity_id}/verification/owners/{owner_id}/authority-document'];
       type OwnersInviteRoot = pathsV1Frontend['/frontend/kyc/entities/{entity_id}/verification/owners/invite'];
       type Schemas = componentsV1Frontend['schemas'];
 
@@ -1292,6 +1294,14 @@ export namespace API {
             export type Request = OwnerDocumentRoot['post']['parameters']['path'] &
               Omit<Body, 'file'> & { file: File | Blob } & UploadOptions;
             export type Response = OwnerDocumentRoot['post']['responses'][201]['content']['application/json'];
+          }
+
+          export namespace AuthorityDocument {
+            type Body = OwnerAuthorityDocumentRoot['post']['requestBody']['content']['multipart/form-data'];
+
+            export type Request = OwnerAuthorityDocumentRoot['post']['parameters']['path'] &
+              Omit<Body, 'file'> & { file: File | Blob } & UploadOptions;
+            export type Response = OwnerAuthorityDocumentRoot['post']['responses'][201]['content']['application/json'];
           }
 
           export namespace Invite {

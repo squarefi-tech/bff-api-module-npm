@@ -552,6 +552,25 @@ export const frontend = {
             { data: formData, signal, timeout, onUploadProgress },
           );
         },
+        // The owner's letter of authority: one PDF, JPEG or PNG. It stays with CORE and nothing waits on it.
+        // Unlike the other owner routes this one takes the filler's own row (`is_applicant`) too.
+        authorityDocument: ({
+          entity_id,
+          owner_id,
+          file,
+          signal,
+          timeout,
+          onUploadProgress,
+        }: API.Frontend.KycForms.Verification.Owners.AuthorityDocument.Request): Promise<API.Frontend.KycForms.Verification.Owners.AuthorityDocument.Response> => {
+          const formData = new FormData();
+
+          formData.append('file', file);
+
+          return apiClientV1Frontend.postRequest<API.Frontend.KycForms.Verification.Owners.AuthorityDocument.Response>(
+            `/frontend/kyc/entities/${entity_id}/verification/owners/${owner_id}/authority-document`,
+            { data: formData, signal, timeout, onUploadProgress },
+          );
+        },
         // The provider emails every owner still to pass the check; taken once in 10 minutes
         // (409 KYC_OWNER_INVITES_TOO_SOON, `verification.invites.next_at` of the overview).
         invite: ({

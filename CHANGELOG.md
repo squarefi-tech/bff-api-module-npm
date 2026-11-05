@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`frontend.kycForms.verification.owners.authorityDocument` uploads the letter of authority of an owner (SFI-3090).** It wraps `POST /frontend/kyc/entities/{entity_id}/verification/owners/{owner_id}/authority-document`, with its types in `API.Frontend.KycForms.Verification.Owners.AuthorityDocument`. The body is multipart with `file` only: one PDF, JPEG or PNG up to 20 MB. `signal`, `timeout` and `onUploadProgress` go to the upload, as on `owners.document`. It answers `201` with `{ success, data: { document_id, type: 'auth_letter' } }`.
+  - The file stays with CORE: the identity provider and the card vendors never get it. Neither the sending of the form nor any status waits on it, and whether to ask for it is for the client to decide.
+  - Unlike the other owner routes, it takes the filler's own row (`is_applicant`) too. The generated description of the `owner_id` parameter still excludes that row, because those routes share it.
+  - Sent again, the file is a new row: the newest counts and the older ones stay on record.
+
 ### Changed
 
 - **Breaking in the API, not in the types: an item of `beneficial_owners` takes `roles[]` instead of `role` (SFI-3090).** Dev serves this since Frontend 34.3.0; this release only brings the types and docs up to date. `KycFormsListItemValue` is an open object, so the compiler sees none of this.
