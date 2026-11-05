@@ -2755,7 +2755,7 @@ export interface paths {
                                 updated_at?: string | null;
                                 /**
                                  * Format: uuid
-                                 * @description RainCards sub-account ID (for RN_CARDS orders)
+                                 * @description Card sub-account id, when the order funded a card
                                  */
                                 sub_account_id?: string | null;
                                 /** @description Order metadata (varies by order type).
@@ -2795,12 +2795,6 @@ export interface paths {
                                  *     - counterparty_account_nickname
                                  *     - to_crypto_address
                                  *     - reference, note (optional)
-                                 *
-                                 *     RN_CARDS_OFFRAMP:
-                                 *     - sub_account_id
-                                 *     - to_address (crypto deposit address)
-                                 *     - sub_account_currency
-                                 *     - crypto_transaction_hash (when completed)
                                  *      */
                                 meta?: {
                                     billing_amount?: number;

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`verification.rejected_documents` in `GET /frontend/kyc/entities/{entity_id}/overview` (SFI-3090).** `KycFormsOverview`, and so `API.Frontend.KycForms.Overview`, gains `verification.rejected_documents[]`: the papers of a business's sent form that did not get to the identity provider, because the provider refused the file or the file is not one that can be sent. An item is `{ key, label }`: `key` is the key of the file field of the form (such as `document.formation_doc`), and `label` is the name of that field in the language of the request.
+  - The application goes on without them: neither `stage` nor `next_step` changes, and the same file is not sent again. The client replaces a paper in the form once compliance returns the application.
+  - The array is empty for a personal entity and when nothing was refused.
+  - The field is required in the type, so code that builds an overview's `verification` by hand (a fixture, a mock) stops compiling until it adds `rejected_documents`, even though this release is a patch.
+
+### Changed
+
+- **Types regenerated from the dev specs, which now advertise one platform version, 1.131.2 (SFI-3090).** Since platform 1.131.0 every CORE spec and the `X-API-Version` header carry one shared version instead of a separate one per surface, so the Frontend `34.x` numbering of the earlier entries no longer appears in the specs. The backend's SFI-3090 note calls the KYC changes below Frontend 34.4.1; the spec's release notes list them under 1.130.0 and 1.130.1. Frontend and Legacy change, while External, Tenant and V2 regenerate with no diff. Nothing in the types is removed or renamed, and no SDK method changes. `rejected_documents` above is the only change to a type: everything below is in descriptions, so the compiler shows none of it.
+  - Frontend, KYC (1.130.0): new error code `VERIFICATION_PROVIDER_REFUSED` (400) on `POST /frontend/kyc/entities/{entity_id}/verification/session`, `POST …/verification/owners/invite` and the owner routes that share `KycFormsOwnerErrors` (`…/link`, `…/session`, `…/document`). The identity provider answered and did not accept the data, so the same request gets the same answer. `VERIFICATION_PROVIDER_UNAVAILABLE` now means only that it did not answer: try later. `ErrorResponse.error.code` is a plain `string`, so no union gains a value.
+  - Frontend, KYC (1.130.0): `POST /frontend/kyc/entities/{entity_id}/forms/uploads` and `POST …/verification/owners/{owner_id}/authority-document` answer `400 DOCUMENT_REJECTED` for a PDF that does not open or has no pages, and store nothing. `POST …/verification/owners/{owner_id}/document` does not change: it takes no PDF at all.
+  - Frontend, KYC (1.130.0): the filler's own row in `verification.owners[]` of the overview, while it has no check of its own, shows the `state` of their personal check and, when the form gave no name, the name on their personal entity. It used to read `not_started` with `name: null`. `next_step` does not change.
+  - Frontend, KYC (1.130.1): `validation.max` of `formation_date` and `gov_id_issuance_date` is the current date in UTC. It changes every day and never changes `schema_version`. `POST …/forms/submit` refuses a later date with `400 VALIDATION_ERROR` on the field and the text `message.max`, while a draft still keeps it. `validation.max` was already `number | string` in `KycFormsField`.
+  - Frontend, no type change (1.130.2, 1.131.1): `SCHEDULED_PAYMENT_LOW_BALANCE` in `GET /frontend/notifications` also comes right after approve for a scheduled payment approved less than a day before `scheduled_at` that the balance will not cover. An outgoing order stays `PENDING` after it is approved, with the wallet already debited, until the payout provider accepts the transfer; `PROCESSING` means that transfer is under way.
+  - `RN_CARDS_OFFRAMP` (1.131.2): the card program is closed. `POST /api/orders/RN_CARDS_OFFRAMP`, `POST /frontend/orders/RN_CARDS_OFFRAMP` and `POST /admin/orders/RN_CARDS_OFFRAMP` answer `410 INTEGRATION_RETIRED`, and so does a card or sub-account deposit on that program. The Legacy `GET /v2/orders/list/{wallet_uuid}` no longer documents the `RN_CARDS_OFFRAMP` meta fields. The SDK keeps `orders.v2.create.byOrderType.RN_CARDS_OFFRAMP`, which posts to `/v2/orders/RN_CARDS_OFFRAMP`: no spec has that route, so whether it answers `410` too is not documented.
+
 ## [1.36.106] - 2026-11-05
 
 ### Added
