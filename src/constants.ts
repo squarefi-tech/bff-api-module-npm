@@ -1,5 +1,8 @@
 import { API } from '.';
+import type { components as componentsV1External } from './api/types/autogen/apiV1External.types';
 import type { components as componentsV1Frontend } from './api/types/autogen/apiV1Frontend.types';
+import type { components as componentsV1Legacy } from './api/types/autogen/apiV1Legacy.types';
+import type { components as componentsV1Tenant } from './api/types/autogen/apiV1Tenant.types';
 import { EnumValues, IsEnumEqualToUnion, EnumUnionMismatch, IsUnionSubset, UnionSubsetMismatch } from './utils/types';
 
 export type ValueWithLabel = {
@@ -325,9 +328,14 @@ export type OrderTypeIncludedInWalletTransactionRecordTypeMismatch = UnionSubset
   EnumValues<WalletTransactionRecordType>
 >;
 
-// Every order type the backend can return must have an OrderType member, or consumers fall back to raw ids
-// and hide order actions (SUPPORT-655). OrderType may carry extra legacy ids, so this is a subset check.
-type BackendOrderTypeId = componentsV1Frontend['schemas']['OrderTypeId'];
+// Every order type the V1 specs declare must have an OrderType member, or consumers fall back to raw ids and
+// hide order actions (SUPPORT-655). Engine-only types the specs omit (ADJUSTMENT, AUTO_CONVERT_CRYPTO, ...) are
+// not covered. OrderType may carry extra legacy ids, so this is a subset check.
+type BackendOrderTypeId =
+  | componentsV1Frontend['schemas']['OrderTypeId']
+  | componentsV1Tenant['schemas']['OrderTypeId']
+  | componentsV1External['schemas']['OrderTypeId']
+  | componentsV1Legacy['schemas']['OrderTypeId'];
 export const backendOrderTypeIdIncludedInOrderTypeCheck: IsUnionSubset<
   BackendOrderTypeId,
   EnumValues<OrderType>
