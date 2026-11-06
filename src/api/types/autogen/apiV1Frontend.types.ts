@@ -21396,6 +21396,16 @@ export interface components {
                          * @example Certificate of incorporation
                          */
                         label: string;
+                        /**
+                         * Format: uuid
+                         * @description The file that was refused: the `id` of a file in that field's value in `GET …/forms`, the one `DELETE …/forms/uploads/{upload_id}` removes. Of a field with several files only the first goes to the provider, so only it is named. No file with this id in the field = the client already replaced it.
+                         */
+                        upload_id: string;
+                        /**
+                         * Format: date-time
+                         * @description When the file was refused.
+                         */
+                        rejected_at: string;
                     }[];
                 };
                 /** @description Only for an entity linked to a wallet and with a base form: one item per active rail of the tenant of the entity's client type (and the universal ones) — not filtered by what the wallet sees (`GET …/targets` does that); empty otherwise. */
