@@ -1,4 +1,8 @@
 import { API } from '.';
+import type { components as componentsV1External } from './api/types/autogen/apiV1External.types';
+import type { components as componentsV1Frontend } from './api/types/autogen/apiV1Frontend.types';
+import type { components as componentsV1Legacy } from './api/types/autogen/apiV1Legacy.types';
+import type { components as componentsV1Tenant } from './api/types/autogen/apiV1Tenant.types';
 import { EnumValues, IsEnumEqualToUnion, EnumUnionMismatch, IsUnionSubset, UnionSubsetMismatch } from './utils/types';
 
 export type ValueWithLabel = {
@@ -152,6 +156,7 @@ export enum OrderType {
   BRL_ACH_ONRAMP = 'BRL_ACH_ONRAMP',
   BRL_WIRE_OFFRAMP = 'BRL_WIRE_OFFRAMP',
   BRL_WIRE_ONRAMP = 'BRL_WIRE_ONRAMP',
+  BRL_FEDNOW_ONRAMP = 'BRL_FEDNOW_ONRAMP',
   BRL_RTP_OFFRAMP = 'BRL_RTP_OFFRAMP',
   DLS_WIRE_ONRAMP = 'DLS_WIRE_ONRAMP',
   DLS_WIRE_OFFRAMP = 'DLS_WIRE_OFFRAMP',
@@ -167,6 +172,8 @@ export enum OrderType {
   BC1_SWIFT_OFFRAMP = 'BC1_SWIFT_OFFRAMP',
   BC3_SEPA_ONRAMP = 'BC3_SEPA_ONRAMP',
   BC3_SEPA_OFFRAMP = 'BC3_SEPA_OFFRAMP',
+  BC3_SWIFT_ONRAMP = 'BC3_SWIFT_ONRAMP',
+  BC3_SWIFT_OFFRAMP = 'BC3_SWIFT_OFFRAMP',
   NARVI_SEPA_ONRAMP = 'NARVI_SEPA_ONRAMP',
   NARVI_SEPA_OFFRAMP = 'NARVI_SEPA_OFFRAMP',
   RPP_SWIFT_OFFRAMP = 'RPP_SWIFT_OFFRAMP',
@@ -181,6 +188,8 @@ export enum OrderType {
   REFUND_CARD_PREPAID = 'REFUND_CARD_PREPAID',
   REFUND_CARD_SUBACCOUNT = 'REFUND_CARD_SUBACCOUNT',
   ADJUSTMENT = 'ADJUSTMENT',
+  MONTHLY_FEE = 'MONTHLY_FEE',
+  REFERRAL_PAYOUT = 'REFERRAL_PAYOUT',
   // when extend do not forget to add new order type to the enum WalletTransactionRecordType
 }
 
@@ -270,6 +279,7 @@ export enum WalletTransactionRecordType {
   BRL_ACH_ONRAMP = 'BRL_ACH_ONRAMP',
   BRL_WIRE_OFFRAMP = 'BRL_WIRE_OFFRAMP',
   BRL_WIRE_ONRAMP = 'BRL_WIRE_ONRAMP',
+  BRL_FEDNOW_ONRAMP = 'BRL_FEDNOW_ONRAMP',
   BRL_RTP_OFFRAMP = 'BRL_RTP_OFFRAMP',
   DLS_WIRE_ONRAMP = 'DLS_WIRE_ONRAMP',
   DLS_WIRE_OFFRAMP = 'DLS_WIRE_OFFRAMP',
@@ -285,6 +295,8 @@ export enum WalletTransactionRecordType {
   BC1_SWIFT_OFFRAMP = 'BC1_SWIFT_OFFRAMP',
   BC3_SEPA_ONRAMP = 'BC3_SEPA_ONRAMP',
   BC3_SEPA_OFFRAMP = 'BC3_SEPA_OFFRAMP',
+  BC3_SWIFT_ONRAMP = 'BC3_SWIFT_ONRAMP',
+  BC3_SWIFT_OFFRAMP = 'BC3_SWIFT_OFFRAMP',
   NARVI_SEPA_ONRAMP = 'NARVI_SEPA_ONRAMP',
   NARVI_SEPA_OFFRAMP = 'NARVI_SEPA_OFFRAMP',
   RPP_SWIFT_OFFRAMP = 'RPP_SWIFT_OFFRAMP',
@@ -299,6 +311,8 @@ export enum WalletTransactionRecordType {
   REFUND_CARD_PREPAID = 'REFUND_CARD_PREPAID',
   REFUND_CARD_SUBACCOUNT = 'REFUND_CARD_SUBACCOUNT',
   ADJUSTMENT = 'ADJUSTMENT',
+  MONTHLY_FEE = 'MONTHLY_FEE',
+  REFERRAL_PAYOUT = 'REFERRAL_PAYOUT',
 }
 
 export type OrderTypeMissingInWalletTransactionRecordType = Exclude<
@@ -312,6 +326,23 @@ export const orderTypeIncludedInWalletTransactionRecordTypeCheck: IsUnionSubset<
 export type OrderTypeIncludedInWalletTransactionRecordTypeMismatch = UnionSubsetMismatch<
   EnumValues<OrderType>,
   EnumValues<WalletTransactionRecordType>
+>;
+
+// Every order type the V1 specs declare must have an OrderType member, or consumers fall back to raw ids and
+// hide order actions (SUPPORT-655). Engine-only types the specs omit (ADJUSTMENT, AUTO_CONVERT_CRYPTO, ...) are
+// not covered. OrderType may carry extra legacy ids, so this is a subset check.
+type BackendOrderTypeId =
+  | componentsV1Frontend['schemas']['OrderTypeId']
+  | componentsV1Tenant['schemas']['OrderTypeId']
+  | componentsV1External['schemas']['OrderTypeId']
+  | componentsV1Legacy['schemas']['OrderTypeId'];
+export const backendOrderTypeIdIncludedInOrderTypeCheck: IsUnionSubset<
+  BackendOrderTypeId,
+  EnumValues<OrderType>
+> = true;
+export type BackendOrderTypeIdIncludedInOrderTypeMismatch = UnionSubsetMismatch<
+  BackendOrderTypeId,
+  EnumValues<OrderType>
 >;
 
 export enum RequestStatus {
