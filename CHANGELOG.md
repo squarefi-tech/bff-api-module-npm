@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.108] - 2026-11-06
+
 ### Added
 
 - **`upload_id` and `rejected_at` on each item of `verification.rejected_documents` in `GET /frontend/kyc/entities/{entity_id}/overview` (SFI-3090).** An item of `KycFormsOverview`'s `verification.rejected_documents[]`, and so of `API.Frontend.KycForms.Overview`, is now `{ key, label, upload_id, rejected_at }`. No SDK method changes: `frontend.kycForms.entities.overview` answers the new fields as they are.
