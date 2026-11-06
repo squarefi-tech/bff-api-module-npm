@@ -1,4 +1,5 @@
 import { API } from '.';
+import type { components as componentsV1Frontend } from './api/types/autogen/apiV1Frontend.types';
 import { EnumValues, IsEnumEqualToUnion, EnumUnionMismatch, IsUnionSubset, UnionSubsetMismatch } from './utils/types';
 
 export type ValueWithLabel = {
@@ -152,6 +153,7 @@ export enum OrderType {
   BRL_ACH_ONRAMP = 'BRL_ACH_ONRAMP',
   BRL_WIRE_OFFRAMP = 'BRL_WIRE_OFFRAMP',
   BRL_WIRE_ONRAMP = 'BRL_WIRE_ONRAMP',
+  BRL_FEDNOW_ONRAMP = 'BRL_FEDNOW_ONRAMP',
   BRL_RTP_OFFRAMP = 'BRL_RTP_OFFRAMP',
   DLS_WIRE_ONRAMP = 'DLS_WIRE_ONRAMP',
   DLS_WIRE_OFFRAMP = 'DLS_WIRE_OFFRAMP',
@@ -184,6 +186,7 @@ export enum OrderType {
   REFUND_CARD_SUBACCOUNT = 'REFUND_CARD_SUBACCOUNT',
   ADJUSTMENT = 'ADJUSTMENT',
   MONTHLY_FEE = 'MONTHLY_FEE',
+  REFERRAL_PAYOUT = 'REFERRAL_PAYOUT',
   // when extend do not forget to add new order type to the enum WalletTransactionRecordType
 }
 
@@ -273,6 +276,7 @@ export enum WalletTransactionRecordType {
   BRL_ACH_ONRAMP = 'BRL_ACH_ONRAMP',
   BRL_WIRE_OFFRAMP = 'BRL_WIRE_OFFRAMP',
   BRL_WIRE_ONRAMP = 'BRL_WIRE_ONRAMP',
+  BRL_FEDNOW_ONRAMP = 'BRL_FEDNOW_ONRAMP',
   BRL_RTP_OFFRAMP = 'BRL_RTP_OFFRAMP',
   DLS_WIRE_ONRAMP = 'DLS_WIRE_ONRAMP',
   DLS_WIRE_OFFRAMP = 'DLS_WIRE_OFFRAMP',
@@ -305,6 +309,7 @@ export enum WalletTransactionRecordType {
   REFUND_CARD_SUBACCOUNT = 'REFUND_CARD_SUBACCOUNT',
   ADJUSTMENT = 'ADJUSTMENT',
   MONTHLY_FEE = 'MONTHLY_FEE',
+  REFERRAL_PAYOUT = 'REFERRAL_PAYOUT',
 }
 
 export type OrderTypeMissingInWalletTransactionRecordType = Exclude<
@@ -318,6 +323,18 @@ export const orderTypeIncludedInWalletTransactionRecordTypeCheck: IsUnionSubset<
 export type OrderTypeIncludedInWalletTransactionRecordTypeMismatch = UnionSubsetMismatch<
   EnumValues<OrderType>,
   EnumValues<WalletTransactionRecordType>
+>;
+
+// Every order type the backend can return must have an OrderType member, or consumers fall back to raw ids
+// and hide order actions (SUPPORT-655). OrderType may carry extra legacy ids, so this is a subset check.
+type BackendOrderTypeId = componentsV1Frontend['schemas']['OrderTypeId'];
+export const backendOrderTypeIdIncludedInOrderTypeCheck: IsUnionSubset<
+  BackendOrderTypeId,
+  EnumValues<OrderType>
+> = true;
+export type BackendOrderTypeIdIncludedInOrderTypeMismatch = UnionSubsetMismatch<
+  BackendOrderTypeId,
+  EnumValues<OrderType>
 >;
 
 export enum RequestStatus {
