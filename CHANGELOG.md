@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`upload_id` and `rejected_at` on each item of `verification.rejected_documents` in `GET /frontend/kyc/entities/{entity_id}/overview` (SFI-3090).** An item of `KycFormsOverview`'s `verification.rejected_documents[]`, and so of `API.Frontend.KycForms.Overview`, is now `{ key, label, upload_id, rejected_at }`. No SDK method changes: `frontend.kycForms.entities.overview` answers the new fields as they are.
+  - `upload_id` (uuid) is the file that was refused: the `id` of a file in the value of that field in `GET …/forms` (`frontend.kycForms.forms.get`), the same id that `DELETE …/forms/uploads/{upload_id}` (`frontend.kycForms.forms.removeUpload`) removes. Of a field with several files only the first goes to the identity provider, so only that one is named. When the field holds no file with this id, the client has already replaced it.
+  - `rejected_at` (date-time) is when the file was refused.
+  - Sending a returned form again makes a new submission, with a new `submission.id`. A key leaves `rejected_documents[]` once the papers have gone to the identity provider in the background; if the provider refuses the new file too, the key stays, now with the new `upload_id`. While the application is returned, the list does not change.
+  - Both fields are required in the type, so code that builds an item of `rejected_documents` by hand (a fixture, a mock) stops compiling until it adds them, even though this release is a patch.
+
+### Changed
+
+- **Types regenerated from the dev specs at platform version 1.132.0 (was 1.131.2) (SFI-3090).** Only Frontend changes: External, Legacy, Tenant and V2 regenerate with no diff, and the release notes of the CORE specs list 1.132.0 for the Frontend API alone. `upload_id` and `rejected_at` above are the whole diff: no other type and no description changes. Nothing in the types is removed or renamed.
+
 ## [1.36.107] - 2026-11-05
 
 ### Added
