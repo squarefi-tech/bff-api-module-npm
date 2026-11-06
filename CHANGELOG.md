@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **`BC3_SWIFT_ONRAMP` and `BC3_SWIFT_OFFRAMP` in `OrderType` and `WalletTransactionRecordType` (SUPPORT-655).** The backend has created SWIFT payouts and deposits on BCB third-party VIBAN programs with these order types since 2026-11-02, and the autogen `OrderTypeId` already lists them. Until now consumers had no enum member for them, so they could not label such orders or treat them as banking rails. The values match the `order_types` ids, next to `BC3_SEPA_*`. This closes the gap noted under 1.36.103, where `OrderTypeId` gained them but the enum did not. A consumer with an exhaustive `Record<OrderType, …>` or `Record<WalletTransactionRecordType, …>`, or an exhaustive switch, has to add the two keys when it upgrades.
+- **`MONTHLY_FEE` in `OrderType` and `WalletTransactionRecordType`.** The backend collects the customers' monthly plan fee as `MONTHLY_FEE` orders (one per subject and calendar month, created `PENDING`), and `OrderTypeId` lists it, but consumers had no enum member and could not label these orders. An exhaustive `Record<OrderType, …>` / `Record<WalletTransactionRecordType, …>` has to add this key too.
 
 ## [1.36.108] - 2026-11-06
 

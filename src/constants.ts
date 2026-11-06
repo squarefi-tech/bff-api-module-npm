@@ -183,6 +183,7 @@ export enum OrderType {
   REFUND_CARD_PREPAID = 'REFUND_CARD_PREPAID',
   REFUND_CARD_SUBACCOUNT = 'REFUND_CARD_SUBACCOUNT',
   ADJUSTMENT = 'ADJUSTMENT',
+  MONTHLY_FEE = 'MONTHLY_FEE',
   // when extend do not forget to add new order type to the enum WalletTransactionRecordType
 }
 
@@ -303,6 +304,7 @@ export enum WalletTransactionRecordType {
   REFUND_CARD_PREPAID = 'REFUND_CARD_PREPAID',
   REFUND_CARD_SUBACCOUNT = 'REFUND_CARD_SUBACCOUNT',
   ADJUSTMENT = 'ADJUSTMENT',
+  MONTHLY_FEE = 'MONTHLY_FEE',
 }
 
 export type OrderTypeMissingInWalletTransactionRecordType = Exclude<
