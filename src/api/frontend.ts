@@ -582,6 +582,50 @@ export const frontend = {
       },
     },
   },
+  // AML screening of crypto addresses. `quote` charges nothing; `screenings.create` charges the fee (an `AML_CHECK`
+  // order) and answers `PENDING` — wait for the realtime `WALLET_AML_SCREENINGS` hint, then `getById`, do not poll.
+  aml: {
+    quote: ({ wallet_id, ...params }: API.Frontend.Aml.Quote.Request): Promise<API.Frontend.Aml.Quote.Response> =>
+      apiClientV1Frontend.getRequest<API.Frontend.Aml.Quote.Response>(`/frontend/aml/${wallet_id}/quote`, { params }),
+    screenings: {
+      create: ({
+        wallet_id,
+        idempotency_key,
+        ...data
+      }: API.Frontend.Aml.Screenings.Create.Request): Promise<API.Frontend.Aml.Screenings.Create.Response> =>
+        apiClientV1Frontend.postRequest<API.Frontend.Aml.Screenings.Create.Response>(
+          `/frontend/aml/${wallet_id}/screenings`,
+          {
+            data,
+            headers: idempotency_key ? { 'Idempotency-Key': idempotency_key } : undefined,
+          },
+        ),
+      list: ({
+        wallet_id,
+        ...params
+      }: API.Frontend.Aml.Screenings.List.Request): Promise<API.Frontend.Aml.Screenings.List.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.Aml.Screenings.List.Response>(
+          `/frontend/aml/${wallet_id}/screenings`,
+          { params },
+        ),
+      getById: ({
+        wallet_id,
+        id,
+      }: API.Frontend.Aml.Screenings.GetById.Request): Promise<API.Frontend.Aml.Screenings.GetById.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.Aml.Screenings.GetById.Response>(
+          `/frontend/aml/${wallet_id}/screenings/${id}`,
+        ),
+      // With `responseType: 'blob'` an error body (JSON) arrives as a Blob too.
+      report: ({
+        wallet_id,
+        id,
+      }: API.Frontend.Aml.Screenings.Report.Request): Promise<API.Frontend.Aml.Screenings.Report.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.Aml.Screenings.Report.Response>(
+          `/frontend/aml/${wallet_id}/screenings/${id}/report`,
+          { responseType: 'blob' },
+        ),
+    },
+  },
   reference: {
     // Frontend twin of `exchange.byOrderType.*` (legacy `GET /exchange/`): the same tenant pairs, but paged in
     // memory — 50 per page by default, 500 at most, in no particular order — and behind the bearer session.
@@ -618,6 +662,27 @@ export const frontend = {
           '/frontend/reference/order_types',
           { params },
         ),
+    },
+    // `aml_supported`: the tenant's AML provider can screen addresses on the token's network; always `false` while
+    // screening is off for the tenant. The backend pages it (50 by default), so the whole list is asked for by default.
+    currencies: {
+      list: (
+        params: API.Frontend.Reference.Currencies.List.Request = {},
+      ): Promise<API.Frontend.Reference.Currencies.List.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.Reference.Currencies.List.Response>(
+          '/frontend/reference/currencies',
+          { params: { limit: 500, ...params } },
+        ),
+    },
+    // `aml_supported`: the tenant's AML provider can screen addresses on the network; always `false` while screening
+    // is off for the tenant. Paged like `currencies`, so the whole list is asked for by default.
+    chains: {
+      list: (
+        params: API.Frontend.Reference.Chains.List.Request = {},
+      ): Promise<API.Frontend.Reference.Chains.List.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.Reference.Chains.List.Response>('/frontend/reference/chains', {
+          params: { limit: 500, ...params },
+        }),
     },
   },
   // IN_APP stays on (400 INBOX_CHANNEL_LOCKED); channels vary by tenant (TELEGRAM needs a bot); PUT upserts any subset.

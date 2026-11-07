@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`frontend.aml` wraps the AML screening of crypto addresses (SFI-2274).** The types are in `API.Frontend.Aml`, derived from the Frontend spec. It also exports the entities, so the app does not have to reach into the autogen: `Screening`, `Quote`, `Result`, `CheckedCategory`, `Asset`, `Provider`. As the spec declares them, `success` and `data` are optional in the answers of `quote`, `create` and `getById`, and required in `list`.
+  - `aml.quote({ wallet_id, pay_from_currency_id, currency_id? })` wraps `GET /frontend/aml/{wallet_id}/quote`: the price of one screening paid from `pay_from_currency_id`. Nothing is charged. With `currency_id`, `asset.supported` says whether that token's network can be screened. It answers `{ success, data: Quote }`.
+  - `aml.screenings.create({ wallet_id, idempotency_key?, address, currency_id, pay_from_currency_id })` wraps `POST /frontend/aml/{wallet_id}/screenings`. It charges the tenant's fee (an `AML_CHECK` order), hands the address to the tenant's AML provider and answers `201` with the screening in `PENDING`. `idempotency_key` goes as the `Idempotency-Key` header (8–128 characters), not in the body: a retry with the same key returns the screening the first call created instead of charging again. The body is `{ address, currency_id, pay_from_currency_id }`.
+  - `aml.screenings.list({ wallet_id, offset?, limit?, address?, chain_id? })` wraps `GET /frontend/aml/{wallet_id}/screenings`: the wallet's screenings, newest first, as `{ success, data: Screening[], pagination }`. `limit` is 1–100, 20 by default on the backend. The query type comes from the spec, so new filters arrive with a regen.
+  - `aml.screenings.getById({ wallet_id, id })` wraps `GET /frontend/aml/{wallet_id}/screenings/{id}`: the screening and its verdict. Do not poll it: wait for the realtime `data.changed` hint with `entity: WALLET_AML_SCREENINGS`, then read the screening.
+  - `aml.screenings.report({ wallet_id, id })` wraps `GET /frontend/aml/{wallet_id}/screenings/{id}/report`: the PDF report of a completed screening. It is requested with `responseType: 'blob'`, so the method resolves to a `Blob`, like `statements.pdfByWalletUuid`. An error body arrives as a `Blob` too, and reading the JSON out of it is up to the app.
+- **`frontend.reference.currencies.list` and `frontend.reference.chains.list` (SFI-2274).** They wrap `GET /frontend/reference/currencies` and `GET /frontend/reference/chains`, with types in `API.Frontend.Reference.Currencies` (`Currency`, `List.Request`, `List.Response`) and `API.Frontend.Reference.Chains` (`Chain`, `List.Request`, `List.Response`).
+  - Every item carries `aml_supported`: whether the tenant's AML provider can screen addresses on that network. It is always `false` while screening is off for the tenant. `aml_supported: true` in the query keeps only those items.
+  - The currencies query also takes `is_crypto`, `type`, `symbol`, `enabled_only`, `offset` and `limit`. The chains query takes `offset` and `limit`.
+  - Both ask for `limit: 500`, the backend's maximum (its default is 50), unless the caller passes its own, like `reference.countries.list`.
+- **`AML_CHECK` in `OrderType` (SFI-2274).** It is the order that pays for a screening. It is not added to `WalletTransactionRecordType`, because the fee shows up in the transactions as a `FEE` row with `meta.meta_type: 'AML_CHECK'`. The compile-time check that every `OrderType` is also a `WalletTransactionRecordType` now exempts it, so `OrderTypeMissingInWalletTransactionRecordType` is `'AML_CHECK'` instead of `never`.
+- **`AML_CHECK` breaks code with an exhaustive `Record<OrderType, …>`, or an exhaustive switch over `OrderType`, that lacks the key.** Such code stops compiling until it adds `AML_CHECK`, even though this release is a patch.
+
 ## [1.36.109] - 2026-11-06
 
 ### Added

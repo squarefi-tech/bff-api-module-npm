@@ -190,6 +190,8 @@ export enum OrderType {
   ADJUSTMENT = 'ADJUSTMENT',
   MONTHLY_FEE = 'MONTHLY_FEE',
   REFERRAL_PAYOUT = 'REFERRAL_PAYOUT',
+  // Not in WalletTransactionRecordType, see OrderTypeWithoutRecordType.
+  AML_CHECK = 'AML_CHECK',
   // when extend do not forget to add new order type to the enum WalletTransactionRecordType
 }
 
@@ -319,12 +321,15 @@ export type OrderTypeMissingInWalletTransactionRecordType = Exclude<
   EnumValues<OrderType>,
   EnumValues<WalletTransactionRecordType>
 >;
+// The order types whose transactions have no record type of their own: the fee of an AML check is a `FEE` row
+// with `meta.meta_type: 'AML_CHECK'`.
+type OrderTypeWithoutRecordType = EnumValues<OrderType.AML_CHECK>;
 export const orderTypeIncludedInWalletTransactionRecordTypeCheck: IsUnionSubset<
-  EnumValues<OrderType>,
+  Exclude<EnumValues<OrderType>, OrderTypeWithoutRecordType>,
   EnumValues<WalletTransactionRecordType>
 > = true;
 export type OrderTypeIncludedInWalletTransactionRecordTypeMismatch = UnionSubsetMismatch<
-  EnumValues<OrderType>,
+  Exclude<EnumValues<OrderType>, OrderTypeWithoutRecordType>,
   EnumValues<WalletTransactionRecordType>
 >;
 
