@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.110] - 2026-11-07
+
 ### Added
 
 - **`frontend.aml` wraps the AML screening of crypto addresses (SFI-2274).** The types are in `API.Frontend.Aml`, derived from the Frontend spec. It also exports the entities, so the app does not have to reach into the autogen: `Screening`, `Quote`, `Result`, `CheckedCategory`, `Asset`, `Provider`. As the spec declares them, `success` and `data` are optional in the answers of `quote`, `create` and `getById`, and required in `list`.
