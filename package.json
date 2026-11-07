@@ -47,7 +47,7 @@
   "devDependencies": {
     "@types/jest": "^29.x.x",
     "@types/lodash.debounce": "^4.0.9",
-    "@types/node": "^20.17.47",
+    "@types/node": "^26.5.1",
     "@types/node-rsa": "^1.1.4",
     "@types/react": "^19.1.8",
     "dotenv": "^16.5.0",
