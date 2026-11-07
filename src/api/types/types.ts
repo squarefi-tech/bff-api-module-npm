@@ -1312,6 +1312,56 @@ export namespace API {
       }
     }
 
+    export namespace Aml {
+      type QuoteRoot = pathsV1Frontend['/frontend/aml/{wallet_id}/quote'];
+      type ScreeningsRoot = pathsV1Frontend['/frontend/aml/{wallet_id}/screenings'];
+      type ScreeningRoot = pathsV1Frontend['/frontend/aml/{wallet_id}/screenings/{id}'];
+      type ReportRoot = pathsV1Frontend['/frontend/aml/{wallet_id}/screenings/{id}/report'];
+      type Schemas = componentsV1Frontend['schemas'];
+
+      export type Screening = Schemas['AmlScreening'];
+      export type Quote = Schemas['AmlScreeningQuote'];
+      export type Result = Schemas['AmlScreeningResult'];
+      export type CheckedCategory = Schemas['AmlCheckedCategory'];
+      export type Asset = Schemas['AmlScreeningAsset'];
+      export type Provider = Schemas['AmlProvider'];
+
+      export namespace Quote {
+        export type Request = QuoteRoot['get']['parameters']['path'] & QuoteRoot['get']['parameters']['query'];
+        export type Response = QuoteRoot['get']['responses'][200]['content']['application/json'];
+      }
+
+      export namespace Screenings {
+        export namespace Create {
+          export type Request = ScreeningsRoot['post']['parameters']['path'] &
+            ScreeningsRoot['post']['requestBody']['content']['application/json'] & {
+              /**
+               * Sent as the `Idempotency-Key` header, 8–128 characters: a retry with the same key returns the
+               * screening the first call created instead of charging again.
+               */
+              idempotency_key?: NonNullable<ScreeningsRoot['post']['parameters']['header']>['Idempotency-Key'];
+            };
+          export type Response = ScreeningsRoot['post']['responses'][201]['content']['application/json'];
+        }
+
+        export namespace List {
+          export type Request = ScreeningsRoot['get']['parameters']['path'] &
+            NonNullable<ScreeningsRoot['get']['parameters']['query']>;
+          export type Response = ScreeningsRoot['get']['responses'][200]['content']['application/json'];
+        }
+
+        export namespace GetById {
+          export type Request = ScreeningRoot['get']['parameters']['path'];
+          export type Response = ScreeningRoot['get']['responses'][200]['content']['application/json'];
+        }
+
+        export namespace Report {
+          export type Request = ReportRoot['get']['parameters']['path'];
+          export type Response = Blob;
+        }
+      }
+    }
+
     export namespace Reference {
       export namespace ExchangeRates {
         type ExchangeRatesRoot = pathsV1Frontend['/frontend/reference/exchange_rates'];
@@ -1345,6 +1395,28 @@ export namespace API {
         export namespace List {
           export type Request = NonNullable<OrderTypesRoot['get']['parameters']['query']>;
           export type Response = OrderTypesRoot['get']['responses'][200]['content']['application/json'];
+        }
+      }
+
+      export namespace Currencies {
+        type CurrenciesRoot = pathsV1Frontend['/frontend/reference/currencies'];
+
+        export type Currency = componentsV1Frontend['schemas']['ReferenceCurrency'];
+
+        export namespace List {
+          export type Request = NonNullable<CurrenciesRoot['get']['parameters']['query']>;
+          export type Response = CurrenciesRoot['get']['responses'][200]['content']['application/json'];
+        }
+      }
+
+      export namespace Chains {
+        type ChainsRoot = pathsV1Frontend['/frontend/reference/chains'];
+
+        export type Chain = componentsV1Frontend['schemas']['ReferenceChain'];
+
+        export namespace List {
+          export type Request = NonNullable<ChainsRoot['get']['parameters']['query']>;
+          export type Response = ChainsRoot['get']['responses'][200]['content']['application/json'];
         }
       }
     }
