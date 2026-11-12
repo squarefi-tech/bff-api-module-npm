@@ -21881,6 +21881,12 @@ export interface components {
                  * @example 2027-05-31T23:59:59.000Z
                  */
                 kyc_expires_at?: string | null;
+                /**
+                 * Format: uri
+                 * @description The offer document the tenant publishes for agents — an `https://` link to show next to the offer before `POST /frontend/referrals/offer/accept`; null when the tenant has published none.
+                 * @example https://non.example/legal/agent-offer.pdf
+                 */
+                offer_url?: string | null;
             };
             pro?: {
                 /**

@@ -22,7 +22,7 @@ Regenerated autogen types from the DEV specs (`npm run update:types`, SFI-2548).
 - **`GET /frontend/referrals/summary` fields:**
   - `status`: the month's status by the average of the closed months, with `source` `AVERAGE` / `LOCK` / `PASSIVE`, `locked_until` and `is_passive`;
   - `balance`: `accrued_usd`, `in_hold_usd`, `available_usd`;
-  - `payout_conditions`: `offer_accepted_at`, `kyc_passed`, `kyc_expiring_usd`, `kyc_expires_at`;
+  - `payout_conditions`: `offer_accepted_at`, `kyc_passed`, `kyc_expiring_usd`, `kyc_expires_at`, and `offer_url` — the tenant's offer document, an `https://` link, or `null` when the tenant has published none (base_backend #2352);
   - `pro.is_open`.
 - **Referral event fields.** `reward_type` (`OPENING`, `TURNOVER`, `MANUAL`) and `hold_until` on a `GET /frontend/referrals/events` row.
 - **`REFERRAL_TARIFF_INVITE_ONLY`** among the `400` codes of `POST /frontend/promo-codes/redeem`.
