@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.111] - 2026-11-12
+
 ### Added
 
 - **`frontend.kycForms.forms.validate` checks a KYC form without sending it (SFI-2937).** It wraps `POST /frontend/kyc/entities/{entity_id}/forms/validate` and takes what `forms.submit` takes: the form target (`rails`, `programs`, `wallet_id`) and `locale` go in the query, `schema_version` and `values` in the body. The types are `API.Frontend.KycForms.Forms.Validate` (`Request`, `Response`), derived from the Frontend spec.
