@@ -3184,6 +3184,15 @@ export interface paths {
                         "application/json": components["schemas"]["ApiErrorResponse"];
                     };
                 };
+                /** @description Card is not active at the vendor (`CARD_INACTIVE`) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
@@ -4777,6 +4786,7 @@ export interface paths {
                  *     - Missing required fields
                  *     - Invalid amount (must be positive number)
                  *     - Sub-account not found
+                 *     - Insufficient funds (`INSUFFICIENT_FUNDS`)
                  *     - Card service withdrawal failed
                  *      */
                 400: {
@@ -5079,6 +5089,12 @@ export interface paths {
          *     The quote is priced for the wallet bound to the API key; a `wallet_id` in the
          *     query is ignored.
          *
+         *     **Crypto withdrawal rail.** For `order_type` `OMNIBUS_CRYPTO_TRANSFER` or
+         *     `SEGREGATED_CRYPTO_TRANSFER` the quote is refused with
+         *     `400 WALLET_RAIL_NOT_ONBOARDED` / `WALLET_RAIL_NOT_APPROVED` when the
+         *     tenant has a crypto withdrawal rail, tenant KYC is on and the wallet is
+         *     not `APPROVED` on it — the same check as creating the withdrawal.
+         *
          *     **Authentication**: x-api-key header required
          *
          */
@@ -5116,7 +5132,11 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Invalid request (e.g. unknown `order_type`, missing required parameter, exchange rate not found) */
+                /** @description Invalid request (e.g. unknown `order_type`, missing required parameter, exchange rate not found),
+                 *     or a crypto withdrawal quote for a wallet that may not send crypto yet:
+                 *     `WALLET_RAIL_NOT_ONBOARDED` (no row on the tenant's crypto withdrawal rail) or
+                 *     `WALLET_RAIL_NOT_APPROVED` (the rail is there, none is `APPROVED`)
+                 *      */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -5245,8 +5265,22 @@ export interface paths {
                     filters?: string;
                     date_from?: string;
                     date_to?: string;
-                    /** @description Part of the recipient's name or nickname (`meta.counterparty_account_name`,
-                     *     `meta.counterparty_account_nickname`), case-insensitive. Combines with `filters`,
+                    /** @description Lower bound, inclusive, on either side of the order: it matches when `amount_from`
+                     *     (sent) or `amount_to` (received) is in the range. A non-negative decimal; empty, absent
+                     *     or `0` means no lower bound. Anything else answers 400 `INVALID_REQUEST` with
+                     *     `details.field` = `amount_min`.
+                     *      */
+                    amount_min?: string;
+                    /** @description Upper bound, inclusive, on either side, as `amount_min`; empty or absent means no
+                     *     upper bound. An `amount_min` greater than `amount_max` answers 400 `INVALID_REQUEST`
+                     *     with `details.field` = `amount_min`.
+                     *      */
+                    amount_max?: string;
+                    /** @description Free text, case-insensitive. Finds a part of the recipient's name or nickname,
+                     *     `meta.reference`, `meta.note`, `comment`, the sender's name, an order-type word; an
+                     *     amount on either side exactly (`14 000` = `14000`); 6+ letters and digits, not a plain word (8+ if only digits), of an
+                     *     address, tx hash, or the saved counterparty's crypto address, IBAN or account
+                     *     number; an order `id` exactly. Combines with `filters`,
                      *     sorting and pagination; `pagination` counts the matches only. `*`, `%`, `"` and `\`
                      *     are ignored without splitting the word (`des%ign` finds "Design"); `_` matches itself.
                      *     Up to 100 characters: a longer value answers 400 `INVALID_REQUEST` with
@@ -5341,6 +5375,283 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/orders/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload order document
+         * @description Uploads a supporting document of a payout (an invoice, a contract) and returns its
+         *     `document_id`. Pass the id in `documents` when creating a withdrawal
+         *     (`POST /api/orders/withdrawal/*`) or attach it to an existing order with
+         *     `POST /api/orders/{order_id}/documents`; an uploaded file belongs to no order until then.
+         *
+         *     PDF, JPEG or PNG up to 5 MB, recognised by its content, not by the file name. The file is
+         *     stored privately in the folder of the wallet bound to the API key: a `document_id` is
+         *     accepted only for orders of that wallet.
+         *
+         *     **Authentication**: x-api-key header required
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "multipart/form-data": {
+                        /**
+                         * Format: binary
+                         * @description The document — PDF, JPEG or PNG, up to 5 MB.
+                         */
+                        file: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Document stored */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        /** @example {
+                         *       "success": true,
+                         *       "data": {
+                         *         "document_id": "3f0c2a8e-6b1d-4c3e-9f7a-1d2b3c4d5ee1.pdf",
+                         *         "type": "pdf",
+                         *         "size_kb": 412
+                         *       }
+                         *     } */
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /**
+                                 * @description Id to pass in `documents[].document_id`.
+                                 * @example 3f0c2a8e-6b1d-4c3e-9f7a-1d2b3c4d5ee1.pdf
+                                 */
+                                document_id: string;
+                                /** @enum {string} */
+                                type: "pdf" | "jpg" | "png";
+                                /** @example 412 */
+                                size_kb: number;
+                            };
+                        };
+                    };
+                };
+                /** @description No file, an empty file, more than one file or a field other than `file`, a file other than PDF/JPEG/PNG or larger than 5 MB (`VALIDATION_ERROR`); the API key is not bound to a wallet (`WALLET_NOT_BOUND`) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Authentication required — missing or invalid API key */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description The wallet's KYC status does not allow the operation (`KYC_REQUIREMENTS_NOT_MET`) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/{order_id}/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Attach documents to order
+         * @description Attaches documents uploaded with `POST /api/orders/documents` to an order of the wallet
+         *     bound to the API key. Each document is stored on the order and, on a payout through a rail
+         *     that takes documents, delivered to the payout provider; `vendor_delivery` tells, per
+         *     document, where it stands:
+         *
+         *     - `on_approve` — goes to the provider with the payment: the order is `NEW` or `EXPECTED`,
+         *       or the provider has not accepted the payment yet;
+         *     - `sent` — the provider has it (sent in this request or earlier);
+         *     - `not_sent` — the provider did not get it, `reason` says why: `too_large` (the payment
+         *       takes up to 15 MB of documents in total), `vendor_error` (the provider did not take the file;
+         *       attach the same `document_id` again to retry — unless the file is missing from storage or
+         *       of a type the provider rejects), `payment_not_accepting` (the payment is past the point where
+         *       documents are taken);
+         *     - `not_applicable` — the order's rail takes no documents; the document stays on the order.
+         *
+         *     A `document_id` already attached to the order is not added twice: it is only delivered
+         *     again when the provider does not have it yet. An order takes up to 50 documents.
+         *     Orders in `COMPLETE`, `CANCELED`, `FAILED` or `REFUNDED` take none.
+         *
+         *     **Authentication**: x-api-key header required
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    order_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    /** @example {
+                     *       "documents": [
+                     *         {
+                     *           "document_id": "3f0c2a8e-6b1d-4c3e-9f7a-1d2b3c4d5ee1.pdf",
+                     *           "description": "invoice-1042.pdf"
+                     *         }
+                     *       ]
+                     *     } */
+                    "application/json": {
+                        documents: {
+                            /**
+                             * @description From `POST /api/orders/documents`.
+                             * @example 3f0c2a8e-6b1d-4c3e-9f7a-1d2b3c4d5ee1.pdf
+                             */
+                            document_id: string;
+                            /**
+                             * @description What the document is; shown on the order, and the file name the provider sees when it ends in a file extension, e.g. `.pdf`.
+                             * @example invoice-1042.pdf
+                             */
+                            description?: string;
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Documents attached */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        /** @example {
+                         *       "success": true,
+                         *       "data": {
+                         *         "documents": [
+                         *           {
+                         *             "document_id": "3f0c2a8e-6b1d-4c3e-9f7a-1d2b3c4d5ee1.pdf",
+                         *             "description": "invoice-1042.pdf",
+                         *             "vendor_delivery": "sent"
+                         *           }
+                         *         ]
+                         *       }
+                         *     } */
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                documents: {
+                                    document_id: string;
+                                    /** @description The description sent in this request; `null` when none was. */
+                                    description: string | null;
+                                    /** @enum {string} */
+                                    vendor_delivery: "on_approve" | "sent" | "not_sent" | "not_applicable";
+                                    /**
+                                     * @description Set with `not_sent` only.
+                                     * @enum {string}
+                                     */
+                                    reason?: "too_large" | "vendor_error" | "payment_not_accepting";
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid body, an `order_id` that is not a UUID, or more than 50 documents on the order (`VALIDATION_ERROR`); a `document_id` not uploaded with this wallet's API key (`DOCUMENT_NOT_FOUND`); the API key is not bound to a wallet (`WALLET_NOT_BOUND`) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Authentication required — missing or invalid API key */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description The order does not belong to the API key's wallet (`INSUFFICIENT_PERMISSIONS`), or the wallet's KYC status does not allow the operation (`KYC_REQUIREMENTS_NOT_MET`) */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Order not found (`NOT_FOUND`) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description The order is `COMPLETE`, `CANCELED`, `FAILED` or `REFUNDED` (`INVALID_STATE`), or another call holds the order lock (`OPERATION_IN_PROGRESS`) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description The locking service is unavailable, so the order cannot be changed safely (`SERVICE_UNAVAILABLE`); retry later */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/orders/{order_id}/approve": {
         parameters: {
             query?: never;
@@ -5368,6 +5679,10 @@ export interface paths {
          *     away, 400 `SCHEDULED_AT_TOO_SOON`
          *     (create the payment again with a new date).
          *
+         *     The order is looked up in the wallet bound to the API key; a `wallet_id`
+         *     in the body is ignored. A key that is not bound to a wallet is refused
+         *     with 400 `WALLET_NOT_BOUND`.
+         *
          */
         post: {
             parameters: {
@@ -5394,26 +5709,41 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Insufficient funds (`INSUFFICIENT_FUNDS` — the order is released back to NEW), a scheduled order before its approval window opens (`SCHEDULED_APPROVAL_NOT_OPEN`, `details.approvable_from`) or less than an hour before its `scheduled_at` (`SCHEDULED_AT_TOO_SOON`), or validation error */
+                /** @description Insufficient funds (`INSUFFICIENT_FUNDS` — the order is released back to NEW), a scheduled order before its approval window opens (`SCHEDULED_APPROVAL_NOT_OPEN`, `details.approvable_from`) or less than an hour before its `scheduled_at` (`SCHEDULED_AT_TOO_SOON`), the API key is not bound to a wallet (`WALLET_NOT_BOUND`), or validation error */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
                 };
-                /** @description Order does not belong to the API key's wallet */
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Order does not belong to the API key's wallet, or the wallet's KYC status does not allow the operation (`KYC_REQUIREMENTS_NOT_MET`) */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
                 };
                 /** @description Order not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
                 };
                 /** @description Order is not in an approvable state (`INVALID_STATE`), or another lifecycle call holds the order lock (`OPERATION_IN_PROGRESS`) */
                 409: {
@@ -5459,6 +5789,10 @@ export interface paths {
          *     409. Paying back an order that was debited and then failed is now a
          *     separate, admin-panel-only refund action.
          *
+         *     The order is looked up in the wallet bound to the API key; a `wallet_id`
+         *     in the body is ignored. A key that is not bound to a wallet is refused
+         *     with 400 `WALLET_NOT_BOUND`.
+         *
          */
         post: {
             parameters: {
@@ -5495,26 +5829,50 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Order does not belong to the API key's wallet */
+                /** @description The API key is not bound to a wallet (`WALLET_NOT_BOUND`), or validation error */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
+                };
+                /** @description Order does not belong to the API key's wallet, or the wallet's KYC status does not allow the operation (`KYC_REQUIREMENTS_NOT_MET`) */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
                 };
                 /** @description Order not found */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
                 };
                 /** @description Order is not in a cancelable state (`INVALID_STATE`), or another lifecycle call holds the order lock (`OPERATION_IN_PROGRESS`) */
                 409: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ApiErrorResponse"];
+                    };
                 };
             };
         };
@@ -5591,7 +5949,7 @@ export interface paths {
                          * @example 2026-07-20T12:00:00Z
                          */
                         scheduled_at?: string;
-                        documents?: Record<string, never>[];
+                        documents?: components["schemas"]["ApiOrderDocuments"];
                     };
                 };
             };
@@ -5609,7 +5967,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error */
+                /** @description Validation error (`VALIDATION_ERROR`); a `document_id` in `documents` not uploaded with this wallet's API key (`DOCUMENT_NOT_FOUND`) */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -5694,6 +6052,13 @@ export interface paths {
          *     Without `to_currency_id` (or with the same value) nothing changes: one
          *     currency, one chain.
          *
+         *     **Crypto withdrawal rail.** When the tenant has a crypto withdrawal rail
+         *     and tenant KYC is on, the wallet bound to the API key must be `APPROVED`
+         *     on it; otherwise the request is refused with
+         *     `400 WALLET_RAIL_NOT_ONBOARDED` (the wallet has no row on the rail) or
+         *     `400 WALLET_RAIL_NOT_APPROVED` (the wallet has the rail, none is
+         *     approved). Without such a rail nothing changes.
+         *
          *     `wallet_id` is automatically resolved from the API key — do **not** pass it
          *     in the body.
          *
@@ -5724,7 +6089,12 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error */
+                /** @description Validation error (`VALIDATION_ERROR`); a `document_id` in `documents`
+                 *     not uploaded with this wallet's API key (`DOCUMENT_NOT_FOUND`); the
+                 *     wallet may not send crypto yet — `WALLET_RAIL_NOT_ONBOARDED` (no row
+                 *     on the tenant's crypto withdrawal rail) or `WALLET_RAIL_NOT_APPROVED`
+                 *     (the rail is there, none is `APPROVED`)
+                 *      */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -5812,7 +6182,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error */
+                /** @description Validation error (`VALIDATION_ERROR`); a `document_id` in `documents` not uploaded with this wallet's API key (`DOCUMENT_NOT_FOUND`) */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -5899,7 +6269,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error */
+                /** @description Validation error (`VALIDATION_ERROR`); a `document_id` in `documents` not uploaded with this wallet's API key (`DOCUMENT_NOT_FOUND`) */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -5984,7 +6354,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error */
+                /** @description Validation error (`VALIDATION_ERROR`); a `document_id` in `documents` not uploaded with this wallet's API key (`DOCUMENT_NOT_FOUND`) */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -6070,7 +6440,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error */
+                /** @description Validation error (`VALIDATION_ERROR`); a `document_id` in `documents` not uploaded with this wallet's API key (`DOCUMENT_NOT_FOUND`) */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -6154,7 +6524,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error */
+                /** @description Validation error (`VALIDATION_ERROR`); a `document_id` in `documents` not uploaded with this wallet's API key (`DOCUMENT_NOT_FOUND`) */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -6238,7 +6608,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error */
+                /** @description Validation error (`VALIDATION_ERROR`); a `document_id` in `documents` not uploaded with this wallet's API key (`DOCUMENT_NOT_FOUND`) */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -7443,6 +7813,7 @@ export interface paths {
         /**
          * Export transactions to CSV
          * @description Downloads wallet transactions in CSV format.
+         *     One row per balance movement; its `Amount`, `Balance Before` and `Balance After` are in the row's `Currency` (the last three columns).
          *
          *     **Authentication**: x-api-key header required
          *
@@ -8875,6 +9246,39 @@ export interface components {
             /** Format: date-time */
             updated_at?: string | null;
         };
+        /**
+         * @description Optional. Supporting documents of the payout (an invoice, a contract), stored on the order and sent to the payout provider with the payment when its rail takes documents. Each item is either a file uploaded with `POST /api/orders/documents` (`document_id`) or a link (`url`) — exactly one of the two; items of both kinds can be mixed. A `document_id` not uploaded with this wallet's API key refuses the order with `400 DOCUMENT_NOT_FOUND`, and no order is created. A `url` that is not http(s) or whose domain is not allowed is refused with `400 VALIDATION_ERROR`. More documents can be attached later with `POST /api/orders/{order_id}/documents`.
+         * @example [
+         *       {
+         *         "document_id": "3f0c2a8e-6b1d-4c3e-9f7a-1d2b3c4d5ee1.pdf",
+         *         "description": "invoice-1042.pdf"
+         *       }
+         *     ]
+         */
+        ApiOrderDocuments: ({
+            /**
+             * @description From `POST /api/orders/documents`.
+             * @example 3f0c2a8e-6b1d-4c3e-9f7a-1d2b3c4d5ee1.pdf
+             */
+            document_id: string;
+            /**
+             * @description What the document is; also the file name the payout provider sees when it ends in a file extension, e.g. `.pdf`.
+             * @example invoice-1042.pdf
+             */
+            description?: string;
+        } | {
+            /**
+             * Format: uri
+             * @description http(s) link to the document on an allowed domain. Only a file in our own storage reaches the payout provider.
+             * @example https://files.example.com/invoice-1042.pdf
+             */
+            url: string;
+            /**
+             * @description What the document is.
+             * @example invoice-1042.pdf
+             */
+            description?: string;
+        })[];
         ApiCryptoTransferRequest: {
             /**
              * @description Amount to send, in `from_currency_id` units. With `is_reverse: true` — the amount the recipient must receive, in destination-currency units.
@@ -8925,6 +9329,7 @@ export interface components {
              * @example 2026-07-20T12:00:00Z
              */
             scheduled_at?: string;
+            documents?: components["schemas"]["ApiOrderDocuments"];
         };
         ApiOfframpOrderRequest: {
             /**
@@ -8977,6 +9382,7 @@ export interface components {
              * @example 2026-07-20T12:00:00Z
              */
             scheduled_at?: string;
+            documents?: components["schemas"]["ApiOrderDocuments"];
         };
         ApiExchangeOrderRequest: {
             /**

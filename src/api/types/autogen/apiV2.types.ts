@@ -3828,7 +3828,7 @@ export interface operations {
                     "application/json": components["schemas"]["InitKycDataCollectionResponseDto"];
                 };
             };
-            /** @description Wallet is linked to a KYC entity of a different type */
+            /** @description Wallet is linked to a KYC entity of a different type; or the tenant runs the KYC forms flow: the client verifies through the KYC forms of CORE */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -3870,6 +3870,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ResumeKycDataCollectionResponseDto"];
                 };
+            };
+            /** @description The tenant runs the KYC forms flow: the client verifies through the KYC forms of CORE */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Unauthorized */
             401: {
@@ -4016,7 +4023,7 @@ export interface operations {
                     "application/json": components["schemas"]["InitKycDataCollectionResponseDto"];
                 };
             };
-            /** @description reuse_user_verification requested for an entity type that supports no reuse */
+            /** @description reuse_user_verification requested for an entity type that supports no reuse; or the tenant runs the KYC forms flow: the client verifies through the KYC forms of CORE */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -4065,6 +4072,13 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ResumeKycDataCollectionResponseDto"];
                 };
+            };
+            /** @description The tenant runs the KYC forms flow: the client verifies through the KYC forms of CORE */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Unauthorized */
             401: {
