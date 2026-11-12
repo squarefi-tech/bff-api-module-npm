@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Regenerated autogen types from the DEV specs: the Non Wallet referral program in the Frontend spec (SFI-2548).** The CORE `/frontend/referrals/*` contract the wallet's referral screen reads (SFI-2853) replaced the SFI-2410 one. Consumers call these routes through the typed `v1Client` paths. The SDK adds no wrappers.
+  - `GET /frontend/referrals/summary` now carries `status` (the month's status by the average of the closed months, `source` `AVERAGE` / `LOCK` / `PASSIVE`, `locked_until`, `is_passive`), `balance` (`accrued_usd`, `in_hold_usd`, `available_usd`), `payout_conditions` (`offer_accepted_at`, `kyc_passed`, `kyc_expiring_usd`, `kyc_expires_at`), `pro.is_open`, `breakdown` with the current rate per order type, and `terms`. `pending_usd` is gone, and `balance` replaces it.
+  - `GET /frontend/referrals/events` rows carry `reward_type` (`OPENING`, `TURNOVER`, `MANUAL`), `hold_until`, and nullable `order_type` / `level_no` / `level_name` (null on a `MANUAL` row).
+  - New routes: `POST /offer/accept`, `GET /months`, `POST /months/{period}/report/accept`, `POST /months/{period}/report/objection`, `GET /clients`, `GET` / `POST /invites`, and the second level under `/pro/*` (`summary`, `subagents`, `rewards`, `links`, `DELETE /links/{code}`).
+- **The same regen also brings the specs' other drift since 1.36.110.**
+  - Card endpoints document `409 CARD_INACTIVE`.
+  - A mass payout's `problems` item is the named schema `MassPayoutItemProblem` and gains `code` (`WALLET_RAIL_NOT_ONBOARDED`, `WALLET_RAIL_NOT_APPROVED`).
+  - On a transaction row, `network_fee_currency` is a nullable uuid. It is `null` on a row without a network fee, such as an AML screening fee.
+  - The External API gains `POST /api/orders/documents` and `POST /api/orders/{order_id}/documents`.
+  - Order lists in External, Tenant, Legacy and Frontend document the `amount_min` / `amount_max` / `search` filters.
+  - V2 KYC routes document the refusal when the tenant runs the CORE KYC forms flow.
+
 ## [1.36.110] - 2026-11-07
 
 ### Added

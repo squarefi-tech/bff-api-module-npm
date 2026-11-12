@@ -2663,7 +2663,7 @@ export interface paths {
                      *     - By your own reference: `[{"meta->>reference":"invoice-2026-04-001"}]`
                      *
                      *     Every key is checked before the query runs (SFI-2693): an unknown field, a value of the
-                     *     wrong type (e.g. a status that does not exist, an `order_type` that is neither enabled for the tenant — see `/reference/order_types` — nor among the wallet's orders, or a non-uuid id) or an object on a plain
+                     *     wrong type (e.g. a status that does not exist, an `order_type` filter none of whose types is enabled for the tenant — see `/reference/order_types` — or among the wallet's orders (in a list one such type is enough), or a non-uuid id) or an object on a plain
                      *     field answers 400 `INVALID_REQUEST`, and `details.field` names the field. An object is
                      *     accepted on `meta` only — `[{"meta":{"direction":"out"}}]` matches `meta->>direction`.
                      *
@@ -2674,12 +2674,26 @@ export interface paths {
                     date_from?: string;
                     /** @description Filter orders created up to this date (inclusive). Format - ISO 8601 (e.g., 2024-12-31T23:59:59Z) */
                     date_to?: string;
-                    /** @description Part of the recipient's name or nickname (`meta.counterparty_account_name`,
-                     *     `meta.counterparty_account_nickname`), case-insensitive. Combines with `filters`,
+                    /** @description Lower bound, inclusive, on either side of the order: it matches when `amount_from`
+                     *     (sent) or `amount_to` (received) is in the range. A non-negative decimal; empty, absent
+                     *     or `0` means no lower bound. Anything else answers 400 in this endpoint's legacy
+                     *     body `{"error": "<message>"}`, the message naming `amount_min`.
+                     *      */
+                    amount_min?: string;
+                    /** @description Upper bound, inclusive, on either side, as `amount_min`; empty or absent means no
+                     *     upper bound. An `amount_min` greater than `amount_max` answers 400 in the legacy
+                     *     body `{"error": "<message>"}`.
+                     *      */
+                    amount_max?: string;
+                    /** @description Free text, case-insensitive. Finds a part of the recipient's name or nickname,
+                     *     `meta.reference`, `meta.note`, `comment`, the sender's name, an order-type word; an
+                     *     amount on either side exactly (`14 000` = `14000`); 6+ letters and digits, not a plain word (8+ if only digits), of an
+                     *     address, tx hash, or the saved counterparty's crypto address, IBAN or account
+                     *     number; an order `id` exactly. Combines with `filters`,
                      *     sorting and pagination; `pagination` counts the matches only. `*`, `%`, `"` and `\`
                      *     are ignored without splitting the word (`des%ign` finds "Design"); `_` matches itself.
-                     *     Up to 100 characters: a longer value answers 400 `INVALID_REQUEST` with
-                     *     `details.field` = `search`.
+                     *     Up to 100 characters: a longer value answers 400 in this endpoint's legacy body
+                     *     `{"error": "<message>"}`.
                      *      */
                     search?: string;
                     /** @description If `true`, includes dust orders (amount below render threshold for either currency). Defaults to `false` — dust orders are hidden. */
