@@ -3784,6 +3784,13 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Card is not active at the vendor (`CARD_INACTIVE`) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
             };
         };
         put?: never;
@@ -3857,6 +3864,13 @@ export interface paths {
                 };
                 /** @description Missing or undecryptable `encrypted_key`, or a key that is not 32 bytes */
                 400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Card is not active at the vendor (`CARD_INACTIVE`) */
+                409: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -7846,6 +7860,26 @@ export interface paths {
          *     pay an on-platform wallet without a network fee use an INTERNAL
          *     destination.
          *
+         *     A recipient that cannot be paid is not an error of the request: it is
+         *     listed in `problems` (with `error` text) and left out of the fee and
+         *     debit totals, the other rows are estimated as usual. Among the
+         *     reasons: a crypto row whose destination address is registered for
+         *     another currency than the batch (`Counterparty destination is
+         *     registered for a different currency than the batch sends`, checked
+         *     with or without `to_currency_id`), a crypto destination without an
+         *     address (`Counterparty destination must have a crypto address for
+         *     crypto transfers`), a banking row whose stored bank details cannot be
+         *     paid out — non-empty `validation_issues` of the destination
+         *     (`The destination's bank details cannot be paid out — add a new
+         *     destination.` followed by the first issue), every crypto row when the
+         *     batch wallet is not `APPROVED` on the tenant's crypto withdrawal rail
+         *     (the problem carries `code` `WALLET_RAIL_NOT_ONBOARDED` — no row on the
+         *     rail — or `WALLET_RAIL_NOT_APPROVED` — the rail is there, none is
+         *     approved; checked only when the tenant has the rail and tenant KYC is
+         *     on), and the checks of submit.
+         *     `POST .../submit` and `POST .../approve` refuse the batch while any
+         *     problem remains.
+         *
          */
         get: {
             parameters: {
@@ -7905,16 +7939,36 @@ export interface paths {
                                     debit_amount?: number;
                                     result_amount?: number;
                                 }[];
-                                problems?: {
-                                    /** Format: uuid */
-                                    item_id?: string;
-                                    position?: number;
-                                    /** Format: uuid */
-                                    destination_id?: string;
-                                    error?: string;
-                                }[];
+                                problems?: components["schemas"]["MassPayoutItemProblem"][];
                             };
                         };
+                    };
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Caller has no access to the wallet, or its KYC status does not allow the operation */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Mass payout not found (`MASS_PAYOUT_NOT_FOUND`) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
             };
@@ -7940,10 +7994,20 @@ export interface paths {
          * Submit a mass payout for approval
          * @description DRAFT → PENDING_APPROVAL. Refused while any recipient is invalid — a
          *     missing/deleted destination, an unsupported type, a banking row
-         *     without a source account, or a row at/above the invoice threshold
-         *     without an INVOICE attachment. The problems are returned in the error
-         *     details so the rows can be fixed. Wallet members are notified that the
-         *     batch awaits approval.
+         *     without a source account, a crypto row whose address is registered for
+         *     another currency than the batch (with or without `to_currency_id`), a
+         *     crypto destination without an address, a banking row whose stored bank
+         *     details cannot be paid out (non-empty `validation_issues` of the
+         *     destination), a row at/above the invoice threshold without an
+         *     INVOICE attachment, or — for every crypto row — a batch wallet that is
+         *     not `APPROVED` on the tenant's crypto withdrawal rail (such a problem
+         *     carries `code` `WALLET_RAIL_NOT_ONBOARDED` or `WALLET_RAIL_NOT_APPROVED`;
+         *     checked only when the tenant has the rail and tenant KYC is on). The
+         *     same rows are listed in `problems` of the
+         *     preview. The answer is `400 MASS_PAYOUT_INVALID_ITEMS` with the
+         *     problems in `error.details.problems[]` (`item_id`, `position`,
+         *     `destination_id`, `error`, optional `code`) so the rows can be fixed. Wallet members
+         *     are notified that the batch awaits approval.
          *
          */
         post: {
@@ -7972,8 +8036,22 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Batch has invalid items (details carry the per-item problems) */
+                /** @description `MASS_PAYOUT_INVALID_ITEMS` — at least one row cannot be paid;
+                 *     `error.details.problems[]` lists each one (`item_id`, `position`,
+                 *     `destination_id`, `error`, optional `code` — see
+                 *     `MassPayoutItemProblem`). `MASS_PAYOUT_EMPTY` — the batch has no
+                 *     items.
+                 *      */
                 400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Mass payout not found (`MASS_PAYOUT_NOT_FOUND`) */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -8058,7 +8136,22 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Insufficient funds for the estimated total debit, or invalid items */
+                /** @description `INSUFFICIENT_FUNDS` — the estimated total debit exceeds the wallet
+                 *     balance (`error.details.required` / `available`). The estimate
+                 *     covers only the rows that have no problem, so a batch with
+                 *     invalid rows can answer this before the next one.
+                 *     `MASS_PAYOUT_INVALID_ITEMS` — the items are re-validated at
+                 *     approval and at least one row cannot be paid (same checks as
+                 *     submit and the preview `problems`, including a crypto address
+                 *     registered for another currency than the batch and bank details
+                 *     that cannot be paid out, and — for crypto rows — a batch wallet
+                 *     not approved on the tenant's crypto withdrawal rail, `code`
+                 *     `WALLET_RAIL_NOT_ONBOARDED` / `WALLET_RAIL_NOT_APPROVED`);
+                 *     `error.details.problems[]` lists them
+                 *     (`item_id`, `position`, `destination_id`, `error`, optional
+                 *     `code`). Nothing is
+                 *     claimed or sent, fix the rows and approve again.
+                 *      */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -9007,6 +9100,16 @@ export interface paths {
          *     `POST /frontend/orders/calc`. Omitted or equal `to_currency_id` is the
          *     plain same-asset transfer.
          *
+         *     **Crypto withdrawal rail.** When the tenant has a crypto withdrawal rail
+         *     and tenant KYC is on, the source wallet must be `APPROVED` on it (see
+         *     `GET /frontend/wallets/{wallet_id}/kyc-rails`); otherwise the request is
+         *     refused with `400 WALLET_RAIL_NOT_ONBOARDED` (the wallet has no row on
+         *     the rail) or `400 WALLET_RAIL_NOT_APPROVED` (the wallet has the rail,
+         *     none is approved). Without such a rail nothing changes.
+         *
+         *     **Authentication**: Bearer token with x-tenant-id header; the caller must
+         *     be an admin of the source wallet.
+         *
          */
         post: {
             parameters: {
@@ -9034,7 +9137,11 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error */
+                /** @description Validation error, or the wallet may not send crypto yet:
+                 *     `WALLET_RAIL_NOT_ONBOARDED` — the wallet has no row on the tenant's
+                 *     crypto withdrawal rail; `WALLET_RAIL_NOT_APPROVED` — it has the rail
+                 *     but none is `APPROVED`.
+                 *      */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -9950,6 +10057,14 @@ export interface paths {
          * Calculate order
          * @description Pre-calculates order amounts, fees and exchange rates without creating an order.
          *
+         *     **Crypto withdrawal rail.** For `order_type` `OMNIBUS_CRYPTO_TRANSFER` or
+         *     `SEGREGATED_CRYPTO_TRANSFER` with a `wallet_id` the caller may act on, the
+         *     quote is refused with `400 WALLET_RAIL_NOT_ONBOARDED` /
+         *     `400 WALLET_RAIL_NOT_APPROVED` when the tenant has a crypto withdrawal
+         *     rail, tenant KYC is on and the wallet is not `APPROVED` on it — the same
+         *     check as creating the withdrawal. Without a `wallet_id`, or for a wallet
+         *     the caller has no access to, the rail is not checked.
+         *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
          */
@@ -9994,8 +10109,21 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Invalid request (e.g. unknown `order_type`, missing required parameter, exchange rate not found) */
+                /** @description Invalid request (e.g. unknown `order_type`, missing required parameter, exchange rate not found),
+                 *     or a crypto withdrawal quote for a wallet that may not send crypto yet:
+                 *     `WALLET_RAIL_NOT_ONBOARDED` (no row on the tenant's crypto withdrawal rail) or
+                 *     `WALLET_RAIL_NOT_APPROVED` (the rail is there, none is `APPROVED`)
+                 *      */
                 400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Authentication required */
+                401: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -10072,8 +10200,23 @@ export interface paths {
                     filters?: string;
                     date_from?: string;
                     date_to?: string;
-                    /** @description Part of the recipient's name or nickname (`meta.counterparty_account_name`,
-                     *     `meta.counterparty_account_nickname`), case-insensitive. Combines with `filters`,
+                    /** @description Lower bound, inclusive, on either side of the order: it matches when `amount_from`
+                     *     (sent) or `amount_to` (received; for an offramp, what the recipient got) is in
+                     *     the range. A non-negative decimal (`100`, `99.5`); empty, absent or `0` means no
+                     *     lower bound. Combines with `filters`, the dates and `search`. Anything else
+                     *     answers 400 `INVALID_REQUEST` with `details.field` = `amount_min`.
+                     *      */
+                    amount_min?: string;
+                    /** @description Upper bound, inclusive, on either side, as `amount_min`. Same format; empty or
+                     *     absent means no upper bound. An `amount_min` greater than `amount_max` answers 400
+                     *     `INVALID_REQUEST` with `details.field` = `amount_min`.
+                     *      */
+                    amount_max?: string;
+                    /** @description Free text, case-insensitive. Finds a part of the recipient's name or nickname,
+                     *     `meta.reference`, `meta.note`, `comment`, the sender's name, an order-type word; an
+                     *     amount on either side exactly (`14 000` = `14000`); 6+ letters and digits, not a plain word (8+ if only digits), of an
+                     *     address, tx hash, or the saved counterparty's crypto address, IBAN or account
+                     *     number; an order `id` exactly. Combines with `filters`,
                      *     sorting and pagination; `pagination` counts the matches only. `*`, `%`, `"` and `\`
                      *     are ignored without splitting the word (`des%ign` finds "Design"); `_` matches itself.
                      *     Up to 100 characters: a longer value answers 400 `INVALID_REQUEST` with
@@ -10105,7 +10248,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description `INVALID_REQUEST` — `filters` is not a JSON array, `mass_payout_id` / `rfi_case_id` is not a uuid, `scheduled` is not `all` / `upcoming` / `past`, a filter names an unknown field or carries a value of the wrong type, or `search` is longer than 100 characters (`details.field` names the field) */
+                /** @description `INVALID_REQUEST` — `filters` is not a JSON array, `mass_payout_id` / `rfi_case_id` is not a uuid, `scheduled` is not `all` / `upcoming` / `past`, a filter names an unknown field or carries a value of the wrong type, `search` is longer than 100 characters, or `amount_min` / `amount_max` is not a non-negative number or `amount_min` is greater than `amount_max` (`details.field` names the field) */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -10247,6 +10390,18 @@ export interface paths {
                 query?: {
                     date_from?: string;
                     date_to?: string;
+                    /** @description Lower bound, inclusive, on either side of the order: it matches when `amount_from`
+                     *     (sent) or `amount_to` (received; for an offramp, what the recipient got) is in
+                     *     the range. A non-negative decimal (`100`, `99.5`); empty, absent or `0` means no
+                     *     lower bound. Combines with `filters`, the dates and `search`. Anything else
+                     *     answers 400 `INVALID_REQUEST` with `details.field` = `amount_min`.
+                     *      */
+                    amount_min?: string;
+                    /** @description Upper bound, inclusive, on either side, as `amount_min`. Same format; empty or
+                     *     absent means no upper bound. An `amount_min` greater than `amount_max` answers 400
+                     *     `INVALID_REQUEST` with `details.field` = `amount_min`.
+                     *      */
+                    amount_max?: string;
                     /** @description JSON-encoded array of filters, e.g. `[{"status":"COMPLETE"}]`.
                      *     Besides order columns it accepts `mass_payout_id` (uuid), which narrows the
                      *     result to the orders of one mass payout batch — the same batch reported by
@@ -10272,8 +10427,11 @@ export interface paths {
                      *     accepted on `meta` only — `[{"meta":{"direction":"out"}}]` matches `meta->>direction`.
                      *      */
                     filters?: string;
-                    /** @description Part of the recipient's name or nickname (`meta.counterparty_account_name`,
-                     *     `meta.counterparty_account_nickname`), case-insensitive. Combines with `filters`,
+                    /** @description Free text, case-insensitive. Finds a part of the recipient's name or nickname,
+                     *     `meta.reference`, `meta.note`, `comment`, the sender's name, an order-type word; an
+                     *     amount on either side exactly (`14 000` = `14000`); 6+ letters and digits, not a plain word (8+ if only digits), of an
+                     *     address, tx hash, or the saved counterparty's crypto address, IBAN or account
+                     *     number; an order `id` exactly. Combines with `filters`,
                      *     sorting and pagination; `pagination` counts the matches only. `*`, `%`, `"` and `\`
                      *     are ignored without splitting the word (`des%ign` finds "Design"); `_` matches itself.
                      *     Up to 100 characters: a longer value answers 400 `INVALID_REQUEST` with
@@ -10300,7 +10458,7 @@ export interface paths {
                         "text/csv": string;
                     };
                 };
-                /** @description `INVALID_REQUEST` — `filters` is not a JSON array, `mass_payout_id` / `rfi_case_id` is not a uuid, `scheduled` is not `all` / `upcoming` / `past`, a filter names an unknown field or carries a value of the wrong type, or `search` is longer than 100 characters (`details.field` names the field) */
+                /** @description `INVALID_REQUEST` — `filters` is not a JSON array, `mass_payout_id` / `rfi_case_id` is not a uuid, `scheduled` is not `all` / `upcoming` / `past`, a filter names an unknown field or carries a value of the wrong type, `search` is longer than 100 characters, or `amount_min` / `amount_max` is not a non-negative number or `amount_min` is greater than `amount_max` (`details.field` names the field) */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -10531,6 +10689,17 @@ export interface paths {
          *     only — such a request with a different `to_currency_id` is refused with
          *     `400 INVALID_REQUEST` instead of silently delivering `from_currency_id`.
          *
+         *     **Crypto withdrawal rail.** When the tenant has a crypto withdrawal rail
+         *     and tenant KYC is on, the source wallet must be `APPROVED` on it;
+         *     otherwise the request is refused with `400 WALLET_RAIL_NOT_ONBOARDED`
+         *     (the wallet has no row on the rail) or `400 WALLET_RAIL_NOT_APPROVED`
+         *     (the wallet has the rail, none is approved). A send to an address of a
+         *     wallet on this platform is downgraded to an off-chain internal transfer
+         *     and is not subject to the rail.
+         *
+         *     **Authentication**: Bearer token with x-tenant-id header; the caller must
+         *     be an admin of the source wallet.
+         *
          */
         post: {
             parameters: {
@@ -10551,6 +10720,46 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Validation error, or the wallet may not send crypto yet:
+                 *     `WALLET_RAIL_NOT_ONBOARDED` — no row on the tenant's crypto
+                 *     withdrawal rail; `WALLET_RAIL_NOT_APPROVED` — the rail is there, none
+                 *     is `APPROVED`.
+                 *      */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Caller is not an admin of the source wallet */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -10575,6 +10784,15 @@ export interface paths {
          *     carry `request_id` (idempotency key); `scheduled_at` is ignored.
          *     Prefer `POST /frontend/orders/withdrawal/crypto`.
          *
+         *     **Crypto withdrawal rail.** When the tenant has a crypto withdrawal rail
+         *     and tenant KYC is on, the source wallet must be `APPROVED` on it;
+         *     otherwise the request is refused with `400 WALLET_RAIL_NOT_ONBOARDED`
+         *     (the wallet has no row on the rail) or `400 WALLET_RAIL_NOT_APPROVED`
+         *     (the wallet has the rail, none is approved).
+         *
+         *     **Authentication**: Bearer token with x-tenant-id header; the caller must
+         *     be an admin of the source wallet.
+         *
          */
         post: {
             parameters: {
@@ -10595,6 +10813,46 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Validation error, or the wallet may not send crypto yet:
+                 *     `WALLET_RAIL_NOT_ONBOARDED` — no row on the tenant's crypto
+                 *     withdrawal rail; `WALLET_RAIL_NOT_APPROVED` — the rail is there, none
+                 *     is `APPROVED`.
+                 *      */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Caller is not an admin of the source wallet */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -10663,7 +10921,9 @@ export interface paths {
                         };
                     };
                 };
-                /** @description No `code`, or a code of the wrong format (`VALIDATION_ERROR`). */
+                /** @description - `VALIDATION_ERROR` — no `code`, or a code of the wrong format;
+                 *     - `REFERRAL_TARIFF_INVITE_ONLY` — the code's user group has been made invite-only since the code was issued: a user gets that group by registering with an invite, so the code moves nobody. Nothing is counted or changed. The check comes after `PROMO_CODE_NOT_ACTIVE` and before `PROMO_CODE_ALREADY_REDEEMED` and `PROMO_CODE_GROUP_ALREADY_ASSIGNED`.
+                 *      */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -11200,7 +11460,7 @@ export interface paths {
         };
         /**
          * The agent's referral summary
-         * @description The main referral screen in one call — the agent's code, this month's earnings and level, what waits for a payout, what was paid so far, the ladder and the program terms. A user without a referral code gets one here.
+         * @description The main referral screen in one call — the agent's code, this month's earnings, the status the month runs on and the level it has reached, the unpaid balance and what stands between the agent and a payout, what was paid so far, the ladder and the program terms. A user without a referral code gets one here.
          */
         get: {
             parameters: {
@@ -11230,7 +11490,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -11251,7 +11513,7 @@ export interface paths {
         };
         /**
          * The agent's rewards of a month
-         * @description One row per rewarded order (and per reversal), newest first. Canceled rows are not listed. Without `period` the current month is served; a level change is visible as a change of `level_no` between rows.
+         * @description The agent's own rows of a month, newest first — one per rewarded order, per reversal and per row support added by hand. The mentor's share of subagents' rewards is not listed here; neither are canceled rows and rows that wait for a support decision. A row never carries the amount of its order, and only an opening bonus names its customer. Without `period` the current month is served; a level change is visible as a change of `level_no` between rows (a `MANUAL` row is priced by no level, so its `level_no` and `level_name` are null).
          */
         get: {
             parameters: {
@@ -11290,7 +11552,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 401: components["responses"]["UnauthorizedError"];
                 /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`). */
@@ -11298,7 +11562,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -11347,13 +11613,24 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Invalid query (`VALIDATION_ERROR`). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
                 401: components["responses"]["UnauthorizedError"];
                 /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`). */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -11374,7 +11651,7 @@ export interface paths {
         };
         /**
          * Download the monthly referral report (PDF)
-         * @description The month's summary, the breakdown by order type and the reward rows, on the tenant's branded sheet. Without `period` the last closed month is served — the one a payout is made for; the current month is served too, marked preliminary. Generated on the fly and streamed; nothing is persisted.
+         * @description The month's summary, the breakdown by order type and the agent's own reward rows, on the tenant's branded sheet. A row carries no order amount, and only an opening bonus names its customer. The mentor's share of subagents' rewards is one line with the month's sum, present only when there is a sum. Without `period` the last closed month is served — the one a payout is made for; the current month is served too, marked preliminary. Generated on the fly and streamed; nothing is persisted.
          */
         get: {
             parameters: {
@@ -11402,7 +11679,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 401: components["responses"]["UnauthorizedError"];
                 /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`). */
@@ -11410,14 +11689,18 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description More than 5 report requests (downloads and Telegram sends together) in a minute (`RATE_LIMIT_EXCEEDED`). */
                 429: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -11484,7 +11767,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 401: components["responses"]["UnauthorizedError"];
                 /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`). */
@@ -11492,28 +11777,36 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description The user has not started the tenant's bot (`TELEGRAM_NOT_LINKED`), or the tenant runs no bot (`TELEGRAM_NOT_AVAILABLE`). */
                 409: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description More than 5 report requests (downloads and Telegram sends together) in a minute (`RATE_LIMIT_EXCEEDED`). */
                 429: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description Telegram did not accept the document (`TELEGRAM_DELIVERY_FAILED`); retry later. */
                 503: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -11562,7 +11855,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -11600,7 +11895,9 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 401: components["responses"]["UnauthorizedError"];
                 /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`). */
@@ -11608,19 +11905,973 @@ export interface paths {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description The user has not started the tenant's bot (`TELEGRAM_NOT_LINKED`) — there is nowhere to send the report. */
                 409: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/referrals/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The user's invites and invite quota
+         * @description How many invites to the tenant's invite-only tariff the user may issue, how many they have issued, the invites themselves and the referral code their invite links carry. An agent without a referral code gets one here; so does the agent of a user who has not accepted the offer.
+         *     A tenant without an invite-only tariff is answered too — with the quota, `issued` 0 and no items.
+         *
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The quota, the referral code and the issued invites. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        /** @example {
+                         *       "success": true,
+                         *       "data": {
+                         *         "limit": 5,
+                         *         "issued": 2,
+                         *         "available": 3,
+                         *         "referrer_code": "k3j9dm2p1q",
+                         *         "items": [
+                         *           {
+                         *             "code": "aB3dE6gH9jK2",
+                         *             "created_at": "2026-11-05T10:00:00.000Z",
+                         *             "used_at": null
+                         *           },
+                         *           {
+                         *             "code": "Zx8cV7bN6mQ1",
+                         *             "created_at": "2026-11-04T09:30:00.000Z",
+                         *             "used_at": "2026-11-04T12:00:00.000Z"
+                         *           }
+                         *         ]
+                         *       }
+                         *     } */
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["ReferralInvites"];
+                        };
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Issue an invite
+         * @description Issues one invite to the tenant's invite-only tariff against the user's quota. There is no request body.
+         *     The invite never expires and is used once, by whoever registers with it. That user gets the invite-only tariff and, when the link carries `referrer_code` too, becomes a customer of that agent.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The invite was issued. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        /** @example {
+                         *       "success": true,
+                         *       "data": {
+                         *         "code": "aB3dE6gH9jK2",
+                         *         "referrer_code": "k3j9dm2p1q"
+                         *       }
+                         *     } */
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["ReferralIssuedInvite"];
+                        };
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The invite was not issued:
+                 *     - `REFERRAL_INVITE_LIMIT_REACHED` — the user has issued every invite their quota allows;
+                 *     - `REFERRAL_INVITE_TARIFF_MISSING` — the tenant has no invite-only tariff;
+                 *     - `OPERATION_IN_PROGRESS` — another request of the same user is still running; retry shortly.
+                 *      */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        /** @example {
+                         *       "success": false,
+                         *       "error": {
+                         *         "code": "REFERRAL_INVITE_LIMIT_REACHED",
+                         *         "message": "You have issued every invite available to you"
+                         *       }
+                         *     } */
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The request could not be put in line with the user's other requests right now (`SERVICE_UNAVAILABLE`); nothing was issued, retry later. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/referrals/clients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The agent's customers
+         * @description The customers linked to the agent, newest link first — anonymised. A customer is given by an alias, the date they were linked and the plan they are on now; never by name, email, phone, id or the name of their tariff.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    offset?: number;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description A page of customers. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["ReferralClient"][];
+                            pagination: components["schemas"]["PaginationResponse"];
+                        };
+                    };
+                };
+                /** @description Invalid query (`VALIDATION_ERROR`). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/referrals/months": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The agent's history, month by month
+         * @description The agent's UTC months, newest first: every month the program keeps for them, and the current month — always the first one, with preliminary sums and no report.
+         *     A closed month keeps the turnover and the level it closed with. Its sums follow its rows, so a deduction or an accrual lost for the lack of the KYC mark changes the sums, never the turnover or the level.
+         *
+         */
+        get: {
+            parameters: {
+                query?: {
+                    offset?: number;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description A page of months. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["ReferralMonth"][];
+                            pagination: components["schemas"]["PaginationResponse"];
+                        };
+                    };
+                };
+                /** @description Invalid query (`VALIDATION_ERROR`). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/referrals/months/{period}/report/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept the report of a month
+         * @description The agent agrees with the report of a closed month. There is no request body. A payout does not wait for this answer.
+         *     Safe to repeat: a report accepted already — by the agent, or by silence once `auto_accept_at` has passed — answers with the same `source` and the same `accepted_at`.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description UTC month `YYYY-MM`. */
+                    period: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The report stands accepted. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                /**
+                                 * @example ACCEPTED
+                                 * @enum {string}
+                                 */
+                                status: "ACCEPTED";
+                                /**
+                                 * @description Who accepted the report — the agent, or nobody in time.
+                                 * @example AGENT
+                                 * @enum {string}
+                                 */
+                                source: "AGENT" | "SILENCE";
+                                /**
+                                 * Format: date-time
+                                 * @example 2026-11-03T10:00:00.000Z
+                                 */
+                                accepted_at: string;
+                            };
+                        };
+                    };
+                };
+                /** @description `period` is not a month written `YYYY-MM` (`VALIDATION_ERROR`). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The month has no report — the agent has no such month, it is still open, or it earned nothing (`REFERRAL_REPORT_NOT_FOUND`). */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The report was answered the other way — objected to by the agent, with the objection still open or closed by support (`REFERRAL_REPORT_ALREADY_CLOSED`). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/referrals/months/{period}/report/objection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Object to the report of a month
+         * @description The agent disagrees with the report of a closed month and says why; support closes the objection. A report takes one answer, so it must still be waiting for it. A payout does not wait for the objection.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description UTC month `YYYY-MM`. */
+                    period: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /**
+                         * @description What is wrong with the report. Surrounding spaces are not counted or kept.
+                         * @example The October turnover looks lower than it should be
+                         */
+                        text: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description The objection is recorded. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                /**
+                                 * @example OBJECTED
+                                 * @enum {string}
+                                 */
+                                status: "OBJECTED";
+                            };
+                        };
+                    };
+                };
+                /** @description `text` is missing, empty once trimmed, or longer than 2000 characters (`INVALID_REQUEST`); `text` is not a string, or `period` is not a month written `YYYY-MM` (`VALIDATION_ERROR`). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The month has no report — the agent has no such month, it is still open, or it earned nothing (`REFERRAL_REPORT_NOT_FOUND`). */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The report has been answered already — accepted, by the agent or by silence, or objected to (`REFERRAL_REPORT_ALREADY_CLOSED`). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/referrals/offer/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept the referral offer
+         * @description Records that the user accepted the offer of the referral program. The offer is what makes a user an agent: rewards are paid out only to an agent, and only an agent's invite quota grows. There is no request body.
+         *     Safe to repeat: the first acceptance stands, and every later call answers with the same date.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description When the offer was accepted. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        /** @example {
+                         *       "success": true,
+                         *       "data": {
+                         *         "offer_accepted_at": "2026-11-03T10:00:00.000Z"
+                         *       }
+                         *     } */
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["ReferralOfferAcceptance"];
+                        };
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/referrals/pro/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The mentor's places and how the current month stands
+         * @description The subagent places of the mentor, what the current month would give them, and whether the activity condition holds right now.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The summary. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["ReferralProSummary"];
+                        };
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`), or the second level is not open to the user (`REFERRAL_PRO_ACCESS_REQUIRED`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/referrals/pro/subagents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Those who registered by the mentor's links
+         * @description One row per user who registered by a recruiting link of the mentor, newest first. Without `period` the current month is served.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description UTC month `YYYY-MM`; defaults to the current one. */
+                    period?: string;
+                    offset?: number;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description A page of subagents; `meta.period` names the month served. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["ReferralSubagent"][];
+                            pagination?: components["schemas"]["PaginationResponse"];
+                            meta?: {
+                                /** @example 2026-10 */
+                                period?: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid query (`VALIDATION_ERROR`). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`), or the second level is not open to the user (`REFERRAL_PRO_ACCESS_REQUIRED`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/referrals/pro/rewards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The mentor's second-level rows of a month
+         * @description The mentor's share of subagents' rewards in a month, row by row, newest first; a reversal is negative. These rows appear when the month closes, so the current month is empty. Canceled rows and rows that wait for a support decision are not listed. Without `period` the current month is served.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    /** @description UTC month `YYYY-MM`; defaults to the current one. */
+                    period?: string;
+                    offset?: number;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description A page of rows; `meta.period` names the month served. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["ReferralOverrideReward"][];
+                            pagination?: components["schemas"]["PaginationResponse"];
+                            meta?: {
+                                /** @example 2026-10 */
+                                period?: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Invalid query (`VALIDATION_ERROR`). */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`), or the second level is not open to the user (`REFERRAL_PRO_ACCESS_REQUIRED`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/referrals/pro/links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The mentor's recruiting links and places
+         * @description How many places for subagents the mentor has and how many are taken, and the links they created — the open ones and those somebody registered by, newest first; a revoked link is not listed. A link is a place of its own and takes nothing from the invite quota of `GET /frontend/referrals/invites`, which does not list it.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The places and the links. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        /** @example {
+                         *       "success": true,
+                         *       "data": {
+                         *         "limit": 20,
+                         *         "taken": 6,
+                         *         "items": [
+                         *           {
+                         *             "code": "xY7kM2pQ9rT4",
+                         *             "created_at": "2026-11-05T10:00:00.000Z",
+                         *             "used_at": null
+                         *           }
+                         *         ]
+                         *       }
+                         *     } */
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["ReferralSubagentLinks"];
+                        };
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`), or the second level is not open to the user (`REFERRAL_PRO_ACCESS_REQUIRED`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Create a recruiting link
+         * @description Takes one place of the mentor for a link that never expires and is used once. Whoever registers by it gets the tenant's default tariff and waits for an operator's decision. There is no request body.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The link was created. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        /** @example {
+                         *       "success": true,
+                         *       "data": {
+                         *         "code": "xY7kM2pQ9rT4"
+                         *       }
+                         *     } */
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: components["schemas"]["ReferralIssuedSubagentLink"];
+                        };
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`), or the second level is not open to the user (`REFERRAL_PRO_ACCESS_REQUIRED`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The link was not created:
+                 *     - `REFERRAL_SUBAGENT_LIMIT_REACHED` — every place of the mentor is taken;
+                 *     - `OPERATION_IN_PROGRESS` — another request of the same user is still running; retry shortly.
+                 *      */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        /** @example {
+                         *       "success": false,
+                         *       "error": {
+                         *         "code": "REFERRAL_SUBAGENT_LIMIT_REACHED",
+                         *         "message": "You have no free places for subagents"
+                         *       }
+                         *     } */
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The request could not be put in line with the user's other requests right now (`SERVICE_UNAVAILABLE`); nothing was created, retry later. */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/referrals/pro/links/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Revoke a recruiting link
+         * @description Ends a link nobody registered by and frees its place. A link somebody already registered by stays — `409 REFERRAL_SUBAGENT_LINK_USED`.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description The code of the link. */
+                    code: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The link is revoked. */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["UnauthorizedError"];
+                /** @description The referral program is not enabled for the tenant (`REFERRAL_PROGRAM_NOT_ENABLED`), or the second level is not open to the user (`REFERRAL_PRO_ACCESS_REQUIRED`). */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description The mentor has no such link — it never existed, is somebody else's, or is revoked already (`REFERRAL_SUBAGENT_LINK_NOT_FOUND`). */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Somebody has registered by the link (`REFERRAL_SUBAGENT_LINK_USED`). */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -14975,6 +16226,7 @@ export interface paths {
         /**
          * Export transactions
          * @description Downloads wallet transactions in CSV format.
+         *     One row per balance movement; its `Amount`, `Balance Before` and `Balance After` are in the row's `Currency` (the last three columns).
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -16738,7 +17990,7 @@ export interface paths {
         };
         /**
          * The form of an entity for a set of purposes
-         * @description Built on every call from the tenant's requirement profiles and the entity. Without `rails` and `programs` it is the base form. With one rail it is that rail's form: the base profile, the tenant's rail profile and the vendor's minimum merged: a field required by any of them is required, `review` wins over `auto`, and a field is shown when any of them shows it (one asking it without a condition — the vendor's minimum always — shows it always); profiles whose conditions read each other in a circle answer `409 KYC_FORM_CONDITIONS_CYCLE`. Sections are the groups to draw, `visible_when` the show logic, `required_by` the purposes a field is required for, the locks (`saved`, `from_document`, `pending`, `status`) what the client cannot change, `schema_version` what to echo back. Fields that come from the identity document (names, date of birth, citizenship, the document number and dates) are left out until the document is verified; the document itself is asked: its type `gov_id_type` (`PASSPORT`, `ID_CARD`, `RESIDENCE_PERMIT`, `DRIVERS` — the codes `…/owners/{owner_id}/document` takes as `type` too), issuing country `gov_id_country` and photos `gov_id_front` and `gov_id_back` (shown unless a passport) — saved, and no longer asked, once it is verified; `state: complete` on a rail form means nothing is left to ask and the client goes straight to the rail's terms. With one program and `wallet_id` it is the form before a card: the level the program's vendor demands (`minimal`: name, email, phone; `basic`: plus date of birth, citizenship, gender, identity document type and number, residential address; `declared` / `full`: plus the identity document and the face, verified after the form) merged with the tenant's binding for the program, without the base form; what the personal entity already holds is locked `saved`, so `state: complete` means the card can be asked for at once. Several rails and programs at once is the multi form: the base form, every rail and every program merged, each field once with `required_by` naming the purposes. A form whose last submission is `returned` comes back with that submission's answers in `values` — its files too, as files of the draft (`saved: false`, removable by `DELETE …/forms/uploads/{upload_id}`) — until the client saves, uploads or sends again. On a personal entity's form (base, rail, card or multi) that is editable and shows an open `email` nobody has given yet — not saved, not pending, not in the draft — `values.email` carries the email of the entity owner's account as a suggestion: it is not saved until a draft or a submission sends it, the field stays unlocked, `missing_required` and `state` still count it as empty, and a saved, pending or draft value wins over it; a business form gets none, and only the owner of the entity gets it (a wallet admin reading the form does not). Access: the owner of the entity, or an owner / admin of a wallet it is linked to.
+         * @description Built on every call from the tenant's requirement profiles and the entity. Without `rails` and `programs` it is the base form. With one rail it is that rail's form: the base profile, the tenant's rail profile and the vendor's minimum merged: a field required by any of them is required, `review` wins over `auto`, and a field is shown when any of them shows it (one asking it without a condition — the vendor's minimum always — shows it always); profiles whose conditions read each other in a circle answer `409 KYC_FORM_CONDITIONS_CYCLE`. Sections are the groups to draw, `visible_when` the show logic, `required_by` the purposes a field is required for, the locks (`saved`, `from_document`, `pending`, `status`) what the client cannot change, `schema_version` what to echo back. Fields that come from the identity document (names, date of birth, citizenship, the document number and dates) are left out until the document is verified; the document itself is asked: its type `gov_id_type` (`PASSPORT`, `ID_CARD`, `RESIDENCE_PERMIT`, `DRIVERS` — the codes `…/owners/{owner_id}/document` takes as `type` too), issuing country `gov_id_country` and photos `gov_id_front` and `gov_id_back` (shown unless a passport) — saved, and no longer asked, once it is verified; `state: complete` on a rail form means nothing is left to ask and the client goes straight to the rail's terms. With one program and `wallet_id` it is the form before a card: the level the program's vendor demands (`minimal`: name, email, phone; `basic`: plus date of birth, citizenship, gender, identity document type and number, residential address; `declared` / `full`: plus the identity document and the face, verified after the form) merged with the tenant's binding for the program, without the base form; what the personal entity already holds is locked `saved`, so `state: complete` means the card can be asked for at once. Several rails and programs at once is the multi form: the base form, every rail and every program merged, each field once with `required_by` naming the purposes. A form whose last submission is `returned` comes back with that submission's answers in `values` — its files too, as files of the draft (`saved: false`, removable by `DELETE …/forms/uploads/{upload_id}`) — until the client saves, uploads or sends again. On a personal entity's form (base, rail, card or multi) that is editable and shows an open `email` nobody has given yet — not saved, not pending, not in the draft — `values.email` carries the email of the entity owner's account as a suggestion: it is not saved until a draft or a submission sends it, the field stays unlocked, `missing_required` and `state` still count it as empty, and a saved, pending or draft value wins over it; a business form gets none, and only the owner of the entity gets it (a wallet admin reading the form does not). The business form has no field for the filler's role in the company (`applicant_role` was removed): the filler's roles are the `roles` of their own item in `beneficial_owners` (`is_applicant: true`), and a draft or a returned submission that still holds an `applicant_role` opens as usual — the value is not returned and not counted. Access: the owner of the entity, or an owner / admin of a wallet it is linked to.
          */
         get: {
             parameters: {
@@ -16814,7 +18066,7 @@ export interface paths {
         get?: never;
         /**
          * Save the draft of a form
-         * @description The form is the one `rails` and `programs` name, as for `GET …/forms`. Replaces the draft as a whole with the given values of open fields; the files of the draft stay, and so do those of a `returned` last submission (they carry over into the draft, those removed excepted). Types are checked, rules and requiredness are not — except that an option chosen together with another one while it excludes the others (`options[].exclusive` of a `multi_enum` field), owner shares over 100% in total, a value whose condition reads an empty required source, and a change to a saved owner the form does not allow (left out of the list, its value cleared, or changed outside a `returned` form) are refused here too, as on the submission: the draft is not saved. The rules of `validation` (`max_items`, `min_age`, patterns such as Latin letters only) and the owners' roles (`owner_role_missing`, `company_owner_role`) wait for the submission; a PEP detail sent with a value while `pep_declaration` is `false` is refused here as there, with `FORM_FIELD_NOT_ALLOWED`. Nothing is written to the KYC entity. The first draft of a business form moves the application to `PENDING`. One change to a form at a time — a draft save, an upload, a removal or the submission: another one sent meanwhile, from any tab or member, answers `409 OPERATION_IN_PROGRESS` and changes nothing; send the changes of one form one after another. The entity's owner, or an owner or admin of a linked wallet.
+         * @description The form is the one `rails` and `programs` name, as for `GET …/forms`. Replaces the draft as a whole with the given values of open fields; the files of the draft stay, and so do those of a `returned` last submission (they carry over into the draft, those removed excepted). Types are checked, rules and requiredness are not — except that an option chosen together with another one while it excludes the others (`options[].exclusive` of a `multi_enum` field), owner shares over 100% in total, a value whose condition reads an empty required source, a company marked as the filler (`owner_type: business` with `is_applicant: true`, `company_cannot_be_filler`) and a change to a saved owner the form does not allow (left out of the list, its value cleared, or changed outside a `returned` form) are refused here too, as on the submission: the draft is not saved. The rules of `validation` (`max_items`, `min_age`, patterns such as Latin letters only), the filler's own item in the list (`filler_owner_missing`) and the owners' roles (`owner_role_missing`, `company_owner_role`) wait for the submission; a PEP detail sent with a value while `pep_declaration` is `false` is refused here as there, with `FORM_FIELD_NOT_ALLOWED`. Nothing is written to the KYC entity. The first draft of a business form moves the application to `PENDING`. One change to a form at a time — a draft save, an upload, a removal or the submission: another one sent meanwhile, from any tab or member, answers `409 OPERATION_IN_PROGRESS` and changes nothing; send the changes of one form one after another. The entity's owner, or an owner or admin of a linked wallet.
          */
         put: {
             parameters: {
@@ -17090,7 +18342,7 @@ export interface paths {
         put?: never;
         /**
          * Send a form
-         * @description The form is the one `rails` and `programs` name. The full check of every open field (all errors in one `VALIDATION_ERROR`, an option chosen together with another one that `options[].exclusive` says it excludes included; the rules of `validation` — `max_items`, `min_age`, `max` (a `formation_date` or a `gov_id_issuance_date` later than today in UTC), Latin letters only — and, on a form that asks `beneficial_owners`, at least one person with the role `UBO` and one with `DIRECTOR` (the filler counts by their role), a company only as `SHAREHOLDER`), then a submission: `awaiting_verification` when the identity document and face are still needed, `applied` when every profile of the form writes the answers into the KYC entity at once, `in_review` when compliance decides (any profile of the form in review mode). Answers `200` with the form in its new state. One change to a form at a time: a submission sent while a draft save, an upload, a removal or another submission of the form runs answers `409 OPERATION_IN_PROGRESS` and changes nothing; send it again once the others answer. A rail form does not change the application status; once its submission is approved, the rail is submitted through the wallet's existing `POST /frontend/wallets/{wallet_id}/kyc-rails/{rail_id}`. A card form is `auto` unless a profile of it says otherwise and never changes the application status; once applied, the cardholder is created through `POST /frontend/issuing/cardholders` with `user_data_id`. A multi form moves the application like the base form it includes; once applied, every rail and program of the set is satisfied from the shared data. A `returned` submission sent again keeps its files that were not removed. A saved beneficial owner (an item of `beneficial_owners` with an `id`) is the entity's: a list without one, a changed saved value outside a `returned` form, and a saved value sent empty are refused with `VALIDATION_ERROR`, as in the draft. The entity's owner, or an owner or admin of a linked wallet.
+         * @description The form is the one `rails` and `programs` name. The full check of every open field (all errors in one `VALIDATION_ERROR`, an option chosen together with another one that `options[].exclusive` says it excludes included; the rules of `validation` — `max_items`, `min_age`, `max` (a `formation_date` or a `gov_id_issuance_date` later than today in UTC), Latin letters only — and, on a form that asks `beneficial_owners`, the filler's own item in the list, at least one person with the role `UBO` and one with `DIRECTOR` (the filler counts by the `roles` of their own item), a company only as `SHAREHOLDER` and never as the filler), then a submission: `awaiting_verification` when the identity document and face are still needed, `applied` when every profile of the form writes the answers into the KYC entity at once, `in_review` when compliance decides (any profile of the form in review mode). Answers `200` with the form in its new state. One change to a form at a time: a submission sent while a draft save, an upload, a removal or another submission of the form runs answers `409 OPERATION_IN_PROGRESS` and changes nothing; send it again once the others answer. A rail form does not change the application status; once its submission is approved, the rail is submitted through the wallet's existing `POST /frontend/wallets/{wallet_id}/kyc-rails/{rail_id}`. A card form is `auto` unless a profile of it says otherwise and never changes the application status; once applied, the cardholder is created through `POST /frontend/issuing/cardholders` with `user_data_id`. A multi form moves the application like the base form it includes; once applied, every rail and program of the set is satisfied from the shared data. A `returned` submission sent again keeps its files that were not removed. A saved beneficial owner (an item of `beneficial_owners` with an `id`) is the entity's: a list without one, a changed saved value outside a `returned` form, and a saved value sent empty are refused with `VALIDATION_ERROR`, as in the draft. `POST …/forms/validate` runs the same check on the same body without sending it. The entity's owner, or an owner or admin of a linked wallet.
          */
         post: {
             parameters: {
@@ -17141,7 +18393,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description `FORM_LOCKED` — the form is read-only by the application status, or its last submission waits on the verification or the review; `FORM_OUTDATED` — `schema_version` is not the one the form has now, reload it (`GET …/forms`) and send again; `OPERATION_IN_PROGRESS` — a submission of this form, or another change to it (a draft save, an upload, a removal), is running; `KYC_FORM_CONDITIONS_CYCLE` — the tenant's form settings show fields on conditions that read each other in a circle */
+                /** @description `FORM_LOCKED` — the form is read-only by the application status, or its last submission waits on the verification or the review; `FORM_OUTDATED` — `schema_version` is not the one the form has now, reload it (`GET …/forms`) and send again; `OPERATION_IN_PROGRESS` — a submission of this form, or another change to it (a draft save, an upload, a removal), is running; `KYC_BASE_FORM_NOT_SENT` — a rail form sent while the application is `UNVERIFIED` or `PENDING` and no base or multi form of it is sent: the base form (or the multi form) opens the application, a rail form only completes it; `KYC_FORM_CONDITIONS_CYCLE` — the tenant's form settings show fields on conditions that read each other in a circle */
                 409: {
                     headers: {
                         [name: string]: unknown;
@@ -17151,6 +18403,95 @@ export interface paths {
                     };
                 };
                 503: components["responses"]["KycFormsLockUnavailable"];
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/kyc/entities/{entity_id}/forms/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check a form as it would be sent
+         * @description The form is the one `rails` and `programs` name. Takes the body of `POST …/forms/submit` and runs every check of the submission on it — the open fields, the rules of `validation`, on a business form the filler's own item and the roles of the owners, and the owner list through the same planner that writes the KYC tables — and sends nothing: no submission, no draft, no KYC write, no status, no event, no identity provider. The checks are of the body sent, with the files of the draft; the draft itself is not read for values and not saved: send the values the client holds. Answers `200 { valid: true }` when the submission would be taken, the errors of the submission otherwise — `FORM_FIELD_NOT_ALLOWED` (a key the form does not accept) on its own, before the field errors, as on the submission. Takes no lock: it runs beside a draft save or an upload of the same form and blocks none of them, so a draft saved meanwhile is not part of its answer. The entity's owner, or an owner or admin of a linked wallet.
+         */
+        post: {
+            parameters: {
+                query?: {
+                    /** @description `kyc_rails.id` of the tenant the form is for, as a native query array: `rails[]=a&rails[]=b` or `rails=a&rails=b` (a comma-separated string is not a list). Empty with `programs`: the base form. One rail alone: that rail's form. Several, or together with `programs`: the multi form over the whole set (`scope: multi`), whatever the order of the ids. A rail of another client type than the entity's (and not universal), or one the tenant does not have, is `404 NOT_FOUND`; a value that is not a uuid is `400 VALIDATION_ERROR`. */
+                    rails?: components["parameters"]["KycFormsRails"];
+                    /** @description `issuing_programs.id` of the tenant the form is for, as a native query array: `programs[]=a&programs[]=b` or `programs=a&programs=b`. One program alone: the form before a card of that program (`scope: card`). Together with `rails` or several at once: the multi form. Only a personal entity has card forms (`400 FORM_TARGET_UNSUPPORTED` on a business entity); `wallet_id` is required whenever programs are named. A program the tenant does not have is `404 NOT_FOUND`. */
+                    programs?: components["parameters"]["KycFormsPrograms"];
+                    /** @description The wallet the card is for — required when `programs` are named (`400 INVALID_REQUEST` without it), ignored otherwise. The entity's owner must be an active member of it (any role; the cardholder is theirs), and so must the caller when it is someone else, else `403 ACCESS_DENIED`. The form is built for this wallet, and the draft and the submission carry it. Not a uuid: `400 VALIDATION_ERROR`. */
+                    wallet_id?: components["parameters"]["KycFormsWalletId"];
+                    /** @description Language of the texts (labels, hints, options, section titles, general messages); takes precedence over `Accept-Language`. A language outside the tenant's list is served in English. */
+                    locale?: components["parameters"]["KycFormsLocale"];
+                };
+                header?: {
+                    /** @description Language of the texts when `locale` is not given. A language outside the tenant's list is served in English. */
+                    "Accept-Language"?: components["parameters"]["KycFormsAcceptLanguage"];
+                };
+                path: {
+                    /** @description `kyc_entity.id` of the caller, or of an entity linked to a wallet the caller owns or administers */
+                    entity_id: components["parameters"]["KycFormsEntityId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["KycFormsAnswersRequest"];
+                };
+            };
+            responses: {
+                /** @description The submission would be taken */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success: boolean;
+                            data: {
+                                /**
+                                 * @example true
+                                 * @enum {boolean}
+                                 */
+                                valid: true;
+                            };
+                        };
+                    };
+                };
+                400: components["responses"]["KycFormsFieldErrors"];
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["KycFormsAccessDenied"];
+                /** @description `NOT_FOUND` — the entity does not exist or belongs to another tenant, or a rail / program of the query does not exist for the tenant */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description `FORM_LOCKED` — the form is read-only by the application status, or its last submission waits on the verification or the review; `FORM_OUTDATED` — `schema_version` is not the one the form has now, reload it (`GET …/forms`) and check again; `KYC_BASE_FORM_NOT_SENT` — a rail form while the application is `UNVERIFIED` or `PENDING` and no base or multi form of it is sent; `KYC_FORM_CONDITIONS_CYCLE` — the tenant's form settings show fields on conditions that read each other in a circle */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["KycFormsErrorResponse"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -17379,7 +18720,7 @@ export interface paths {
                 path: {
                     /** @description `kyc_entity.id` of the caller, or of an entity linked to a wallet the caller owns or administers */
                     entity_id: components["parameters"]["KycFormsEntityId"];
-                    /** @description The `id` of a beneficial owner of the business entity — an item of `beneficial_owners` as `GET …/forms` lists it after the base form was sent (every saved item carries its `id`; `verification.owners[].id` of the overview is the same id). A person, not a company; not the owner the filler marked as themselves (`is_applicant`). */
+                    /** @description The `id` of a beneficial owner of the business entity — an item of `beneficial_owners` as `GET …/forms` lists it after the base form was sent (every saved item carries its `id`; `verification.owners[].id` of the overview is the same id). A person, not a company; not the filler's own row (`is_applicant` in the form and in the overview). */
                     owner_id: components["parameters"]["KycFormsOwnerId"];
                 };
                 cookie?: never;
@@ -17448,7 +18789,7 @@ export interface paths {
                 path: {
                     /** @description `kyc_entity.id` of the caller, or of an entity linked to a wallet the caller owns or administers */
                     entity_id: components["parameters"]["KycFormsEntityId"];
-                    /** @description The `id` of a beneficial owner of the business entity — an item of `beneficial_owners` as `GET …/forms` lists it after the base form was sent (every saved item carries its `id`; `verification.owners[].id` of the overview is the same id). A person, not a company; not the owner the filler marked as themselves (`is_applicant`). */
+                    /** @description The `id` of a beneficial owner of the business entity — an item of `beneficial_owners` as `GET …/forms` lists it after the base form was sent (every saved item carries its `id`; `verification.owners[].id` of the overview is the same id). A person, not a company; not the filler's own row (`is_applicant` in the form and in the overview). */
                     owner_id: components["parameters"]["KycFormsOwnerId"];
                 };
                 cookie?: never;
@@ -17524,7 +18865,7 @@ export interface paths {
                 path: {
                     /** @description `kyc_entity.id` of the caller, or of an entity linked to a wallet the caller owns or administers */
                     entity_id: components["parameters"]["KycFormsEntityId"];
-                    /** @description The `id` of a beneficial owner of the business entity — an item of `beneficial_owners` as `GET …/forms` lists it after the base form was sent (every saved item carries its `id`; `verification.owners[].id` of the overview is the same id). A person, not a company; not the owner the filler marked as themselves (`is_applicant`). */
+                    /** @description The `id` of a beneficial owner of the business entity — an item of `beneficial_owners` as `GET …/forms` lists it after the base form was sent (every saved item carries its `id`; `verification.owners[].id` of the overview is the same id). A person, not a company; not the filler's own row (`is_applicant` in the form and in the overview). */
                     owner_id: components["parameters"]["KycFormsOwnerId"];
                 };
                 cookie?: never;
@@ -17628,7 +18969,7 @@ export interface paths {
                 path: {
                     /** @description `kyc_entity.id` of the caller, or of an entity linked to a wallet the caller owns or administers */
                     entity_id: components["parameters"]["KycFormsEntityId"];
-                    /** @description The `id` of a beneficial owner of the business entity — an item of `beneficial_owners` as `GET …/forms` lists it after the base form was sent (every saved item carries its `id`; `verification.owners[].id` of the overview is the same id). A person, not a company; not the owner the filler marked as themselves (`is_applicant`). */
+                    /** @description The `id` of a beneficial owner of the business entity — an item of `beneficial_owners` as `GET …/forms` lists it after the base form was sent (every saved item carries its `id`; `verification.owners[].id` of the overview is the same id). A person, not a company; not the filler's own row (`is_applicant` in the form and in the overview). */
                     owner_id: components["parameters"]["KycFormsOwnerId"];
                 };
                 cookie?: never;
@@ -19950,7 +21291,8 @@ export interface components {
         };
         /** @description Unified currency record. `is_crypto: true` identifies a blockchain asset, `false` a fiat one. The joined `meta` JSONB blob carries currency-specific details (e.g. `chain_id`/contract for crypto, ISO code/country for fiat). */
         Currency: {
-            id?: number;
+            /** Format: uuid */
+            id?: string;
             /** Format: uuid */
             uuid: string;
             icon?: string | null;
@@ -19978,7 +21320,11 @@ export interface components {
             /** @description Percent rate behind `percent_commission`, in whole percent (1 = 1%). */
             base_markup?: number;
             network_fee?: number;
-            network_fee_currency?: string;
+            /**
+             * Format: uuid
+             * @description Currency `uuid` of `network_fee`. `null` on a row without a network fee, e.g. the fee of an AML screening.
+             */
+            network_fee_currency?: string | null;
             exchange_rate?: number;
             from_address?: string;
             to_address?: string;
@@ -20223,6 +21569,25 @@ export interface components {
             /** Format: uuid */
             currency_id?: string;
             amount?: number;
+        };
+        /** @description A recipient row that cannot be paid */
+        MassPayoutItemProblem: {
+            /** Format: uuid */
+            item_id?: string;
+            position?: number;
+            /** Format: uuid */
+            destination_id?: string;
+            /** @description Why the row cannot be paid (text for people) */
+            error?: string;
+            /**
+             * @description Machine-readable reason, present only when the client can act on it. Today:
+             *     `WALLET_RAIL_NOT_ONBOARDED` (the batch wallet has no row on the tenant's crypto
+             *     withdrawal rail) or `WALLET_RAIL_NOT_APPROVED` (the rail is there, none is
+             *     `APPROVED`) on every otherwise valid crypto row. Other problems carry only `error`.
+             *
+             * @example WALLET_RAIL_NOT_APPROVED
+             */
+            code?: string;
         };
         MassPayout: {
             /** Format: uuid */
@@ -20493,11 +21858,6 @@ export interface components {
              * @example 186
              */
             earned_usd?: number;
-            /**
-             * @description Earned in closed months and waiting for a payout.
-             * @example 75
-             */
-            pending_usd?: number;
             /** @example 980 */
             paid_total_usd?: number;
             /**
@@ -20505,30 +21865,125 @@ export interface components {
              * @description When the first payout was made.
              */
             paid_since?: string | null;
-            /** @description Whether the tenant's default tariff runs the program. When false there is no ladder — `level` is null, `levels` and `terms` are empty — while the money fields are still real. */
+            /** @description Whether the tenant's default tariff runs the program. When false there is no ladder — `status` and `level` are null, `levels` and `terms` are empty — while the money fields are still real. */
             participating?: boolean;
+            /** @description The status the current month runs on. It is decided when the previous month closes, by the average turnover of the last three closed months, and holds for the whole month. A user the program keeps no month for yet is on the first level, measured by nothing. */
+            status?: {
+                /** @example 2 */
+                no?: number;
+                /** @example Silver */
+                name?: string;
+                /**
+                 * @description What put the month on this level — `AVERAGE` when the average turnover itself gives it (locked or not), `LOCK` when only a lock still holds it, `PASSIVE` in a passive month.
+                 * @example LOCK
+                 * @enum {string}
+                 */
+                source?: "AVERAGE" | "LOCK" | "PASSIVE";
+                /**
+                 * @description The average turnover of the closed months the status was measured by.
+                 * @example 180000
+                 */
+                average_turnover_usd?: number;
+                /**
+                 * Format: date-time
+                 * @description The first instant of the month the locked level was reached for; null when the status is not locked.
+                 * @example 2026-11-01T00:00:00.000Z
+                 */
+                achieved_at?: string | null;
+                /**
+                 * Format: date-time
+                 * @description Until when the status does not fall below this level; null when it is not locked.
+                 * @example 2027-11-01T00:00:00.000Z
+                 */
+                locked_until?: string | null;
+                /**
+                 * @description This month's turnover earns the passive rate of a tariff, whatever the level. Opening bonuses are not affected.
+                 * @example false
+                 */
+                is_passive?: boolean;
+            } | null;
+            /** @description The level the month runs on now — the higher of `status` and the level this month's turnover has reached. A threshold is inclusive. */
             level?: {
                 /** @example 2 */
                 no?: number;
-                /** @example Bronze */
+                /** @example Silver */
                 name?: string;
                 /**
-                 * @description This month's turnover the level is measured by.
-                 * @example 186000
+                 * @description This month's turnover after deductions, never below 0.
+                 * @example 120000
                  */
                 turnover_usd?: number;
                 /** @description The next level; null on the top one. */
                 next?: {
                     /** @example 3 */
                     no?: number;
-                    /** @example Silver */
+                    /** @example Gold */
                     name?: string;
-                    /** @example 300000 */
+                    /** @example 1000000 */
                     min_turnover_usd?: number;
-                    /** @example 114000 */
+                    /**
+                     * @description What `min_turnover_usd` still lacks of `turnover_usd`, never below 0.
+                     * @example 880000
+                     */
                     remaining_usd?: number;
                 } | null;
             } | null;
+            /** @description What the agent has earned and has not been paid yet, over all months. Rows that wait for a support decision are not counted. */
+            balance?: {
+                /**
+                 * @description Everything unpaid.
+                 * @example 1500
+                 */
+                accrued_usd?: number;
+                /**
+                 * @description The part whose hold has not ended yet.
+                 * @example 75
+                 */
+                in_hold_usd?: number;
+                /**
+                 * @description What a payout may take now — `accrued_usd` less `in_hold_usd` and less the rows that wait for a subagent to be paid or for a flag decision.
+                 * @example 1250
+                 */
+                available_usd?: number;
+            };
+            /** @description What stands between the agent and a payout. A month is paid when the offer was accepted and the KYC mark stood by the end of that month; until then the rewards accumulate. */
+            payout_conditions?: {
+                /**
+                 * Format: date-time
+                 * @description When the user accepted the offer (`POST /frontend/referrals/offer/accept`); null while they have not.
+                 * @example 2026-11-03T10:00:00.000Z
+                 */
+                offer_accepted_at?: string | null;
+                /**
+                 * @description The agent's KYC mark stands now.
+                 * @example false
+                 */
+                kyc_passed?: boolean;
+                /**
+                 * @description What is lost next for the lack of the KYC mark — the unpaid rewards of the agent's earliest month that has any. 0 with the mark, or with nothing to lose.
+                 * @example 300
+                 */
+                kyc_expiring_usd?: number;
+                /**
+                 * Format: date-time
+                 * @description The last second in which a KYC mark still saves `kyc_expiring_usd`; null when that is 0.
+                 * @example 2027-05-31T23:59:59.000Z
+                 */
+                kyc_expires_at?: string | null;
+                /**
+                 * Format: uri
+                 * @description The offer document the tenant publishes for agents — an `https://` link to show next to the offer before `POST /frontend/referrals/offer/accept`; null when the tenant has published none.
+                 * @example https://non.example/legal/agent-offer.pdf
+                 */
+                offer_url?: string | null;
+            };
+            pro?: {
+                /**
+                 * @description The second level is open to the agent — opened and not closed since.
+                 * @example false
+                 */
+                is_open?: boolean;
+            };
             /** @description This month by order type — every type the program prices (a zero line before the first order), plus any type the month earned on. */
             breakdown?: {
                 /** @example CARD_ISSUING_FEE */
@@ -20541,7 +21996,7 @@ export interface components {
                 amount_usd?: number;
                 /** @example 150 */
                 reward_usd?: number;
-                /** @description What the type pays on the agent's current level; null when the program no longer prices it. */
+                /** @description What an order of the type is priced at now — the rate of `level`, or the passive rate of the type in a passive month; null when the program no longer prices it. */
                 current_rate_percent?: number | null;
                 current_fixed_usd?: number | null;
             }[];
@@ -20571,32 +22026,161 @@ export interface components {
             kind?: "ACCRUAL" | "REVERSAL";
             /** @enum {string} */
             status?: "PENDING" | "PAID";
-            /** @example TRANSFER_CARD_SUBACCOUNT */
-            order_type?: string;
-            /** @example Top-ups */
+            /**
+             * @description What the row is paid for — `OPENING` is the bonus for a paid card of a customer, `TURNOVER` the percent of a customer's turnover, `MANUAL` a row support added by hand.
+             * @example OPENING
+             * @enum {string}
+             */
+            reward_type?: "OPENING" | "TURNOVER" | "MANUAL";
+            /**
+             * @description The type of the order the row was earned on; null on a `MANUAL` row — there is no order behind it.
+             * @example CARD_ISSUING_FEE
+             */
+            order_type?: string | null;
+            /**
+             * @description How the screens name the row.
+             * @example Card openings
+             */
             label?: string;
             /**
-             * @description The referred customer, anonymised.
+             * @description The referred customer, anonymised — on an `OPENING` row only. A `TURNOVER` or `MANUAL` row carries null, so the rows never tell what one customer turns over.
              * @example Customer 4821
              */
-            customer_alias?: string;
-            /** @example 18000 */
-            amount_usd?: number;
-            /** @example 0.7 */
+            customer_alias?: string | null;
+            /** @example 50 */
             rate_percent?: number;
             /** @example 0 */
             fixed_usd?: number;
             /**
              * @description Negative on a REVERSAL.
-             * @example 126
+             * @example 25
              */
             reward_usd?: number;
-            /** @example 2 */
-            level_no?: number;
-            /** @example Bronze */
-            level_name?: string;
+            /**
+             * @description The level the row was priced by; null on a `MANUAL` row.
+             * @example 2
+             */
+            level_no?: number | null;
+            /**
+             * @description The name of that level; null on a `MANUAL` row.
+             * @example Silver
+             */
+            level_name?: string | null;
             /** Format: date-time */
             occurred_at?: string;
+            /**
+             * Format: date-time
+             * @description Until when the row is in hold and is not paid out; null when it has no hold.
+             * @example 2026-11-19T12:00:00.000Z
+             */
+            hold_until?: string | null;
+        };
+        ReferralClient: {
+            /**
+             * @description The customer, anonymised — the same alias their opening bonuses carry in `GET /frontend/referrals/events`.
+             * @example Customer 4821
+             */
+            customer_alias: string;
+            /**
+             * Format: date-time
+             * @description When the customer was linked to the agent.
+             * @example 2026-08-14T09:00:00.000Z
+             */
+            registered_at: string;
+            /**
+             * @description The plan the customer is on now — `INVITE` is the tenant's invite-only tariff, `INDIVIDUAL` a tariff outside the price list, `BASE` anything else. The name of the tariff is never given.
+             * @example BASE
+             * @enum {string}
+             */
+            plan: "BASE" | "INVITE" | "INDIVIDUAL";
+        };
+        ReferralMonth: {
+            /**
+             * @description UTC month `YYYY-MM`.
+             * @example 2026-10
+             */
+            period: string;
+            /**
+             * @description The turnover of the month — what it closed with, which never changes afterwards, or the turnover so far (never below 0) while the month is open.
+             * @example 120000
+             */
+            turnover_usd: number;
+            /** @description The level the month went on — the one it closed on, or the one it runs on now while it is open (as `level` of the summary). Null only for an open month of a tenant whose default tariff runs no program. */
+            level: {
+                /** @example 2 */
+                no?: number;
+                /** @example Silver */
+                name?: string;
+            } | null;
+            /**
+             * @description The turnover of the month earned the passive rate.
+             * @example false
+             */
+            is_passive: boolean;
+            /**
+             * @description Bonuses for paid cards of the agent's own customers.
+             * @example 75
+             */
+            opening_bonus_usd: number;
+            /**
+             * @description The percent of the turnover of the agent's own customers.
+             * @example 1260
+             */
+            turnover_reward_usd: number;
+            /**
+             * @description The mentor's share of the subagents' rewards of the month, in one sum.
+             * @example 0
+             */
+            override_usd: number;
+            /**
+             * @description Rows support added by hand.
+             * @example 0
+             */
+            adjustment_usd: number;
+            /**
+             * @description The four sums together. Every sum is signed (reversals are in) and counts the rows that are neither canceled nor waiting for a support decision; preliminary while the month is open.
+             * @example 1335
+             */
+            total_usd: number;
+            /**
+             * @description Where the agent's payout for the month stands. `PROCESSING` — the payout is created and the money has not provably moved yet; `PAID` — paid; `ON_REVIEW` — there is no payout, the reward of this month waits for a review, and the payouts of this month and the next ones wait with it. Null when the month has no payout and is not the one on review.
+             * @example PAID
+             * @enum {string|null}
+             */
+            payout_status: "PROCESSING" | "PAID" | "ON_REVIEW" | null;
+            /** @description The report of the month; null for an open month and for a closed month that earned nothing. */
+            report: {
+                /**
+                 * @example WAITING
+                 * @enum {string}
+                 */
+                status: "WAITING" | "ACCEPTED" | "OBJECTED" | "RESOLVED";
+                /**
+                 * @description Who accepted the report — the agent, or nobody in time (`SILENCE`); null while it is not accepted.
+                 * @example null
+                 * @enum {string|null}
+                 */
+                source: "AGENT" | "SILENCE" | null;
+                /**
+                 * Format: date-time
+                 * @example null
+                 */
+                accepted_at: string | null;
+                /**
+                 * Format: date-time
+                 * @description When silence accepts a report nobody answered.
+                 * @example 2026-11-06T00:45:00.000Z
+                 */
+                auto_accept_at: string;
+            } | null;
+        };
+        ReferralOfferAcceptance: {
+            /**
+             * Format: date-time
+             * @description When the user accepted the offer — the first time they did.
+             * @example 2026-11-03T10:00:00.000Z
+             */
+            offer_accepted_at: string;
         };
         ReferralPayout: {
             /** @example 2026-08 */
@@ -20615,6 +22199,231 @@ export interface components {
             linked?: boolean;
             /** @description The report is sent to Telegram every month. Always false while not linked. */
             enabled?: boolean;
+        };
+        ReferralInvite: {
+            /**
+             * @description The invite code the registration link carries.
+             * @example aB3dE6gH9jK2
+             */
+            code: string;
+            /** Format: date-time */
+            created_at: string;
+            /**
+             * Format: date-time
+             * @description When somebody registered with the invite; null while it is unused. An unused invite never expires.
+             */
+            used_at: string | null;
+        };
+        ReferralInvites: {
+            /**
+             * @description How many invites the user may issue in total. An agent (a user who accepted the offer) starts with the tenant's base quota and gets one more for every few paid cards of their customers on the default tariff; any other user has the tenant's flat limit. The limit goes down when a customer is moved off the default tariff.
+             * @example 5
+             */
+            limit: number;
+            /**
+             * @description Invites the user has issued here, used or not. Subagent recruiting links and the invites created in the panel or by the bot are not counted.
+             * @example 2
+             */
+            issued: number;
+            /**
+             * @description What is left to issue — `limit` minus `issued`, never below 0.
+             * @example 3
+             */
+            available: number;
+            /**
+             * @description The referral code the client puts into the invite link next to the invite code. An agent's own code; for a user who has not accepted the offer — the code of the agent who referred them; null when there is no such agent (the invite still works, nobody is rewarded for it).
+             * @example k3j9dm2p1q
+             */
+            referrer_code: string | null;
+            /** @description The invites `issued` counts, newest first. */
+            items: components["schemas"]["ReferralInvite"][];
+        };
+        ReferralIssuedInvite: {
+            /**
+             * @description The new invite code.
+             * @example aB3dE6gH9jK2
+             */
+            code: string;
+            /**
+             * @description The referral code to put into the link next to it, the same one `GET /frontend/referrals/invites` returns; null when the user has no agent.
+             * @example k3j9dm2p1q
+             */
+            referrer_code: string | null;
+        };
+        ReferralSubagentLink: {
+            /**
+             * @description The code the recruiting link carries.
+             * @example xY7kM2pQ9rT4
+             */
+            code: string;
+            /** Format: date-time */
+            created_at: string;
+            /**
+             * Format: date-time
+             * @description When somebody registered by the link; null while nobody has.
+             */
+            used_at: string | null;
+        };
+        ReferralSubagentLinks: {
+            /**
+             * @description How many places for subagents the mentor has.
+             * @example 20
+             */
+            limit: number;
+            /**
+             * @description Places taken — approved subagents, those who registered and wait for a decision, and open links. A rejected subagent and a revoked link free their place.
+             * @example 6
+             */
+            taken: number;
+            /** @description The mentor's open and used links, newest first. A revoked link is not listed. */
+            items: components["schemas"]["ReferralSubagentLink"][];
+        };
+        ReferralIssuedSubagentLink: {
+            /**
+             * @description The new recruiting code. The link carries no referral code — a subagent does not become a customer of the mentor.
+             * @example xY7kM2pQ9rT4
+             */
+            code: string;
+        };
+        ReferralProSummary: {
+            /**
+             * Format: date-time
+             * @description When the second level was opened to the agent.
+             */
+            opened_at: string;
+            subagents: {
+                /**
+                 * @description How many places for subagents the mentor has.
+                 * @example 20
+                 */
+                limit: number;
+                /**
+                 * @description Subagents the operator approved.
+                 * @example 2
+                 */
+                approved: number;
+                /**
+                 * @description Those who registered by a link and wait for a decision.
+                 * @example 1
+                 */
+                pending: number;
+                /**
+                 * @description Links nobody registered by and that were not revoked.
+                 * @example 1
+                 */
+                links_open: number;
+            };
+            /** @description The current UTC month. */
+            month: {
+                /** @example 2026-11 */
+                period: string;
+                /**
+                 * @description What the rows of approved subagents would give the mentor if the month closed now and the activity condition held. Does not depend on `is_eligible` — show both.
+                 * @example 80
+                 */
+                estimated_override_usd: number;
+                /**
+                 * @description Whether the activity condition holds right now — the mentor is not passive this month and has a new paid wallet or reached `min_own_turnover_usd`.
+                 * @example true
+                 */
+                is_eligible: boolean;
+                /**
+                 * @description The mentor's own turnover in the month.
+                 * @example 60000
+                 */
+                own_turnover_usd: number;
+                /**
+                 * @description The own turnover the activity condition asks for.
+                 * @example 50000
+                 */
+                min_own_turnover_usd: number;
+                /**
+                 * @description The mentor's opening bonuses of the month.
+                 * @example 0
+                 */
+                new_paid_wallets: number;
+            };
+        };
+        /** @description Somebody who registered by a link of the mentor. The month's figures are given only for an approved subagent, null for anybody else. Nothing here tells who the subagent is, or what one customer of theirs turns over. */
+        ReferralSubagent: {
+            /**
+             * @description The subagent, anonymised. The same alias their rows carry in `GET /frontend/referrals/pro/rewards`.
+             * @example Agent 4821
+             */
+            subagent_alias: string;
+            /**
+             * Format: date-time
+             * @description When they registered by the link.
+             */
+            registered_at: string;
+            /**
+             * @description The operator's decision; `PENDING` while there is none.
+             * @example APPROVED
+             * @enum {string}
+             */
+            approval: "PENDING" | "APPROVED" | "REJECTED";
+            /** @description The level the subagent's month runs on; null for a subagent who is not approved, and when the tenant's default tariff runs no program. */
+            status: {
+                /** @example 1 */
+                no: number;
+                /** @example Bronze */
+                name: string;
+            } | null;
+            /**
+             * @description Their turnover of the month: final for a closed month, so far for an open one.
+             * @example 100000
+             */
+            turnover_usd: number | null;
+            /**
+             * @description How many customers they have now.
+             * @example 12
+             */
+            clients_count: number | null;
+            /**
+             * @description Their first-level accruals of the month that are not canceled.
+             * @example 825
+             */
+            month_reward_usd: number | null;
+            /**
+             * @description What the mentor's second-level rows from this subagent add up to in the month; 0 until the month closes.
+             * @example 82.5
+             */
+            month_override_usd: number | null;
+        };
+        ReferralOverrideReward: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "ACCRUAL" | "REVERSAL";
+            /** @enum {string} */
+            status: "PENDING" | "PAID";
+            /**
+             * @description The subagent whose row the share is of, anonymised.
+             * @example Agent 4821
+             */
+            subagent_alias: string;
+            /**
+             * @example OPENING
+             * @enum {string}
+             */
+            reward_type: "OPENING" | "TURNOVER";
+            /**
+             * @description The sum of the subagent's row the share was counted from.
+             * @example 25
+             */
+            source_reward_usd: number;
+            /**
+             * @description Negative on a REVERSAL.
+             * @example 2.5
+             */
+            reward_usd: number;
+            /** Format: date-time */
+            occurred_at: string;
+            /**
+             * Format: date-time
+             * @description Until when the row is in hold and is not paid out; null when it has no hold.
+             */
+            hold_until: string | null;
         };
         /**
          * Format: date
@@ -21017,7 +22826,7 @@ export interface components {
             saved: boolean;
         };
         /**
-         * @description One item of a `list` field (`beneficial_owners`): an object keyed by the `item.fields[].key` of the field, each value shaped by that item field's `type` (an item field never takes files). `id` is set on a row already saved in the KYC entity (for an owner, the `owner_id` of the owner routes); send it back to keep the row, leave it out for a new one. A saved row is the entity's: the client never removes it — a list (or a draft's list, an empty or `null` one included) without an `id` the form gave is refused with `VALIDATION_ERROR` on the list key, «A saved beneficial owner cannot be removed; contact support»; compliance removes one. Nor does its `owner_type` change, nor is a saved value of it cleared (sent empty: `VALIDATION_ERROR` on the item field, «A saved value cannot be cleared; correct it or contact support»; left out of the item: kept). On a `returned` form the client corrects the other values of the item fields the form asks; outside a return a changed saved value is refused (`VALIDATION_ERROR`, «A saved value cannot be changed; contact support»). Messages come in the language of the form. Do not offer to delete an item with an `id`, nor to change its type. An item with `owner_type: business` requires `corporate_name`, `corporate_country` and `corporate_registration_number` (the form marks them `required` on the item fields): without them the identity provider cannot set the company up, so the submission is refused with `VALIDATION_ERROR` on the item field. An item with `owner_type: individual` other than the filler's own requires `email` (the form marks it `required` on the item fields, whatever `invite_by_email` and the tenant's profiles say): a submission without it, a saved owner of a returned form included, is refused with `VALIDATION_ERROR` on `beneficial_owners[i].email` (required); the draft takes it empty. The filler's own item (`is_applicant: true`) has no `email` field — the email of their account is used. The email is kept either way; `invite_by_email: true` is what has the identity provider email the owner their link to it. An owner may hold several `roles`; `role` is not an item field: a new item that sends it is refused with `FORM_FIELD_NOT_ALLOWED`, an owner saved with one `role` comes with the `roles` it means. `has_control` is not an item field either (it follows from `roles` and `ubo_basis`): a new item that sends it with a value, `false` included, is refused the same way. `roles` is required (at least one of `UBO`, `SHAREHOLDER`, `DIRECTOR`, `REPRESENTATIVE`); a company owner takes only `SHAREHOLDER`. `share_proportion` (0.01 to 100) is asked of a `SHAREHOLDER` and of a `UBO`, but not of a `UBO` whose `ubo_basis` is `controls_otherwise` or `senior_managing_official`. `ubo_basis` (`owns_shares`, `controls_otherwise`, `senior_managing_official`) is asked of a `UBO` and required on a submission — not of an owner saved before it was asked. `ubo_control_details` (up to 2000 characters) is asked and required when `ubo_basis` is `controls_otherwise`. The names of a person are Latin letters only, up to 50 characters, and a date of birth typed in is of an adult (`validation.min_age`).
+         * @description One item of a `list` field (`beneficial_owners`): an object keyed by the `item.fields[].key` of the field, each value shaped by that item field's `type` (an item field never takes files). `id` is set on a row already saved in the KYC entity (for an owner, the `owner_id` of the owner routes); send it back to keep the row, leave it out for a new one. A saved row is the entity's: the client never removes it — a list (or a draft's list, an empty or `null` one included) without an `id` the form gave is refused with `VALIDATION_ERROR` on the list key, «A saved beneficial owner cannot be removed; contact support»; compliance removes one. Nor does its `owner_type` change, nor is a saved value of it cleared (sent empty: `VALIDATION_ERROR` on the item field, «A saved value cannot be cleared; correct it or contact support»; left out of the item: kept). On a `returned` form the client corrects the other values of the item fields the form asks; outside a return a changed saved value is refused (`VALIDATION_ERROR`, «A saved value cannot be changed; contact support»). Messages come in the language of the form. Do not offer to delete an item with an `id`, nor to change its type. An item with `owner_type: business` requires `corporate_name`, `corporate_country` and `corporate_registration_number` (the form marks them `required` on the item fields): without them the identity provider cannot set the company up, so the submission is refused with `VALIDATION_ERROR` on the item field. An item with `owner_type: individual` other than the filler's own requires `email` (the form marks it `required` on the item fields, whatever `invite_by_email` and the tenant's profiles say): a submission without it, a saved owner of a returned form included, is refused with `VALIDATION_ERROR` on `beneficial_owners[i].email` (required); the draft takes it empty. The filler's own item (`is_applicant: true`) has no `email` field — the email of their account is used; its `roles` are the ones the filler gives it, required as on any item. A submission needs the filler's own item in the list — `is_applicant: true`, or on a form sent again the item with the `id` of their row; without it the submission is refused with `VALIDATION_ERROR` on `beneficial_owners`. A company is not the filler: an item with `owner_type: business` and `is_applicant: true` is refused with `VALIDATION_ERROR` on `beneficial_owners[i].is_applicant`, in the draft too, and its type is never changed for it. The email is kept either way; `invite_by_email: true` is what has the identity provider email the owner their link to it. An owner may hold several `roles`; `role` is not an item field: a new item that sends it is refused with `FORM_FIELD_NOT_ALLOWED`, an owner saved with one `role` comes with the `roles` it means. `has_control` is not an item field either (it follows from `roles` and `ubo_basis`): a new item that sends it with a value, `false` included, is refused the same way. `roles` is required (at least one of `UBO`, `SHAREHOLDER`, `DIRECTOR`, `REPRESENTATIVE`); a company owner takes only `SHAREHOLDER` — the other options of `roles` carry `visible_when` on the `owner_type` of the item: offer them while the item is not a company. `share_proportion` (0.01 to 100) is asked of a `SHAREHOLDER` and of a `UBO`, but not of a `UBO` whose `ubo_basis` is `controls_otherwise` or `senior_managing_official`. `ubo_basis` (`owns_shares`, `controls_otherwise`, `senior_managing_official`) is asked of a `UBO` and required on a submission — not of an owner saved before it was asked. `ubo_control_details` (up to 2000 characters) is asked and required when `ubo_basis` is `controls_otherwise`. The names of a person are Latin letters only, up to 50 characters, and a date of birth typed in is of an adult (`validation.min_age`).
          * @example {
          *       "id": "2d7c1b9e-4f30-4a8c-9e21-7b6a5c4d3e2f",
          *       "owner_type": "individual",
@@ -21112,6 +22921,8 @@ export interface components {
                  * @example true
                  */
                 exclusive?: boolean;
+                /** @description Present only on an option offered on a condition: offer it while the condition holds on the values of the same list item, hide it otherwise. Today the roles a company cannot hold — `UBO`, `DIRECTOR`, `REPRESENTATIVE` of `beneficial_owners[].roles` — read `{ field: owner_type, op: neq, value: business }`; a company is offered `SHAREHOLDER` only. What the form offers, not what it accepts: a role the item already holds stays valid as saved. Not part of `schema_version`. */
+                visible_when?: components["schemas"]["KycFormsCondition"];
             }[];
             /** @description `file` fields only. */
             file?: {
@@ -21349,7 +23160,7 @@ export interface components {
                         role: "UBO" | "OWNER_OR_OPERATOR" | "PARTNER" | "DIRECTOR_CONTROL_PERSON_OR_LEGAL_REP" | "AGENT_OR_AUTHORISED_PERSON" | null;
                         /** @description Every role of the owner, the highest first (UBO, shareholder, director, representative) — codes of the form's `roles` field, its labels in that field's `options`. An owner saved with one `role` reads as the role it means. Empty when none. */
                         roles: ("UBO" | "SHAREHOLDER" | "DIRECTOR" | "REPRESENTATIVE")[];
-                        /** @description The filler's own row — the item the filler marked as themselves (`is_applicant` in the form), or the one CORE added for them from `applicant_role`. Draw it without the owner actions: the owner routes answer it `400 KYC_OWNER_IS_FILLER`, all but `…/authority-document`. Its `state` is the filler's own check on their personal entity — the same as `verification.applicant.state` for the owner of the business — and it never counts towards `next_step: owners`. */
+                        /** @description The filler's own row — the item the filler marked as themselves (`is_applicant` in the form), or on a form sent while it still asked the filler's role, the row CORE added for them. Draw it without the owner actions: the owner routes answer it `400 KYC_OWNER_IS_FILLER`, all but `…/authority-document`. Its `state` is the filler's own check on their personal entity — the same as `verification.applicant.state` for the owner of the business — and it never counts towards `next_step: owners`. */
                         is_applicant: boolean;
                         state: components["schemas"]["KycFormsVerificationState"];
                         /**
@@ -21677,7 +23488,7 @@ export interface components {
                 "application/json": components["schemas"]["ErrorResponse"];
             };
         };
-        /** @description `VALIDATION_ERROR` — field errors in `details.fields[key] = [message]` (on a business form the owner list the KYC tables refuse, and owner shares adding up to more than 100%, come back under `beneficial_owners`; an individual beneficial owner other than the filler without an `email` comes back under `beneficial_owners[i].email` on a submission (the draft takes it empty); a saved beneficial owner (an item with an `id`) left out of the list — an empty or `null` list included — comes back under `beneficial_owners`, a saved value of it changed outside a `returned` form, or sent empty, under `beneficial_owners[i].<field>`, and nothing is saved; a value sent for a field whose condition reads a source left empty or wrong comes back as the error of the source, e.g. `beneficial_owners[0].roles`; a `multi_enum` field with an option that excludes the others (`options[].exclusive`) chosen together with another one comes back under the field, on the draft too; on a submission only — the draft takes them: a value over the `validation` of its field comes back as the text of the rule with the bound in it — `max_items` «Choose no more than 5», `min_age` «You must be at least 18 years old», `max` «The value must be at most 2026-11-05» for a date in the future, a pattern its own message, such as «Use Latin characters only…» for the names and addresses written in Latin letters; a form that asks `beneficial_owners` without a person holding the role `UBO` or `DIRECTOR` — the filler counts by their role, a company counts for none — comes back under `beneficial_owners`, «Add at least one person with the role DIRECTOR», one text for each missing role (the code of the role); a company owner with a role other than `SHAREHOLDER` comes back under `beneficial_owners[i].roles`, «A company can only be a shareholder» — a saved company keeps its roles until they change; the texts are the `message.latin_only`, `message.max`, `message.min_age`, `message.too_many_values`, `message.owner_role_missing` and `message.company_owner_role` of the form texts, in the language of the form), or a message only for a malformed body (`schema_version` missing or longer than 64, `values` not an object) and a path id that is not a uuid; `FORM_FIELD_NOT_ALLOWED` — a key the form does not accept (unknown, locked, hidden, a file field; on a list item a key that is not an item field of the form — `role`, `has_control` — named `beneficial_owners[0].role` in `details.fields`), and, in the draft too, any PEP detail (`pep_full_name`, `pep_relationship`, `pep_country`, `pep_position`, `pep_is_current`, `pep_end_date`, `pep_related_declaration`, `pep_related_position`, `pep_related_country`) sent with a value while `pep_declaration` is `false` (a detail hidden by its condition is refused even empty, like any hidden key: leave it out), `details.fields = [key]`, the whole request refused; `FORM_TARGET_UNSUPPORTED` — a card program named on a business entity; `INVALID_REQUEST` — `wallet_id` missing for a form over card programs; `KYC_BASE_BINDING_MISSING` — the tenant has no base form for this client type; `KYC_FORMS_NOT_ENABLED` — the tenant is not on the forms flow */
+        /** @description `VALIDATION_ERROR` — field errors in `details.fields[key] = [message]` (on a business form the owner list the KYC tables refuse, and owner shares adding up to more than 100%, come back under `beneficial_owners`; an individual beneficial owner other than the filler without an `email` comes back under `beneficial_owners[i].email` on a submission (the draft takes it empty); a saved beneficial owner (an item with an `id`) left out of the list — an empty or `null` list included — comes back under `beneficial_owners`, a saved value of it changed outside a `returned` form, or sent empty, under `beneficial_owners[i].<field>`, and nothing is saved; a value sent for a field whose condition reads a source left empty or wrong comes back as the error of the source, e.g. `beneficial_owners[0].roles`; a `multi_enum` field with an option that excludes the others (`options[].exclusive`) chosen together with another one comes back under the field, on the draft too; on a submission only — the draft takes them: a value over the `validation` of its field comes back as the text of the rule with the bound in it — `max_items` «Choose no more than 5», `min_age` «You must be at least 18 years old», `max` «The value must be at most 2026-11-05» for a date in the future, a pattern its own message, such as «Use Latin characters only…» for the names and addresses written in Latin letters; a form that asks `beneficial_owners` without the filler's own item in the list (`is_applicant: true`, or the item with the `id` of their row of the form sent before) comes back under `beneficial_owners`, «Add yourself to the owners: mark your own item and give its roles»; without a person holding the role `UBO` or `DIRECTOR` — the filler counts by the `roles` of their own item, a company counts for none — under `beneficial_owners`, «Add at least one person with the role Director», one text for each missing role (the role named by its label in the `options` of `roles`, in the language of the form); a company owner with a role other than `SHAREHOLDER` comes back under `beneficial_owners[i].roles`, «A company can only be a shareholder» — a saved company keeps its roles until they change; the texts are the `message.latin_only`, `message.max`, `message.min_age`, `message.too_many_values`, `message.filler_owner_missing`, `message.owner_role_missing` and `message.company_owner_role` of the form texts, in the language of the form); in the draft too, a company marked as the filler (`owner_type: business` with `is_applicant: true`) comes back under `beneficial_owners[i].is_applicant`, «A company cannot be you: unmark this item or change its type» (`message.company_cannot_be_filler`), or a message only for a malformed body (`schema_version` missing or longer than 64, `values` not an object) and a path id that is not a uuid; `FORM_FIELD_NOT_ALLOWED` — a key the form does not accept (unknown, locked, hidden, a file field; on a list item a key that is not an item field of the form — `role`, `has_control` — named `beneficial_owners[0].role` in `details.fields`), and, in the draft too, any PEP detail (`pep_full_name`, `pep_relationship`, `pep_country`, `pep_position`, `pep_is_current`, `pep_end_date`, `pep_related_declaration`, `pep_related_position`, `pep_related_country`) sent with a value while `pep_declaration` is `false` (a detail hidden by its condition is refused even empty, like any hidden key: leave it out), `details.fields = [key]`, the whole request refused; `FORM_TARGET_UNSUPPORTED` — a card program named on a business entity; `INVALID_REQUEST` — `wallet_id` missing for a form over card programs; `KYC_BASE_BINDING_MISSING` — the tenant has no base form for this client type; `KYC_FORMS_NOT_ENABLED` — the tenant is not on the forms flow */
         KycFormsFieldErrors: {
             headers: {
                 [name: string]: unknown;
@@ -21802,7 +23613,7 @@ export interface components {
         KycFormsLocale: string;
         /** @description Language of the texts when `locale` is not given. A language outside the tenant's list is served in English. */
         KycFormsAcceptLanguage: string;
-        /** @description The `id` of a beneficial owner of the business entity — an item of `beneficial_owners` as `GET …/forms` lists it after the base form was sent (every saved item carries its `id`; `verification.owners[].id` of the overview is the same id). A person, not a company; not the owner the filler marked as themselves (`is_applicant`). */
+        /** @description The `id` of a beneficial owner of the business entity — an item of `beneficial_owners` as `GET …/forms` lists it after the base form was sent (every saved item carries its `id`; `verification.owners[].id` of the overview is the same id). A person, not a company; not the filler's own row (`is_applicant` in the form and in the overview). */
         KycFormsOwnerId: string;
     };
     requestBodies: never;

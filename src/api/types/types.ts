@@ -1143,6 +1143,7 @@ export namespace API {
       type UploadsRoot = pathsV1Frontend['/frontend/kyc/entities/{entity_id}/forms/uploads'];
       type UploadRoot = pathsV1Frontend['/frontend/kyc/entities/{entity_id}/forms/uploads/{upload_id}'];
       type SubmitRoot = pathsV1Frontend['/frontend/kyc/entities/{entity_id}/forms/submit'];
+      type ValidateRoot = pathsV1Frontend['/frontend/kyc/entities/{entity_id}/forms/validate'];
       type SessionRoot = pathsV1Frontend['/frontend/kyc/entities/{entity_id}/verification/session'];
       type OwnerLinkRoot = pathsV1Frontend['/frontend/kyc/entities/{entity_id}/verification/owners/{owner_id}/link'];
       type OwnerSessionRoot =
@@ -1266,6 +1267,13 @@ export namespace API {
             NonNullable<SubmitRoot['post']['parameters']['query']> &
             SubmitRoot['post']['requestBody']['content']['application/json'];
           export type Response = SubmitRoot['post']['responses'][200]['content']['application/json'];
+        }
+
+        export namespace Validate {
+          export type Request = ValidateRoot['post']['parameters']['path'] &
+            NonNullable<ValidateRoot['post']['parameters']['query']> &
+            ValidateRoot['post']['requestBody']['content']['application/json'];
+          export type Response = ValidateRoot['post']['responses'][200]['content']['application/json'];
         }
       }
 

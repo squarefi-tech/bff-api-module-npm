@@ -2913,6 +2913,15 @@ export interface paths {
          *     `POST /admin/orders/calc`. Omitted or equal `to_currency_id` is the
          *     plain same-asset transfer.
          *
+         *     **Crypto withdrawal rail.** When the tenant has a crypto withdrawal rail
+         *     and tenant KYC is on, the source wallet must be `APPROVED` on it;
+         *     otherwise the request is refused with `400 WALLET_RAIL_NOT_ONBOARDED`
+         *     (the wallet has no row on the rail) or `400 WALLET_RAIL_NOT_APPROVED`
+         *     (the wallet has the rail, none is approved). Without such a rail
+         *     nothing changes.
+         *
+         *     Requires the `OPERATOR` admin role.
+         *
          */
         post: {
             parameters: {
@@ -2943,7 +2952,11 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Validation error */
+                /** @description Validation error, or the wallet may not send crypto yet:
+                 *     `WALLET_RAIL_NOT_ONBOARDED` — no row on the tenant's crypto
+                 *     withdrawal rail; `WALLET_RAIL_NOT_APPROVED` — the rail is there,
+                 *     none is `APPROVED`.
+                 *      */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -3513,8 +3526,22 @@ export interface paths {
                     date_from?: string;
                     /** @description Orders created up to this date (inclusive), ISO 8601 */
                     date_to?: string;
-                    /** @description Part of the recipient's name or nickname (`meta.counterparty_account_name`,
-                     *     `meta.counterparty_account_nickname`), case-insensitive. Combines with `filters`,
+                    /** @description Lower bound, inclusive, on either side of the order: it matches when `amount_from`
+                     *     (sent) or `amount_to` (received) is in the range. A non-negative decimal; empty, absent
+                     *     or `0` means no lower bound. Anything else answers 400 `INVALID_REQUEST` with
+                     *     `details.field` = `amount_min`.
+                     *      */
+                    amount_min?: string;
+                    /** @description Upper bound, inclusive, on either side, as `amount_min`; empty or absent means no
+                     *     upper bound. An `amount_min` greater than `amount_max` answers 400 `INVALID_REQUEST`
+                     *     with `details.field` = `amount_min`.
+                     *      */
+                    amount_max?: string;
+                    /** @description Free text, case-insensitive. Finds a part of the recipient's name or nickname,
+                     *     `meta.reference`, `meta.note`, `comment`, the sender's name, an order-type word; an
+                     *     amount on either side exactly (`14 000` = `14000`); 6+ letters and digits, not a plain word (8+ if only digits), of an
+                     *     address, tx hash, or the saved counterparty's crypto address, IBAN or account
+                     *     number; an order `id` exactly. Combines with `filters`,
                      *     sorting and pagination; `pagination` counts the matches only. `*`, `%`, `"` and `\`
                      *     are ignored without splitting the word (`des%ign` finds "Design"); `_` matches itself.
                      *     Up to 100 characters: a longer value answers 400 `INVALID_REQUEST` with
@@ -3546,7 +3573,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Invalid `filters` (not a JSON array), non-uuid `mass_payout_id`, `scheduled` other than `all` / `upcoming` / `past`, a filter with an unknown field or a value of the wrong type, or `search` longer than 100 characters (`details.field` names the field) */
+                /** @description Invalid `filters` (not a JSON array), non-uuid `mass_payout_id`, `search` longer than 100 characters, or `amount_min` / `amount_max` not a non-negative number or `amount_min` above `amount_max` (`details.field` names the field) */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -3572,7 +3599,18 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Calculate order */
+        /**
+         * Calculate order
+         * @description Pre-calculates order amounts, fees and exchange rates for the wallet
+         *     without creating an order. Requires the `VIEWER` admin role.
+         *
+         *     **Crypto withdrawal rail.** For `order_type` `OMNIBUS_CRYPTO_TRANSFER` or
+         *     `SEGREGATED_CRYPTO_TRANSFER` the quote is refused with
+         *     `400 WALLET_RAIL_NOT_ONBOARDED` / `WALLET_RAIL_NOT_APPROVED` when the
+         *     tenant has a crypto withdrawal rail, tenant KYC is on and the wallet is
+         *     not `APPROVED` on it — the same check as creating the withdrawal.
+         *
+         */
         get: {
             parameters: {
                 query: {
@@ -3608,7 +3646,11 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Invalid request (e.g. unknown `order_type`, missing required parameter, exchange rate not found) */
+                /** @description Invalid request (e.g. unknown `order_type`, missing required parameter, exchange rate not found),
+                 *     or a crypto withdrawal quote for a wallet that may not send crypto yet:
+                 *     `WALLET_RAIL_NOT_ONBOARDED` (no row on the tenant's crypto withdrawal rail) or
+                 *     `WALLET_RAIL_NOT_APPROVED` (the rail is there, none is `APPROVED`)
+                 *      */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -7375,6 +7417,15 @@ export interface paths {
                         };
                     };
                 };
+                /** @description The card vendor refused the request (`CARD_VENDOR_ERROR`), e.g. the card is not active */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
@@ -8080,7 +8131,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Bad Request — amount must be a positive number */
+                /** @description Bad Request — amount must be a positive number, or insufficient funds (`INSUFFICIENT_FUNDS`) */
                 400: {
                     headers: {
                         [name: string]: unknown;

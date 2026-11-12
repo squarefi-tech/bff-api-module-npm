@@ -504,6 +504,19 @@ export const frontend = {
           `/frontend/kyc/entities/${entity_id}/forms/submit`,
           { data, params: { rails, programs, wallet_id, locale }, paramsSerializer: KYC_FORMS_ARRAY_PARAMS },
         ),
+      // The checks of `submit` on the same body, nothing sent or saved; takes no lock, so it runs beside a draft save.
+      validate: ({
+        entity_id,
+        rails,
+        programs,
+        wallet_id,
+        locale,
+        ...data
+      }: API.Frontend.KycForms.Forms.Validate.Request): Promise<API.Frontend.KycForms.Forms.Validate.Response> =>
+        apiClientV1Frontend.postRequest<API.Frontend.KycForms.Forms.Validate.Response>(
+          `/frontend/kyc/entities/${entity_id}/forms/validate`,
+          { data, params: { rails, programs, wallet_id, locale }, paramsSerializer: KYC_FORMS_ARRAY_PARAMS },
+        ),
     },
     verification: {
       // A widget token of the identity provider for the owner of the entity (the filler of a business).
