@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.112] - 2026-11-18
+
 ### Added
 
 - **`wallets.statementPdf` downloads the wallet statement PDF from the Frontend API.** It wraps `GET /frontend/wallets/{wallet_id}/statement-pdf` and takes `wallet_id` plus the query `from_date`, `to_date`, `currency_uuid` and `show_low_balance`. The types are `API.Wallets.StatementPdf` (`Request`, `Response`), derived from the Frontend spec. It goes through the bearer frontend client with its 401 refresh and resolves to a `Blob`, like `frontend.aml.screenings.report`. The PDF is the same one the legacy route builds, with branding from the wallet's tenant.
