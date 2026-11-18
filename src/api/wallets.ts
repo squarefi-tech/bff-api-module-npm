@@ -120,6 +120,15 @@ export const wallets = {
       ),
   },
 
+  statementPdf: ({
+    wallet_id,
+    ...params
+  }: API.Wallets.StatementPdf.Request): Promise<API.Wallets.StatementPdf.Response> =>
+    apiClientV1Frontend.getRequest<API.Wallets.StatementPdf.Response>(
+      `/frontend/wallets/${wallet_id}/statement-pdf`,
+      { params, responseType: 'blob' },
+    ),
+
   users: {
     lookup: (params: API.Wallets.Users.Lookup.Request): Promise<API.Wallets.Users.Lookup.Response> =>
       apiClientV1Frontend.getRequest<API.Wallets.Users.Lookup.Response>('/frontend/wallets/users/lookup', {
