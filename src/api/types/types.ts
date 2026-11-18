@@ -4495,6 +4495,7 @@ export namespace API {
     type WalletTransactionsRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/transactions'];
     type WalletTransactionByIdRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/transactions/{transaction_id}'];
     type WalletTransactionsCsvRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/transactions/csv'];
+    type WalletStatementPdfRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/statement-pdf'];
     type WalletInvitesRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/invites'];
     type WalletInviteByIdRoot = pathsV1Frontend['/frontend/wallets/{wallet_id}/invites/{invite_id}'];
     type AcceptInviteRoot = pathsV1Frontend['/frontend/wallets/accept-invite'];
@@ -4591,6 +4592,12 @@ export namespace API {
       }
     }
 
+    export namespace StatementPdf {
+      export type Request = WalletStatementPdfRoot['get']['parameters']['path'] &
+        NonNullable<WalletStatementPdfRoot['get']['parameters']['query']>;
+      export type Response = Blob;
+    }
+
     export namespace Users {
       export namespace Lookup {
         export type Request = UsersLookupRoot['get']['parameters']['query'];
@@ -4674,6 +4681,7 @@ export namespace API {
   }
 
   export namespace Statements {
+    /** @deprecated Legacy public route; use `API.Wallets.StatementPdf` with `wallets.statementPdf`. */
     export namespace Pdf {
       export type Request = {
         wallet_uuid: string;

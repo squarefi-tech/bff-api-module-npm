@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`wallets.statementPdf` downloads the wallet statement PDF from the Frontend API.** It wraps `GET /frontend/wallets/{wallet_id}/statement-pdf` and takes `wallet_id` plus the query `from_date`, `to_date`, `currency_uuid` and `show_low_balance`. The types are `API.Wallets.StatementPdf` (`Request`, `Response`), derived from the Frontend spec. It goes through the bearer frontend client with its 401 refresh and resolves to a `Blob`, like `frontend.aml.screenings.report`. The PDF is the same one the legacy route builds: branding comes from the wallet's tenant, and the route checks wallet access.
+
+### Deprecated
+
+- **`statements.pdfByWalletUuid` and `API.Statements.Pdf`.** They call the legacy `GET /wallets/transactions/{wallet_uuid}/statement-pdf`, which answers without authentication and which CORE is removing together with the rest of the legacy `/wallets` group. Move to `wallets.statementPdf`: `wallet_uuid` becomes `wallet_id`, `crypto_id` becomes `currency_uuid`, and `logo` goes away, because the backend has ignored it since the branding moved to the tenant.
+
 ## [1.36.111] - 2026-11-12
 
 ### Added
