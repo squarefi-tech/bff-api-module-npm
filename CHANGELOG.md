@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.113] - 2026-11-21
+
 ### Changed
 
 - **Frontend types regenerated from the deployed spec (`npm run update:types`, `apiV1Frontend` only).**
