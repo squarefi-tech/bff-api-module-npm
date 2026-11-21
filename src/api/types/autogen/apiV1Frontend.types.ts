@@ -3653,6 +3653,15 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Card is blocked by the platform (CARD_BLOCKED) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         options?: never;
@@ -3941,6 +3950,15 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Card is blocked by the platform (CARD_BLOCKED) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         post?: never;
@@ -3999,6 +4017,15 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Card is blocked by the platform (CARD_BLOCKED) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
             };
         };
@@ -4239,6 +4266,15 @@ export interface paths {
                     };
                     content?: never;
                 };
+                /** @description Card is blocked by the platform (CARD_BLOCKED) */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         post?: never;
@@ -4309,9 +4345,11 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Validation error. Includes `TOPUP_BELOW_MINIMUM` — credited amount is
-                 *     below the program's `min_topup` threshold (`error.details.min_topup`,
-                 *     program currency). No order created, wallet not debited.
+                /** @description Validation error. Includes `TOPUP_BELOW_MINIMUM` — the credited amount
+                 *     is below the program's `min_topup` (`error.message` names the
+                 *     minimum, `error.details.min_topup` carries it and
+                 *     `error.details.currency` its currency code). No order created,
+                 *     wallet not debited.
                  *      */
                 400: {
                     headers: {
@@ -5039,9 +5077,10 @@ export interface paths {
                  *     - Invalid reference_id format
                  *     - Invalid amount (must be positive number)
                  *     - Insufficient wallet balance (`INSUFFICIENT_BALANCE`)
-                 *     - `TOPUP_BELOW_MINIMUM` — credited amount is below the program's
-                 *       `min_topup` threshold; `error.details.min_topup` carries the
-                 *       threshold (program currency). No order created, wallet not debited.
+                 *     - `TOPUP_BELOW_MINIMUM` — the credited amount is below the program's
+                 *       `min_topup`; `error.message` names the minimum,
+                 *       `error.details.min_topup` carries it and `error.details.currency`
+                 *       its currency code. No order created, wallet not debited.
                  *      */
                 400: {
                     headers: {
@@ -7851,8 +7890,8 @@ export interface paths {
         };
         /**
          * Preview a mass payout
-         * @description Dry-run before submitting: validates every recipient (the invoice rule
-         *     included), estimates the fee per item through the tenant's pricing —
+         * @description Dry-run before submitting: validates every recipient (the payee and
+         *     invoice rules included), estimates the fee per item through the tenant's pricing —
          *     cross-currency rows are quoted at the current rate — and sums the
          *     total debit in the batch source currency against the wallet balance.
          *     Estimates are indicative: execution prices each payout at its own
@@ -7879,6 +7918,24 @@ export interface paths {
          *     on), and the checks of submit.
          *     `POST .../submit` and `POST .../approve` refuse the batch while any
          *     problem remains.
+         *
+         *     **Invoice rule.** A row needs an INVOICE attachment from the documents
+         *     threshold of the order type it pays through — the
+         *     `documents_required_from_amount` of the order type directory, the
+         *     same number a single payment of that type follows: most bank payouts
+         *     carry 20000, some `0` (every amount), crypto and internal transfers
+         *     `null` (never). Unlike a single payment, a row paying the wallet
+         *     owner's own account is held to it too. The threshold is compared with what the row debits
+         *     in the batch source currency: the row's `amount` when it pays out in
+         *     the batch currency, the quoted `debit_amount` of a cross-currency row.
+         *     Each row reports its threshold as `invoice_required_from`, on `items`
+         *     and on `problems` alike.
+         *
+         *     **Payee rule.** A bank or crypto row whose order type is
+         *     `first_party_only` (order types reference) pays only the wallet
+         *     owner's own account: a row whose counterparty is not `is_self` is a
+         *     problem — "This payout rail is limited to an account belonging to the
+         *     wallet owner".
          *
          */
         get: {
@@ -7917,7 +7974,13 @@ export interface paths {
                                     available?: number;
                                     sufficient?: boolean;
                                 };
-                                /** @description Rows at or above this amount must carry an INVOICE attachment */
+                                /**
+                                 * @deprecated
+                                 * @description Deprecated — read `invoice_required_from` of each row. The
+                                 *     threshold applied to a row whose order type cannot be
+                                 *     resolved (20000).
+                                 *
+                                 */
                                 invoice_threshold?: number;
                                 valid_count?: number;
                                 invalid_count?: number;
@@ -7938,6 +8001,11 @@ export interface paths {
                                     fee_currency_id?: string;
                                     debit_amount?: number;
                                     result_amount?: number;
+                                    /** @description From which debit, in the batch source currency, this row
+                                     *     needs an INVOICE attachment: the documents threshold of its
+                                     *     order type. `0` — every amount; `null` — never.
+                                     *      */
+                                    invoice_required_from?: number | null;
                                 }[];
                                 problems?: components["schemas"]["MassPayoutItemProblem"][];
                             };
@@ -7998,16 +8066,19 @@ export interface paths {
          *     another currency than the batch (with or without `to_currency_id`), a
          *     crypto destination without an address, a banking row whose stored bank
          *     details cannot be paid out (non-empty `validation_issues` of the
-         *     destination), a row at/above the invoice threshold without an
-         *     INVOICE attachment, or — for every crypto row — a batch wallet that is
-         *     not `APPROVED` on the tenant's crypto withdrawal rail (such a problem
+         *     destination), a row whose order type pays only the wallet owner's own
+         *     account to someone else's, a row that reaches the invoice threshold
+         *     of its order type without an INVOICE attachment (the rules the preview
+         *     describes; a cross-currency row whose debit cannot be priced is refused
+         *     too), or — for every crypto row — a batch wallet that is not
+         *     `APPROVED` on the tenant's crypto withdrawal rail (such a problem
          *     carries `code` `WALLET_RAIL_NOT_ONBOARDED` or `WALLET_RAIL_NOT_APPROVED`;
          *     checked only when the tenant has the rail and tenant KYC is on). The
-         *     same rows are listed in `problems` of the
-         *     preview. The answer is `400 MASS_PAYOUT_INVALID_ITEMS` with the
-         *     problems in `error.details.problems[]` (`item_id`, `position`,
-         *     `destination_id`, `error`, optional `code`) so the rows can be fixed. Wallet members
-         *     are notified that the batch awaits approval.
+         *     same rows are listed in `problems` of the preview. The answer is
+         *     `400 MASS_PAYOUT_INVALID_ITEMS` with the problems in
+         *     `error.details.problems[]` (`item_id`, `position`, `destination_id`,
+         *     `error`, `invoice_required_from`, optional `code`) so the rows can be
+         *     fixed. Wallet members are notified that the batch awaits approval.
          *
          */
         post: {
@@ -8038,9 +8109,9 @@ export interface paths {
                 };
                 /** @description `MASS_PAYOUT_INVALID_ITEMS` — at least one row cannot be paid;
                  *     `error.details.problems[]` lists each one (`item_id`, `position`,
-                 *     `destination_id`, `error`, optional `code` — see
-                 *     `MassPayoutItemProblem`). `MASS_PAYOUT_EMPTY` — the batch has no
-                 *     items.
+                 *     `destination_id`, `error`, `invoice_required_from`, optional
+                 *     `code` — see `MassPayoutItemProblem`). `MASS_PAYOUT_EMPTY` — the
+                 *     batch has no items.
                  *      */
                 400: {
                     headers: {
@@ -8143,14 +8214,15 @@ export interface paths {
                  *     `MASS_PAYOUT_INVALID_ITEMS` — the items are re-validated at
                  *     approval and at least one row cannot be paid (same checks as
                  *     submit and the preview `problems`, including a crypto address
-                 *     registered for another currency than the batch and bank details
-                 *     that cannot be paid out, and — for crypto rows — a batch wallet
-                 *     not approved on the tenant's crypto withdrawal rail, `code`
+                 *     registered for another currency than the batch, bank details
+                 *     that cannot be paid out, a payee the order type does not pay, a
+                 *     missing invoice, and — for crypto rows — a batch wallet not
+                 *     approved on the tenant's crypto withdrawal rail, `code`
                  *     `WALLET_RAIL_NOT_ONBOARDED` / `WALLET_RAIL_NOT_APPROVED`);
-                 *     `error.details.problems[]` lists them
-                 *     (`item_id`, `position`, `destination_id`, `error`, optional
-                 *     `code`). Nothing is
-                 *     claimed or sent, fix the rows and approve again.
+                 *     `error.details.problems[]` lists them (`item_id`, `position`,
+                 *     `destination_id`, `error`, `invoice_required_from`, optional
+                 *     `code`). Nothing is claimed or sent, fix the rows and approve
+                 *     again.
                  *      */
                 400: {
                     headers: {
@@ -9100,7 +9172,7 @@ export interface paths {
          *     `POST /frontend/orders/calc`. Omitted or equal `to_currency_id` is the
          *     plain same-asset transfer.
          *
-         *     **Crypto withdrawal rail.** When the tenant has a crypto withdrawal rail
+         *     **Crypto withdrawal rail.** When the tenant has switched on its crypto withdrawal rail
          *     and tenant KYC is on, the source wallet must be `APPROVED` on it (see
          *     `GET /frontend/wallets/{wallet_id}/kyc-rails`); otherwise the request is
          *     refused with `400 WALLET_RAIL_NOT_ONBOARDED` (the wallet has no row on
@@ -9954,6 +10026,10 @@ export interface paths {
          * List order types
          * @description Retrieves a list of available order types for the tenant.
          *
+         *     `order_types_kyc_rails` of every type lists only the links to the rails of the
+         *     caller's tenant (`x-tenant-id`); links to rails of other tenants are never returned.
+         *     A type with no rail of the tenant has an empty `order_types_kyc_rails`.
+         *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
          */
@@ -9979,6 +10055,15 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
@@ -10000,6 +10085,9 @@ export interface paths {
          * Get order type
          * @description Retrieves details of a specific order type by ID.
          *
+         *     `order_types_kyc_rails` lists only the links to the rails of the caller's tenant
+         *     (`x-tenant-id`); links to rails of other tenants are never returned.
+         *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
          */
@@ -10008,6 +10096,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
+                    /** @description Order type id, e.g. `TRANSFER_CARD_SUBACCOUNT` */
                     id: string;
                 };
                 cookie?: never;
@@ -10025,6 +10114,15 @@ export interface paths {
                             success: boolean;
                             data: components["schemas"]["OrderTypeInfo"];
                         };
+                    };
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
                 /** @description Order type not found */
@@ -10689,7 +10787,7 @@ export interface paths {
          *     only — such a request with a different `to_currency_id` is refused with
          *     `400 INVALID_REQUEST` instead of silently delivering `from_currency_id`.
          *
-         *     **Crypto withdrawal rail.** When the tenant has a crypto withdrawal rail
+         *     **Crypto withdrawal rail.** When the tenant has switched on its crypto withdrawal rail
          *     and tenant KYC is on, the source wallet must be `APPROVED` on it;
          *     otherwise the request is refused with `400 WALLET_RAIL_NOT_ONBOARDED`
          *     (the wallet has no row on the rail) or `400 WALLET_RAIL_NOT_APPROVED`
@@ -10784,7 +10882,7 @@ export interface paths {
          *     carry `request_id` (idempotency key); `scheduled_at` is ignored.
          *     Prefer `POST /frontend/orders/withdrawal/crypto`.
          *
-         *     **Crypto withdrawal rail.** When the tenant has a crypto withdrawal rail
+         *     **Crypto withdrawal rail.** When the tenant has switched on its crypto withdrawal rail
          *     and tenant KYC is on, the source wallet must be `APPROVED` on it;
          *     otherwise the request is refused with `400 WALLET_RAIL_NOT_ONBOARDED`
          *     (the wallet has no row on the rail) or `400 WALLET_RAIL_NOT_APPROVED`
@@ -14378,6 +14476,198 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/frontend/wallets/{wallet_id}/conversion/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * EUR <-> stablecoin conversion setup of the wallet
+         * @description Where the wallet stands on the conversion rail: legal documents and their acceptance, the rail's
+         *     status and the stage of its chain (wallet address -> partner verification -> bank account ->
+         *     payment method -> active), the deposit IBAN once the bank has issued it, and today's EUR limits.
+         *     `ready: true` means a SEPA transfer to `bankAccount.iban` is converted and credited as stablecoin,
+         *     and a stablecoin withdrawal to a SEPA beneficiary is paid out in EUR.
+         *
+         *     **Access Control**: any member of the wallet except the scoped `user` role. No KYC gate.
+         *
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    wallet_id: components["parameters"]["KycRailsWalletId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Conversion status */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["ConversionStatus"];
+                        };
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["ForbiddenError"];
+                /** @description Wallet not found or the wallet has no owner to convert for (NOT_FOUND) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/wallets/{wallet_id}/conversion/legal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Legal documents of the conversion partner
+         * @description The documents the wallet's owner must accept before KYC data is shared with the conversion partner,
+         *     each with the current version, a link, and whether (and which version) the owner accepted.
+         *     `missing` lists what still blocks the rail submission.
+         *
+         *     **Access Control**: any member of the wallet except the scoped `user` role. No KYC gate.
+         *
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    wallet_id: components["parameters"]["KycRailsWalletId"];
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Legal documents and acceptance state */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["ConversionLegalState"];
+                        };
+                    };
+                };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["ForbiddenError"];
+                /** @description Wallet not found (NOT_FOUND) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/wallets/{wallet_id}/conversion/legal/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept the conversion partner's legal documents
+         * @description Records the owner's acceptance of the listed documents at their current version (with the request's
+         *     IP and user agent as evidence) and relays it to the partner once the owner exists there. Idempotent:
+         *     re-accepting an already accepted version changes nothing. Returns the updated legal state.
+         *
+         *     **Access Control**: wallet `admin` or higher.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    wallet_id: components["parameters"]["KycRailsWalletId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        document_types: ("partner-privacy-policy" | "partner-terms-of-service" | "partner-risk-disclosure")[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated legal state */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: components["schemas"]["ConversionLegalState"];
+                        };
+                    };
+                };
+                /** @description Unknown document type or empty list (VALIDATION_ERROR) */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                401: components["responses"]["UnauthorizedError"];
+                403: components["responses"]["ForbiddenError"];
+                /** @description Wallet not found (NOT_FOUND) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/frontend/wallets/users/lookup": {
         parameters: {
             query?: never;
@@ -15041,10 +15331,8 @@ export interface paths {
          *       - `empty_name: false` or omitted (default) → a random placeholder name
          *         is generated (e.g., "Golden Vault 42").
          *       - `empty_name: true` → the wallet is created with `name: null`.
-         *     - **purpose** — what the account is opened for, one of the listed codes.
-         *       `other` needs a free-text **purpose_other**; any other code refuses it.
-         *       Stored once with the wallet: it cannot be changed later and no
-         *       endpoint returns it.
+         *     - The caller becomes the wallet's `owner`; the first wallet the user owns is the main one.
+         *     - Any other field of the body (the former `purpose` and `purpose_other` included) is ignored, whatever its value.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -15060,7 +15348,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         /**
-                         * @description Wallet name. Used as-is when non-empty.
+                         * @description Wallet name (1–100 characters after trimming). Used as-is when non-empty.
                          * @example My Main Wallet
                          */
                         name?: string;
@@ -15083,21 +15371,6 @@ export interface paths {
                          *
                          */
                         kyc_entity_id?: string;
-                        /**
-                         * @description What the account is opened for. Only the code travels — labels
-                         *     are the client's. Write-once and never returned.
-                         *
-                         * @example payroll
-                         * @enum {string}
-                         */
-                        purpose?: "payroll" | "client_or_project_funds" | "treasury_or_reserves" | "separate_by_team" | "separate_by_currency_or_region" | "other";
-                        /**
-                         * @description Free-text purpose. Required when `purpose` is `other`, refused
-                         *     with any other `purpose` (a blank value counts as absent).
-                         *
-                         * @example Contractor payouts
-                         */
-                        purpose_other?: string | null;
                     };
                 };
             };
@@ -15141,26 +15414,42 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Bad request — invalid name; `kyc_entity_id` is malformed / not an entity of the current user / belongs to another tenant; `purpose` is not a listed code; `purpose_other` is missing for `other`, longer than 255 characters or sent with another `purpose` */
+                /** @description Bad request — invalid name (longer than 100 characters); `kyc_entity_id` is malformed / not an entity of the current user / belongs to another tenant (`KYC entity not found or not accessible`).
+                 *
+                 *     `WALLET_LIMIT_REACHED` — the caller already owns the maximum number of wallets of this kind:
+                 *     1 individual (a wallet without `kyc_entity_id` counts as individual), 2 business. Wallets the
+                 *     caller is only a member of, deleted wallets and wallets of other tenants don't count. Checked after the body and the
+                 *     entity, so their errors come first. `details` carries `kyc_entity_type`, `max_wallets`, `owned_wallets`.
+                 *      */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        /** @example {
+                         *       "success": false,
+                         *       "error": {
+                         *         "code": "WALLET_LIMIT_REACHED",
+                         *         "message": "You can't create more than 1 individual wallet",
+                         *         "details": {
+                         *           "kyc_entity_type": "individual",
+                         *           "max_wallets": 1,
+                         *           "owned_wallets": 1
+                         *         }
+                         *       }
+                         *     } */
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
+                401: components["responses"]["UnauthorizedError"];
                 /** @description Forbidden — no permission to create wallets, or the entity type is not enabled for the tenant */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
-                };
-                /** @description Server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
-                    content?: never;
                 };
             };
         };
@@ -15187,7 +15476,7 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: Any owner/admin/auditor member of the wallet (the scoped `user` role is rejected with 403); wallet KYC must be APPROVED or HOLD
+         *     **Access Control**: Any owner/admin/auditor member of the wallet (the scoped `user` role is rejected with 403); wallet KYC must be APPROVED or a read-only status (HOLD, EXPIRED, NEEDS_ATTENTION, PENDING, WAITING_ON_UBOS, WAITING_ON_REVIEW)
          *
          */
         get: {
@@ -15750,7 +16039,7 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: Any owner/admin/auditor member of the wallet (the scoped `user` role is rejected with 403); wallet KYC must be APPROVED or HOLD
+         *     **Access Control**: Any owner/admin/auditor member of the wallet (the scoped `user` role is rejected with 403); wallet KYC must be APPROVED or a read-only status (HOLD, EXPIRED, NEEDS_ATTENTION, PENDING, WAITING_ON_UBOS, WAITING_ON_REVIEW)
          *
          *     This is a simplified version of the main wallet endpoint that:
          *     - Returns raw balance records without aggregation
@@ -15878,7 +16167,7 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: Any owner/admin/auditor member of the wallet (the scoped `user` role is rejected with 403); wallet KYC must be APPROVED or HOLD
+         *     **Access Control**: Any owner/admin/auditor member of the wallet (the scoped `user` role is rejected with 403); wallet KYC must be APPROVED or a read-only status (HOLD, EXPIRED, NEEDS_ATTENTION, PENDING, WAITING_ON_UBOS, WAITING_ON_REVIEW)
          *
          */
         get: {
@@ -15965,7 +16254,7 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: Any owner/admin/auditor member of the wallet (the scoped `user` role is rejected with 403); wallet KYC must be APPROVED or HOLD
+         *     **Access Control**: Any owner/admin/auditor member of the wallet (the scoped `user` role is rejected with 403); wallet KYC must be APPROVED or a read-only status (HOLD, EXPIRED, NEEDS_ATTENTION, PENDING, WAITING_ON_UBOS, WAITING_ON_REVIEW)
          *
          */
         get: {
@@ -16115,7 +16404,7 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: Any owner/admin/auditor member of the wallet (the scoped `user` role is rejected with 403); wallet KYC must be APPROVED or HOLD
+         *     **Access Control**: Any owner/admin/auditor member of the wallet (the scoped `user` role is rejected with 403); wallet KYC must be APPROVED or a read-only status (HOLD, EXPIRED, NEEDS_ATTENTION, PENDING, WAITING_ON_UBOS, WAITING_ON_REVIEW)
          *
          */
         get: {
@@ -16230,7 +16519,7 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: Any owner/admin/auditor member of the wallet (the scoped `user` role is rejected with 403); wallet KYC must be APPROVED or HOLD
+         *     **Access Control**: Any owner/admin/auditor member of the wallet (the scoped `user` role is rejected with 403); wallet KYC must be APPROVED or a read-only status (HOLD, EXPIRED, NEEDS_ATTENTION, PENDING, WAITING_ON_UBOS, WAITING_ON_REVIEW)
          *
          */
         get: {
@@ -16329,6 +16618,14 @@ export interface paths {
                     to_date?: string;
                     /** @description Statement for this currency only; every currency when omitted */
                     currency_uuid?: string;
+                    /** @description Statement of this virtual account of the wallet: only its operations — payments
+                     *     in to its bank details, payouts sent from them and their refunds — whatever
+                     *     balance they moved, under its bank details (shown for an active account only).
+                     *     Such a statement shows no balances: the summary has money in and money out
+                     *     only, and the table has no balance column. Takes precedence over
+                     *     `currency_uuid`. An account that is not the wallet's answers 404.
+                     *      */
+                    virtual_account_id?: string;
                     /** @description When false (default), dust transactions below threshold are hidden */
                     show_low_balance?: boolean;
                 };
@@ -16365,7 +16662,7 @@ export interface paths {
                     };
                     content?: never;
                 };
-                /** @description Wallet not found */
+                /** @description Wallet not found, or `virtual_account_id` is not an account of this wallet */
                 404: {
                     headers: {
                         [name: string]: unknown;
@@ -17990,7 +18287,7 @@ export interface paths {
         };
         /**
          * The form of an entity for a set of purposes
-         * @description Built on every call from the tenant's requirement profiles and the entity. Without `rails` and `programs` it is the base form. With one rail it is that rail's form: the base profile, the tenant's rail profile and the vendor's minimum merged: a field required by any of them is required, `review` wins over `auto`, and a field is shown when any of them shows it (one asking it without a condition — the vendor's minimum always — shows it always); profiles whose conditions read each other in a circle answer `409 KYC_FORM_CONDITIONS_CYCLE`. Sections are the groups to draw, `visible_when` the show logic, `required_by` the purposes a field is required for, the locks (`saved`, `from_document`, `pending`, `status`) what the client cannot change, `schema_version` what to echo back. Fields that come from the identity document (names, date of birth, citizenship, the document number and dates) are left out until the document is verified; the document itself is asked: its type `gov_id_type` (`PASSPORT`, `ID_CARD`, `RESIDENCE_PERMIT`, `DRIVERS` — the codes `…/owners/{owner_id}/document` takes as `type` too), issuing country `gov_id_country` and photos `gov_id_front` and `gov_id_back` (shown unless a passport) — saved, and no longer asked, once it is verified; `state: complete` on a rail form means nothing is left to ask and the client goes straight to the rail's terms. With one program and `wallet_id` it is the form before a card: the level the program's vendor demands (`minimal`: name, email, phone; `basic`: plus date of birth, citizenship, gender, identity document type and number, residential address; `declared` / `full`: plus the identity document and the face, verified after the form) merged with the tenant's binding for the program, without the base form; what the personal entity already holds is locked `saved`, so `state: complete` means the card can be asked for at once. Several rails and programs at once is the multi form: the base form, every rail and every program merged, each field once with `required_by` naming the purposes. A form whose last submission is `returned` comes back with that submission's answers in `values` — its files too, as files of the draft (`saved: false`, removable by `DELETE …/forms/uploads/{upload_id}`) — until the client saves, uploads or sends again. On a personal entity's form (base, rail, card or multi) that is editable and shows an open `email` nobody has given yet — not saved, not pending, not in the draft — `values.email` carries the email of the entity owner's account as a suggestion: it is not saved until a draft or a submission sends it, the field stays unlocked, `missing_required` and `state` still count it as empty, and a saved, pending or draft value wins over it; a business form gets none, and only the owner of the entity gets it (a wallet admin reading the form does not). The business form has no field for the filler's role in the company (`applicant_role` was removed): the filler's roles are the `roles` of their own item in `beneficial_owners` (`is_applicant: true`), and a draft or a returned submission that still holds an `applicant_role` opens as usual — the value is not returned and not counted. Access: the owner of the entity, or an owner / admin of a wallet it is linked to.
+         * @description Built on every call from the tenant's requirement profiles and the entity. Without `rails` and `programs` it is the base form. With one rail it is that rail's form: the base profile, the tenant's rail profile and the vendor's minimum merged: a field required by any of them is required, `review` wins over `auto`, and a field is shown when any of them shows it (one asking it without a condition — the vendor's minimum always — shows it always); profiles whose conditions read each other in a circle answer `409 KYC_FORM_CONDITIONS_CYCLE`. Sections are the groups to draw, `visible_when` the show logic, `required_by` the purposes a field is required for, the locks (`saved`, `from_document`, `pending`, `status`) what the client cannot change, `schema_version` what to echo back. Fields that come from the identity document (names, date of birth, citizenship, the document number and dates) are left out until the document is verified; the document itself is asked: its type `gov_id_type` (`PASSPORT`, `ID_CARD`, `RESIDENCE_PERMIT`, `DRIVERS` — the codes `…/owners/{owner_id}/document` takes as `type` too), issuing country `gov_id_country` and photos `gov_id_front` and `gov_id_back` (shown for an ID card, a residence permit or a driving licence), all in the section `verification` with the number and the dates of the document — saved, and no longer asked, once it is verified; `state: complete` on a rail form means nothing is left to ask and the client goes straight to the rail's terms. With one program and `wallet_id` it is the form before a card: the level the program's vendor demands (`minimal`: name, email, phone; `basic`: plus date of birth, citizenship, gender, identity document type and number, residential address; `declared` / `full`: plus the identity document and the face, verified after the form) merged with the tenant's binding for the program, without the base form; what the personal entity already holds is locked `saved`, so `state: complete` means the card can be asked for at once. Several rails and programs at once is the multi form: the base form, every rail and every program merged, each field once with `required_by` naming the purposes. A form whose last submission is `returned` comes back with that submission's answers in `values` — its files too, as files of the draft (`saved: false`, removable by `DELETE …/forms/uploads/{upload_id}`) — until the client saves, uploads or sends again. On a business form the owners of `values.beneficial_owners` come as saved in the KYC entity with the draft laid over them: a saved owner's empty field takes the draft's value, and on a `returned` form the client's correction of a saved owner (saved by `PUT …/forms/draft`) shows over the saved value until compliance changes or clears the same field after that save (a field cleared that way stays empty) — the later change wins, so saving the correction again after compliance's change shows it again — while a value equal to what the profile holds or to what the returned submission held is not a correction and leaves the field showing what the profile holds now; the `id` and `owner_type` of a saved owner stay as saved, and an empty value of the draft never hides a saved one. On a personal entity's form (base, rail, card or multi) that is editable and shows an open `email` nobody has given yet — not saved, not pending, not in the draft — `values.email` carries the email of the entity owner's account as a suggestion: it is not saved until a draft or a submission sends it, the field stays unlocked, `missing_required` and `state` still count it as empty, and a saved, pending or draft value wins over it; a business form gets none, and only the owner of the entity gets it (a wallet admin reading the form does not). The business form has no field for the filler's role in the company (`applicant_role` was removed): the filler's roles are the `roles` of their own item in `beneficial_owners` (`is_applicant: true`), and a draft or a returned submission that still holds an `applicant_role` opens as usual — the value is not returned and not counted. Access: the owner of the entity, or an owner / admin of a wallet it is linked to.
          */
         get: {
             parameters: {
@@ -18066,7 +18363,7 @@ export interface paths {
         get?: never;
         /**
          * Save the draft of a form
-         * @description The form is the one `rails` and `programs` name, as for `GET …/forms`. Replaces the draft as a whole with the given values of open fields; the files of the draft stay, and so do those of a `returned` last submission (they carry over into the draft, those removed excepted). Types are checked, rules and requiredness are not — except that an option chosen together with another one while it excludes the others (`options[].exclusive` of a `multi_enum` field), owner shares over 100% in total, a value whose condition reads an empty required source, a company marked as the filler (`owner_type: business` with `is_applicant: true`, `company_cannot_be_filler`) and a change to a saved owner the form does not allow (left out of the list, its value cleared, or changed outside a `returned` form) are refused here too, as on the submission: the draft is not saved. The rules of `validation` (`max_items`, `min_age`, patterns such as Latin letters only), the filler's own item in the list (`filler_owner_missing`) and the owners' roles (`owner_role_missing`, `company_owner_role`) wait for the submission; a PEP detail sent with a value while `pep_declaration` is `false` is refused here as there, with `FORM_FIELD_NOT_ALLOWED`. Nothing is written to the KYC entity. The first draft of a business form moves the application to `PENDING`. One change to a form at a time — a draft save, an upload, a removal or the submission: another one sent meanwhile, from any tab or member, answers `409 OPERATION_IN_PROGRESS` and changes nothing; send the changes of one form one after another. The entity's owner, or an owner or admin of a linked wallet.
+         * @description The form is the one `rails` and `programs` name, as for `GET …/forms`. Replaces the draft as a whole with the given values of open fields; the files of the draft stay, and so do those of a `returned` last submission (they carry over into the draft, those removed excepted). Types are checked, rules and requiredness are not — except that an option chosen together with another one while it excludes the others (`options[].exclusive` of a `multi_enum` field), owner shares over 100% in total, a value whose condition reads an empty required source, a company marked as the filler (`owner_type: business` with `is_applicant: true`, `company_cannot_be_filler`) and a change to a saved owner the form does not allow (left out of the list, its value cleared, or changed outside a `returned` form) are refused here too, as on the submission: the draft is not saved. The rules of `validation` (`max_items`, `min_age`, patterns such as Latin letters only), the filler's own item in the list (`filler_owner_missing`) and the owners' roles (`owner_role_missing`, `company_owner_role`) wait for the submission; a PEP detail sent with a value while `pep_declaration` is `false` is refused here as there, with `FORM_FIELD_NOT_ALLOWED`. On a `returned` form a value of a saved owner equal to what the profile holds or to what the returned submission held is not saved as the client's correction (the form shows the profile's value); a correction shows until compliance changes or clears the same field after the save, and saving it after compliance's change shows it again — every draft save counts, so a page opened before compliance's change that still holds the client's earlier correction puts it back when it saves. Nothing is written to the KYC entity. The first draft of a business form moves the application to `PENDING`. One change to a form at a time — a draft save, an upload, a removal or the submission: another one sent meanwhile, from any tab or member, answers `409 OPERATION_IN_PROGRESS` and changes nothing; send the changes of one form one after another. The entity's owner, or an owner or admin of a linked wallet.
          */
         put: {
             parameters: {
@@ -18511,7 +18808,7 @@ export interface paths {
         put?: never;
         /**
          * Start or continue the identity verification; a widget token
-         * @description The owner of a personal entity passes the identity check in the identity verification widget after sending a form whose purpose needs it (the submission is `awaiting_verification`), or again when the overview says `retry`. CORE finds or creates the applicant of the personal entity on the tenant's individual verification level — an applicant from the old flow is moved to that level, its passed steps kept — hands it the photos of the identity document uploaded with the waiting form (once per file; not when the provider already accepted a document of the applicant), and answers a token for the widget. With the document handed over, the widget asks only for the face; it asks for the document itself when the form carried none, when the provider could not take it, or to retake a photo the provider refused. Called on a business entity, it verifies the filler — the owner of the business entity, who alone may call it: the token is for their own personal entity (created when missing), whose id comes back in `entity_id`. An admin of the wallet fills and sends a business form, the owner passes the check (the overview answers the admin `waiting_on: applicant`). The token expires after `expires_in` seconds; the widget's expiry handler calls this route again. The result of the check arrives later through the provider's webhook; until then the overview shows `in_progress` (the widget is open, or the document was handed over and the face is due) and then `in_review` (the provider is looking). One start per entity at a time: a parallel call gets `409 OPERATION_IN_PROGRESS`; a handover of the document already running in the background is waited for a few seconds first. Takes no body.
+         * @description The owner of a personal entity passes the identity check in the identity verification widget after sending a form whose purpose needs it (the submission is `awaiting_verification`), or again when the overview says `retry`. CORE finds or creates the applicant of the personal entity on the tenant's individual verification level — an applicant from the old flow is moved to that level, its passed steps kept — hands it the photos of the identity document uploaded with the waiting form (once per file; not when the provider already accepted a document of the applicant), and answers a token for the widget. With the document handed over, the widget asks only for the face; it asks for the document itself when the form carried none, when the provider could not take it, or to retake a photo the provider refused. Called on a business entity, it verifies the filler — the owner of the business entity, who alone may call it: the token is for their own personal entity (created when missing), whose id comes back in `entity_id`. An admin of the wallet fills and sends a business form, the owner passes the check (the overview answers the admin `waiting_on: applicant`). The token expires after `expires_in` seconds; the widget's expiry handler calls this route again. The result of the check arrives later through the provider's webhook; until then the overview shows `in_progress` (the widget is open, or the document was handed over and the face is due) and then `in_review` (the provider is looking). One start per entity at a time: a parallel call gets `409 OPERATION_IN_PROGRESS`; a handover of the document already running in the background is waited for a few seconds first. On an entity in `EXPIRED` the call starts the check over, and nothing else brings it back: the entity moves to `PENDING`, and an identity check that had passed is reset at the provider, so the widget asks for the document and the face again — a check not passed is taken up as it stands. Called on a business, the same goes for the filler's personal entity in `EXPIRED`, and the check reset is the filler's. Only a passed check is reset: one not started, under way, asked again or refused for good stands as it is, and a call on an entity already in `PENDING` resets nothing a second time. A provider that cannot reset the check answers `400 VERIFICATION_PROVIDER_UNAVAILABLE` (or `VERIFICATION_PROVIDER_REFUSED`, `VERIFICATION_PROVIDER_NOT_CONFIGURED`) below and leaves the entity `EXPIRED`: call again. Takes no body.
          */
         post: {
             parameters: {
@@ -18602,7 +18899,6 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                503: components["responses"]["KycFormsLockUnavailable"];
             };
         };
         delete?: never;
@@ -19273,6 +19569,7 @@ export interface components {
             max_amount: number | null;
             /** @description Amount in the send currency from which the order needs supporting documents (`documents`); `0` — always, `null` — never */
             documents_required_from_amount: number | null;
+            /** @description Rails of the caller's tenant this order type is linked to; rails of other tenants are not listed */
             order_types_kyc_rails: {
                 /** Format: uuid */
                 id: string;
@@ -21127,7 +21424,7 @@ export interface components {
              */
             type: "individual" | "business" | "universal";
             /**
-             * @description KYC verification status. A refusal is one of three values: `DECLINED`, `REJECT` or `SOFT_REJECT`. Only `APPROVED` (full access) and `HOLD` (read-only) open the wallet's data endpoints; any other status except `OFFBOARDED` stays listed for members. `OFFBOARDED` — final: the work with this company or person is over, and the wallet is closed for its members: every wallet endpoint answers them `403 ACCESS_DENIED` (its owner still sees it); `EXPIRED` — no activity on the application for over three months; a check passed on it brings it back.
+             * @description KYC verification status. A refusal is one of three values: `DECLINED`, `REJECT` or `SOFT_REJECT`. Only `APPROVED` (full access) and the read-only `HOLD`, `EXPIRED`, `NEEDS_ATTENTION`, `PENDING`, `WAITING_ON_UBOS` and `WAITING_ON_REVIEW` (reads pass, operations answer `403 KYC_REQUIREMENTS_NOT_MET`) open the wallet's data endpoints; any other status except `OFFBOARDED` stays listed for members. `OFFBOARDED` — final: the work with this company or person is over, and the wallet is closed for its members: every wallet endpoint answers them `403 ACCESS_DENIED` (its owner still sees it); `EXPIRED` — no activity on the application for over three months; it comes back when its owner opens the identity check again.
              * @enum {string}
              */
             status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW" | "EXPIRED" | "OFFBOARDED";
@@ -21559,7 +21856,7 @@ export interface components {
              */
             url: string;
             /**
-             * @description Kind of the attachment; INVOICE satisfies the invoice rule for large payouts
+             * @description Kind of the attachment; INVOICE satisfies the invoice rule (the row's `invoice_required_from` in the preview)
              * @enum {string}
              */
             type: "INVOICE" | "DOCUMENT";
@@ -21579,6 +21876,12 @@ export interface components {
             destination_id?: string;
             /** @description Why the row cannot be paid (text for people) */
             error?: string;
+            /** @description The row's invoice threshold, as on the preview `items`. Absent when the
+             *     row has no rail to resolve: an unknown or unsupported destination, or a
+             *     banking row of a batch without a source virtual account. A rail whose
+             *     order type cannot be resolved reports the fallback `20000`.
+             *      */
+            invoice_required_from?: number | null;
             /**
              * @description Machine-readable reason, present only when the client can act on it. Today:
              *     `WALLET_RAIL_NOT_ONBOARDED` (the batch wallet has no row on the tenant's crypto
@@ -21727,7 +22030,10 @@ export interface components {
             to_currency_id?: string;
             /** @description Optional payment reference for this row */
             reference?: string;
-            /** @description Supporting documents; an INVOICE attachment is required for rows at or above the invoice threshold */
+            /** @description Supporting documents. A row needs an INVOICE attachment once what it
+             *     debits reaches the documents threshold of the order type it pays
+             *     through — the preview reports it per row as `invoice_required_from`.
+             *      */
             documents?: components["schemas"]["MassPayoutDocument"][];
         };
         /** @description A template row has no documents field: an invoice belongs to one
@@ -22645,6 +22951,67 @@ export interface components {
             /** @description Every transaction the request covers, in the order compliance linked them. For the full table (currencies, paging) open the order list with `filters=[{"rfi_case_id":"<id>"}]`. */
             transactions: components["schemas"]["RfiTransaction"][];
         };
+        ConversionLegalDocument: {
+            /** @example partner-terms-of-service */
+            type?: string;
+            /** @example 2026-01 */
+            version?: string;
+            url?: string | null;
+            title?: string;
+            /** @description Relayed to the conversion partner's legal API */
+            sentToVendor?: boolean;
+            accepted?: boolean;
+            /** Format: date-time */
+            acceptedAt?: string | null;
+            acceptedVersion?: string | null;
+        };
+        ConversionLegalState: {
+            documents?: components["schemas"]["ConversionLegalDocument"][];
+            /** @description Document types still to accept (current version) */
+            missing?: string[];
+            complete?: boolean;
+        };
+        ConversionStatus: {
+            /** @description Legal complete, rail APPROVED and the chain at stage `active` */
+            ready?: boolean;
+            legal?: components["schemas"]["ConversionLegalState"];
+            rail?: {
+                /**
+                 * Format: uuid
+                 * @description `kyc_rails.id` of the conversion rail to submit
+                 */
+                railId?: string | null;
+                /** @example PROCESSING */
+                status?: string | null;
+                message?: string | null;
+                /** @enum {string|null} */
+                stage?: "wallet_address" | "partner_verification" | "bank_account" | "payment_method" | "active" | null;
+                /** @description The wallet's own address the stablecoin leg uses */
+                conversionAddress?: string | null;
+                /** @example ethereum */
+                conversionChain?: string | null;
+                walletLinked?: boolean;
+                /** @enum {string} */
+                bankAccount?: "none" | "pending" | "active" | "failed" | "conflict";
+                /** @enum {string|null} */
+                paymentMethod?: "pending" | "active" | "rejected" | "deleted" | null;
+            };
+            bankAccount?: {
+                /** Format: uuid */
+                virtualAccountId?: string;
+                /** @example ACTIVE */
+                status?: string;
+                iban?: string | null;
+                bic?: string | null;
+            } | null;
+            limits?: {
+                /** @enum {string} */
+                direction?: "onramp" | "offramp";
+                limitEur?: number;
+                usedEur?: number;
+                remainingEur?: number;
+            }[];
+        };
         WalletKycRailResponse: {
             /** @example true */
             success: boolean;
@@ -22670,7 +23037,7 @@ export interface components {
             };
         };
         /**
-         * @description Raw application status of the KYC entity (`kyc_entity.status`) — the same value the wallet shows as `kyc_info.status` (`WalletKycInfo`); a rail application (`wallet_rail.status`) has its own status of the same set. Build screens by the overview `stage`, not by this value: a status can be added without a release. `PROCESSING` is not set by the forms flow — a vendor sync of the old flow leaves it on an entity — and the overview answers `stage: unknown` for it, as for any status it does not know. `EXPIRED` (no activity on the application for over three months) and `OFFBOARDED` (compliance ended the relationship; final) are set in CORE, never by the identity provider. No form moves either, and no provider event moves `OFFBOARDED`. An `EXPIRED` application comes back once its verification is heard from again — a person's when their identity check passes, a business's on any check outcome of the filler or an owner while the filler's own check stands passed — and goes on to its owners (`WAITING_ON_UBOS`) or to compliance (`WAITING_ON_REVIEW`), never approved by itself.
+         * @description Raw application status of the KYC entity (`kyc_entity.status`) — the same value the wallet shows as `kyc_info.status` (`WalletKycInfo`); a rail application (`wallet_rail.status`) has its own status of the same set. Build screens by the overview `stage`, not by this value: a status can be added without a release. `PROCESSING` is not set by the forms flow — a vendor sync of the old flow leaves it on an entity — and the overview answers `stage: unknown` for it, as for any status it does not know. `EXPIRED` (no activity on the application for over three months) and `OFFBOARDED` (compliance ended the relationship; final) are set in CORE, never by the identity provider, and no form or provider event moves either — a passed identity check included. An `EXPIRED` application comes back only when its owner opens the identity check again (`POST …/verification/session`): it moves to `PENDING`, a check that had passed is reset at the provider, and the application goes on as a fresh one.
          * @enum {string}
          */
         KycFormsEntityStatus: "UNVERIFIED" | "PENDING" | "PROCESSING" | "WAITING_ON_REVIEW" | "WAITING_ON_UBOS" | "NEEDS_ATTENTION" | "HOLD" | "APPROVED" | "SOFT_REJECT" | "REJECT" | "DECLINED" | "DOUBLE" | "EXPIRED" | "OFFBOARDED";
@@ -22680,7 +23047,7 @@ export interface components {
          */
         KycFormsFormState: "not_started" | "draft" | "in_review" | "complete";
         /**
-         * @description State of an identity check, computed on every read. `not_started` — no applicant yet; `in_progress` — the check is set up with the identity provider and not finished: the widget may not have been opened yet (an owner whose check the background set up), be open, or the document was handed over and the face is due; `in_review` — the identity provider is looking (also right after a row nobody has read yet, and for an owner whose declared data does not match the document); `passed`; `retry` — the provider asks to go again, call the session route for a new token; `failed` — a final refusal (the application is not rejected by it: it goes to compliance, so build a refusal screen by this value, not by `stage`).
+         * @description State of an identity check, computed on every read. `not_started` — no applicant yet; `in_progress` — the check is set up with the identity provider and not finished: the widget may not have been opened yet (an owner whose check the background set up), be open, or the document was handed over and the face is due; `in_review` — the identity provider is looking (also right after a row nobody has read yet, and for an owner whose declared data does not match the document — but the filler, whose own row then reads `retry`); `passed`; `retry` — the provider asks to go again, call the session route for a new token; `failed` — a final refusal (the application is not rejected by it: it goes to compliance, so build a refusal screen by this value, not by `stage`).
          * @enum {string}
          */
         KycFormsVerificationState: "not_started" | "in_progress" | "in_review" | "passed" | "retry" | "failed";
@@ -23000,7 +23367,7 @@ export interface components {
             data: {
                 form: components["schemas"]["KycFormsForm"];
                 /**
-                 * @description Current value per field key (saved in KYC first, then pending, then the draft), each shaped by the field's `type` (`KycFormsFieldValue`): strings, numbers, booleans, `YYYY-MM-DD` dates, alpha-2 countries, arrays of strings; files as `KycFormsFileValue[]`; lists as `KycFormsListItemValue[]` with an `id` on saved rows. Every field of the form has a key here; empty is null. On a personal entity's editable form an empty, shown, unlocked `email` carries the email of the entity owner's account as a suggestion: not saved until the draft or the submission sends it, not locked, still counted in `missing_required`; a business form gets none, and only the owner of the entity gets it (a wallet admin reading the form does not).
+                 * @description Current value per field key (saved in KYC first, then pending, then the draft), each shaped by the field's `type` (`KycFormsFieldValue`): strings, numbers, booleans, `YYYY-MM-DD` dates, alpha-2 countries, arrays of strings; files as `KycFormsFileValue[]`; lists as `KycFormsListItemValue[]` with an `id` on saved rows. Every field of the form has a key here; empty is null. Saved owners of `beneficial_owners` carry the draft's correction on a returned form (see `GET …/forms`). On a personal entity's editable form an empty, shown, unlocked `email` carries the email of the entity owner's account as a suggestion: not saved until the draft or the submission sends it, not locked, still counted in `missing_required`; a business form gets none, and only the owner of the entity gets it (a wallet admin reading the form does not).
                  * @example {
                  *       "email": "user@example.com",
                  *       "citizenship": "DE",
@@ -23118,7 +23485,7 @@ export interface components {
                 entity_type: "individual" | "business";
                 status: components["schemas"]["KycFormsEntityStatus"];
                 /**
-                 * @description Build the screen by this, not by `status`. `not_required` — the tenant asks nothing of this client type (`base_form` is null); `not_started` — the base form was not started; `incomplete` — a draft exists; `action_required` — the client's move: pass the identity check (`next_step: verification`), or, for a business, get the owners through theirs (`next_step: owners`); `in_review` — the identity provider or compliance is looking; `resubmit` — returned by compliance, the form is open again with `submission.comment` (open it with `base_form.target`); `on_hold` — frozen by compliance; `verified` — approved; `expired` — no activity on the application for over three months: a passed identity check brings it back (`next_step: verification`), then compliance looks again; `rejected` — refused, the form is read-only; `offboarded` — compliance ended the relationship, final; `unknown` — a status this contract does not know. The stage of each `status`: `APPROVED` → `verified`; `REJECT`, `DECLINED`, `DOUBLE` → `rejected`; `OFFBOARDED` → `offboarded`; `EXPIRED` → `expired`; `HOLD` → `on_hold`; `WAITING_ON_REVIEW` → `in_review`; `NEEDS_ATTENTION` → `resubmit`; `WAITING_ON_UBOS` → `action_required` with `next_step: verification` while the filler's own check is asked again (`verification.applicant.state: retry`; it comes before the owners, as they cannot finish without it, and an admin of the wallet reading sees `waiting_on: applicant`, `next_step: wait`), else `action_required` with `next_step: owners` while an owner other than the filler's row has a check to start, finish or redo, else `in_review` (also when the filler's check is with the provider or an owner's declared data does not match the document); `UNVERIFIED`, `PENDING`, `SOFT_REJECT` → by the base form and the identity check: `not_required` (no base form), `not_started`, `incomplete` (a draft), `action_required` (the check is the move), `in_review` (sent, with compliance or the provider), `resubmit` (the latest submission was returned) — the forms flow never sets `SOFT_REJECT`, one left by the old flow shows the screen of its form like `PENDING`; `PROCESSING` → `unknown` (the forms flow never sets it, an old-flow vendor sync may leave it).
+                 * @description Build the screen by this, not by `status`. `not_required` — the tenant asks nothing of this client type (`base_form` is null); `not_started` — the base form was not started; `incomplete` — a draft exists; `action_required` — the client's move: pass the identity check (`next_step: verification`), or, for a business, get the owners through theirs (`next_step: owners`); `in_review` — the identity provider or compliance is looking; `resubmit` — returned by compliance, the form is open again with `submission.comment` (open it with `base_form.target`); `on_hold` — frozen by compliance; `verified` — approved; `expired` — no activity on the application for over three months: the owner opens the identity check again (`next_step: verification`), which moves it to `PENDING` and asks for the check anew, then it goes on as a fresh one — the base form when it was never sent, then compliance; `rejected` — refused, the form is read-only; `offboarded` — compliance ended the relationship, final; `unknown` — a status this contract does not know. The stage of each `status`: `APPROVED` → `verified`; `REJECT`, `DECLINED`, `DOUBLE` → `rejected`; `OFFBOARDED` → `offboarded`; `EXPIRED` → `expired`; `HOLD` → `on_hold`; `WAITING_ON_REVIEW` → `in_review`; `NEEDS_ATTENTION` → `resubmit`; `WAITING_ON_UBOS` → `action_required` with `next_step: verification` while the filler's own check is asked again (`verification.applicant.state: retry`; it comes before the owners, as they cannot finish without it, and an admin of the wallet reading sees `waiting_on: applicant`, `next_step: wait`), else `action_required` with `next_step: owners` while an owner other than the filler's row has a check to start, finish or redo, else `in_review` (also when the filler's check is with the provider or an owner's declared data does not match the document); `UNVERIFIED`, `PENDING`, `SOFT_REJECT` → by the base form and the identity check: `not_required` (no base form), `not_started`, `incomplete` (a draft), `action_required` (the check is the move), `in_review` (sent, with compliance or the provider), `resubmit` (the latest submission was returned) — the forms flow never sets `SOFT_REJECT`, one left by the old flow shows the screen of its form like `PENDING`; `PROCESSING` → `unknown` (the forms flow never sets it, an old-flow vendor sync may leave it).
                  * @enum {string}
                  */
                 stage: "not_required" | "not_started" | "incomplete" | "action_required" | "in_review" | "resubmit" | "on_hold" | "verified" | "expired" | "rejected" | "offboarded" | "unknown";
@@ -23139,7 +23506,7 @@ export interface components {
                     applicant: {
                         state: components["schemas"]["KycFormsVerificationState"];
                     };
-                    /** @description A business with a base form only (empty otherwise): one item per individual beneficial owner — the filler's own row included, told by `is_applicant` in the form's `values.beneficial_owners` — and per company among the owners whose check the identity provider runs (the tenant's company level checks companies; CORE requests the check on the company data of the item, there is no session, link or document for it). A company the provider does not check is not listed. `state` is that owner's own check; `not_started` while a person has no applicant, but the filler's own row shows their personal check until the row has one. */
+                    /** @description A business with a base form only (empty otherwise): one item per individual beneficial owner — the filler's own row included, told by `is_applicant` in the form's `values.beneficial_owners` — and per company among the owners whose check the identity provider runs (the tenant's company level checks companies; CORE requests the check on the company data of the item, there is no session, link or document for it). A company the provider does not check is not listed. `state` is that owner's own check; `not_started` while a person has no applicant, but the filler's own row shows their personal check until the row has one, and reads like `verification.applicant` (a mismatch is `retry`). */
                     owners: {
                         /**
                          * Format: uuid

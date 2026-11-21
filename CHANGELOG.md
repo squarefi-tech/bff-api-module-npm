@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Frontend types regenerated from the deployed spec (`npm run update:types`, `apiV1Frontend` only).**
+  - `API.Wallets.StatementPdf.Request` takes `virtual_account_id` (SFI-3402). With it, `GET /frontend/wallets/{wallet_id}/statement-pdf` builds the statement of that one account: only its operations, a section per currency, its details in the header, no balances. It wins over `currency_uuid`. An account that is not the wallet's answers `404 NOT_FOUND`, a value that is not a UUID answers `400`.
+  - **Breaking for type consumers:** `API.Wallets.Wallet.Create.Request` no longer has `purpose` and `purpose_other` (SFI-3158). The backend has ignored both since that release, so an app that still sends them only needs to drop them from the payload and its types.
+  - New paths `/frontend/wallets/{wallet_id}/conversion/status`, `/conversion/legal` and `/conversion/legal/accept` are in the generated types. The SDK has no wrappers for them yet.
+  - `POST /frontend/wallets` types its `400 WALLET_LIMIT_REACHED` body (the caller already owns the maximum number of wallets of this kind); the documented `500` is gone.
+  - Mass payout preview: each row now carries `invoice_required_from` (on `items` and on the row problems), the threshold of the order type it pays through. The single `invoice_threshold` is `@deprecated`: it is wrong for order types whose threshold is 0 or none. Read the row's value instead.
+  - Four card routes document `409 CARD_BLOCKED` (the card is blocked by the platform).
+  - `TOPUP_BELOW_MINIMUM` also carries `error.details.currency`, and `error.message` names the minimum.
+  - `POST /frontend/kyc/entities/{entity_id}/verification/session` no longer documents `503 KycFormsLockUnavailable`. The backend still answers 503 when its lock store is down; the spec dropped it upstream, so keep handling 503 there.
+  - The other generated files (`apiV2`, `apiV1Tenant`, `apiV1External`, `apiV1Legacy`) are not regenerated here. The current V2 spec no longer has `/storage/{type}` and `/wallets/*`, which the SDK still wraps (`StorageController_getFileUrl` in `types.ts`), so regenerating it breaks the build. That needs its own change.
+
 ## [1.36.112] - 2026-11-18
 
 ### Added
