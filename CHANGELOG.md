@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Frontend types regenerated from the deployed spec (`npm run update:types`, `apiV1Frontend` only).**
+  - `API.Wallets.StatementPdf.Request` takes `virtual_account_id` (SFI-3402). With it, `GET /frontend/wallets/{wallet_id}/statement-pdf` builds the statement of that one account: only its operations, a section per currency, its details in the header, no balances. It wins over `currency_uuid`. An account that is not the wallet's answers `404 NOT_FOUND`, a value that is not a UUID answers `400`.
+  - **Breaking for type consumers:** `API.Wallets.Wallet.Create.Request` no longer has `purpose` and `purpose_other` (SFI-3158). The backend has ignored both since that release, so an app that still sends them only needs to drop them from the payload and its types.
+  - New paths `/frontend/wallets/{wallet_id}/conversion/status`, `/conversion/legal` and `/conversion/legal/accept` are in the generated types. The SDK has no wrappers for them yet.
+  - The other generated files (`apiV2`, `apiV1Tenant`, `apiV1External`, `apiV1Legacy`) are not regenerated here. The current V2 spec no longer has `/storage/{type}` and `/wallets/*`, which the SDK still wraps (`StorageController_getFileUrl` in `types.ts`), so regenerating it breaks the build. That needs its own change.
+
 ## [1.36.112] - 2026-11-18
 
 ### Added
