@@ -3546,12 +3546,15 @@ export namespace API {
            */
           export type OrderListScheduledFilter = Record<'scheduled', 'all' | 'upcoming' | 'past'>;
           /**
-           * Narrows the feed to the orders that move one of the currencies (`crypto.uuid`) on
-           * either side: `from_uuid` or `to_uuid` is in the list, so an exchange or an offramp out
-           * of a currency is among its orders. `from_uuid` and `to_uuid` given as two filters are
-           * AND-ed instead: both sides must match.
+           * Narrows the feed to the orders that move one of the currencies, by currency uuid (the
+           * `uuid` of a currency from the currencies list, fiat or crypto): an order matches when its
+           * `from_uuid` OR its `to_uuid` is one of them, so an exchange or an offramp out of a
+           * currency is among its orders. An empty list narrows nothing; a value that is not a uuid
+           * is refused with 400 `INVALID_REQUEST`, `details.field: 'currency'`. Like every filter it
+           * is AND-ed with the others — `from_uuid` and `to_uuid` given as two filters therefore
+           * both have to match.
            */
-          export type OrderListCurrencyFilter = Record<'currency', string[]>;
+          export type OrderListCurrencyFilter = Record<'currency', string[] | string>;
 
           export type OrderListFilter =
             | OrderListStatusFilter

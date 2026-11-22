@@ -9,7 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **The order feed takes a `currency` filter (SFI-3415).** `API.Orders.V2.List.ByWallet.OrderListCurrencyFilter` is `{ currency: string[] }`, in the `OrderListFilter` union (the type of `filters` on `orders.frontend.list.byWallet` and on its CSV export). An order matches when its `from_uuid` or its `to_uuid` is one of the uuids, so a currency's feed includes the exchanges and offramps out of it. Passing `{ from_uuid }` and `{ to_uuid }` as two filters still AND-s them: both sides must be one of the currencies. Needs the base_backend feed change for SFI-3415 on the API being called; an API without it answers 400 for an unknown filter field.
+- **The order feed takes a `currency` filter (SFI-3415).** `API.Orders.V2.List.ByWallet.OrderListCurrencyFilter` is `{ currency: string[] | string }`, a currency uuid or a list of them (fiat or crypto, the `uuid` of the currencies list). It is in the `OrderListFilter` union, so `filters` takes it on `orders.frontend.list.byWallet`, `orders.frontend.list.csv.getByWalletUuid` and `orders.v2.list.byWallet`.
+  - An order matches when its `from_uuid` OR its `to_uuid` is one of the uuids, so a currency's feed includes the exchanges and offramps out of it. An empty list narrows nothing. A value that is not a uuid answers `400 INVALID_REQUEST` with `details.field: 'currency'`.
+  - Like every filter it is AND-ed with the others. `{ from_uuid }` and `{ to_uuid }` passed as two filters still both have to match.
+  - Needs the base_backend change for SFI-3415 (#2505 on dev, #2506 on main) on the API being called: an API without it answers 400 for an unknown filter field.
 
 ## [1.36.113] - 2026-11-21
 
