@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.115] - 2026-11-22
+
 ### Added
 
 - **`frontend.access.keys.allowedIps` manages the IP addresses a wallet API key is accepted from.** `add(key_id, { ip })` adds one address, `remove(key_id, ip)` removes one, `replace(key_id, { allowed_ips })` sets the whole list. Each answers the key's list after the change (`API.Frontend.Access.Keys.AllowedIps.Response`: `id`, `allowed_ips`, `updated_at`). The caller must be owner or admin of the key's wallet. Only public IPv4 addresses, up to 50; the last address cannot be removed, an address that is not listed cannot be removed, and a revoked key cannot be changed (400); a key that does not exist answers 404. Once the backend enforces the lists (announced to clients for 29 November 2026), a call with the key from an address that is not listed answers `403 IP_NOT_ALLOWED`.
