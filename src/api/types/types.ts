@@ -988,6 +988,7 @@ export namespace API {
           // required; such a key works from any address until one is added.
           allowed_ips: string[];
           created_at: string;
+          updated_at?: string;
           is_enabled: boolean;
         }
 
@@ -1003,9 +1004,10 @@ export namespace API {
             // At least one public IPv4 address, up to 50. Ranges, hostnames, IPv6 and private addresses answer 400.
             allowed_ips: string[];
           };
+          // The backend answers no `is_enabled` and no `updated_at`: a key just created is enabled.
           export type Response = {
             success: boolean;
-            data: API.Frontend.Access.Keys.ExtendedKey;
+            data: Omit<API.Frontend.Access.Keys.ExtendedKey, 'is_enabled' | 'updated_at'>;
           };
         }
 
@@ -1036,8 +1038,9 @@ export namespace API {
           };
         }
 
-        // The key's list after the change. A revoked key, an address that is not public IPv4, a 51st address and
-        // removing the last one answer 400; an address already on the list is added once.
+        // The key's list after the change. 400: a revoked key, an address that is not public IPv4, a 51st address,
+        // removing the last one or one that is not on the list. 404: no such key. An address already listed is added
+        // once.
         export namespace AllowedIps {
           export type Response = {
             success: boolean;
