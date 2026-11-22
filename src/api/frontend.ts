@@ -20,6 +20,26 @@ export const frontend = {
         ),
       revoke: (key_id: string): Promise<API.Frontend.Access.Keys.Revoke.Response> =>
         apiClientV1.deleteRequest(`/frontend/access/keys/${key_id}`),
+      allowedIps: {
+        replace: (
+          key_id: string,
+          data: API.Frontend.Access.Keys.AllowedIps.Replace.Request,
+        ): Promise<API.Frontend.Access.Keys.AllowedIps.Response> =>
+          apiClientV1.putRequest<API.Frontend.Access.Keys.AllowedIps.Response>(
+            `/frontend/access/keys/${key_id}/allowed-ips`,
+            { data },
+          ),
+        add: (
+          key_id: string,
+          data: API.Frontend.Access.Keys.AllowedIps.Add.Request,
+        ): Promise<API.Frontend.Access.Keys.AllowedIps.Response> =>
+          apiClientV1.postRequest<API.Frontend.Access.Keys.AllowedIps.Response>(
+            `/frontend/access/keys/${key_id}/allowed-ips`,
+            { data },
+          ),
+        remove: (key_id: string, ip: string): Promise<API.Frontend.Access.Keys.AllowedIps.Response> =>
+          apiClientV1.deleteRequest(`/frontend/access/keys/${key_id}/allowed-ips/${encodeURIComponent(ip)}`),
+      },
     },
   },
   // Card money movement (`deposit` / `withdraw`). Both card-level methods are thin wrappers the

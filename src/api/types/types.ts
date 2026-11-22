@@ -984,6 +984,9 @@ export namespace API {
           name: string;
           role: APIKeyRole;
           wallet_id: string;
+          // Public IPv4 addresses the key is accepted from. Empty only on a key created before an address became
+          // required; such a key works from any address until one is added.
+          allowed_ips: string[];
           created_at: string;
           is_enabled: boolean;
         }
@@ -997,6 +1000,8 @@ export namespace API {
             name: string;
             role: APIKeyRole;
             wallet_id: string;
+            // At least one public IPv4 address, up to 50. Ranges, hostnames, IPv6 and private addresses answer 400.
+            allowed_ips: string[];
           };
           export type Response = {
             success: boolean;
@@ -1012,9 +1017,12 @@ export namespace API {
         }
 
         export namespace Regenerate {
+          // The backend answers only these fields: the key keeps its wallet, IP list and creation date.
           export type Response = {
             success: boolean;
-            data: API.Frontend.Access.Keys.ExtendedKey;
+            data: Pick<API.Frontend.Access.Keys.ExtendedKey, 'id' | 'key' | 'name' | 'role'> & {
+              updated_at: string;
+            };
           };
         }
 
@@ -1026,6 +1034,31 @@ export namespace API {
               revoked_at: string;
             };
           };
+        }
+
+        // The key's list after the change. A revoked key, an address that is not public IPv4, a 51st address and
+        // removing the last one answer 400; an address already on the list is added once.
+        export namespace AllowedIps {
+          export type Response = {
+            success: boolean;
+            data: {
+              id: string;
+              allowed_ips: string[];
+              updated_at: string;
+            };
+          };
+
+          export namespace Replace {
+            export type Request = {
+              allowed_ips: string[];
+            };
+          }
+
+          export namespace Add {
+            export type Request = {
+              ip: string;
+            };
+          }
         }
       }
     }

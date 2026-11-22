@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`frontend.access.keys.allowedIps` manages the IP addresses a wallet API key is accepted from.** `add(key_id, { ip })` adds one address, `remove(key_id, ip)` removes one, `replace(key_id, { allowed_ips })` sets the whole list. Each answers the key's list after the change (`API.Frontend.Access.Keys.AllowedIps.Response`: `id`, `allowed_ips`, `updated_at`). The caller must be owner or admin of the key's wallet. Only public IPv4 addresses, up to 50; the last address cannot be removed, and a revoked key cannot be changed (400). A call with the key from an address that is not listed answers `403 IP_NOT_ALLOWED`.
+
+### Changed
+
+- **Breaking for type consumers: `API.Frontend.Access.Keys.Create.Request` requires `allowed_ips`.** The backend refuses a key without at least one public IPv4 address (400). `API.Frontend.Access.Keys.Key` carries `allowed_ips` as well; it is empty only on a key created before an address became required, and such a key works from any address until one is added.
+- **Breaking for type consumers: `API.Frontend.Access.Keys.Regenerate.Response` types only what the backend answers** — `id`, `key`, `name`, `role`, `updated_at`. It used to claim the whole key, so an app that put the answer in place of the listed key lost its wallet, IP list and creation date. Keep the listed key and take `key` and `updated_at` from the answer.
+- These are the hand-written types under `API.Frontend.Access.Keys`. The generated Frontend types are not regenerated here: the DEV spec now also carries the wallet transaction changes of SFI-3415, which are not on production yet.
+
 ## [1.36.113] - 2026-11-21
 
 ### Changed
