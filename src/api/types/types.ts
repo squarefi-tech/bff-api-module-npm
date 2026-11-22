@@ -3545,12 +3545,20 @@ export namespace API {
            * with `status`; any other value is refused with 400.
            */
           export type OrderListScheduledFilter = Record<'scheduled', 'all' | 'upcoming' | 'past'>;
+          /**
+           * Narrows the feed to the orders that move one of the currencies (`crypto.uuid`) on
+           * either side: `from_uuid` or `to_uuid` is in the list, so an exchange or an offramp out
+           * of a currency is among its orders. `from_uuid` and `to_uuid` given as two filters are
+           * AND-ed instead: both sides must match.
+           */
+          export type OrderListCurrencyFilter = Record<'currency', string[]>;
 
           export type OrderListFilter =
             | OrderListStatusFilter
             | OrderListOrderTypeFilter
             | OrderListFromUuidFilter
             | OrderListToUuidFilter
+            | OrderListCurrencyFilter
             | OrderListMassPayoutFilter
             | OrderListRfiCaseFilter
             | OrderListScheduledFilter;
