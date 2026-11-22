@@ -984,7 +984,11 @@ export namespace API {
           name: string;
           role: APIKeyRole;
           wallet_id: string;
+          // Public IPv4 addresses the key is accepted from. Empty only on a key created before an address became
+          // required; such a key works from any address until one is added.
+          allowed_ips: string[];
           created_at: string;
+          updated_at?: string;
           is_enabled: boolean;
         }
 
@@ -997,10 +1001,13 @@ export namespace API {
             name: string;
             role: APIKeyRole;
             wallet_id: string;
+            // At least one public IPv4 address, up to 50. Ranges, hostnames, IPv6 and private addresses answer 400.
+            allowed_ips: string[];
           };
+          // The backend answers no `is_enabled` and no `updated_at`: a key just created is enabled.
           export type Response = {
             success: boolean;
-            data: API.Frontend.Access.Keys.ExtendedKey;
+            data: Omit<API.Frontend.Access.Keys.ExtendedKey, 'is_enabled' | 'updated_at'>;
           };
         }
 
@@ -1012,9 +1019,12 @@ export namespace API {
         }
 
         export namespace Regenerate {
+          // The backend answers only these fields: the key keeps its wallet, IP list and creation date.
           export type Response = {
             success: boolean;
-            data: API.Frontend.Access.Keys.ExtendedKey;
+            data: Pick<API.Frontend.Access.Keys.ExtendedKey, 'id' | 'key' | 'name' | 'role'> & {
+              updated_at: string;
+            };
           };
         }
 
@@ -1026,6 +1036,32 @@ export namespace API {
               revoked_at: string;
             };
           };
+        }
+
+        // The key's list after the change. 400: a revoked key, an address that is not public IPv4, a 51st address,
+        // removing the last one or one that is not on the list. 404: no such key. An address already listed is added
+        // once.
+        export namespace AllowedIps {
+          export type Response = {
+            success: boolean;
+            data: {
+              id: string;
+              allowed_ips: string[];
+              updated_at: string;
+            };
+          };
+
+          export namespace Replace {
+            export type Request = {
+              allowed_ips: string[];
+            };
+          }
+
+          export namespace Add {
+            export type Request = {
+              ip: string;
+            };
+          }
         }
       }
     }
