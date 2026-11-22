@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.114] - 2026-11-22
+
 ### Added
 
 - **The order feed takes a `currency` filter (SFI-3415).** `API.Orders.V2.List.ByWallet.OrderListCurrencyFilter` is `{ currency: string[] | string }`, a currency uuid or a list of them (fiat or crypto, the `uuid` of the currencies list). It is in the `OrderListFilter` union, so `filters` takes it on `orders.frontend.list.byWallet`, `orders.frontend.list.csv.getByWalletUuid` and `orders.v2.list.byWallet`.
