@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **The order feed takes a `currency` filter (SFI-3415).** `API.Orders.V2.List.ByWallet.OrderListCurrencyFilter` is `{ currency: string[] | string }`, a currency uuid or a list of them (fiat or crypto, the `uuid` of the currencies list). It is in the `OrderListFilter` union, so `filters` takes it on `orders.frontend.list.byWallet`, `orders.frontend.list.csv.getByWalletUuid` and `orders.v2.list.byWallet`.
+  - An order matches when its `from_uuid` OR its `to_uuid` is one of the uuids, so a currency's feed includes the exchanges and offramps out of it. An empty list narrows nothing.
+  - All currencies go into one filter item: `currency` may appear in one item only, at most 50 distinct uuids. A second item with `currency`, more than 50 uuids or a value that is not a uuid answers `400 INVALID_REQUEST` with `details.field: 'currency'`.
+  - The item is AND-ed with the other filters. `{ from_uuid }` and `{ to_uuid }` passed as two filters still both have to match.
+  - Needs the base_backend change for SFI-3415 (#2505 on dev, #2506 on main) on the API being called: an API without it answers 400 for an unknown filter field.
+
 ## [1.36.113] - 2026-11-21
 
 ### Changed
