@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.117] - 2026-11-24
+
 ### Added
 
 - **The card routes of SFI-2131 in the generated Frontend types (base_backend #2539).** No SDK method changes: the new query parameters pass through the existing wrappers.
