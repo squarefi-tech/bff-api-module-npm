@@ -158,7 +158,8 @@ export const issuing = {
     csv: {
       /**
        * @deprecated Use `frontend.issuing.cards.transactionsCsv({ card_id })` (SFI-2131) — takes an object
-       * instead of the bare id, with an optional `to_date`.
+       * instead of the bare id, with an optional `to_date`. The frontend route also answers 403 when the
+       * wallet's KYC does not allow reads (`requireKycReadAccess`), which this legacy route does not check.
        */
       getByCardId: (card_id: string): Promise<string> =>
         apiClientV1.getRequest<string>(`/issuing/transactions/csv`, {
@@ -166,7 +167,8 @@ export const issuing = {
         }),
       /**
        * @deprecated Use `frontend.issuing.subAccounts.transactionsCsv({ sub_account_id })` (SFI-2131) — takes an
-       * object instead of the bare id, with optional `card_id`, `status`, `from_date`, `to_date` filters.
+       * object instead of the bare id, with optional `card_id`, `status`, `from_date`, `to_date` filters. The
+       * frontend route also answers 403 when the wallet's KYC does not allow reads (`requireKycReadAccess`).
        */
       getBySubAccountId: (sub_account_id: string): Promise<string> =>
         apiClientV1.getRequest<string>(`/issuing/sub_account/${sub_account_id}/transactions/csv`),
@@ -228,9 +230,10 @@ export const issuing = {
     transactions: {
       /**
        * @deprecated Use `frontend.issuing.subAccounts.transactions` (SFI-2131). `from_timestamp` / `to_timestamp`
-       * become `from_date` / `to_date`, `limit` / `offset` are optional, and there is no `card_id` filter — read one
-       * card's transactions with `frontend.issuing.cards.transactions`. The answer is typed
-       * `API.Frontend.Issuing.SubAccounts.Transactions.Response`.
+       * become `from_date` / `to_date` and `limit` / `offset` are optional. The answer is the JSON envelope
+       * `{ data, pagination: { offset, limit, total } }` (`API.Frontend.Issuing.SubAccounts.Transactions.Response`)
+       * instead of `{ count, data, has_more }`: page by `pagination.total`. The `card_id` filter is being added
+       * to the frontend route in SFI-2131 and arrives with the next type regeneration.
        */
       get: ({
         sub_account_id,
