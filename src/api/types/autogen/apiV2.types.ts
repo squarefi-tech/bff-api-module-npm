@@ -149,7 +149,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Sign up new user with Telegram data. Returns TelegramSessionDto for Supabase tenants, TelegramTicketDto for Clerk tenants. */
+        /** Sign up new user with Telegram data. Returns TelegramSignUpSessionDto for Supabase tenants, TelegramSignUpTicketDto for Clerk tenants. */
         post: operations["AuthTelegramController_signUp"];
         delete?: never;
         options?: never;
@@ -368,23 +368,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/storage/{type}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get typed file */
-        get: operations["StorageController_getFileUrl"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/referrals/code": {
         parameters: {
             query?: never;
@@ -470,42 +453,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/wallets": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get user wallets */
-        get: operations["WalletsController_all"];
-        put?: never;
-        /** Create a new wallet */
-        post: operations["WalletsController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/wallets/{wallet_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get specific user wallet with balances */
-        get: operations["WalletsController_view"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/wallets/{wallet_id}/logo": {
+    "/user/verification/init": {
         parameters: {
             query?: never;
             header?: never;
@@ -514,101 +462,25 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Upload Logo for wallet */
-        post: operations["WalletsController_uploadLogoFile"];
+        /** Init user-level KYC verification (data / documents / face flow) */
+        post: operations["UserVerificationController_init"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/wallets/{wallet_id}/addresses/{chain}": {
+    "/user/verification/resume": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Wallet address for chain */
-        get: operations["WalletsAddressesController_viewWalletAddressByChain"];
+        get?: never;
         put?: never;
-        /**
-         * Create a new address
-         * @deprecated
-         * @description Use viewWalletAddressByChain method to create and/or view address
-         */
-        post: operations["WalletsAddressesController_createAddress"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/wallets/{wallet_id}/transactions": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List of transactions for wallet */
-        get: operations["WalletsTransactionsController_viewTransactionsByWallet"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/wallets/{wallet_id}/transactions/{transaction_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get transaction by id for wallet */
-        get: operations["WalletsTransactionsController_viewTransactionByWallet"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/wallets/{wallet_id}/transactions/export/csv": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Export all wallet transactions */
-        get: operations["WalletsTransactionsController_export"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/chains": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List of chains
-         * @deprecated
-         */
-        get: operations["ChainsController_all"];
-        put?: never;
-        post?: never;
+        /** Re-issue the SDK access token for the current level */
+        post: operations["UserVerificationController_resume"];
         delete?: never;
         options?: never;
         head?: never;
@@ -650,34 +522,20 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/user/verification/init": {
+    "/chains": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /**
+         * List of chains
+         * @deprecated
+         */
+        get: operations["ChainsController_all"];
         put?: never;
-        /** Init user-level KYC verification (data / documents / face flow) */
-        post: operations["UserVerificationController_init"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/user/verification/resume": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Re-issue the SDK access token for the current level */
-        post: operations["UserVerificationController_resume"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1134,6 +992,10 @@ export interface components {
             type: "email" | "phone";
             login: string;
         };
+        SignUpResponseDto: {
+            /** @description True when the user ends the sign-up in the promo code's group; false without a promo code. */
+            promo_code_applied: boolean;
+        };
         SignOutDto: {
             access_token: string;
             refresh_token: string;
@@ -1157,6 +1019,25 @@ export interface components {
             ticket: string;
             /** @description Unix timestamp (seconds) when the ticket expires. */
             expires_at: number;
+        };
+        TelegramSignUpSessionDto: {
+            provider_token?: string | null;
+            provider_refresh_token?: string | null;
+            access_token: string;
+            expires_in: number;
+            expires_at?: number;
+            token_type: string;
+            refresh_token?: string | null;
+            /** @description True when the user ends the sign-up in the promo code's group; false without a promo code. */
+            promo_code_applied: boolean;
+        };
+        TelegramSignUpTicketDto: {
+            /** @description One-time Clerk sign-in ticket. Exchange via Clerk JS: signIn.create({ strategy: "ticket", ticket }). */
+            ticket: string;
+            /** @description Unix timestamp (seconds) when the ticket expires. */
+            expires_at: number;
+            /** @description True when the user ends the sign-up in the promo code's group; false without a promo code. */
+            promo_code_applied: boolean;
         };
         TelegramContactDto: {
             user_id: number;
@@ -1345,117 +1226,18 @@ export interface components {
             /** @example 1250.5 */
             incoming_amount: number;
         };
-        WalletKycInfoDto: {
-            /** @enum {string} */
-            type: "individual" | "business" | "universal";
-            email?: string | null;
-            phone?: string | null;
-            /**
-             * @default UNVERIFIED
-             * @enum {string}
-             */
-            status: "APPROVED" | "DECLINED" | "PENDING" | "PROCESSING" | "HOLD" | "NEEDS_ATTENTION" | "DOUBLE" | "SOFT_REJECT" | "REJECT" | "UNVERIFIED" | "WAITING_ON_UBOS" | "WAITING_ON_REVIEW" | "EXPIRED" | "OFFBOARDED";
-            readonly business_name?: string;
-            readonly first_name?: string;
-            readonly last_name?: string;
+        /** @enum {string} */
+        UserVerificationFlow: "data" | "documents" | "face";
+        InitUserVerificationRequestDto: {
+            flow: components["schemas"]["UserVerificationFlow"];
         };
-        WalletDto: {
-            uuid: string;
-            logo_url: string | null;
-            name: string | null;
-            created_at: string;
-            /** @description Is main wallet for user */
-            is_main: boolean;
-            /** @enum {string} */
-            role: "owner" | "admin" | "user" | "auditor";
-            readonly kyc_info?: components["schemas"]["WalletKycInfoDto"];
+        InitUserVerificationResponseDto: {
+            verificationId: string;
+            verificationToken: string;
         };
-        WalletsFilter: Record<string, never>;
-        CreateWalletDto: {
-            name: string | null;
-        };
-        AggregatedBalanceDetailsDto: {
-            uuid: string;
-            amount: number;
-            fiat_amount: number;
-            currency: components["schemas"]["CryptoCurrencyDto"] | components["schemas"]["FiatCurrencyDto"];
-        };
-        AggregatedBalanceDto: {
-            symbol: string;
-            icon: string;
-            name: string;
-            is_crypto: boolean;
-            decimal: number;
-            amount: number;
-            fiat_amount: number;
-            details: components["schemas"]["AggregatedBalanceDetailsDto"][];
-        };
-        WalletExtendedDto: {
-            uuid: string;
-            logo_url: string | null;
-            name: string | null;
-            created_at: string;
-            /** @description Is main wallet for user */
-            is_main: boolean;
-            /** @enum {string} */
-            role: "owner" | "admin" | "user" | "auditor";
-            readonly kyc_info?: components["schemas"]["WalletKycInfoDto"];
-            fiat_total: number;
-            crypto_total: number;
-            /** @description Sum of orders.amount_from for non-terminal orders (NEW/PENDING/PROCESSING/FAILED/ERROR), converted to user default_currency — same currency as total_amount. */
-            pending_balance: number;
-            total_amount: number;
-            balance: components["schemas"]["AggregatedBalanceDto"][];
-        };
-        WalletUploadLogoResponseDto: {
-            fullPath: string;
-        };
-        WalletAddressDto: {
-            address: string | null;
-            chain: number | null;
-            created_at: string;
-            uuid: string | null;
-            wallet_uuid: string | null;
-        };
-        CreateWalletAddressDto: {
-            label: string;
-        };
-        TransactionsFilter: {
-            created_at?: string;
-            /** @enum {string} */
-            type?: "deposit" | "withdrawal";
-            /** @enum {string|null} */
-            method?: "p2p" | "crypto" | "bank_transfer" | "exchange" | "sbp" | "internal_fiat" | null;
-            /** @enum {string|null} */
-            record_type?: "WITHDRAWAL" | "DEPOSIT" | "REFERRAL_INCOME" | null;
-            "currency.uuid"?: string;
-            "meta.billing_amount_currency"?: string;
-            "meta.transaction_amount_currency"?: string;
-            /** Format: date-time */
-            from_created_at?: string;
-            /** Format: date-time */
-            to_created_at?: string;
-            /** @default false */
-            show_low_balance: boolean;
-            status?: ("complete" | "pending" | "canceled" | "failed" | "processing" | "new")[];
-        };
-        ChainDto: {
-            id: number;
-            /** @description Stable key of the network (e.g. `Binance Smart Chain`). Match on it; show `display_name`. */
-            name: string | null;
-            /** @description Stable key of the network (e.g. `MATIC`), also the icon key. Not a ticker to display. */
-            symbol: string | null;
-            /**
-             * @description Network name to show people (BNB Smart Chain, TRON, TON). Falls back to `name`.
-             * @example BNB Smart Chain
-             */
-            display_name: string | null;
-            is_beta: boolean | null;
-        };
-        AllChainsResponseDto: {
-            total: number;
-            data: components["schemas"]["ChainDto"][];
-            readonly has_more: boolean;
+        ResumeUserVerificationResponseDto: {
+            verificationId: string;
+            verificationToken: string;
         };
         CryptoCurrencyMetaDto: {
             icon: string;
@@ -1509,18 +1291,23 @@ export interface components {
             total: number;
             data: (components["schemas"]["CryptoCurrencyDto"] | components["schemas"]["FiatCurrencyDto"])[];
         };
-        /** @enum {string} */
-        UserVerificationFlow: "data" | "documents" | "face";
-        InitUserVerificationRequestDto: {
-            flow: components["schemas"]["UserVerificationFlow"];
+        ChainDto: {
+            id: number;
+            /** @description Stable key of the network (e.g. `Binance Smart Chain`). Match on it; show `display_name`. */
+            name: string | null;
+            /** @description Stable key of the network (e.g. `MATIC`), also the icon key. Not a ticker to display. */
+            symbol: string | null;
+            /**
+             * @description Network name to show people (BNB Smart Chain, TRON, TON). Falls back to `name`.
+             * @example BNB Smart Chain
+             */
+            display_name: string | null;
+            is_beta: boolean | null;
         };
-        InitUserVerificationResponseDto: {
-            verificationId: string;
-            verificationToken: string;
-        };
-        ResumeUserVerificationResponseDto: {
-            verificationId: string;
-            verificationToken: string;
+        AllChainsResponseDto: {
+            total: number;
+            data: components["schemas"]["ChainDto"][];
+            readonly has_more: boolean;
         };
         InitKycDataCollectionResponseDto: {
             providerType: string;
@@ -1608,7 +1395,10 @@ export interface components {
              * @enum {string}
              */
             type: "supplementary" | "gov_id_front" | "gov_id_back" | "gov_id_hand_hold" | "selfie" | "proof_of_address" | "auth_letter" | "formation_doc" | "proof_of_ownership" | "certificate_of_registration_doc" | "business_registration_doc" | "share_structure" | "constitution_or_annual_report" | "articles_of_association" | "ubo_declaration" | "partnership_mins_of_meeting" | "partnership_deed" | "certificate_of_incumbency" | "regulatory_license" | "state_registry_doc" | "good_standing_cert" | "business_proof_of_address" | "invoices" | "contracts" | "financial_statements" | "source_of_funds" | "business_bank_statement" | "source_of_wealth_ubo" | "customer_supplier_agreements";
-            /** Format: uri */
+            /**
+             * Format: uri
+             * @description Response: the file URL with a signature (the `token` query parameter); it opens the file for a limited time — read the entity again for a fresh one. Request: the file URL returned by the upload (fullPath); a URL from a response is accepted and filed without its signature.
+             */
             link: string;
             /**
              * Format: date
@@ -2191,6 +1981,8 @@ export interface components {
             base_currency: string;
             mass_payouts: components["schemas"]["SystemMassPayoutsConfigDto"];
             aml_check: components["schemas"]["SystemAmlCheckConfigDto"];
+            /** @description true when the tenant's compliance requests (RFI) are answered in the client app, false when they go by email (also the default for a tenant with no RFI setting). Absent when the channel could not be read: treat it as true. */
+            rfi_in_app?: boolean;
         };
         SystemChainsResponseDto: {
             total: number;
@@ -2490,6 +2282,14 @@ export interface operations {
             };
         };
         responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SignUpResponseDto"];
+                };
+            };
             /** @description Invite code is required */
             400: {
                 headers: {
@@ -2560,7 +2360,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TelegramSessionDto"] | components["schemas"]["TelegramTicketDto"];
+                    "application/json": components["schemas"]["TelegramSignUpSessionDto"] | components["schemas"]["TelegramSignUpTicketDto"];
                 };
             };
             /** @description Invalid tenant */
@@ -3065,35 +2865,15 @@ export interface operations {
     };
     StorageController_getFile: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Signature of a private file link, as handed out in responses (SFI-3209); the link opens the file only while it is valid. */
+                token?: unknown;
+            };
             header?: never;
             path: {
                 type: "kyc" | "logo" | "order-documents";
                 folder_id: string;
                 file_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/octet-stream": string;
-                };
-            };
-        };
-    };
-    StorageController_getFileUrl: {
-        parameters: {
-            query: {
-                path: string;
-            };
-            header?: never;
-            path: {
-                type: string;
             };
             cookie?: never;
         };
@@ -3284,18 +3064,53 @@ export interface operations {
             };
         };
     };
-    WalletsController_all: {
+    UserVerificationController_init: {
         parameters: {
-            query?: {
-                /** @description Number of records to skip */
-                offset?: number;
-                /** @description Number of records to return */
-                limit?: number;
-                sort_order?: "ASC" | "DESC";
-                sort_by?: "created_at" | null;
-                filter?: components["schemas"]["WalletsFilter"];
-                include_shared?: boolean;
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InitUserVerificationRequestDto"];
             };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InitUserVerificationResponseDto"];
+                };
+            };
+            /** @description The tenant runs the KYC forms flow: the user verifies through the KYC forms of CORE */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description User verification is not enabled for the tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    UserVerificationController_resume: {
+        parameters: {
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -3307,10 +3122,15 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PaginationResponseDto"] & {
-                        data?: unknown;
-                    };
+                    "application/json": components["schemas"]["ResumeUserVerificationResponseDto"];
                 };
+            };
+            /** @description The tenant runs the KYC forms flow: the user verifies through the KYC forms of CORE */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Unauthorized */
             401: {
@@ -3319,323 +3139,12 @@ export interface operations {
                 };
                 content?: never;
             };
-        };
-    };
-    WalletsController_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateWalletDto"];
-            };
-        };
-        responses: {
-            /** @description Wallet created */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WalletDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
+            /** @description Verification not initialized */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-        };
-    };
-    WalletsController_view: {
-        parameters: {
-            query?: {
-                show_low_balance?: boolean;
-            };
-            header?: never;
-            path: {
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WalletExtendedDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletsController_uploadLogoFile: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "multipart/form-data": {
-                    /**
-                     * Format: binary
-                     * @description Allowed types: JPEG, PNG, WEBP. Max size: 1 MB.
-                     */
-                    file: string;
-                };
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WalletUploadLogoResponseDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletsAddressesController_viewWalletAddressByChain: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-                chain: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WalletAddressDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletsAddressesController_createAddress: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-                chain: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateWalletAddressDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WalletAddressDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletsTransactionsController_viewTransactionsByWallet: {
-        parameters: {
-            query?: {
-                /** @description Number of records to skip */
-                offset?: number;
-                /** @description Number of records to return */
-                limit?: number;
-                sort_order?: "ASC" | "DESC";
-                sort_by?: "created_at" | "type" | "status" | "amount" | "method" | "record_type" | null;
-                filter?: components["schemas"]["TransactionsFilter"];
-            };
-            header?: never;
-            path: {
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PaginationResponseDto"] & {
-                        data?: unknown;
-                    };
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletsTransactionsController_viewTransactionByWallet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                wallet_id: string;
-                transaction_id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WalletTransactionDto"];
-                };
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    WalletsTransactionsController_export: {
-        parameters: {
-            query?: {
-                filter?: components["schemas"]["TransactionsFilter"];
-            };
-            header?: never;
-            path: {
-                wallet_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description You don`t have access to current wallet */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    ChainsController_all: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AllChainsResponseDto"];
-                };
             };
         };
     };
@@ -3721,51 +3230,7 @@ export interface operations {
             };
         };
     };
-    UserVerificationController_init: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["InitUserVerificationRequestDto"];
-            };
-        };
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InitUserVerificationResponseDto"];
-                };
-            };
-            /** @description The tenant runs the KYC forms flow: the user verifies through the KYC forms of CORE */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description User verification is not enabled for the tenant */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-        };
-    };
-    UserVerificationController_resume: {
+    ChainsController_all: {
         parameters: {
             query?: never;
             header?: never;
@@ -3774,34 +3239,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: {
+            default: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ResumeUserVerificationResponseDto"];
+                    "application/json": components["schemas"]["AllChainsResponseDto"];
                 };
-            };
-            /** @description The tenant runs the KYC forms flow: the user verifies through the KYC forms of CORE */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Unauthorized */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Verification not initialized */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
         };
     };

@@ -65,8 +65,8 @@ export const auth = {
       }),
   },
   signup: {
-    byType: (data: API.Auth.SignUp.ByType.Request, captcha: string): Promise<API.Auth.Tokens> =>
-      apiClientV2.postRequest('/auth/sign-up', {
+    byType: (data: API.Auth.SignUp.ByType.Request, captcha: string): Promise<API.Auth.SignUp.ByType.Response> =>
+      apiClientV2.postRequest<API.Auth.SignUp.ByType.Response>('/auth/sign-up', {
         data,
         headers: { captcha },
         context: { bypassUnauthorizedHandler: true },

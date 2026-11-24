@@ -85,6 +85,7 @@ export namespace API {
     export namespace SignUp {
       export namespace ByType {
         export type Request = operations['AuthController_signUp']['requestBody']['content']['application/json'];
+        export type Response = operations['AuthController_signUp']['responses']['200']['content']['application/json'];
       }
 
       export namespace Password {
@@ -4766,14 +4767,6 @@ export namespace API {
       export namespace Upload {
         export type Response =
           operations['StorageController_uploadKycFile']['responses']['201']['content']['application/json'];
-      }
-
-      export namespace GetFileUrl {
-        export type Request = {
-          path: string;
-        };
-        export type Response =
-          operations['StorageController_getFileUrl']['responses']['200']['content']['application/octet-stream'];
       }
 
       export namespace GetFileById {

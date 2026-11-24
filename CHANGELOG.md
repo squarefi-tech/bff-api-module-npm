@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`promo_code_applied` on the sign-up answers (SFI-3453, BFF #1112).** It says whether the user ends the sign-up in the promo code's group. The BFF always sends it, `false` without a code. A `false` on a success means the account was created without the code, e.g. a user registered before and moved to a group of their own.
+  - `POST /auth/sign-up` answers `SignUpResponseDto` (`{ promo_code_applied: boolean }`). New `API.Auth.SignUp.ByType.Response`.
+  - `POST /auth/sign-up/telegram` answers `TelegramSignUpSessionDto` (Supabase tenants) or `TelegramSignUpTicketDto` (Clerk tenants), the session or ticket plus `promo_code_applied`. `API.Auth.Telegram.Signup.Response` picks it up.
+  - `POST /auth/register` (the Clerk web sign-up) does not send it.
+
+### Changed
+
+- **`auth.signup.byType` resolves to `API.Auth.SignUp.ByType.Response` instead of `API.Auth.Tokens`.** `POST /auth/sign-up` never answered tokens: the session comes after the OTP. It answered an empty body until #1112 and answers `{ promo_code_applied }` now.
+- **V2 types regenerated from the DEV spec (`npm run update:types`, `apiV2` only).** Last regenerated before 1.36.113. The other generated files are not regenerated here.
+
+### Removed
+
+- **`storage.kyc.getFileUrl` and `API.Storage.KYC.GetFileUrl`.** The BFF removed the `GET /storage/{type}?path=` read route on 13.11 (SFI-3209, `fix(storage): drop the unused ?path= read route`). It is on BFF develop and main, so the method only gets a 404. Read a KYC file with `storage.kyc.getFileById`. This had kept `apiV2` from being regenerated since 1.36.113.
+- **The BFF wallet routes the BFF no longer serves, from the generated V2 types:** `/wallets`, `/wallets/{wallet_id}`, `/wallets/{wallet_id}/logo`, `/wallets/{wallet_id}/addresses/{chain}`, `/wallets/{wallet_id}/transactions`, `/wallets/{wallet_id}/transactions/{transaction_id}`, `/wallets/{wallet_id}/transactions/export/csv`, `/storage/{type}`, with their operations and the schemas only they used (`WalletDto`, `WalletExtendedDto`, `CreateWalletDto`, `WalletKycInfoDto`, `AggregatedBalanceDto`, `AggregatedBalanceDetailsDto`, `WalletUploadLogoResponseDto`, `WalletAddressDto`, `CreateWalletAddressDto`, `TransactionsFilter`). No SDK method wraps them. The SDK's wallet methods go to CORE (V1).
+
 ## [1.36.117] - 2026-11-24
 
 ### Added
