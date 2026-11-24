@@ -145,8 +145,9 @@ export const frontend = {
           `/frontend/issuing/cards/${card_id}/transactions`,
           { params },
         ),
-      // No `responseType: 'text'`, like the other CSV methods on this client: the body stays a string
-      // (it is not JSON), while a 400/403 error body is still parsed, so its `error.code` reaches the caller.
+      // No `responseType: 'text'`, like `orders.frontend.list.csv` and `wallets.transactions.csv`: the body
+      // stays a string (it is not JSON), while a 400/403 error body is still parsed, so its `error.code`
+      // reaches the caller and the reverification interceptor.
       transactionsCsv: ({
         card_id,
         ...params

@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `issuing.transactions.csv.getBySubAccountId(sub_account_id)` → `frontend.issuing.subAccounts.transactionsCsv({ sub_account_id })`.
   - Unlike the legacy routes, the frontend CSV routes answer 403 when the wallet's KYC does not allow reads.
   - `issuing.sub_accounts.transactions.get` → `frontend.issuing.subAccounts.transactions`. `from_timestamp` / `to_timestamp` become `from_date` / `to_date`, `limit` / `offset` are optional, and the answer is `{ data, pagination: { offset, limit, total } }` instead of `{ count, data, has_more }`. The `card_id` filter is being added to the frontend route in SFI-2131.
-  - `orders.v2.orderTypes.list` → `orders.frontend.types.list`, which answers the JSON envelope with the order types in `data` instead of a bare array; an item's `direction` is `transaction_type` there.
+  - `orders.v2.orderTypes.list` → `orders.frontend.types.list`, which answers the JSON envelope with the order types in `data` instead of a bare array. Its items have no `direction`: the direction is in `transaction_type` (`'deposit' | 'withdrawal' | null`, `null` for internal types).
 
 ## [1.36.115] - 2026-11-22
 
