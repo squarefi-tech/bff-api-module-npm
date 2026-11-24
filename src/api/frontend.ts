@@ -145,6 +145,16 @@ export const frontend = {
           `/frontend/issuing/cards/${card_id}/transactions`,
           { params },
         ),
+      // `text/csv`, not the JSON envelope — resolved as the raw CSV string (`responseType: 'text'`,
+      // as `massPayouts.reportCsv`). Replaces the legacy `issuing.transactions.csv.getByCardId`.
+      transactionsCsv: ({
+        card_id,
+        ...params
+      }: API.Frontend.Issuing.Cards.TransactionsCsv.Request): Promise<API.Frontend.Issuing.Cards.TransactionsCsv.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.Issuing.Cards.TransactionsCsv.Response>(
+          `/frontend/issuing/cards/${card_id}/transactions/csv`,
+          { params, responseType: 'text' },
+        ),
       // Unified create — the backend routes to the balance or prepaid flow by the program's
       // `sub_account_type`, so there is one method for both. Replaces the legacy
       // `issuing.cards.create.*` methods. The cardholder is either an explicit `cardholder_id`
@@ -298,6 +308,16 @@ export const frontend = {
         apiClientV1Frontend.getRequest<API.Frontend.Issuing.SubAccounts.Transactions.Response>(
           `/frontend/issuing/sub-accounts/${sub_account_id}/transactions`,
           { params },
+        ),
+      // Raw CSV string, like `cards.transactionsCsv`. Replaces the legacy
+      // `issuing.transactions.csv.getBySubAccountId`.
+      transactionsCsv: ({
+        sub_account_id,
+        ...params
+      }: API.Frontend.Issuing.SubAccounts.TransactionsCsv.Request): Promise<API.Frontend.Issuing.SubAccounts.TransactionsCsv.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.Issuing.SubAccounts.TransactionsCsv.Response>(
+          `/frontend/issuing/sub-accounts/${sub_account_id}/transactions/csv`,
+          { params, responseType: 'text' },
         ),
       deposit: ({
         sub_account_id,

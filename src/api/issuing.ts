@@ -154,11 +154,20 @@ export const issuing = {
       apiClientV1.getRequest<API.Cards.TransactionsList>(`/issuing/transactions/`, {
         params: { limit, offset, fiat_account_id, new_scheme: true, transaction_type, status, from, to },
       }),
+    /** @deprecated The legacy `/issuing/*` CSV routes are being retired (SFI-2131). Use the `transactionsCsv` methods under `frontend.issuing`. */
     csv: {
+      /**
+       * @deprecated Use `frontend.issuing.cards.transactionsCsv({ card_id })` (SFI-2131) — takes an object
+       * instead of the bare id, with an optional `to_date`.
+       */
       getByCardId: (card_id: string): Promise<string> =>
         apiClientV1.getRequest<string>(`/issuing/transactions/csv`, {
           params: { card_id },
         }),
+      /**
+       * @deprecated Use `frontend.issuing.subAccounts.transactionsCsv({ sub_account_id })` (SFI-2131) — takes an
+       * object instead of the bare id, with optional `card_id`, `status`, `from_date`, `to_date` filters.
+       */
       getBySubAccountId: (sub_account_id: string): Promise<string> =>
         apiClientV1.getRequest<string>(`/issuing/sub_account/${sub_account_id}/transactions/csv`),
     },
@@ -217,6 +226,12 @@ export const issuing = {
         data: { wallet_id, program_id },
       }),
     transactions: {
+      /**
+       * @deprecated Use `frontend.issuing.subAccounts.transactions` (SFI-2131). `from_timestamp` / `to_timestamp`
+       * become `from_date` / `to_date`, `limit` / `offset` are optional, and there is no `card_id` filter — read one
+       * card's transactions with `frontend.issuing.cards.transactions`. The answer is typed
+       * `API.Frontend.Issuing.SubAccounts.Transactions.Response`.
+       */
       get: ({
         sub_account_id,
         ...params

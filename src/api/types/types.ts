@@ -1531,6 +1531,9 @@ export namespace API {
       type CardLimitsRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/limits'];
       type CardTransactionsRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/transactions'];
       type SubAccountTransactionsRoot = pathsV1Frontend['/frontend/issuing/sub-accounts/{sub_account_id}/transactions'];
+      type CardTransactionsCsvRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/transactions/csv'];
+      type SubAccountTransactionsCsvRoot =
+        pathsV1Frontend['/frontend/issuing/sub-accounts/{sub_account_id}/transactions/csv'];
       type CardDepositRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/deposit'];
       type CardWithdrawRoot = pathsV1Frontend['/frontend/issuing/cards/{card_id}/withdraw'];
       type SubAccountDepositRoot = pathsV1Frontend['/frontend/issuing/sub-accounts/{sub_account_id}/deposit'];
@@ -1587,6 +1590,14 @@ export namespace API {
           } & NonNullable<SubAccountTransactionsRoot['get']['parameters']['query']>;
           export type Response = SubAccountTransactionsRoot['get']['responses']['200']['content']['application/json'];
           export type Transaction = NonNullable<Response['data']>[number];
+        }
+
+        /** `text/csv`, not the JSON envelope — the response is the raw CSV body. */
+        export namespace TransactionsCsv {
+          export type Request = {
+            sub_account_id: string;
+          } & NonNullable<SubAccountTransactionsCsvRoot['get']['parameters']['query']>;
+          export type Response = SubAccountTransactionsCsvRoot['get']['responses']['200']['content']['text/csv'];
         }
 
         export namespace Deposit {
@@ -1672,6 +1683,14 @@ export namespace API {
           } & NonNullable<CardTransactionsRoot['get']['parameters']['query']>;
           export type Response = CardTransactionsRoot['get']['responses']['200']['content']['application/json'];
           export type Transaction = NonNullable<Response['data']>[number];
+        }
+
+        /** `text/csv`, not the JSON envelope — the response is the raw CSV body. */
+        export namespace TransactionsCsv {
+          export type Request = {
+            card_id: string;
+          } & NonNullable<CardTransactionsCsvRoot['get']['parameters']['query']>;
+          export type Response = CardTransactionsCsvRoot['get']['responses']['200']['content']['text/csv'];
         }
 
         // Unified create: the endpoint routes to the balance or prepaid flow by the program's
