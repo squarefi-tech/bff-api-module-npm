@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`promo_code_applied` on the sign-up answers (SFI-3453, BFF #1112).** It says whether the user ends the sign-up in the promo code's group. The BFF always sends it, `false` without a code. A `false` on a success means the account was created without the code, e.g. a user registered before and moved to a group of their own.
+  - `POST /auth/sign-up` answers `SignUpResponseDto` (`{ promo_code_applied: boolean }`). New `API.Auth.SignUp.ByType.Response`.
+  - `POST /auth/sign-up/telegram` answers `TelegramSignUpSessionDto` (Supabase tenants) or `TelegramSignUpTicketDto` (Clerk tenants), the session or ticket plus `promo_code_applied`. `API.Auth.Telegram.Signup.Response` picks it up.
+  - `POST /auth/register` (the Clerk web sign-up) does not send it.
+- **`rfi_in_app` on `GET /system/config` (`API.System.Config`, `SystemConfigDto`).** `true` when the tenant's compliance requests (RFI) are answered in the client app, `false` when they go by email, also the default for a tenant with no RFI setting. Absent when the channel could not be read: treat that as `true`.
+- **`token` query on `GET /storage/{type}/{folderId}/{fileId}` (`StorageController_getFile`, SFI-3209).** It carries the signature of a private file link as the BFF hands it out. The link opens the file only while the signature is valid. `storage.kyc.getFileById` and `storage.orderDocuments.getFileById` do not pass it yet.
+
+### Changed
+
+- **Breaking for type consumers: `auth.signup.byType` resolves to `API.Auth.SignUp.ByType.Response` instead of `API.Auth.Tokens`.** `POST /auth/sign-up` never answered tokens: the session comes after the OTP. It answered an empty body until #1112 and answers `{ promo_code_applied }` now. None of neo-bank-b2b, NON-b2b-FRONTEND, noname-wallet-v2 and neo-bank-b2c calls it.
+- **The `link` of a KYC document (`KycDocumentDto`) is described as a signed URL.** In a response it carries the `token` signature and opens the file for a limited time, so read the entity again for a fresh link instead of keeping it. In a request it is the file URL from the upload; a URL from a response is accepted and filed without its signature. The type is still `string`.
+- **V2 types regenerated from the DEV spec (`npm run update:types`, `apiV2` only).** Last regenerated before 1.36.113. Every change an app can see is listed in this section. The other generated files are not regenerated here.
+
+### Removed
+
+- **Breaking for type consumers: `storage.kyc.getFileUrl` and `API.Storage.KYC.GetFileUrl`.** The BFF removed the `GET /storage/{type}?path=` read route on 13.11 (SFI-3209, `fix(storage): drop the unused ?path= read route`). It is on BFF develop and main, so the method only got a 404. Open a KYC file by the signed `link` of its document. This method had kept `apiV2` from being regenerated since 1.36.113. None of the four frontends above calls it.
+- **The BFF wallet routes the BFF no longer serves, from the generated V2 types:** `/wallets`, `/wallets/{wallet_id}`, `/wallets/{wallet_id}/logo`, `/wallets/{wallet_id}/addresses/{chain}`, `/wallets/{wallet_id}/transactions`, `/wallets/{wallet_id}/transactions/{transaction_id}`, `/wallets/{wallet_id}/transactions/export/csv`. Their operations and the schemas only they used go too (`WalletDto`, `WalletExtendedDto`, `CreateWalletDto`, `WalletKycInfoDto`, `AggregatedBalanceDto`, `AggregatedBalanceDetailsDto`, `WalletUploadLogoResponseDto`, `WalletAddressDto`, `CreateWalletAddressDto`, `TransactionsFilter`). No SDK method wraps them; the SDK's wallet methods go to CORE (V1).
+
 ## [1.36.117] - 2026-11-24
 
 ### Added

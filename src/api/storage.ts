@@ -11,10 +11,6 @@ export const storage = {
         data: formData,
       });
     },
-    getFileUrl: ({ path }: API.Storage.KYC.GetFileUrl.Request): Promise<API.Storage.KYC.GetFileUrl.Response> =>
-      apiClientV2.getRequest<API.Storage.KYC.GetFileUrl.Response>('/storage/kyc', {
-        params: { path },
-      }),
     getFileById: ({
       folderId,
       fileId,
