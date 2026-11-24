@@ -232,8 +232,7 @@ export const issuing = {
        * @deprecated Use `frontend.issuing.subAccounts.transactions` (SFI-2131). `from_timestamp` / `to_timestamp`
        * become `from_date` / `to_date` and `limit` / `offset` are optional. The answer is the JSON envelope
        * `{ data, pagination: { offset, limit, total } }` (`API.Frontend.Issuing.SubAccounts.Transactions.Response`)
-       * instead of `{ count, data, has_more }`: page by `pagination.total`. The `card_id` filter is being added
-       * to the frontend route in SFI-2131 and arrives with the next type regeneration.
+       * instead of `{ count, data, has_more }`: page by `pagination.total`. Narrow it to one card with `card_id`.
        */
       get: ({
         sub_account_id,
