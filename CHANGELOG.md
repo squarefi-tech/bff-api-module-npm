@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.116] - 2026-11-24
+
 ### Added
 
 - **CSV export of card and sub-account transactions on the CORE frontend routes (SFI-2131).** Both resolve the raw CSV body as a string, like the legacy methods they replace, so an app can put the answer straight into a `Blob`. The CSV lists every transaction newest first, with a running balance.
