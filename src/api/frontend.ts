@@ -145,6 +145,17 @@ export const frontend = {
           `/frontend/issuing/cards/${card_id}/transactions`,
           { params },
         ),
+      // No `responseType: 'text'`, like `orders.frontend.list.csv` and `wallets.transactions.csv`: the body
+      // stays a string (it is not JSON), while a 400/403 error body is still parsed, so its `error.code`
+      // reaches the caller and the reverification interceptor.
+      transactionsCsv: ({
+        card_id,
+        ...params
+      }: API.Frontend.Issuing.Cards.TransactionsCsv.Request): Promise<API.Frontend.Issuing.Cards.TransactionsCsv.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.Issuing.Cards.TransactionsCsv.Response>(
+          `/frontend/issuing/cards/${card_id}/transactions/csv`,
+          { params },
+        ),
       // Unified create — the backend routes to the balance or prepaid flow by the program's
       // `sub_account_type`, so there is one method for both. Replaces the legacy
       // `issuing.cards.create.*` methods. The cardholder is either an explicit `cardholder_id`
@@ -297,6 +308,14 @@ export const frontend = {
       }: API.Frontend.Issuing.SubAccounts.Transactions.Request): Promise<API.Frontend.Issuing.SubAccounts.Transactions.Response> =>
         apiClientV1Frontend.getRequest<API.Frontend.Issuing.SubAccounts.Transactions.Response>(
           `/frontend/issuing/sub-accounts/${sub_account_id}/transactions`,
+          { params },
+        ),
+      transactionsCsv: ({
+        sub_account_id,
+        ...params
+      }: API.Frontend.Issuing.SubAccounts.TransactionsCsv.Request): Promise<API.Frontend.Issuing.SubAccounts.TransactionsCsv.Response> =>
+        apiClientV1Frontend.getRequest<API.Frontend.Issuing.SubAccounts.TransactionsCsv.Response>(
+          `/frontend/issuing/sub-accounts/${sub_account_id}/transactions/csv`,
           { params },
         ),
       deposit: ({

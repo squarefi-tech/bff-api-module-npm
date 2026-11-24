@@ -92,6 +92,11 @@ export const orders = {
       }),
 
     orderTypes: {
+      /**
+       * @deprecated Use `orders.frontend.types.list` (SFI-2131). It answers the JSON envelope — the order types
+       * are in `data` — instead of a bare array. Its items (`OrderTypeInfo`) have no `direction`: read the
+       * direction from `transaction_type` (`'deposit' | 'withdrawal' | null`, `null` for internal types).
+       */
       list: (): Promise<API.Orders.V2.OrderTypes.List.Response> =>
         apiClientV1.getRequest<API.Orders.V2.OrderTypes.List.Response>('/v2/orders/order_types'),
     },

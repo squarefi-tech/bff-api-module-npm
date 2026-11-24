@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **CSV export of card and sub-account transactions on the CORE frontend routes (SFI-2131).** Both resolve the raw CSV body as a string, like the legacy methods they replace, so an app can put the answer straight into a `Blob`. The CSV lists every transaction newest first, with a running balance.
+  - `frontend.issuing.cards.transactionsCsv({ card_id, to_date? })` calls `GET /frontend/issuing/cards/{card_id}/transactions/csv`: vendor transactions plus the card's top-ups and withdrawals. `to_date` (ISO 8601, inclusive) cuts off later transactions. Types: `API.Frontend.Issuing.Cards.TransactionsCsv`.
+  - `frontend.issuing.subAccounts.transactionsCsv({ sub_account_id, card_id?, status?, from_date?, to_date? })` calls `GET /frontend/issuing/sub-accounts/{sub_account_id}/transactions/csv`: vendor transactions, pending authorizations and top-ups. `card_id` narrows it to one card, `status` to one status, `from_date` / `to_date` (ISO 8601, inclusive) to a period. Types: `API.Frontend.Issuing.SubAccounts.TransactionsCsv`.
+  - An invalid query parameter answers 400; a card or sub-account the caller has no access to, or a wallet whose KYC does not allow reads, answers 403. Error bodies arrive parsed, as on the other CSV methods, so `error.code` is readable.
+
+### Deprecated
+
+- **Legacy methods that now have a CORE frontend replacement (SFI-2131).** They still work; nothing is removed.
+  - `issuing.transactions.csv.getByCardId(card_id)` → `frontend.issuing.cards.transactionsCsv({ card_id })`.
+  - `issuing.transactions.csv.getBySubAccountId(sub_account_id)` → `frontend.issuing.subAccounts.transactionsCsv({ sub_account_id })`.
+  - Unlike the legacy routes, the frontend CSV routes answer 403 when the wallet's KYC does not allow reads.
+  - `issuing.sub_accounts.transactions.get` → `frontend.issuing.subAccounts.transactions`. `from_timestamp` / `to_timestamp` become `from_date` / `to_date`, `limit` / `offset` are optional, and the answer is `{ data, pagination: { offset, limit, total } }` instead of `{ count, data, has_more }`. The `card_id` filter is being added to the frontend route in SFI-2131.
+  - `orders.v2.orderTypes.list` → `orders.frontend.types.list`, which answers the JSON envelope with the order types in `data` instead of a bare array. Its items have no `direction`: the direction is in `transaction_type` (`'deposit' | 'withdrawal' | null`, `null` for internal types).
+
 ## [1.36.115] - 2026-11-22
 
 ### Added
