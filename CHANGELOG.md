@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.118] - 2026-11-24
+
 ### Added
 
 - **`promo_code_applied` on the sign-up answers (SFI-3453, BFF #1112).** It says whether the user ends the sign-up in the promo code's group. The BFF always sends it, `false` without a code. A `false` on a success means the account was created without the code, e.g. a user registered before and moved to a group of their own.
