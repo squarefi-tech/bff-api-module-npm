@@ -43,6 +43,13 @@ export interface paths {
                                 role?: string;
                                 /** Format: uuid */
                                 wallet_id?: string;
+                                /**
+                                 * @description Public IPv4 addresses the key may be used from. Empty only for keys created before addresses became required — such a key works from any address. Managed with `/frontend/access/keys/{key_id}/allowed-ips`.
+                                 * @example [
+                                 *       "203.0.113.4"
+                                 *     ]
+                                 */
+                                allowed_ips?: string[];
                                 /** Format: date-time */
                                 created_at?: string;
                                 /** Format: date-time */
@@ -98,6 +105,13 @@ export interface paths {
                          * @example 550e8400-e29b-41d4-a716-446655440000
                          */
                         wallet_id: string;
+                        /**
+                         * @description Required. Public IPv4 addresses the key may be used from — at least one, up to 50.
+                         * @example [
+                         *       "203.0.113.4"
+                         *     ]
+                         */
+                        allowed_ips: string[];
                     };
                 };
             };
@@ -126,6 +140,7 @@ export interface paths {
                                  * @description Associated wallet ID
                                  */
                                 wallet_id?: string;
+                                allowed_ips?: string[];
                                 /** Format: date-time */
                                 created_at?: string;
                             };
@@ -278,6 +293,250 @@ export interface paths {
                     };
                 };
                 /** @description Access denied */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description API key not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/access/keys/{key_id}/allowed-ips": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Replace the IP addresses an API key may be used from
+         * @description Replaces the key's list of public IPv4 addresses. A request with the key from any other address is refused with `403 IP_NOT_ALLOWED`. The list cannot be emptied: at least one address stays — revoke the key to stop it being used.
+         *
+         *     Up to 50 plain addresses such as `203.0.113.4`. Ranges, hostnames, IPv6 and private, loopback or carrier-NAT addresses are refused.
+         *
+         *     **Authentication**: Bearer token and x-tenant-id header; the caller must be `owner` or `admin` of the key's wallet.
+         *
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    key_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @example [
+                         *       "203.0.113.4",
+                         *       "198.51.100.7"
+                         *     ] */
+                        allowed_ips: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description The key's list after the change */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /** Format: uuid */
+                                id?: string;
+                                /** @example [
+                                 *       "203.0.113.4"
+                                 *     ] */
+                                allowed_ips?: string[];
+                                /** Format: date-time */
+                                updated_at?: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Not a public IPv4 address, an empty list, more than 50 addresses, the address is not on the list, removing the last address, or the key is revoked */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Caller is not owner/admin of the key's wallet */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description API key not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        /**
+         * Add an IP address to an API key's list
+         * @description Adds one public IPv4 address. Adding an address that is already listed changes nothing. Adding the first address restricts a key created before addresses became required.
+         *
+         *     **Authentication**: Bearer token and x-tenant-id header; the caller must be `owner` or `admin` of the key's wallet.
+         *
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    key_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @example 203.0.113.4 */
+                        ip: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description The key's list after the change */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /** Format: uuid */
+                                id?: string;
+                                /** @example [
+                                 *       "203.0.113.4"
+                                 *     ] */
+                                allowed_ips?: string[];
+                                /** Format: date-time */
+                                updated_at?: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Not a public IPv4 address, an empty list, more than 50 addresses, the address is not on the list, removing the last address, or the key is revoked */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Caller is not owner/admin of the key's wallet */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description API key not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/access/keys/{key_id}/allowed-ips/{ip}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove an IP address from an API key's list
+         * @description Removes one address. The last address cannot be removed: add the new one first, or revoke the key.
+         *
+         *     **Authentication**: Bearer token and x-tenant-id header; the caller must be `owner` or `admin` of the key's wallet.
+         *
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    key_id: string;
+                    ip: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description The key's list after the change */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @example true */
+                            success?: boolean;
+                            data?: {
+                                /** Format: uuid */
+                                id?: string;
+                                /** @example [
+                                 *       "203.0.113.4"
+                                 *     ] */
+                                allowed_ips?: string[];
+                                /** Format: date-time */
+                                updated_at?: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Not a public IPv4 address, an empty list, more than 50 addresses, the address is not on the list, removing the last address, or the key is revoked */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Caller is not owner/admin of the key's wallet */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -3214,6 +3473,11 @@ export interface paths {
                     cardholder_id?: string;
                     /** @description Filter cards by last 4 digits of the card number (partial, case-insensitive match) */
                     last4?: string;
+                    /** @description Only the card created with this `request_id` (`POST /frontend/issuing/cards`) — to find a card whose
+                     *     creation answered with a timeout. Cards of the wallet only; a refused creation comes back too, as
+                     *     `status: FAILED`. A non-UUID answers `400 VALIDATION_ERROR`.
+                     *      */
+                    request_id?: string;
                     /** @description Number of items to skip */
                     offset?: number;
                     /** @description Number of items to return */
@@ -4124,7 +4388,9 @@ export interface paths {
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
-         *     **Access Control**: User must have access to the card's transactions
+         *     **Access Control**: User must have access to the card's transactions. A wallet
+         *     `user` (who sees their own card, not its account) gets the card's own rows only:
+         *     its purchases and the top-ups that name it, none of the account's other rows.
          *
          */
         get: {
@@ -4152,6 +4418,78 @@ export interface paths {
                     };
                 };
                 /** @description Invalid query parameter */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Access denied to this card */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/issuing/cards/{card_id}/statement/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download a card statement for a period as CSV
+         * @description The card's statement for the period between `from_date` and `to_date` —
+         *     vendor transactions and the card's top-ups and withdrawals — as a CSV file.
+         *     Both dates are required; the period is at most 100 days.
+         *
+         *     **Authentication**: Bearer token with x-tenant-id header required
+         *
+         *     **Access Control**: User must have access to the card's transactions. A wallet
+         *     `user` (who sees their own card, not its account) gets the card's own rows only:
+         *     its purchases and the top-ups that name it, none of the account's other rows.
+         *
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Start of the period (inclusive), an ISO 8601 timestamp; a bare date (`2026-09-01`) means its first instant, 00:00 UTC */
+                    from_date: string;
+                    /** @description End of the period (inclusive), an ISO 8601 timestamp; a bare date (`2026-09-30`) covers that whole day, up to 23:59:59.999 UTC */
+                    to_date: string;
+                };
+                header?: never;
+                path: {
+                    /** @description The ID of the card */
+                    card_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description CSV file with the card's statement for the period */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/csv": string;
+                    };
+                };
+                /** @description `MISSING_DATES` — `from_date` or `to_date` is missing; `INVALID_DATES` — a date does not parse;
+                 *     `INVALID_RANGE` — `to_date` is before `from_date`; `RANGE_TOO_LARGE` — the period is longer than 100 days.
+                 *      */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -4851,6 +5189,8 @@ export interface paths {
                     limit?: number;
                     /** @description Exact (case-insensitive) match on the transaction status */
                     status?: string;
+                    /** @description Only the transactions of this card of the sub-account. A card of another account matches nothing. */
+                    card_id?: string;
                     /** @description Start date for filtering transactions */
                     from_date?: string;
                     /** @description End date for filtering transactions */
@@ -4883,6 +5223,13 @@ export interface paths {
                         };
                     };
                 };
+                /** @description `VALIDATION_ERROR` — `card_id` is not a single UUID */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
                 /** @description Access denied to this sub-account */
                 403: {
                     headers: {
@@ -4911,6 +5258,11 @@ export interface paths {
          * Download sub-account transactions as CSV
          * @description Every transaction on the sub-account — vendor transactions, pending
          *     authorizations and top-ups — newest first, with a running balance.
+         *     With `card_id` the file holds that card's transactions only, as the card feeds
+         *     do: no top-up of the account. `status`, `from_date` and `to_date` apply to every
+         *     row, top-ups included. A file filtered by `card_id` or `status` leaves the four
+         *     balance columns empty: it omits money that moved the account, so no running
+         *     balance can be stated.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -4920,7 +5272,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    /** @description Only this card's transactions */
+                    /** @description Only this card's transactions; the account's top-ups are left out */
                     card_id?: string;
                     /** @description Only transactions with this status */
                     status?: string;
@@ -4948,6 +5300,75 @@ export interface paths {
                     };
                 };
                 /** @description Invalid query parameter */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Access denied to this sub-account */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/frontend/issuing/sub-accounts/{sub_account_id}/statement/csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Download a sub-account statement for a period as CSV
+         * @description The sub-account's statement for the period between `from_date` and `to_date`
+         *     as a CSV file. Both dates are required; the period is at most 100 days.
+         *
+         *     **Authentication**: Bearer token with x-tenant-id header required
+         *
+         *     **Access Control**: User must have access to the sub-account
+         *
+         */
+        get: {
+            parameters: {
+                query: {
+                    /** @description Start of the period (inclusive), an ISO 8601 timestamp; a bare date (`2026-09-01`) means its first instant, 00:00 UTC */
+                    from_date: string;
+                    /** @description End of the period (inclusive), an ISO 8601 timestamp; a bare date (`2026-09-30`) covers that whole day, up to 23:59:59.999 UTC */
+                    to_date: string;
+                };
+                header?: never;
+                path: {
+                    /** @description The ID of the sub-account */
+                    sub_account_id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description CSV file with the sub-account's statement for the period */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/csv": string;
+                    };
+                };
+                /** @description `MISSING_DATES` — `from_date` or `to_date` is missing; `INVALID_DATES` — a date does not parse;
+                 *     `INVALID_RANGE` — `to_date` is before `from_date`; `RANGE_TOO_LARGE` — the period is longer than 100 days.
+                 *      */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -5379,6 +5800,8 @@ export interface paths {
                                 order_types: string[];
                                 /** @description Card issuing price from user group settings */
                                 issuing_price_usd?: number;
+                                /** @description Top-up the group settings require on a new card of this program, in the card's currency; `0` — none */
+                                initial_topup_usd?: number;
                                 /** @description Maximum cards allowed from group settings */
                                 max_cards?: number | null;
                                 /** @description Daily card creation limit from group settings */
@@ -5863,29 +6286,44 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Bad Request — missing/invalid fields, or a `user_data_id` precondition not met (user not verified, no KYC applicant, or the applicant is unknown to the KYC provider). Code `INVALID_REQUEST`; the message names the failed precondition. On a tenant of the KYC forms flow the member's personal KYC entity is the dossier and the program's card form the gate (`GET /frontend/kyc/entities/{entity_id}/forms?programs=&wallet_id=`): `CARD_REQUIREMENTS_INCOMPLETE` with `details.fields` (the catalog keys still empty), `CARD_VERIFICATION_REQUIRED` (the level needs the verified document and face), `CARD_KYC_REFUSED` (the member's application, or their identity check, was refused for good), `KYC_PERSONAL_ENTITY_MISSING` (the member has no personal entity yet).
+                /** @description Bad Request — missing/invalid fields, or a `user_data_id` precondition not met (user not verified, no KYC applicant, or the applicant is unknown to the KYC provider). Code `INVALID_REQUEST`; the message names the failed precondition. On a tenant of the KYC forms flow the member's personal KYC entity is the dossier and the program's card form the gate (`GET /frontend/kyc/entities/{entity_id}/forms?programs=&wallet_id=`): `CARD_REQUIREMENTS_INCOMPLETE` with `details.fields` (the catalog keys still empty: the required fields of the card form, then the identity document's data the level names (`gov_id_type`, `gov_id_number`, …) that the entity does not hold — where the card form ends in the identity check, only once it has passed, and a field the tenant's profile takes from the check is not named after it; a field the profile asks as optional counts. The card form asks that data only where the tenant's profile does, and a passed check adds no field to it: a key the form does not show is not the member's to enter — the compliance team enters what the check did not bring, and the create answers the same error until then), `CARD_VERIFICATION_REQUIRED` (the program's card form ends in the identity check — see `needs_identity_verification` of the program in `GET /frontend/kyc/entities/{entity_id}/targets` — and the member's document is not verified yet; checked after the form's required fields, before the document's data), `CARD_KYC_REFUSED` (the member's application, or their identity check, was refused for good), `KYC_PERSONAL_ENTITY_MISSING` (the member has no personal entity yet).
                  *      */
                 400: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
-                /** @description Access denied to wallet */
+                /** @description `UNAUTHORIZED` — missing or invalid Bearer token, `x-tenant-id` or session */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Access denied to wallet; `KYC_REQUIREMENTS_NOT_MET` — the wallet's KYC does not allow this action */
                 403: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
                 /** @description `user_data_id` does not resolve to a user, or `issuing_program_id` names no program */
                 404: {
                     headers: {
                         [name: string]: unknown;
                     };
-                    content?: never;
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
                 };
-                /** @description On a tenant of the KYC forms flow, `KYC_INDIVIDUAL_AMBIGUOUS` when the member has several personal KYC entities (compliance untangles them), or `CARD_REQUIREMENTS_PENDING_REVIEW` with `details.fields` when the card form's required fields are answered but wait in a submission compliance has not decided. Otherwise `DUPLICATE_CARDHOLDER`: a cardholder already exists for this person in this wallet + issuing_program — the member named by `user_data_id` already holds one, or one carries this email. `error.details.cardholder_id` names it (when it could be resolved) so the client can adopt it instead of dead-ending. When `user_data_id` names a member who may adopt the row, the row is first completed from that member's KYC dossier: empty identity fields and document photos of a type it does not hold are filled in, and nothing already on it is changed. Re-read the row for its refreshed `missing_kyc_fields`.
+                /** @description On a tenant of the KYC forms flow, `KYC_INDIVIDUAL_AMBIGUOUS` when the member has several personal KYC entities (compliance untangles them), or `CARD_REQUIREMENTS_PENDING_REVIEW` with `details.fields` when the card form's required fields are answered but wait in a submission compliance has not decided (the identity document's data the level names counts there too; checked last — while the identity check is not passed where the form needs it, `400 CARD_VERIFICATION_REQUIRED` comes first), or `KYC_FORM_CONDITIONS_CYCLE` when the show conditions of the profiles of the card form read each other in a circle (the operator fixes the profiles). Otherwise `DUPLICATE_CARDHOLDER`: a cardholder already exists for this person in this wallet + issuing_program — the member named by `user_data_id` already holds one, or one carries this email. `error.details.cardholder_id` names it (when it could be resolved) so the client can adopt it instead of dead-ending. When `user_data_id` names a member who may adopt the row, the row is first completed from that member's KYC dossier: empty identity fields and document photos of a type it does not hold are filled in, and nothing already on it is changed. Re-read the row for its refreshed `missing_kyc_fields`.
                  *      */
                 409: {
                     headers: {
@@ -5910,21 +6348,6 @@ export interface paths {
                             };
                         };
                     };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description The KYC provider failed while the dossier was being pulled for `user_data_id` (code `EXTERNAL_SERVICE_ERROR`). Retry later; the draft was not created.
-                 *      */
-                502: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
                 };
             };
         };
@@ -6190,8 +6613,10 @@ export interface paths {
          *     - `CAN_CREATE` — no cardholder yet, but the member clears the `user_data_id`-mode
          *       creation gates (approved identity/face verification + KYC applicant), or the program's KYC level needs no document dossier and the member has no final rejection.
          *     - `PENDING` — a verification review is in flight; wait.
-         *     - `NEEDS_VERIFICATION` — no approved verification or no KYC applicant; the member has
-         *       to (re)run identity verification.
+         *     - `NEEDS_VERIFICATION` — no approved verification or no KYC applicant (on the KYC forms flow: the
+         *       program's card form ends in the identity check and the member has not passed it — this verdict
+         *       comes before `NEEDS_CARD_FORM`, and `will_require` then lists the required fields of the card form
+         *       still empty, if any); the member has to (re)run identity verification.
          *     - `NEEDS_VERIFICATION_UPGRADE` — the member IS verified, but not to the level this program
          *       demands (a required document — usually the selfie — was never captured). Read
          *       `required_level` to name the bar ("requires FULL verification"). Same remediation as
@@ -6208,7 +6633,13 @@ export interface paths {
          *       refused until they do (`400 CARD_REQUIREMENTS_INCOMPLETE`, or `400 KYC_PERSONAL_ENTITY_MISSING`
          *       for a member with no personal entity), and fields in the request body do not help.
          *       `will_require` names what the member has left: tell them to fill the card form, do not
-         *       ask the caller for these fields.
+         *       ask the caller for these fields. It can also name the identity document's data the level
+         *       needs (`gov_id_type`, `gov_id_number`, …) that the entity does not hold — where the card form
+         *       ends in the identity check, only after it has passed (a field the tenant's profile takes
+         *       from the check is not named then), and a field the profile asks as optional counts. The card
+         *       form asks that data only where the tenant's profile does, so a key the member's card form
+         *       does not show is not theirs to fill: the compliance team enters what the check did not
+         *       bring, and the verdict stays until then.
          *     - `NEEDS_RESUBMIT` — the VENDOR's review of the cardholder came back rejected (or asked
          *       for part of the dossier again). Not a dead end: fix what `reject_reason` names —
          *       `PATCH` the field, or re-upload and re-attach the document — then call
@@ -6229,16 +6660,25 @@ export interface paths {
          *     - `NOT_MEMBER` — the uuid is not an active member of this wallet.
          *
          *     **On a tenant of the KYC forms flow** (SFI-2544) the verdict comes from the member's personal
-         *     KYC entity and the program's card form, not from the profile statuses: `CAN_CREATE` when the
-         *     form is complete, with nothing in `will_require`; `NEEDS_CARD_FORM` with `will_require` = the
-         *     required fields of the card form still empty in the entity (catalog keys such as `first_name`,
-         *     `email`, `phone`), `NEEDS_VERIFICATION` while the level needs the identity check and it is not
-         *     started or has to be redone, `REJECTED` for an application refused for good, `PENDING` while that
+         *     KYC entity and the program's card form, not from the profile statuses: `CAN_CREATE` when nothing
+         *     is left — every required field of the card form is saved, the identity check has passed where the
+         *     card form ends in one, the entity holds the identity document's data the level names, and nothing
+         *     waits in a submission under review — with nothing in `will_require`; `NEEDS_CARD_FORM` with
+         *     `will_require` = the required fields of the card form still empty in the entity (catalog keys such as
+         *     `first_name`, `email`, `phone`) and the document's data the entity lacks, `NEEDS_VERIFICATION` while
+         *     the card form ends in the identity check — the level names the photo of the document or the selfie
+         *     (`declared`, `full`), the tenant's profile requires them, the level names document data the profile
+         *     does not ask without a condition (`basic` too), or the profile takes any field from the identity check
+         *     (whatever the level; see `needs_identity_verification` of the program in
+         *     `GET /frontend/kyc/entities/{entity_id}/targets`) — and it is not started or has to be redone (it comes
+         *     before `NEEDS_CARD_FORM`: the create names the empty required fields first, the verdict the check),
+         *     `REJECTED` for an application refused for good, `PENDING` while that
          *     check is under review at the identity provider (nothing to do but wait; the create is refused until it passes),
          *     while compliance untangles several personal entities of the member or while every required
          *     field is answered but some wait in a submission under review. A member without a personal entity is
          *     `NEEDS_CARD_FORM` with every required field of the form in `will_require` — or
-         *     `NEEDS_VERIFICATION` when the level needs the identity check, which such a member has not passed.
+         *     `NEEDS_VERIFICATION` when the card form ends in the identity check, which such a member has not passed
+         *     (`will_require` then holds the same required fields).
          *
          *     **`will_require`**: fields the client should expect to collect BY HAND (same vocabulary
          *     as the submit 400 `missing` list, e.g. `address.line1`, `tax_identification_number`,
@@ -6348,15 +6788,6 @@ export interface paths {
                 };
                 /** @description Issuing program not found */
                 404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Server error */
-                500: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -10290,8 +10721,17 @@ export interface paths {
                      *     e.g. `[{"scheduled":"past"},{"status":["PROCESSING","COMPLETE"]}]` lists the sent ones.
                      *     Any other value is rejected with 400.
                      *
+                     *     `currency` (a currency uuid or a list of them), e.g. `[{"currency":["<uuid>","<uuid>"]}]`,
+                     *     lists the orders either side of which is one of these currencies — `from_uuid` or
+                     *     `to_uuid` — so an exchange or an offramp shows under each of its two currencies.
+                     *     (`from_uuid` and `to_uuid` sent as two keys must both match.) It
+                     *     combines with the other filters and the dates; an empty list narrows nothing. A value
+                     *     that is not a uuid, or more than 50 currencies, answers 400 `INVALID_REQUEST` with
+                     *     `details.field` = `currency`; so does `currency` in more than one element of the array
+                     *     (list every currency in one).
+                     *
                      *     Every key is checked before the query runs (SFI-2693): an unknown field, a value of the
-                     *     wrong type (e.g. a status that does not exist, an `order_type` that is neither enabled for the tenant — see `/reference/order_types` — nor among the wallet's orders, or a non-uuid id) or an object on a plain
+                     *     wrong type (e.g. a status that does not exist, an `order_type` that is no order type at all — a typo, a renamed type; a type the tenant does not offer, or that the wallet has no orders of, just matches no orders — or a non-uuid id) or an object on a plain
                      *     field answers 400 `INVALID_REQUEST`, and `details.field` names the field. An object is
                      *     accepted on `meta` only — `[{"meta":{"direction":"out"}}]` matches `meta->>direction`.
                      *      */
@@ -10346,7 +10786,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description `INVALID_REQUEST` — `filters` is not a JSON array, `mass_payout_id` / `rfi_case_id` is not a uuid, `scheduled` is not `all` / `upcoming` / `past`, a filter names an unknown field or carries a value of the wrong type, `search` is longer than 100 characters, or `amount_min` / `amount_max` is not a non-negative number or `amount_min` is greater than `amount_max` (`details.field` names the field) */
+                /** @description `INVALID_REQUEST` — `filters` is not a JSON array, `mass_payout_id` / `rfi_case_id` is not a uuid, `scheduled` is not `all` / `upcoming` / `past`, `currency` is not a uuid or a list of up to 50 of them or comes in more than one element of `filters`, a filter names an unknown field or carries a value of the wrong type, `search` is longer than 100 characters, or `amount_min` / `amount_max` is not a non-negative number or `amount_min` is greater than `amount_max`. `details.field` names the field, except for a malformed `filters`, `mass_payout_id`, `rfi_case_id` and `scheduled`. */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -10519,8 +10959,17 @@ export interface paths {
                      *     e.g. `[{"scheduled":"past"},{"status":["PROCESSING","COMPLETE"]}]` lists the sent ones.
                      *     Any other value is rejected with 400.
                      *
+                     *     `currency` (a currency uuid or a list of them), e.g. `[{"currency":["<uuid>","<uuid>"]}]`,
+                     *     lists the orders either side of which is one of these currencies — `from_uuid` or
+                     *     `to_uuid` — so an exchange or an offramp shows under each of its two currencies.
+                     *     (`from_uuid` and `to_uuid` sent as two keys must both match.) It
+                     *     combines with the other filters and the dates; an empty list narrows nothing. A value
+                     *     that is not a uuid, or more than 50 currencies, answers 400 `INVALID_REQUEST` with
+                     *     `details.field` = `currency`; so does `currency` in more than one element of the array
+                     *     (list every currency in one).
+                     *
                      *     Every key is checked before the query runs (SFI-2693): an unknown field, a value of the
-                     *     wrong type (e.g. a status that does not exist, an `order_type` that is neither enabled for the tenant — see `/reference/order_types` — nor among the wallet's orders, or a non-uuid id) or an object on a plain
+                     *     wrong type (e.g. a status that does not exist, an `order_type` that is no order type at all — a typo, a renamed type; a type the tenant does not offer, or that the wallet has no orders of, just matches no orders — or a non-uuid id) or an object on a plain
                      *     field answers 400 `INVALID_REQUEST`, and `details.field` names the field. An object is
                      *     accepted on `meta` only — `[{"meta":{"direction":"out"}}]` matches `meta->>direction`.
                      *      */
@@ -10556,7 +11005,7 @@ export interface paths {
                         "text/csv": string;
                     };
                 };
-                /** @description `INVALID_REQUEST` — `filters` is not a JSON array, `mass_payout_id` / `rfi_case_id` is not a uuid, `scheduled` is not `all` / `upcoming` / `past`, a filter names an unknown field or carries a value of the wrong type, `search` is longer than 100 characters, or `amount_min` / `amount_max` is not a non-negative number or `amount_min` is greater than `amount_max` (`details.field` names the field) */
+                /** @description `INVALID_REQUEST` — `filters` is not a JSON array, `mass_payout_id` / `rfi_case_id` is not a uuid, `scheduled` is not `all` / `upcoming` / `past`, `currency` is not a uuid or a list of up to 50 of them or comes in more than one element of `filters`, a filter names an unknown field or carries a value of the wrong type, `search` is longer than 100 characters, or `amount_min` / `amount_max` is not a non-negative number or `amount_min` is greater than `amount_max`. `details.field` names the field, except for a malformed `filters`, `mass_payout_id`, `rfi_case_id` and `scheduled`. */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -16401,6 +16850,8 @@ export interface paths {
         /**
          * Get wallet transactions
          * @description Retrieves a paginated list of transactions for a specific wallet.
+         *     Each transaction is a ledger entry: amount, direction and the balance before and after it.
+         *     The operation itself (its type, status, fees, rates, counterparty, card data) is on the order behind `order_id`.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -16414,40 +16865,18 @@ export interface paths {
                     offset?: number;
                     /** @description Number of items to return */
                     limit?: number;
-                    /** @description Field to sort by */
+                    /** @description Field to sort by: id, created_at, type, amount, balance_before, balance_after, wallet_id, crypto_id, order_id. Any other value returns 400. */
                     sort_by?: string;
                     /** @description Sort direction */
                     sort_order?: "ASC" | "DESC";
-                    /** @description Comma-separated transaction statuses (new, pending, processing, complete, canceled, failed) */
-                    status?: string;
                     /** @description Transaction type (direction) */
                     type?: "deposit" | "withdrawal";
-                    /** @description Transaction method filter */
-                    method?: "p2p" | "crypto" | "bank_transfer" | "exchange" | "sbp" | "internal_fiat";
-                    /** @description Transaction subtype (e.g. `DEPOSIT_CRYPTO_EXTERNAL`, `CARD_PROVIDER_DEPOSIT`) */
-                    record_type?: string;
-                    /** @description Filter by sender or recipient address (matches `from` OR `to` fields) */
-                    address?: string;
                     /** @description Start of date range (inclusive) */
                     from_date?: string;
                     /** @description End of date range (inclusive) */
                     to_date?: string;
-                    /**
-                     * @deprecated
-                     * @description **Deprecated** — use `from_date` instead. Start of date range (inclusive)
-                     */
-                    from_created_at?: string;
-                    /**
-                     * @deprecated
-                     * @description **Deprecated** — use `to_date` instead. End of date range (inclusive)
-                     */
-                    to_created_at?: string;
-                    /** @description Filter by currency UUID */
+                    /** @description Filter by the transaction currency (`crypto_id`). Must be a UUID. */
                     currency_uuid?: string;
-                    /** @description Filter by billing currency from transaction meta */
-                    meta_billing_currency?: string;
-                    /** @description Filter by transaction currency from transaction meta */
-                    meta_transaction_currency?: string;
                     /** @description When false (default), dust transactions below threshold are hidden */
                     show_low_balance?: boolean;
                 };
@@ -16474,7 +16903,7 @@ export interface paths {
                         };
                     };
                 };
-                /** @description Bad request - invalid filters format */
+                /** @description Bad request - an invalid filter value, or `sort_by` outside the published fields */
                 400: {
                     headers: {
                         [name: string]: unknown;
@@ -16514,8 +16943,8 @@ export interface paths {
         };
         /**
          * Export transactions
-         * @description Downloads wallet transactions in CSV format.
-         *     One row per balance movement; its `Amount`, `Balance Before` and `Balance After` are in the row's `Currency` (the last three columns).
+         * @description Downloads wallet transactions in CSV format, one row per balance movement, with the same fields as the list:
+         *     `Transaction ID`, `Created Date`, `Type`, `Amount`, `Balance Before`, `Balance After`, `Wallet ID`, `Currency ID`, `Order ID`, `Is Threshold Amount`.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -16525,26 +16954,14 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    /** @description Filter by status (comma-separated for multi-select — new, pending, processing, complete, canceled, failed) */
-                    status?: string;
                     /** @description Transaction type (direction) */
                     type?: "deposit" | "withdrawal";
-                    /** @description Transaction method filter */
-                    method?: "p2p" | "crypto" | "bank_transfer" | "exchange" | "sbp" | "internal_fiat";
-                    /** @description Transaction subtype (e.g. `DEPOSIT_CRYPTO_EXTERNAL`, `CARD_PROVIDER_DEPOSIT`) */
-                    record_type?: string;
-                    /** @description Filter by sender or recipient address (matches `from` OR `to` fields) */
-                    address?: string;
                     /** @description Start of date range (inclusive) */
                     from_date?: string;
                     /** @description End of date range (inclusive) */
                     to_date?: string;
-                    /** @description Filter by currency UUID */
+                    /** @description Filter by the transaction currency (`crypto_id`). Must be a UUID. */
                     currency_uuid?: string;
-                    /** @description Filter by billing currency from transaction meta */
-                    meta_billing_currency?: string;
-                    /** @description Filter by transaction currency from transaction meta */
-                    meta_transaction_currency?: string;
                     /** @description When false (default), dust transactions below threshold are hidden */
                     show_low_balance?: boolean;
                 };
@@ -16618,10 +17035,16 @@ export interface paths {
                     to_date?: string;
                     /** @description Statement for this currency only; every currency when omitted */
                     currency_uuid?: string;
-                    /** @description Statement of this virtual account of the wallet: only its operations — payments
-                     *     in to its bank details, payouts sent from them and their refunds — whatever
-                     *     balance they moved, under its bank details (shown for an active account only).
-                     *     Such a statement shows no balances: the summary has money in and money out
+                    /** @description Statement of this virtual account of the wallet, under its bank details (shown
+                     *     for an active account only): one row per completed payment in to its details
+                     *     or payout sent from them, for the amount that crossed the rail, in that
+                     *     currency — what arrived for a payment in, what the recipient was sent for a
+                     *     payout. A caption under the row gives the other side in the wallet's balance
+                     *     currency and our fee, in cents ("Converted from 1,000.00 USDM, fee 85.00 USDM"),
+                     *     or the fee alone without a conversion. A row is dated by when the operation
+                     *     completed, and `from_date`/`to_date` select operations by that date, whenever
+                     *     they were created. Payments in flight, canceled, failed or
+                     *     refunded are not listed. No balances: the summary has money in and money out
                      *     only, and the table has no balance column. Takes precedence over
                      *     `currency_uuid`. An account that is not the wallet's answers 404.
                      *      */
@@ -16695,7 +17118,7 @@ export interface paths {
         };
         /**
          * Get transaction by ID
-         * @description Retrieves a single transaction by its numeric ID within a specific wallet.
+         * @description Retrieves a single transaction by its numeric ID within a specific wallet: the same ledger fields as the list.
          *
          *     **Authentication**: Bearer token with x-tenant-id header required
          *
@@ -17624,7 +18047,10 @@ export interface paths {
          *     wallet is approved on it. `can_submit` tells whether the rail would take the wallet now; it does not look at
          *     the rail's form — on the KYC forms flow that is `form_state` / `missing_required` of the rail in
          *     `GET /frontend/kyc/entities/{entity_id}/targets`. Offer `POST …/kyc-rails/{rail_id}` when `can_submit` is `true`
-         *     and the rail's form is `complete`: a form not complete answers `400 RAIL_REQUIREMENTS_INCOMPLETE`.
+         *     and the rail's form is `complete`: a form not complete answers `400 RAIL_REQUIREMENTS_INCOMPLETE` — so does a
+         *     form `complete` while the KYC entity lacks the identity document's data the rail's vendor needs: the form asks
+         *     that data only where the tenant's profile does, the identity check brings the rest, and what a passed check
+         *     did not bring the compliance team enters — the client cannot.
          *
          *     Replaces the BFF `GET /kyc/{wallet_id}/rails`; items have its shape plus `can_submit`, without the
          *     rail's `code` and `name` — match a rail to a program by `id` (`kyc_rails_id`).
@@ -17789,8 +18215,12 @@ export interface paths {
                  *     the other entity type; `RAIL_SUBMISSION_REJECTED` — the onboarding behind the rail refused the
                  *     submission (the vendor's reason is logged, never returned); `RAIL_REQUIREMENTS_INCOMPLETE` — on a
                  *     tenant of the KYC forms flow, the KYC entity misses saved values of required fields of the rail's form
-                 *     (a draft does not count): `details.fields` lists their keys, open
-                 *     `GET /frontend/kyc/entities/{entity_id}/forms?rails={rail_id}` and fill them; `TERMS_NOT_ACCEPTED` —
+                 *     (a draft does not count), or the data of the identity document the rail's vendor needs: `details.fields`
+                 *     lists their keys, open `GET /frontend/kyc/entities/{entity_id}/forms?rails={rail_id}` and fill those it
+                 *     shows. The form asks the document's data only where the tenant's profile does, before the identity check
+                 *     and after it; a field of the document it does not show the client cannot enter — the identity check brings
+                 *     it, and what a passed check did not bring the compliance team enters, the submission answering the same
+                 *     error until then; `TERMS_NOT_ACCEPTED` —
                  *     `accepted_terms` misses an active terms document of the rail, or is absent on a rail that requires the
                  *     terms; nothing was submitted
                  *      */
@@ -17829,17 +18259,8 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description `RAIL_ALREADY_APPROVED` — already approved on the rail; `RAIL_SUBMISSION_IN_PROGRESS` — an application is with the vendor; `OPERATION_IN_PROGRESS` — the same submission is being processed */
+                /** @description `RAIL_ALREADY_APPROVED` — already approved on the rail; `RAIL_SUBMISSION_IN_PROGRESS` — an application is with the vendor; `OPERATION_IN_PROGRESS` — the same submission is being processed; `KYC_FORM_CONDITIONS_CYCLE` — on a tenant of the KYC forms flow, the show conditions of the profiles of the rail's form read each other in a circle (the operator fixes the profiles) */
                 409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description `RAIL_SUBMISSION_FAILED` — the onboarding behind the rail failed or is unreachable; `SERVICE_UNAVAILABLE` — the lock service is down */
-                503: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -18287,7 +18708,7 @@ export interface paths {
         };
         /**
          * The form of an entity for a set of purposes
-         * @description Built on every call from the tenant's requirement profiles and the entity. Without `rails` and `programs` it is the base form. With one rail it is that rail's form: the base profile, the tenant's rail profile and the vendor's minimum merged: a field required by any of them is required, `review` wins over `auto`, and a field is shown when any of them shows it (one asking it without a condition — the vendor's minimum always — shows it always); profiles whose conditions read each other in a circle answer `409 KYC_FORM_CONDITIONS_CYCLE`. Sections are the groups to draw, `visible_when` the show logic, `required_by` the purposes a field is required for, the locks (`saved`, `from_document`, `pending`, `status`) what the client cannot change, `schema_version` what to echo back. Fields that come from the identity document (names, date of birth, citizenship, the document number and dates) are left out until the document is verified; the document itself is asked: its type `gov_id_type` (`PASSPORT`, `ID_CARD`, `RESIDENCE_PERMIT`, `DRIVERS` — the codes `…/owners/{owner_id}/document` takes as `type` too), issuing country `gov_id_country` and photos `gov_id_front` and `gov_id_back` (shown for an ID card, a residence permit or a driving licence), all in the section `verification` with the number and the dates of the document — saved, and no longer asked, once it is verified; `state: complete` on a rail form means nothing is left to ask and the client goes straight to the rail's terms. With one program and `wallet_id` it is the form before a card: the level the program's vendor demands (`minimal`: name, email, phone; `basic`: plus date of birth, citizenship, gender, identity document type and number, residential address; `declared` / `full`: plus the identity document and the face, verified after the form) merged with the tenant's binding for the program, without the base form; what the personal entity already holds is locked `saved`, so `state: complete` means the card can be asked for at once. Several rails and programs at once is the multi form: the base form, every rail and every program merged, each field once with `required_by` naming the purposes. A form whose last submission is `returned` comes back with that submission's answers in `values` — its files too, as files of the draft (`saved: false`, removable by `DELETE …/forms/uploads/{upload_id}`) — until the client saves, uploads or sends again. On a business form the owners of `values.beneficial_owners` come as saved in the KYC entity with the draft laid over them: a saved owner's empty field takes the draft's value, and on a `returned` form the client's correction of a saved owner (saved by `PUT …/forms/draft`) shows over the saved value until compliance changes or clears the same field after that save (a field cleared that way stays empty) — the later change wins, so saving the correction again after compliance's change shows it again — while a value equal to what the profile holds or to what the returned submission held is not a correction and leaves the field showing what the profile holds now; the `id` and `owner_type` of a saved owner stay as saved, and an empty value of the draft never hides a saved one. On a personal entity's form (base, rail, card or multi) that is editable and shows an open `email` nobody has given yet — not saved, not pending, not in the draft — `values.email` carries the email of the entity owner's account as a suggestion: it is not saved until a draft or a submission sends it, the field stays unlocked, `missing_required` and `state` still count it as empty, and a saved, pending or draft value wins over it; a business form gets none, and only the owner of the entity gets it (a wallet admin reading the form does not). The business form has no field for the filler's role in the company (`applicant_role` was removed): the filler's roles are the `roles` of their own item in `beneficial_owners` (`is_applicant: true`), and a draft or a returned submission that still holds an `applicant_role` opens as usual — the value is not returned and not counted. Access: the owner of the entity, or an owner / admin of a wallet it is linked to.
+         * @description Built on every call from the tenant's requirement profiles and the entity. Without `rails` and `programs` it is the base form. With one rail it is that rail's form: the base profile, the tenant's rail profile and the vendor's minimum merged: a field required by any of them is required, `review` wins over `auto`, and a field is shown when any of them shows it (one asking it without a condition — the vendor's minimum always — shows it always; the fields of the identity document are the exception: the minimum requires them of the KYC entity, it does not put them in the form); profiles whose conditions read each other in a circle answer `409 KYC_FORM_CONDITIONS_CYCLE`. Sections are the groups to draw, `visible_when` the show logic, `required_by` the purposes a field is required for, the locks (`saved`, `from_document`, `pending`, `status`) what the client cannot change, `schema_version` what to echo back. On a form that ends in the identity check (every form of a personal entity but a card form typed in — `needs_identity_verification` of the program in `GET …/targets`) the fields that come from the identity document (names, date of birth, citizenship, the document number and dates) are left out until the document is verified, and the selfie, taken in the check, is never in the form; the document itself is asked only where a requirement profile of the form asks for it (on that profile's terms, required or optional; a field the profile takes from the identity check is never asked; neither the vendor's minimum of a rail nor the level of a card program adds it): its type `gov_id_type` (`PASSPORT`, `ID_CARD`, `RESIDENCE_PERMIT`, `DRIVERS` — the codes `…/owners/{owner_id}/document` takes as `type` too), issuing country `gov_id_country` and photos `gov_id_front` and `gov_id_back` (shown for an ID card, a residence permit or a driving licence), all in the section `verification` with the number and the dates of the document. Before the check the type, the country and the back side follow the front photo: none of them where the profile does not ask the photo, optional where the photo is optional or shown on a condition. Once the document is verified its photos are no longer required, the number and the dates a profile asks appear, and what the check brought is locked `from_document`; one it did not bring stays open where the profile asks for it. Where the form does not ask the document, the identity check after the form brings it, and the rail or the card still needs its data in the KYC entity. A passed identity check adds no field to the form: the form asks the document only as the profile does, before the check and after it, and the document's data a passed check did not bring (a number it could not read, an issue date the document does not carry) the compliance team enters. Until the data is in the entity, a rail submission answers `400 RAIL_REQUIREMENTS_INCOMPLETE` and a card `400 CARD_VERIFICATION_REQUIRED` (check not passed) / `CARD_REQUIREMENTS_INCOMPLETE`; a key of `details.fields` the form does not show is not the client's to enter — there is nothing to highlight. `state: complete` on a rail form means nothing is left for the client to fill in and the client goes to the rail's terms (the submission still answers `400 RAIL_REQUIREMENTS_INCOMPLETE` while the entity lacks the identity document's data the vendor needs). With one program and `wallet_id` it is the form before a card: the level the program's vendor demands (`minimal`: name, email, phone; `basic`: plus date of birth, citizenship, gender, residential address and the identity document's type and number; `declared`: plus the photo of the identity document; `full`: plus the face — the document and the face are verified after the form) merged with the tenant's binding for the program, without the base form. The level requires the document's data of the KYC entity, and the form asks it only where the binding does (typed in, on the binding's terms); where the binding does not, the identity check brings it — `needs_identity_verification` of the program in `GET …/targets` says so, `basic` included. What the personal entity already holds is locked `saved`. `state: complete` means every required field of the form is saved; the card can be asked for at once when the identity check has passed too wherever the form needs it, and the entity holds the document's data the level names, a field the profile asks as optional included (otherwise `400 CARD_VERIFICATION_REQUIRED` / `CARD_REQUIREMENTS_INCOMPLETE`). Several rails and programs at once is the multi form: the base form, every rail and every program merged, each field once with `required_by` naming the purposes. A form whose last submission is `returned` comes back with that submission's answers in `values` — its files too, as files of the draft (`saved: false`, removable by `DELETE …/forms/uploads/{upload_id}`) — until the client saves, uploads or sends again. On a business form the owners of `values.beneficial_owners` come as saved in the KYC entity with the draft laid over them: a saved owner's empty field takes the draft's value, and on a `returned` form the client's correction of a saved owner (saved by `PUT …/forms/draft`) shows over the saved value until compliance changes or clears the same field after that save (a field cleared that way stays empty) — the later change wins, so saving the correction again after compliance's change shows it again — while a value equal to what the profile holds or to what the returned submission held is not a correction and leaves the field showing what the profile holds now; the `id` and `owner_type` of a saved owner stay as saved, and an empty value of the draft never hides a saved one. On a personal entity's form (base, rail, card or multi) that is editable and shows an open `email` nobody has given yet — not saved, not pending, not in the draft — `values.email` carries the email of the entity owner's account as a suggestion: it is not saved until a draft or a submission sends it, the field stays unlocked, `missing_required` and `state` still count it as empty, and a saved, pending or draft value wins over it; a business form gets none, and only the owner of the entity gets it (a wallet admin reading the form does not). The business form has no field for the filler's role in the company (`applicant_role` was removed): the filler's roles are the `roles` of their own item in `beneficial_owners` (`is_applicant: true`), and a draft or a returned submission that still holds an `applicant_role` opens as usual — the value is not returned and not counted. A business from before the forms whose saved owners already list the filler — a saved owner on the filler's own identity check — gets that owner as the filler's own item before its first submission (`is_applicant: true`, its `id` kept, the personal fields hidden), so do not offer the filler to add themselves; its `roles` and what follows them (`share_proportion`, `ubo_basis`, `ubo_control_details`) come empty for the filler to state — the one saved owner whose saved `role` does not fill `roles` — and what is sent replaces the saved values. After the first submission that owner reads as saved, like any other. Access: the owner of the entity, or an owner / admin of a wallet it is linked to.
          */
         get: {
             parameters: {
@@ -18639,7 +19060,7 @@ export interface paths {
         put?: never;
         /**
          * Send a form
-         * @description The form is the one `rails` and `programs` name. The full check of every open field (all errors in one `VALIDATION_ERROR`, an option chosen together with another one that `options[].exclusive` says it excludes included; the rules of `validation` — `max_items`, `min_age`, `max` (a `formation_date` or a `gov_id_issuance_date` later than today in UTC), Latin letters only — and, on a form that asks `beneficial_owners`, the filler's own item in the list, at least one person with the role `UBO` and one with `DIRECTOR` (the filler counts by the `roles` of their own item), a company only as `SHAREHOLDER` and never as the filler), then a submission: `awaiting_verification` when the identity document and face are still needed, `applied` when every profile of the form writes the answers into the KYC entity at once, `in_review` when compliance decides (any profile of the form in review mode). Answers `200` with the form in its new state. One change to a form at a time: a submission sent while a draft save, an upload, a removal or another submission of the form runs answers `409 OPERATION_IN_PROGRESS` and changes nothing; send it again once the others answer. A rail form does not change the application status; once its submission is approved, the rail is submitted through the wallet's existing `POST /frontend/wallets/{wallet_id}/kyc-rails/{rail_id}`. A card form is `auto` unless a profile of it says otherwise and never changes the application status; once applied, the cardholder is created through `POST /frontend/issuing/cardholders` with `user_data_id`. A multi form moves the application like the base form it includes; once applied, every rail and program of the set is satisfied from the shared data. A `returned` submission sent again keeps its files that were not removed. A saved beneficial owner (an item of `beneficial_owners` with an `id`) is the entity's: a list without one, a changed saved value outside a `returned` form, and a saved value sent empty are refused with `VALIDATION_ERROR`, as in the draft. `POST …/forms/validate` runs the same check on the same body without sending it. The entity's owner, or an owner or admin of a linked wallet.
+         * @description The form is the one `rails` and `programs` name. The full check of every open field (all errors in one `VALIDATION_ERROR`, an option chosen together with another one that `options[].exclusive` says it excludes included; the rules of `validation` — `max_items`, `min_age`, `max` (a `formation_date` or a `gov_id_issuance_date` later than today in UTC), Latin letters only — and, on a form that asks `beneficial_owners`, the filler's own item in the list, at least one person with the role `UBO` and one with `DIRECTOR` (the filler counts by the `roles` of their own item), a company only as `SHAREHOLDER` and never as the filler), then a submission: `awaiting_verification` when the identity document and face are still needed, `applied` when every profile of the form writes the answers into the KYC entity at once, `in_review` when compliance decides (any profile of the form in review mode). Answers `200` with the form in its new state. One change to a form at a time: a submission sent while a draft save, an upload, a removal or another submission of the form runs answers `409 OPERATION_IN_PROGRESS` and changes nothing; send it again once the others answer. A rail form does not change the application status; once its submission is approved, the rail is submitted through the wallet's existing `POST /frontend/wallets/{wallet_id}/kyc-rails/{rail_id}`. A card form is `auto` unless a profile of it says otherwise and never changes the application status; once applied, the cardholder is created through `POST /frontend/issuing/cardholders` with `user_data_id`. A multi form moves the application like the base form it includes; once applied, every rail and program of the set is satisfied from the shared data. A `returned` submission sent again keeps its files that were not removed. A saved beneficial owner (an item of `beneficial_owners` with an `id`) is the entity's: a list without one, a changed saved value outside a `returned` form, and a saved value sent empty are refused with `VALIDATION_ERROR`, as in the draft. A filler already listed as a saved owner on their own identity check (a business from before the forms) who also sends a new item marked as theirs (`is_applicant: true`) is saved as one owner: the checks above run on the body as sent, then the new item is merged into that saved owner — the saved owner keeps its `id` and its place in the list, its `roles` hold the roles of both items, a value the new item filled replaces the saved one and a value it left empty clears nothing — instead of becoming a second owner; the request, the response and the error codes are the same. `POST …/forms/validate` runs the same check on the same body without sending it. The entity's owner, or an owner or admin of a linked wallet.
          */
         post: {
             parameters: {
@@ -18719,7 +19140,7 @@ export interface paths {
         put?: never;
         /**
          * Check a form as it would be sent
-         * @description The form is the one `rails` and `programs` name. Takes the body of `POST …/forms/submit` and runs every check of the submission on it — the open fields, the rules of `validation`, on a business form the filler's own item and the roles of the owners, and the owner list through the same planner that writes the KYC tables — and sends nothing: no submission, no draft, no KYC write, no status, no event, no identity provider. The checks are of the body sent, with the files of the draft; the draft itself is not read for values and not saved: send the values the client holds. Answers `200 { valid: true }` when the submission would be taken, the errors of the submission otherwise — `FORM_FIELD_NOT_ALLOWED` (a key the form does not accept) on its own, before the field errors, as on the submission. Takes no lock: it runs beside a draft save or an upload of the same form and blocks none of them, so a draft saved meanwhile is not part of its answer. The entity's owner, or an owner or admin of a linked wallet.
+         * @description The form is the one `rails` and `programs` name. Takes the body of `POST …/forms/submit` and runs every check of the submission on it — the open fields, the rules of `validation`, on a business form the filler's own item and the roles of the owners, and the owner list (with the filler's new item merged into their saved owner, as on the submission) through the same planner that writes the KYC tables — and sends nothing: no submission, no draft, no KYC write, no status, no event, no identity provider. The checks are of the body sent, with the files of the draft; the draft itself is not read for values and not saved: send the values the client holds. Answers `200 { valid: true }` when the submission would be taken, the errors of the submission otherwise — `FORM_FIELD_NOT_ALLOWED` (a key the form does not accept) on its own, before the field errors, as on the submission. Takes no lock: it runs beside a draft save or an upload of the same form and blocks none of them, so a draft saved meanwhile is not part of its answer. The entity's owner, or an owner or admin of a linked wallet.
          */
         post: {
             parameters: {
@@ -20118,6 +20539,11 @@ export interface components {
             } | null;
             /** @description user_data.id the card is assigned to; omitted (absent) when the card is not assigned to a member */
             user_data_id?: number;
+            /**
+             * Format: uuid
+             * @description The `request_id` the card was created with (the client's own, or one CORE generated when none was sent). Returned by the card list; filter the list by it with `?request_id=`.
+             */
+            request_id?: string;
             /** @description Embedded sub-account summary, or null when no sub-account is linked. Present on the normal (vendor-enriched) response; omitted only in the degraded local-only error mode. */
             sub_account: components["schemas"]["IssuingCardSubAccount"] | null;
             limits?: components["schemas"]["IssuingCardLimits"] | null;
@@ -21076,7 +21502,7 @@ export interface components {
              * @enum {string|null}
              */
             compliance_state?: "held" | "released" | "rejected" | null;
-            /** @description Why the order is (or was) held. */
+            /** @description Why the order is (or was) held: `awaiting_verdict` (review in progress), `on_hold` (manual review), `submit_failed` (could not be submitted for review, retried), `address_blocked` (the deposit address is blocked), `prior_deposit_held` (an earlier deposit to the same address is still held), `rfi_open` (an open compliance request (RFI) holds it; it is let through once the review approved it and the request is closed), `rejected` (review rejected it). On release it keeps the last hold reason. Treat unknown values as "held for review". */
             compliance_reason?: string | null;
             /**
              * Format: date-time
@@ -21478,7 +21904,7 @@ export interface components {
             id: string;
             /** @description The rail takes submissions at all. */
             is_submit_available: boolean;
-            /** @description The rail would take the wallet now: it has an onboarding implementation, is of the entity's type or universal, the entity's KYC is approved (not merely under review), and no application is approved or with the vendor. The rail's form is not looked at: on the KYC forms flow its state is `form_state` / `missing_required` of the rail in `GET /frontend/kyc/entities/{entity_id}/targets`, and a submission while it is not `complete` answers `400 RAIL_REQUIREMENTS_INCOMPLETE`. */
+            /** @description The rail would take the wallet now: it has an onboarding implementation, is of the entity's type or universal, the entity's KYC is approved (not merely under review), and no application is approved or with the vendor. The rail's form is not looked at: on the KYC forms flow its state is `form_state` / `missing_required` of the rail in `GET /frontend/kyc/entities/{entity_id}/targets`, and a submission while it is not `complete` answers `400 RAIL_REQUIREMENTS_INCOMPLETE` — so does one while the entity lacks the identity document's data the vendor needs: the form asks that data only where the tenant's profile does, the identity check brings the rest, and what a passed check did not bring the compliance team enters — the client cannot. */
             can_submit: boolean;
             /** @description The rail's active terms, in display order. */
             terms_and_conditions: components["schemas"]["WalletKycRailTerms"][];
@@ -21602,73 +22028,38 @@ export interface components {
                 [key: string]: unknown;
             };
         };
-        /** @description Transaction metadata. All fields are optional — presence depends on the transaction type/method (crypto transfer, card spend, fiat off-ramp, internal exchange, etc.). Unknown keys may also appear and should be ignored by clients. */
-        TransactionMeta: {
-            billing_amount?: number;
-            billing_amount_currency?: string;
-            transaction_amount?: number;
-            transaction_amount_currency?: string;
-            fee?: number;
-            fee_currency?: string;
-            /** @description Fiat payouts: fixed part of `fee` (the rail's flat charge), in `fee_currency`. Absent on other order types and on payouts created before it was stored — show `fee` as one line then. */
-            fixed_commission?: number;
-            /** @description Percentage part of `fee`, in `fee_currency`. Each part is truncated to cents on its own, so `fixed_commission + percent_commission` can fall a cent short of `fee`; the total is always `fee`. */
-            percent_commission?: number;
-            /** @description Percent rate behind `percent_commission`, in whole percent (1 = 1%). */
-            base_markup?: number;
-            network_fee?: number;
-            /**
-             * Format: uuid
-             * @description Currency `uuid` of `network_fee`. `null` on a row without a network fee, e.g. the fee of an AML screening.
-             */
-            network_fee_currency?: string | null;
-            exchange_rate?: number;
-            from_address?: string;
-            to_address?: string;
-            /** @description The screened address of an AML check, on its `FEE` row next to `meta_type: AML_CHECK`. The `REFUND` row of that fee does not carry it: follow `order_uuid` to the `AML_CHECK` order. */
-            screened_address?: string;
-            /** Format: uuid */
-            from_user_data?: string;
-            /** Format: uuid */
-            to_user_data?: string;
-            to_card_id?: string;
-            to_card_last4?: string;
-            to_fiat_account_id?: string;
-            to_vendor_id?: string;
-            txid?: string;
-            /**
-             * @description Which side of the movement this row is: 'out' debits the wallet, 'in' credits it. Set on internal-transfer legs (copied from the order's meta), card authorizations ('out') and their refunds ('in').
-             * @enum {string}
-             */
-            direction?: "in" | "out";
-            /** Format: uuid */
-            order_id?: string;
-            /**
-             * Format: uuid
-             * @description The order this row belongs to. On the `REFUND` row of an AML check it leads to the `AML_CHECK` order.
-             */
-            order_uuid?: string;
-            /** @description What the row pays for, when the order type sets it: `AML_CHECK` on the `FEE` row of an AML check. The `REFUND` row of that fee does not carry it. */
-            meta_type?: string;
-        } & {
-            [key: string]: unknown;
-        };
-        /** @description Wallet transaction record with embedded currency and metadata */
+        /** @description Wallet transaction: a ledger entry. What the operation was (its type, status, fees, rates, counterparty, card data) is read from the order behind `order_id`; the currency from `crypto_id`. */
         Transaction: {
             id: number;
-            /** Format: date-time */
+            /**
+             * Format: date-time
+             * @description When the transaction was posted.
+             */
             created_at: string;
-            type: string;
-            status: string;
+            /**
+             * @description Direction: `deposit` credits the wallet, `withdrawal` debits it.
+             * @enum {string}
+             */
+            type: "deposit" | "withdrawal";
             amount: number;
-            method: string;
-            record_type: string;
+            /** @description Wallet balance in this currency before the transaction. */
+            balance_before: number | null;
+            /** @description Wallet balance in this currency after the transaction. */
+            balance_after: number | null;
             /** Format: uuid */
             wallet_id: string;
-            /** @description Computed dust flag — amount below the render threshold for the currency. Hidden from the list unless `show_low_balance=true`. */
-            is_threshold_amount?: boolean;
-            currency: components["schemas"]["Currency"];
-            meta: components["schemas"]["TransactionMeta"];
+            /**
+             * Format: uuid
+             * @description Currency `uuid` of the transaction.
+             */
+            crypto_id: string;
+            /**
+             * Format: uuid
+             * @description Order the transaction belongs to. `null` on some transactions posted before orders were linked.
+             */
+            order_id: string | null;
+            /** @description Dust flag: amount below the display threshold for the currency. Hidden from the list unless `show_low_balance=true`. */
+            is_threshold_amount: boolean;
         };
         /** @description A single underlying balance row contributing to an aggregated `balance[]` entry. The aggregated entry merges all rows that share the same symbol; each `details[]` item exposes the per-row breakdown so clients can show per-chain / per-account amounts. */
         AggregatedBalanceDetails: {
@@ -22886,7 +23277,7 @@ export interface components {
             due_at: string | null;
             /** @description True only while `action_required` and past `due_at` (red banner) */
             overdue: boolean;
-            /** @description True while the request keeps one of its transactions on hold — the one marked `held` in `transactions`. Decided when the request is opened and never turned on later: only a `transaction` request holds, and only when one of the transactions it covers was frozen by compliance at that moment. A request holds at most one transaction. The hold ends when the request closes — compliance's decision lets the transaction through or fails it — and the flag is false from then on. */
+            /** @description True while the request keeps one of its transactions on hold — the one marked `held` in `transactions`: the request is open and that transaction is still frozen by compliance. Decided when the request is opened and never turned on later: only a `transaction` request holds, and only when one of the transactions it covers was frozen by compliance at that moment. A request holds at most one transaction. While it is open the transaction is not let through, whatever the review says; a rejection by the review fails it at once. The hold ends when the request closes — compliance's decision lets the transaction through or fails it — or when the transaction is no longer frozen, and the flag is false from then on. */
             holds_transaction: boolean;
             /** @description The account is on hold while the request is open */
             holds_account: boolean;
@@ -22940,7 +23331,7 @@ export interface components {
             amount_to: number | null;
             /** Format: date-time */
             created_at: string | null;
-            /** @description True for the one transaction the request keeps on hold while it is open (see `holds_transaction`). False for every other transaction, and for all of them once the request is closed. */
+            /** @description True for the one transaction the request keeps on hold while it is open and the transaction is frozen by compliance (see `holds_transaction`). False for every other transaction, for all of them once the request is closed, and for the held one once it was let through or failed. */
             held: boolean;
         };
         RfiCaseDetail: components["schemas"]["RfiCase"] & {
@@ -23020,7 +23411,7 @@ export interface components {
         /** @description The error envelope of a rail submission: `ErrorResponse`, with `details` only on `RAIL_REQUIREMENTS_INCOMPLETE` (`fields`) and on a `VALIDATION_ERROR` of `accepted_terms` (`issues`). */
         WalletKycRailSubmitErrorResponse: components["schemas"]["ErrorResponse"] & {
             error?: {
-                /** @description Absent on every other code. `RAIL_REQUIREMENTS_INCOMPLETE`: `fields` lists the keys of the required fields of the rail's form with nothing saved in the KYC entity yet, in form order — the `key` of the fields `GET /frontend/kyc/entities/{entity_id}/forms?rails={rail_id}` answers (`address.city`, `document.proof_of_address`, `beneficial_owners`, …). Open that form and highlight them; a draft or a submission still in review does not count until it is applied. `VALIDATION_ERROR` of `accepted_terms`: `issues` names each problem (`field`, e.g. `accepted_terms.0`, and `message`); a bad `rail_id` carries a message only. */
+                /** @description Absent on every other code. `RAIL_REQUIREMENTS_INCOMPLETE`: `fields` lists the keys of the required fields of the rail's form with nothing saved in the KYC entity yet, in form order — the `key` of the fields `GET /frontend/kyc/entities/{entity_id}/forms?rails={rail_id}` answers (`address.city`, `document.proof_of_address`, `beneficial_owners`, …). Open that form and highlight them; a draft or a submission still in review does not count until it is applied. After them come the fields of the identity document the vendor needs that the entity does not hold: `gov_id_type`, `gov_id_country`, and `gov_id_front` while the entity has no photo of the document on file; after a passed identity check also `gov_id_number`. A field the tenant's profile takes from the identity check is not named once the check has passed. The form lists a field of the document only where the tenant's profile asks for it (the number only after a passed check, the type and the country along with the photo) — highlight it there. One the form does not list the client cannot enter and there is nothing to highlight: the identity check brings it, and what a passed check did not bring the compliance team enters — the submission answers the same error until then. `VALIDATION_ERROR` of `accepted_terms`: `issues` names each problem (`field`, e.g. `accepted_terms.0`, and `message`); a bad `rail_id` carries a message only. */
                 details?: {
                     /** @example [
                      *       "expected_monthly_volume",
@@ -23047,7 +23438,7 @@ export interface components {
          */
         KycFormsFormState: "not_started" | "draft" | "in_review" | "complete";
         /**
-         * @description State of an identity check, computed on every read. `not_started` — no applicant yet; `in_progress` — the check is set up with the identity provider and not finished: the widget may not have been opened yet (an owner whose check the background set up), be open, or the document was handed over and the face is due; `in_review` — the identity provider is looking (also right after a row nobody has read yet, and for an owner whose declared data does not match the document — but the filler, whose own row then reads `retry`); `passed`; `retry` — the provider asks to go again, call the session route for a new token; `failed` — a final refusal (the application is not rejected by it: it goes to compliance, so build a refusal screen by this value, not by `stage`).
+         * @description State of an identity check, computed on every read. `not_started` — no applicant yet; `in_progress` — the check is set up with the identity provider and not finished: the widget may not have been opened yet (an owner whose check the background set up), be open, or the document was handed over and the face is due; `in_review` — the identity provider is looking (also right after a row nobody has read yet, and for an owner whose declared data does not match the document — but the filler, whose own row then reads `retry`); `passed` (`verification.applicant` reads so also on a verified identity document of the entity, unless the state is `retry` or `failed`); `retry` — the provider asks to go again, call the session route for a new token; `failed` — a final refusal, answered as it is also over a verified identity document. On the check of the entity itself (a person, or the company of a business) it declines the application: `status: DECLINED`, `stage: rejected` — except an application in `HOLD`, `REJECT`, `DOUBLE` or `OFFBOARDED`, which stays as it is. A final refusal of an owner of a business does not decline the business: it goes to compliance.
          * @enum {string}
          */
         KycFormsVerificationState: "not_started" | "in_progress" | "in_review" | "passed" | "retry" | "failed";
@@ -23502,7 +23893,7 @@ export interface components {
                 /** @description null when the tenant asks nothing of this client type. */
                 base_form: components["schemas"]["KycFormsFormSummary"] | null;
                 verification: {
-                    /** @description The identity check of the person: of the entity's owner for a personal entity, of the filler (their own personal entity) for a business. `passed` also when the entity holds a verified identity document, unless the provider asks to go again. */
+                    /** @description The identity check of the person: of the entity's owner for a personal entity, of the filler (their own personal entity) for a business. `passed` also when the entity holds a verified identity document, unless the provider asks to go again or has refused the person for good (`retry` and `failed` are answered as they are). */
                     applicant: {
                         state: components["schemas"]["KycFormsVerificationState"];
                     };
@@ -23657,7 +24048,7 @@ export interface components {
                     id: string;
                     /** @description The rail takes submissions at all. */
                     is_submit_available: boolean;
-                    /** @description The rail would take the wallet now, as `can_submit` of `GET /frontend/wallets/{wallet_id}/kyc-rails` says: an onboarding behind it, the entity's type, the KYC `APPROVED`, no application approved or with the vendor. The rail's form is not looked at: it is `form` here (`form_state`, `missing_required`). Offer `POST …/kyc-rails/{rail_id}` when `can_submit` is `true` and `form.form_state` is `complete`; with the form not complete the submission answers `400 RAIL_REQUIREMENTS_INCOMPLETE` — show the form first. */
+                    /** @description The rail would take the wallet now, as `can_submit` of `GET /frontend/wallets/{wallet_id}/kyc-rails` says: an onboarding behind it, the entity's type, the KYC `APPROVED`, no application approved or with the vendor. The rail's form is not looked at: it is `form` here (`form_state`, `missing_required`). Offer `POST …/kyc-rails/{rail_id}` when `can_submit` is `true` and `form.form_state` is `complete`; with the form not complete the submission answers `400 RAIL_REQUIREMENTS_INCOMPLETE` — show the form first. The same answer comes while the entity lacks the identity document's data the vendor needs: the form asks that data only where the tenant's profile does, the identity check brings the rest, and what a passed check did not bring the compliance team enters — the client cannot. */
                     can_submit: boolean;
                     /** @description The wallet's application on the rail; null before the first submission. */
                     application: {
@@ -23682,11 +24073,11 @@ export interface components {
                     id: string;
                     name: string;
                     /**
-                     * @description The cardholder KYC bar of the program: `minimal` and `basic` are typed in, `declared` and `full` end in the identity check.
+                     * @description The cardholder KYC bar of the program: `minimal` is typed in, `declared` (the photo of the document) and `full` (the photo and the face) end in the identity check, `basic` is typed in while the tenant's binding for the program asks both the document's type and number without a condition, and ends in the identity check otherwise. Whatever the level, the form ends in the identity check when the binding requires the photo of the document or the selfie, or takes a field from the check (see `needs_identity_verification`).
                      * @enum {string}
                      */
                     level: "minimal" | "basic" | "declared" | "full";
-                    /** @description The card form ends in the identity check (the document or the face is required). */
+                    /** @description The card form ends in the identity check, and a card is refused (`400 CARD_VERIFICATION_REQUIRED`) until it has passed. `true` when the level names the photo of the document or the selfie (`declared`, `full`), when the tenant's binding for the program requires them, when the level names document data the form is not sure to ask — for `basic`, when the binding does not ask the document's type or number, asks one only on a condition, or takes one from the identity check — or when the binding takes any field from the identity check, whatever the level (`minimal` and `basic` included). Where the binding asks the document without a condition, the client types it in the form instead. A passed check adds no field to the form: the document's data it did not bring the compliance team enters, and a card answers `400 CARD_REQUIREMENTS_INCOMPLETE` until then. */
                     needs_identity_verification: boolean;
                     form: components["schemas"]["KycFormsTargetForm"];
                 }[];
@@ -23755,11 +24146,11 @@ export interface components {
                      */
                     rail_id: string;
                     /**
-                     * @description The cardholder KYC bar of the program: `minimal` and `basic` are typed in, `declared` and `full` end in the identity check.
+                     * @description The cardholder KYC bar of the program: `minimal` is typed in, `declared` (the photo of the document) and `full` (the photo and the face) end in the identity check, `basic` is typed in while the tenant's binding for the program asks both the document's type and number without a condition, and ends in the identity check otherwise. Whatever the level, the form ends in the identity check when the binding requires the photo of the document or the selfie, or takes a field from the check (see `needs_identity_verification`).
                      * @enum {string}
                      */
                     level: "minimal" | "basic" | "declared" | "full";
-                    /** @description The card form ends in the identity check (the document or the face is required). */
+                    /** @description The card form ends in the identity check, and a card is refused (`400 CARD_VERIFICATION_REQUIRED`) until it has passed. `true` when the level names the photo of the document or the selfie (`declared`, `full`), when the tenant's binding for the program requires them, when the level names document data the form is not sure to ask — for `basic`, when the binding does not ask the document's type or number, asks one only on a condition, or takes one from the identity check — or when the binding takes any field from the identity check, whatever the level (`minimal` and `basic` included). Where the binding asks the document without a condition, the client types it in the form instead. A passed check adds no field to the form: the document's data it did not bring the compliance team enters, and a card answers `400 CARD_REQUIREMENTS_INCOMPLETE` until then. */
                     needs_identity_verification: boolean;
                 }[];
             };
