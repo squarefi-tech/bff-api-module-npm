@@ -11,5 +11,5 @@
     "moduleResolution": "bundler"
   },
   "include": ["src", "types.d.ts"],
-  "exclude": ["node_modules", "dist", "**/__tests__/*"]
+  "exclude": ["node_modules", "dist", "**/__tests__/*", "**/*.test.ts", "**/*.test.tsx"]
 }
