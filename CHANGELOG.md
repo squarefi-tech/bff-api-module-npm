@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.36.119] - 2026-11-26
+
 ### Added
 
 - **`isCalcCurrent` and `calcError` on `useOrderCalc` (SFI-3505).** `isCalcCurrent` is `true` only when `calcData` answers the current `calcHandler`, `to_address`, currencies and the amount the user typed last, in that direction, with nothing scheduled or in flight: gate submit on it. `calcError` holds the message of the failed latest request for the current inputs (the body `message` of an axios error, else the error's `message`); a new edit or an answer clears it.
