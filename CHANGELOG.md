@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`isCalcCurrent` and `calcError` on `useOrderCalc` (SFI-3505).** `isCalcCurrent` is `true` only when `calcData` answers the current `calcHandler`, `to_address`, currencies and the amount the user typed last, in that direction, with nothing scheduled or in flight: gate submit on it. `calcError` holds the message of the failed latest request for the current inputs (the body `message` of an axios error, else the error's `message`); a new edit or an answer clears it.
+
+### Fixed
+
+- **Races in `useOrderCalc` (SFI-3505).** The hook is rewritten around one calc state machine per hook instance.
+  - The scheduled quote reads the latest amounts, `calcHandler`, `to_address`, currencies, sell range and `disableCalculation` when it fires, not those of the render that scheduled it. A handler switch while an edit waited no longer quotes with the old handler.
+  - One request at a time: an edit, an input change or a new request aborts the request in flight, and the answer or error of any request but the latest is ignored. A late answer of the previous handler no longer replaces the new quote.
+  - A change of `calcHandler` (by identity), `to_address` or the currencies quotes again the side the user typed last, with the latest amounts. An amount typed in "receiver gets" is quoted in reverse again instead of forward from a stale selling amount, and typing right after the change is no longer overwritten by the re-quote of the old amount.
+  - Nothing is requested on mount. A `setSellingAmount` right after mount (a restored draft) and typing in the first second are no longer wiped 1 s later. Clearing the edited field clears `calcData` and both amounts without a request.
+  - Edits wait 1 s after the last keystroke. Before, the wait fell to 0 ms whenever an abort controller was left over from an earlier call (after the mount and after any skipped calc), so every keystroke was a request.
+  - Amounts written from an answer are not quoted again; only calls of the setters are edits.
+  - A cancel never leaves a pending flag on, and the request in flight is aborted on unmount.
+
+### Changed
+
+- **Behaviour of `useOrderCalc` for consumers (SFI-3505).**
+  - Errors of `calcHandler` are no longer rethrown; they were unhandled rejections from a timer. Read `calcError`. A 404 still resets the quote and both amounts.
+  - `isBuyingValuePending` / `isSellingValuePending` turn on at the edit, not when the debounce fires, and turn off on the answer, an error, a cancel or a skip. They stay off while `disableCalculation` is set or a currency is missing.
+  - A new `calcHandler` identity re-quotes, so pass a memoized handler.
+  - A change of `calcHandler`, `to_address` or the currencies re-quotes after 300 ms (a currency change used to re-quote at once, an address change after 1 s). `disableCalculation` turning off quotes the last edit; before, it waited for the next edit.
+  - Setting the amount it already has is not an edit, as with the plain state setter before.
+
 ## [1.36.118] - 2026-11-24
 
 ### Added
